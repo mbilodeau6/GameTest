@@ -18,6 +18,6 @@ public class GameBoard
     public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
     {
         _logger.LogInformation("C# HTTP trigger function processed a request.");
-        return new OkObjectResult("Hello World! From GameBoard.");
+        return new OkObjectResult("Hello World2! From GameBoard.");
     }
 }
