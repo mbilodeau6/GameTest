@@ -32,6 +32,6 @@ public class Tile
 
     public override string ToString()
     {
-        return $"{Resource} ({DiceNumber}){(HasRobber ? " [Robber]" : "")}";
+        return $"{Resource} ({X},{Y})({DiceNumber}){(HasRobber ? " [Robber]" : "")}";
     }
 }

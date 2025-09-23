@@ -46,7 +46,52 @@ public class TileTests
         // Arrange & Act & Assert
         var exception = Assert.Throws<ArgumentException>(() =>
             new Tile(ResourceType.Wood, invalidDiceNumber, 0, 0));
-        
+
         Assert.Equal("Dice number must be between 2 and 12 (Parameter 'diceNumber')", exception.Message);
+    }
+
+    [Fact]
+    public void MoveRobberTo_SetsHasRobberToTrue()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Brick, 5, 1, 1);
+        Assert.False(tile.HasRobber);
+
+        // Act
+        tile.MoveRobberTo();
+
+        // Assert
+        Assert.True(tile.HasRobber);
+    }
+
+    [Fact]
+    public void RemoveRobber_SetsHasRobberToFalse()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Wood, 12, -1, -1);
+        tile.MoveRobberTo();
+        Assert.True(tile.HasRobber);
+
+        // Act
+        tile.RemoveRobber();
+
+        // Assert
+        Assert.False(tile.HasRobber);
+    }
+
+    [Fact]
+    public void ToString_ReturnsExpectedFormat()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Ore, 10, -1, -1);
+        var desertTile = new Tile(ResourceType.Desert, 2, 1, 0);
+
+        // Act
+        var tileString = tile.ToString();
+        var desertTileString = desertTile.ToString();
+
+        // Assert
+        Assert.Equal("Ore (-1,-1)(10)", tileString);
+        Assert.Equal("Desert (1,0)(7) [Robber]", desertTileString);
     }
 }
