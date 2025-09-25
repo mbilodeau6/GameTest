@@ -53,6 +53,18 @@ public class TileTests
     }
 
     [Fact]
+    public void Constructor_DiceNumberIgnoredForDesertTile()
+    {
+        // Arrange & Act
+        var tile = new Tile(ResourceType.Desert, 0, 0, 0);
+
+        // Assert
+        Assert.True(tile.Id >= 1);
+        Assert.Equal(ResourceType.Desert, tile.Resource);
+        Assert.Equal(7, tile.DiceNumber);
+    }
+
+    [Fact]
     public void MoveRobberTo_SetsHasRobberToTrue()
     {
         // Arrange

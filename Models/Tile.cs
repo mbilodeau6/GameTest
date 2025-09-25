@@ -15,7 +15,7 @@ public class Tile
     {
         Id = Interlocked.Increment(ref s_nextId);
 
-        if (diceNumber < 2 || diceNumber > 12)
+        if (resource != ResourceType.Desert && diceNumber < 2 || diceNumber > 12)
             throw new ArgumentException("Dice number must be between 2 and 12", nameof(diceNumber));
 
         Resource = resource;
