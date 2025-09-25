@@ -2,6 +2,9 @@ namespace GameTest.Models;
 
 public class Tile
 {
+    private static int s_nextId = 0;
+
+    public int Id { get; init; }
     public ResourceType Resource { get; private set; }
     public int DiceNumber { get; private set; }
     public bool HasRobber { get; private set; }
@@ -10,6 +13,8 @@ public class Tile
 
     public Tile(ResourceType resource, int diceNumber, int x, int y)
     {
+        Id = Interlocked.Increment(ref s_nextId);
+
         if (diceNumber < 2 || diceNumber > 12)
             throw new ArgumentException("Dice number must be between 2 and 12", nameof(diceNumber));
         

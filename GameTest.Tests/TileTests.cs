@@ -18,6 +18,7 @@ public class TileTests
         var tile = new Tile(resource, diceNumber, x, y);
 
         // Assert
+        Assert.True(tile.Id >= 1);
         Assert.Equal(resource, tile.Resource);
         Assert.Equal(diceNumber, tile.DiceNumber);
         Assert.Equal(x, tile.X);
@@ -32,6 +33,7 @@ public class TileTests
         var tile = new Tile(ResourceType.Desert, 2, 0, 0);
 
         // Assert
+        Assert.True(tile.Id >= 1);
         Assert.Equal(ResourceType.Desert, tile.Resource);
         Assert.Equal(7, tile.DiceNumber);
         Assert.True(tile.HasRobber);
