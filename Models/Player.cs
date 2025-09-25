@@ -34,14 +34,17 @@ public class Player
         Color = PlayerColor.Red;
     }
 
-    // public Player(string name, PlayerColor color)
-    // {
-    //     Id = Interlocked.Increment(ref s_nextId);
+    public Player(string name, PlayerColor color)
+    {
+        Id = Interlocked.Increment(ref s_nextId);
 
-    //     // TODO: Need to ensure name and color are unique
-    //     Name = name ?? throw new ArgumentNullException(nameof(name));
-    //     Color = color;
-    // }
+        // TODO: Need to ensure name and color are unique
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name cannot be empty", nameof(name));
 
-    // public override string ToString() => $"{Name} ({Id}) - {Color}";
+        Name = name;
+        Color = color;
+    }
+
+    public override string ToString() => $"{Name} ({Id}) - {Color}";
 }
