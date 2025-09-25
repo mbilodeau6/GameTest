@@ -17,7 +17,7 @@ public class Tile
 
         if (diceNumber < 2 || diceNumber > 12)
             throw new ArgumentException("Dice number must be between 2 and 12", nameof(diceNumber));
-        
+
         Resource = resource;
         DiceNumber = resource == ResourceType.Desert ? 7 : diceNumber;
         HasRobber = resource == ResourceType.Desert;

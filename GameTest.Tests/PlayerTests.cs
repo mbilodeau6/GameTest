@@ -1,6 +1,5 @@
 using Xunit;
 using GameTest.Models;
-using System.Drawing;
 
 namespace GameTest.Tests;
 
