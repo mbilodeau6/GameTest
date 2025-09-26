@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using GameTest.DTOs;
 
 namespace GameTest.GameBoard;
 
@@ -11,7 +12,7 @@ public class GameBoard
 {
     private readonly ILogger<GameBoard> _logger;
 
-    private static GameState CreateTestGameState()
+    private static GameStateDTO CreateTestGameState()
     {
         GameState gameState = new GameState();
 
@@ -45,7 +46,7 @@ public class GameBoard
         gameState.AddVertex(new Vertex(p1, t1, t2, t4));  
         gameState.AddVertex(new Vertex(p2, t1, t3, t5));  
 
-        return gameState;
+        return new GameStateDTO(gameState);
     }
 
     public GameBoard(ILogger<GameBoard> logger)
