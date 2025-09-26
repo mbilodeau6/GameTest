@@ -1,3 +1,4 @@
+using System.Security.Cryptography.Xml;
 using GameTest.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,16 +15,37 @@ public class GameBoard
     {
         GameState gameState = new GameState();
 
-        gameState.AddPlayer(new Player("Alice", PlayerColor.Red));
-        gameState.AddPlayer(new Player("Bob", PlayerColor.Blue));
+        var p1 = new Player("Alice", PlayerColor.Red);
+        gameState.AddPlayer(p1);
 
-        gameState.AddTile(new Tile(ResourceType.Grain, 10, 0, 0));
+        var p2 = new Player("Bob", PlayerColor.Blue);
+        gameState.AddPlayer(p2);
+
+        var t1 = new Tile(ResourceType.Grain, 10, 0, 0);
+        gameState.AddTile(t1);
+
         gameState.AddTile(new Tile(ResourceType.Desert, 0, -1, -1));
         gameState.AddTile(new Tile(ResourceType.Wool, 8, 1, -1));
-        gameState.AddTile(new Tile(ResourceType.Brick, 5, -1, 0));
-        gameState.AddTile(new Tile(ResourceType.Ore, 3, 1, 0));
-        gameState.AddTile(new Tile(ResourceType.Wool, 2, -1, 1));
-        gameState.AddTile(new Tile(ResourceType.Wood, 6, 1, 1));
+
+        var t2 = new Tile(ResourceType.Brick, 5, -1, 0);
+        gameState.AddTile(t2);
+
+        var t3 = new Tile(ResourceType.Ore, 3, 1, 0);
+        gameState.AddTile(t3);
+
+        var t4 = new Tile(ResourceType.Wool, 2, -1, 1);
+        gameState.AddTile(t4);
+
+        var t5 = new Tile(ResourceType.Wood, 6, 1, 1);
+        gameState.AddTile(t5);
+
+        gameState.AddEdge(new Edge(p1, t2, t4));
+        gameState.AddEdge(new Edge(p2, t1, t5));
+
+        // gameState.AddVertex(new Vertex(t1, t2, t3));  
+        // gameState.AddVertex(new Vertex(t2, t3));  
+        // gameState.AddVertex(new Vertex(t2));  
+        
 
         // TODO: Add edges, vertices, ports, etc.
 

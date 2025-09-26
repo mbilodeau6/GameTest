@@ -12,8 +12,8 @@ public class Edge
     private static int s_nextId;
 
     public string Id { get; init; }
-    public bool HasRoad { get; private set; } = false;
-    public Player? Owner { get; set; } = null;
+    public Player Owner { get; init; }
+    // TODO: If I want to support ships, may need EdgeType (Road, ShipRoute)
 
     // References to the two vertices this edge connects (required)
     public Vertex[] Vertices { get; } = new Vertex[2];
@@ -21,26 +21,22 @@ public class Edge
     // References to up to two adjacent tiles (nullable)
     public Tile?[] Tiles { get; } = new Tile?[2];
 
-    public Edge()
+    public Edge(Player owner, Tile t1, Tile? t2 = null)
     {
         Id = $"E{Interlocked.Increment(ref s_nextId)}";
+
+        Tiles[0] = t1;
+
+        if (t2 != null)
+            Tiles[1] = t2;
+
+        Owner = owner;
     }
 
     // TODO: Consider adding methods to add/remove vertices, tiles and owner, with validation
 
-    public void BuildRoad()
-    {
-        HasRoad = true;  
-    }
-
-    public void RemoveRoad() {
-      HasRoad = false;  
-    }
-
     public override string ToString()
     {
-        string ownerPart = HasRoad && Owner != null ? $"; Owner: {Owner.Name}" : "";
-
-        return $"Edge {Id} (HasRoad: {(HasRoad ? "T" : "F")}{ownerPart})";
+        return $"Edge {Id} (Owner: {Owner.Name})";
     }
 }

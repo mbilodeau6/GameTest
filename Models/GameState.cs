@@ -6,8 +6,10 @@ public class GameState
 {
     public List<Player> Players { get; } = new();
     public List<Tile> Tiles { get; } = new();
+    public List<Edge> Edges { get; } = new();
+    public List<Vertex> Vertices { get; } = new();
 
-    // Future: Add collections for Edge, Vertex, Port, etc.
+    // Future: Add collections for Ports
 
     public GameState() { }
 
@@ -19,5 +21,15 @@ public class GameState
     public void AddTile(Tile tile)
     {
         Tiles.Add(tile);
+    }
+
+    public void AddEdge(Edge edge)
+    {
+        Edges.Add(edge);
+    }   
+
+    public void AddVertex(Vertex vertex)
+    {
+        Vertices.Add(vertex);
     }
 }
