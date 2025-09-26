@@ -41,7 +41,7 @@ public class Edge
         Owner = owner;
     }
 
-    // TODO: Consider adding methods to add/remove vertices, tiles and owner, with validation
+    // TODO: Consider adding methods to add/remove vertices with validation
 
     public override string ToString()
     {

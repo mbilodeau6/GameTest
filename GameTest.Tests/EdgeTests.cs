@@ -24,7 +24,22 @@ public class EdgeTests
         Assert.All(edge.Tiles, t => Assert.NotNull(t));
     }
 
-    // TODO: Test with edge along water
+    [Fact]
+    public void Constructor_OneTile_CreatesExpectedEdge()
+    {
+        // Arrange
+        var owner = new Player("Sunny", PlayerColor.Red);
+        var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
+
+        // Act
+        var edge = new Edge(owner, tile1);
+
+        // Assert
+        Assert.True(TestHelpers.ValidateId(edge.Id, 'E'));
+        Assert.Single(edge.Tiles);
+        Assert.All(edge.Tiles, t => Assert.NotNull(t));
+    }
+
     
     [Fact]
     public void ToString_ReturnsNonEmptyString()

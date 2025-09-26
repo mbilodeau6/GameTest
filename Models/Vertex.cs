@@ -43,7 +43,7 @@ public class Vertex
         Id = $"V{Interlocked.Increment(ref s_nextId)}";
     }
 
-    // TODO: Consider adding methods to add/remove edges, tiles and owner, with validation
+    // TODO: Consider adding methods to add/remove edges with validation
 
     public void UpgradeToCity()
     {
@@ -55,7 +55,7 @@ public class Vertex
     public void DowngradeToSettlement()
     {
         if (Building != BuildingType.City)
-            throw new InvalidOperationException("Only a settlement can be upgraded to a city.");
+            throw new InvalidOperationException("Only a city can be downgraded to a settlement.");
         Building = BuildingType.Settlement;
     }
 

@@ -21,7 +21,40 @@ public class VertexTests
         Assert.All(vertex.Tiles, t => Assert.NotNull(t));
     }
 
-    // TODO: Add tests for constructor with two and three tiles
+    [Fact]
+    public void Constructor_VertexWith2Tiles_CreatesExpectedVertex()
+    {
+        // Arrange
+        var player = new Player("Alice", PlayerColor.Orange);
+        var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        var t2 = new Tile(ResourceType.Ore, 6, 1, 0);
+
+        // Act
+        var vertex = new Vertex(player, t1, t2);
+
+        // Assert
+        Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
+        Assert.Equal(2, vertex.Tiles.Length);
+        Assert.All(vertex.Tiles, t => Assert.NotNull(t));
+    }
+
+    [Fact]
+    public void Constructor_VertexWith3Tiles_CreatesExpectedVertex()
+    {
+        // Arrange
+        var player = new Player("Frank", PlayerColor.Orange);
+        var t1 = new Tile(ResourceType.Brick, 2, 0, 0);
+        var t2 = new Tile(ResourceType.Ore, 6, 1, 0);
+        var t3 = new Tile(ResourceType.Wood, 4, 0, 1);
+
+        // Act
+        var vertex = new Vertex(player, t1, t2, t3);
+
+        // Assert
+        Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
+        Assert.Equal(3, vertex.Tiles.Length);
+        Assert.All(vertex.Tiles, t => Assert.NotNull(t));
+    }
 
     [Fact]
     public void UpgradeToCity_ExistingSettlement_UpgradesBuildingToCity()
@@ -42,7 +75,6 @@ public class VertexTests
     public void UpgradeToCity_ExistingCity_ThrowsInvalidOperationException()
     {
         // Arrange
-        // Arrange
         var player = new Player("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
         var vertex = new Vertex(player, tile);
@@ -53,35 +85,34 @@ public class VertexTests
         Assert.Equal("Only a settlement can be upgraded to a city.", exception.Message);
     }
 
-    // TODO: Add tests for DowngradeToSettlement cases
-    // [Fact]
-    // public void RemoveBuilding_ExistingSettlement_SetsBuildingToNone()
-    // {
-    //     // Arrange
-    //     var vertex = new Vertex();
-    //     vertex.BuildSettlement();
+    [Fact]
+    public void DowngradeToSettlement_ExistingSettlement_ThrowsException()
+    {
+        // Arrange
+        var player = new Player("Alice", PlayerColor.Blue);
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var vertex = new Vertex(player, tile);
 
-    //     // Act
-    //     vertex.RemoveBuilding();
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() => vertex.DowngradeToSettlement());
+        Assert.Equal("Only a city can be downgraded to a settlement.", exception.Message);
+    }
 
-    //     // Assert
-    //     Assert.Equal(BuildingType.None, vertex.Building);
-    // }
+    [Fact]
+    public void DowngradeToSettlement_ExistingCity_SetsBuildingToSettlement()
+    {
+        // Arrange
+        var player = new Player("Alice", PlayerColor.Blue);
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var vertex = new Vertex(player, tile);
+        vertex.UpgradeToCity();
 
-    // [Fact]
-    // public void RemoveBuilding_ExistingCity_SetsBuildingToNone()
-    // {
-    //     // Arrange
-    //     var vertex = new Vertex();
-    //     vertex.BuildSettlement();
-    //     vertex.UpgradeToCity();
+        // Act
+        vertex.DowngradeToSettlement();
 
-    //     // Act
-    //     vertex.RemoveBuilding();
-
-    //     // Assert
-    //     Assert.Equal(BuildingType.None, vertex.Building);
-    // }
+        // Assert
+        Assert.Equal(BuildingType.Settlement, vertex.Building);
+    }
 
     [Fact]
     public void ToString_NoParameters_ReturnsNonEmptyString()
