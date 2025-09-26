@@ -4,6 +4,7 @@ public class Tile
 {
     private static int s_nextId = 0;
 
+    // TODO: Switch to string
     public int Id { get; init; }
     public ResourceType Resource { get; private set; }
     public int DiceNumber { get; private set; }

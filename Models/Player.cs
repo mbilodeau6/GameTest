@@ -18,6 +18,7 @@ public class Player
 {
     private static int s_nextId = 0;
 
+    // TODO: Switch to string
     public int Id { get; init; }
     public string Name { get; set; }
     public PlayerColor Color { get; set; }
