@@ -68,7 +68,9 @@ public class GameStateTests
     public void AddVertex_AddSingleVertex()
     {
         // Arrange
-        var vertex = new Vertex();
+        var player = new Player("PlayerA", PlayerColor.Red);
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var vertex = new Vertex(player, tile);
         var expectedVertexId = vertex.Id;
 
         // Act

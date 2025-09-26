@@ -42,12 +42,8 @@ public class GameBoard
         gameState.AddEdge(new Edge(p1, t2, t4));
         gameState.AddEdge(new Edge(p2, t1, t5));
 
-        // gameState.AddVertex(new Vertex(t1, t2, t3));  
-        // gameState.AddVertex(new Vertex(t2, t3));  
-        // gameState.AddVertex(new Vertex(t2));  
-        
-
-        // TODO: Add edges, vertices, ports, etc.
+        gameState.AddVertex(new Vertex(p1, t1, t2, t4));  
+        gameState.AddVertex(new Vertex(p2, t1, t3, t5));  
 
         return gameState;
     }

@@ -19,11 +19,19 @@ public class Edge
     public Vertex[] Vertices { get; } = new Vertex[2];
 
     // References to up to two adjacent tiles (nullable)
-    public Tile?[] Tiles { get; } = new Tile?[2];
+    public Tile[] Tiles { get; }
 
     public Edge(Player owner, Tile t1, Tile? t2 = null)
     {
         Id = $"E{Interlocked.Increment(ref s_nextId)}";
+
+        var tileList = new List<Tile> { t1 ?? throw new ArgumentNullException(nameof(t1)) };
+
+        if (t2 != null)
+            tileList.Add(t2);
+
+        // Convert the list to an array, ensuring no nulls
+        Tiles = tileList.ToArray();
 
         Tiles[0] = t1;
 

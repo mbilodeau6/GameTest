@@ -6,67 +6,30 @@ namespace GameTest.Tests;
 public class VertexTests
 {
     [Fact]
-    public void Constructor_ValidParameters_CreatesExpectedVertex()
+    public void Constructor_VertexOfSingleTile_CreatesExpectedVertex()
     {
         // Arrange
+        var player = new Player("Alice", PlayerColor.Blue);
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
 
         // Act
-        var vertex = new Vertex();
+        var vertex = new Vertex(player, tile);
 
         // Assert
         Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
-        Assert.Equal(BuildingType.None, vertex.Building);
-        Assert.Null(vertex.Owner);
-        Assert.Equal(2, vertex.Edges.Length);
-        Assert.All(vertex.Edges, e => Assert.Null(e));
-        Assert.Equal(3, vertex.Tiles.Length);
-        Assert.All(vertex.Tiles, t => Assert.Null(t));
+        Assert.Single(vertex.Tiles);
+        Assert.All(vertex.Tiles, t => Assert.NotNull(t));
     }
 
-    [Fact]
-    public void BuildSettlement_NoExistingBuilding_SetsBuildingToSettlement()
-    {
-        // Arrange
-        var vertex = new Vertex();
-
-        // Act
-        vertex.BuildSettlement();
-
-        // Assert
-        Assert.Equal(BuildingType.Settlement, vertex.Building);
-    }
-
-    [Fact]
-    public void BuildSettlement_ExistingSettlement_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var vertex = new Vertex();
-        vertex.BuildSettlement();
-
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => vertex.BuildSettlement());
-        Assert.Equal("A building already exists on this vertex.", exception.Message);
-    }
-
-    [Fact]
-    public void BuildSettlement_ExistingCity_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var vertex = new Vertex();
-        vertex.BuildSettlement();
-        vertex.UpgradeToCity();
-
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => vertex.BuildSettlement());
-        Assert.Equal("A building already exists on this vertex.", exception.Message);
-    }
+    // TODO: Add tests for constructor with two and three tiles
 
     [Fact]
     public void UpgradeToCity_ExistingSettlement_UpgradesBuildingToCity()
     {
         // Arrange
-        var vertex = new Vertex();
-        vertex.BuildSettlement();
+        var player = new Player("Alice", PlayerColor.Blue);
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var vertex = new Vertex(player, tile);
 
         // Act
         vertex.UpgradeToCity();
@@ -76,22 +39,13 @@ public class VertexTests
     }
 
     [Fact]
-    public void UpgradeToCity_NoExistingSettlement_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var vertex = new Vertex();
-
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => vertex.UpgradeToCity());
-        Assert.Equal("Only a settlement can be upgraded to a city.", exception.Message);
-    }
-
-    [Fact]
     public void UpgradeToCity_ExistingCity_ThrowsInvalidOperationException()
     {
         // Arrange
-        var vertex = new Vertex();
-        vertex.BuildSettlement();
+        // Arrange
+        var player = new Player("Alice", PlayerColor.Blue);
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var vertex = new Vertex(player, tile);
         vertex.UpgradeToCity();
 
         // Act & Assert
@@ -99,53 +53,43 @@ public class VertexTests
         Assert.Equal("Only a settlement can be upgraded to a city.", exception.Message);
     }
 
-    [Fact]
-    public void RemoveBuilding_ExistingSettlement_SetsBuildingToNone()
-    {
-        // Arrange
-        var vertex = new Vertex();
-        vertex.BuildSettlement();
+    // TODO: Add tests for DowngradeToSettlement cases
+    // [Fact]
+    // public void RemoveBuilding_ExistingSettlement_SetsBuildingToNone()
+    // {
+    //     // Arrange
+    //     var vertex = new Vertex();
+    //     vertex.BuildSettlement();
 
-        // Act
-        vertex.RemoveBuilding();
+    //     // Act
+    //     vertex.RemoveBuilding();
 
-        // Assert
-        Assert.Equal(BuildingType.None, vertex.Building);
-    }
+    //     // Assert
+    //     Assert.Equal(BuildingType.None, vertex.Building);
+    // }
 
-    [Fact]
-    public void RemoveBuilding_ExistingCity_SetsBuildingToNone()
-    {
-        // Arrange
-        var vertex = new Vertex();
-        vertex.BuildSettlement();
-        vertex.UpgradeToCity();
+    // [Fact]
+    // public void RemoveBuilding_ExistingCity_SetsBuildingToNone()
+    // {
+    //     // Arrange
+    //     var vertex = new Vertex();
+    //     vertex.BuildSettlement();
+    //     vertex.UpgradeToCity();
 
-        // Act
-        vertex.RemoveBuilding();
+    //     // Act
+    //     vertex.RemoveBuilding();
 
-        // Assert
-        Assert.Equal(BuildingType.None, vertex.Building);
-    }
-
-    [Fact]
-    public void RemoveBuilding_NoBuilding_SetsBuildingToNone()
-    {
-        // Arrange
-        var vertex = new Vertex();
-
-        // Act
-        vertex.RemoveBuilding();
-
-        // Assert
-        Assert.Equal(BuildingType.None, vertex.Building);
-    }
+    //     // Assert
+    //     Assert.Equal(BuildingType.None, vertex.Building);
+    // }
 
     [Fact]
     public void ToString_NoParameters_ReturnsNonEmptyString()
     {
         // Arrange
-        var vertex = new Vertex();
+        var player = new Player("Bob", PlayerColor.Green);
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var vertex = new Vertex(player, tile);
 
         // Act
         var result = vertex.ToString();
@@ -153,21 +97,13 @@ public class VertexTests
         // Assert
         Assert.NotNull(result);
 
-        string expectedResult = $"Vertex {vertex.Id}";
+        string expectedResult = $"Vertex {vertex.Id} (Owner: {vertex.Owner.Name}; Building: ";
 
-        if (vertex.Building != BuildingType.None)
-        {
-            if (vertex.Building == BuildingType.Settlement)
-                expectedResult += "(Building: S";
+        if (vertex.Building == BuildingType.Settlement)
+            expectedResult += "S)";
 
-            if (vertex.Building == BuildingType.City)
-                expectedResult += "(Building: C";
-
-            if (vertex.Owner != null)
-                expectedResult += $"; Owner: {vertex.Owner.Name})";
-            else
-                expectedResult += ")";
-        }
+        if (vertex.Building == BuildingType.City)
+            expectedResult += "C)";
 
         Assert.Equal(expectedResult, result);
     }
