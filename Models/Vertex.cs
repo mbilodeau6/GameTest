@@ -53,12 +53,18 @@ public class Vertex
 
     public override string ToString()
     {
-        // string e0 = Edges[0]?.Id.ToString() ?? "-";
-        // string e1 = Edges[1]?.Id.ToString() ?? "-";
-        // string t0 = Tiles[0]?.Id.ToString() ?? "-";
-        // string t1 = Tiles[1]?.Id.ToString() ?? "-";
-        // string t2 = Tiles[2]?.Id.ToString() ?? "-";
-        // return $"Vertex #{Id} Building:{Building} Edges:[{e0},{e1}] Tiles:[{t0},{t1},{t2}]";
-        return string.Empty;
+    string result = $"Vertex {Id}";
+
+    if (Building != BuildingType.None)
+    {
+        result += Building == BuildingType.Settlement ? "(Building: S" : "(Building: C";
+
+        if (Owner != null)
+            result += $"; Owner: {Owner.Name})";
+        else
+            result += ")";
+    }
+
+    return result;
     }
 }

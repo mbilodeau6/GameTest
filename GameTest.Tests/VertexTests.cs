@@ -140,7 +140,7 @@ public class VertexTests
         // Assert
         Assert.Equal(BuildingType.None, vertex.Building);
     }
-    
+
     [Fact]
     public void ToString_NoParameters_ReturnsNonEmptyString()
     {
@@ -152,7 +152,23 @@ public class VertexTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsType<string>(result);
-        Assert.NotEqual(string.Empty, result);
+
+        string expectedResult = $"Vertex {vertex.Id}";
+
+        if (vertex.Building != BuildingType.None)
+        {
+            if (vertex.Building == BuildingType.Settlement)
+                expectedResult += "(Building: S";
+
+            if (vertex.Building == BuildingType.City)
+                expectedResult += "(Building: C";
+
+            if (vertex.Owner != null)
+                expectedResult += $"; Owner: {vertex.Owner.Name})";
+            else
+                expectedResult += ")";
+        }
+
+        Assert.Equal(expectedResult, result);
     }
 }

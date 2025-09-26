@@ -88,7 +88,17 @@ public class EdgeTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsType<string>(result);
-        Assert.NotEmpty(result); // Currently returns empty string
+
+        string expectedResult = $"Edge {edge.Id} (";
+
+        if (edge.HasRoad)
+            if (edge.Owner != null)
+                expectedResult += $"HasRoad: T; Owner: {edge.Owner.Name})";
+            else
+                expectedResult += "HasRoad: T)";
+        else
+            expectedResult += "HasRoad: F)";
+
+        Assert.Equal(expectedResult, result);
     }
 }

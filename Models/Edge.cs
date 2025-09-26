@@ -40,11 +40,8 @@ public class Edge
 
     public override string ToString()
     {
-        // string v0 = Vertices[0]?.ToString() ?? "null";
-        // string v1 = Vertices[1]?.ToString() ?? "null";
-        // string t0 = Tiles[0]?.ToString() ?? "-";
-        // string t1 = Tiles[1]?.ToString() ?? "-";
-        // return $"Edge #{Id}: V[{v0},{v1}] T[{t0},{t1}] Road:{HasRoad}";
-        return string.Empty;
+        string ownerPart = HasRoad && Owner != null ? $"; Owner: {Owner.Name}" : "";
+
+        return $"Edge {Id} (HasRoad: {(HasRoad ? "T" : "F")}{ownerPart})";
     }
 }
