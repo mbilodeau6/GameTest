@@ -12,7 +12,7 @@ public class PlayerTests
         var player = new Player();
 
         // Assert
-        Assert.True(player.Id >= 1);
+        Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
         Assert.Equal(string.Empty, player.Name);
         Assert.Equal(PlayerColor.Red, player.Color);
     }
@@ -28,7 +28,7 @@ public class PlayerTests
         var player = new Player(expectedName, expectedColor);
 
         // Assert
-        Assert.True(player.Id >= 1);
+        Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
         Assert.Equal(expectedName, player.Name);
         Assert.Equal(expectedColor, player.Color);
     }
@@ -74,7 +74,7 @@ public class PlayerTests
         player.Color = expectedColor;
 
         // Assert
-        Assert.True(player.Id >= 1);
+        Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
         Assert.Equal(expectedName, player.Name);
         Assert.Equal(expectedColor, player.Color);
     }

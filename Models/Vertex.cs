@@ -12,8 +12,7 @@ public class Vertex
 {
     private static int s_nextId;
 
-    // TODO: Switch to string
-    public int Id { get; init; }
+    public string Id { get; init; }
     public BuildingType Building { get; private set; } = BuildingType.None;
     public Player? Owner { get; set; } = null;
 
@@ -27,7 +26,7 @@ public class Vertex
     // Parameterless ctor for serializers
     public Vertex()
     {
-        Id = Interlocked.Increment(ref s_nextId);
+        Id = $"V{Interlocked.Increment(ref s_nextId)}";
     }
 
     // TODO: Consider adding methods to add/remove edges, tiles and owner, with validation

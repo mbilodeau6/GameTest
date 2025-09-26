@@ -11,8 +11,7 @@ public class Edge
 {
     private static int s_nextId;
 
-    // TODO: Switch to string
-    public int Id { get; init; }
+    public string Id { get; init; }
     public bool HasRoad { get; private set; } = false;
     public Player? Owner { get; set; } = null;
 
@@ -24,7 +23,7 @@ public class Edge
 
     public Edge()
     {
-        Id = Interlocked.Increment(ref s_nextId);
+        Id = $"E{Interlocked.Increment(ref s_nextId)}";
     }
 
     // TODO: Consider adding methods to add/remove vertices, tiles and owner, with validation

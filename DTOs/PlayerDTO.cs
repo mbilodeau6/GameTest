@@ -4,7 +4,7 @@ namespace GameTest.DTOs;
 
 public class PlayerDTO
 {
-    public int Id { get; }
+    public string Id { get; }
     public string Name { get; }
     public string Color { get; }
     public PlayerDTO(Player player)

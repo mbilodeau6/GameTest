@@ -14,7 +14,7 @@ public class EdgeTests
         var edge = new Edge();
 
         // Assert
-        Assert.True(edge.Id >= 1);
+        Assert.True(TestHelpers.ValidateId(edge.Id, 'E'));
         Assert.False(edge.HasRoad);
         Assert.Null(edge.Owner);
         Assert.Equal(2, edge.Vertices.Length);

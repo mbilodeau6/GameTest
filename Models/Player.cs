@@ -18,15 +18,14 @@ public class Player
 {
     private static int s_nextId = 0;
 
-    // TODO: Switch to string
-    public int Id { get; init; }
+    public string Id { get; init; }
     public string Name { get; set; }
     public PlayerColor Color { get; set; }
 
     // Parameterless ctor for serializers
     public Player()
     {
-        Id = Interlocked.Increment(ref s_nextId);
+        Id = $"P{Interlocked.Increment(ref s_nextId)}";
 
         // TODO: Need to assign a unique name
         Name = string.Empty;
@@ -37,7 +36,7 @@ public class Player
 
     public Player(string name, PlayerColor color)
     {
-        Id = Interlocked.Increment(ref s_nextId);
+        Id = $"P{Interlocked.Increment(ref s_nextId)}";
 
         // TODO: Need to ensure name and color are unique
         if (string.IsNullOrWhiteSpace(name))

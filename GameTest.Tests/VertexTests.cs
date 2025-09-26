@@ -14,7 +14,7 @@ public class VertexTests
         var vertex = new Vertex();
 
         // Assert
-        Assert.True(vertex.Id >= 1);
+        Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
         Assert.Equal(BuildingType.None, vertex.Building);
         Assert.Null(vertex.Owner);
         Assert.Equal(2, vertex.Edges.Length);
