@@ -4,8 +4,6 @@ namespace GameTest.DTOs;
 
 public class TileDTO
 {
-    private static int s_nextId = 0;
-
     public string Id { get; init; }
     public string Resource { get; init; }
     public int DiceNumber { get; init; }
