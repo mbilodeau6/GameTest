@@ -1,0 +1,6 @@
+public enum GameType
+{
+    Default,
+    Expansion6,
+    Expansion8
+}
