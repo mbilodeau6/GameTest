@@ -4,6 +4,8 @@ namespace GameTest.Models;
 
 public class GameState
 {
+    public Guid Id { get; init; }
+    
     // TODO: I keep on going back and forth on whether I should only store occupied edges/vertices
     // or all edges/vertices in the game. Right now I'm only storing occupied ones. Thinking about
     // changing but need to check with Eric.
@@ -17,7 +19,10 @@ public class GameState
 
     // Future: Add collections for Ports
 
-    public GameState() { }
+    public GameState(Guid guid)
+    { 
+        Id = guid;
+    }
 
     public void AddPlayer(Player player)
     {

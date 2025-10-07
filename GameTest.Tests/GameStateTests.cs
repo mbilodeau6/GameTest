@@ -9,7 +9,7 @@ public class GameStateTests
     public void Constructor_Default_EmptyState()
     {
         // Act
-        var game = new GameState();
+        var game = new GameState(Guid.NewGuid());
 
         // Assert
         Assert.Empty(game.Players);
@@ -23,7 +23,7 @@ public class GameStateTests
         string expectedName = "Alice";
 
         // Act
-        var game = new GameState();
+        var game = new GameState(Guid.NewGuid());
         game.AddPlayer(new Player(expectedName, PlayerColor.Blue));
 
         // Assert
@@ -38,7 +38,7 @@ public class GameStateTests
         ResourceType expectedResourceType = ResourceType.Wool;
 
         // Act
-        var game = new GameState();
+        var game = new GameState(Guid.NewGuid());
         game.AddTile(new Tile(expectedResourceType, 5, 0, 0));
 
         // Assert
@@ -55,7 +55,7 @@ public class GameStateTests
         var expectedEdgeId = edge.Id;
 
         // Act
-        var game = new GameState();
+        var game = new GameState(Guid.NewGuid());
         game.AddEdge(edge);
 
         // Assert
@@ -74,7 +74,7 @@ public class GameStateTests
         var expectedVertexId = vertex.Id;
 
         // Act
-        var game = new GameState();
+        var game = new GameState(Guid.NewGuid());
         game.AddVertex(vertex);
 
         // Assert

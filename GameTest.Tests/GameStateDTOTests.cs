@@ -10,7 +10,8 @@ public class GameStateDTOTests
     public void GameStateDTO_ValidGameState_CreatesDTO()
     {
         // Arrange
-        var gameState = new GameState();
+        Guid guid = Guid.NewGuid();
+        var gameState = new GameState(guid);
         var player1 = new Player("Alice", PlayerColor.Blue);
         var player2 = new Player("Bob", PlayerColor.Red);
         gameState.Players.Add(player1);
@@ -39,5 +40,6 @@ public class GameStateDTOTests
         Assert.Equal(3, gameStateDTO.Edges.Count);
         Assert.Single(gameStateDTO.Vertices);
         Assert.Equal("Settlement", gameStateDTO.Vertices[0].Building);
+        Assert.Equal(guid, gameStateDTO.Id);
     }
 }

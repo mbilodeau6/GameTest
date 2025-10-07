@@ -4,6 +4,8 @@ namespace GameTest.DTOs;
 
 public class GameStateDTO
 {
+    public Guid Id { get; private set; }
+    
     // TODO: I keep on going back and forth on whether I should only store occupied edges/vertices
     // or all edges/vertices in the game. Right now I'm only storing occupied ones. Thinking about
     // changing but need to check with Eric.
@@ -14,7 +16,9 @@ public class GameStateDTO
 
 
     public GameStateDTO(GameState gameState)
-    { 
+    {
+        Id = gameState.Id;
+
         foreach (var player in gameState.Players)
             Players.Add(new PlayerDTO(player));
 

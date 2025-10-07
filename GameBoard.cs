@@ -14,7 +14,7 @@ public class GameBoard
 
     private static GameStateDTO CreateTestGameState()
     {
-        GameState gameState = new GameState();
+        GameState gameState = new GameState(Guid.NewGuid());
 
         var p1 = new Player("Alice", PlayerColor.Red);
         gameState.AddPlayer(p1);
