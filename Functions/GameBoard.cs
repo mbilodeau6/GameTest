@@ -6,7 +6,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using GameTest.DTOs;
 
-namespace GameTest.GameBoard;
+namespace GameTest.Functions;
 
 public class GameBoard
 {
