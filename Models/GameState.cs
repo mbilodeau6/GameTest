@@ -17,11 +17,12 @@ public class GameState
     public List<Tile> Tiles { get; } = new();
     public List<Edge> Edges { get; } = new();
     public List<Vertex> Vertices { get; } = new();
+    public string RobberTileId { get; set; } = string.Empty;
 
     // Future: Add collections for Ports
 
     public GameState(Guid guid)
-    { 
+    {
         Id = guid;
     }
 
@@ -38,10 +39,21 @@ public class GameState
     public void AddEdge(Edge edge)
     {
         Edges.Add(edge);
-    }   
+    }
 
     public void AddVertex(Vertex vertex)
     {
         Vertices.Add(vertex);
+    }
+    
+    public void SetRobberTile(string tileId)
+    {
+        if (tileId.Equals(RobberTileId, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("Robber is already on the specified tile.");
+
+        if (!Tiles.Any(t => t.Id == tileId))
+            throw new ArgumentException("The specified tile does not exist in the game.");
+
+        RobberTileId = tileId;
     }
 }

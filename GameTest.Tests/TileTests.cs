@@ -23,7 +23,6 @@ public class TileTests
         Assert.Equal(diceNumber, tile.DiceNumber);
         Assert.Equal(x, tile.X);
         Assert.Equal(y, tile.Y);
-        Assert.False(tile.HasRobber);
     }
 
     [Fact]
@@ -36,7 +35,6 @@ public class TileTests
         Assert.True(TestHelpers.ValidateId(tile.Id, 'T'));
         Assert.Equal(ResourceType.Desert, tile.Resource);
         Assert.Equal(7, tile.DiceNumber);
-        Assert.True(tile.HasRobber);
     }
 
     [Theory]
@@ -65,35 +63,6 @@ public class TileTests
     }
 
     [Fact]
-    public void MoveRobberTo_SetsHasRobberToTrue()
-    {
-        // Arrange
-        var tile = new Tile(ResourceType.Brick, 5, 1, 1);
-        Assert.False(tile.HasRobber);
-
-        // Act
-        tile.MoveRobberTo();
-
-        // Assert
-        Assert.True(tile.HasRobber);
-    }
-
-    [Fact]
-    public void RemoveRobber_SetsHasRobberToFalse()
-    {
-        // Arrange
-        var tile = new Tile(ResourceType.Wood, 12, -1, -1);
-        tile.MoveRobberTo();
-        Assert.True(tile.HasRobber);
-
-        // Act
-        tile.RemoveRobber();
-
-        // Assert
-        Assert.False(tile.HasRobber);
-    }
-
-    [Fact]
     public void ToString_ReturnsExpectedFormat()
     {
         // Arrange
@@ -106,6 +75,6 @@ public class TileTests
 
         // Assert
         Assert.Equal("Ore (-1,-1)(10)", tileString);
-        Assert.Equal("Desert (1,0)(7) [Robber]", desertTileString);
+        Assert.Equal("Desert (1,0)(7)", desertTileString);
     }
 }

@@ -7,7 +7,6 @@ public class Tile
     public string Id { get; init; }
     public ResourceType Resource { get; private set; }
     public int DiceNumber { get; private set; }
-    public bool HasRobber { get; private set; }
     public int X { get; private set; }
     public int Y { get; private set; }
 
@@ -20,23 +19,12 @@ public class Tile
 
         Resource = resource;
         DiceNumber = resource == ResourceType.Desert ? 7 : diceNumber;
-        HasRobber = resource == ResourceType.Desert;
         X = x;
         Y = y;
     }
 
-    public void MoveRobberTo()
-    {
-        HasRobber = true;
-    }
-
-    public void RemoveRobber()
-    {
-        HasRobber = false;
-    }
-
     public override string ToString()
     {
-        return $"{Resource} ({X},{Y})({DiceNumber}){(HasRobber ? " [Robber]" : "")}";
+        return $"{Resource} ({X},{Y})({DiceNumber})";
     }
 }

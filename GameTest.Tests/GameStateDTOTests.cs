@@ -42,5 +42,26 @@ public class GameStateDTOTests
         Assert.Equal("Settlement", gameStateDTO.Vertices[0].Building);
         Assert.Equal(guid.ToString(), gameStateDTO.Id);
         Assert.Equal("Default", gameStateDTO.Type);
+        Assert.Empty(gameStateDTO.RobberTileId);
+    }
+
+        [Fact]
+    public void GameStateDTO_RobberTileSet()
+    {
+        // Arrange
+        Guid guid = Guid.NewGuid();
+        var gameState = new GameState(guid);
+        var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        var tile2 = new Tile(ResourceType.Wood, 5, -1, 0);
+        gameState.Tiles.Add(tile1);
+        gameState.Tiles.Add(tile2);
+        gameState.SetRobberTile(tile1.Id);
+
+        // Act
+        var gameStateDTO = new GameStateDTO(gameState);
+
+        // Assert
+        Assert.Equal(2, gameStateDTO.Tiles.Count);
+        Assert.Equal(tile1.Id, gameStateDTO.RobberTileId);
     }
 }

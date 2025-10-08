@@ -25,7 +25,10 @@ public class GameBoard
         var t1 = new Tile(ResourceType.Grain, 10, 0, 0);
         gameState.AddTile(t1);
 
-        gameState.AddTile(new Tile(ResourceType.Desert, 0, -1, -1));
+        var t6 = new Tile(ResourceType.Desert, 0, -1, -1);
+        gameState.AddTile(t6);
+        gameState.SetRobberTile(t6.Id);
+
         gameState.AddTile(new Tile(ResourceType.Wool, 8, 1, -1));
 
         var t2 = new Tile(ResourceType.Brick, 5, -1, 0);

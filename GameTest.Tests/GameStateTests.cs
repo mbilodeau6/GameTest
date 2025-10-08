@@ -80,5 +80,54 @@ public class GameStateTests
         // Assert
         Assert.NotEmpty(game.Vertices);
         Assert.Equal(expectedVertexId, game.Vertices[0].Id);
-    }    
+    }
+
+    [Fact]
+    public void SetRobberTileId_ValidLocation()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var tileId = tile.Id;
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(tile);
+
+        // Act
+        game.SetRobberTile(tileId);
+
+        // Assert
+        Assert.Equal(tileId, game.RobberTileId);
+    } 
+
+    [Fact]
+    public void SetRobberTileId_NonexistentTile()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var tileId = tile.Id;
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(tile);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentException>(() =>
+            game.SetRobberTile("TX"));
+
+        Assert.Equal("The specified tile does not exist in the game.", exception.Message);
+    } 
+
+    [Fact]
+    public void SetRobberTileId_AlreadySet()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var tileId = tile.Id;
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(tile);
+        game.SetRobberTile(tileId);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentException>(() =>
+            game.SetRobberTile(tileId));
+
+        Assert.Equal("Robber is already on the specified tile.", exception.Message);
+    } 
 }

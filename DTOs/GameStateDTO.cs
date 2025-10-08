@@ -15,6 +15,7 @@ public class GameStateDTO
     public List<TileDTO> Tiles { get; } = new();
     public List<EdgeDTO> Edges { get; } = new();
     public List<VertexDTO> Vertices { get; } = new();
+    public string RobberTileId { get; } = string.Empty;
 
     // TODO: Need to populate all collections in the DTO (players, tiles, edges, vertices)
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
@@ -41,5 +42,7 @@ public class GameStateDTO
 
         foreach (var vertex in gameState.Vertices)
             Vertices.Add(new VertexDTO(vertex));
+
+        RobberTileId = gameState.RobberTileId;
     }
 }
