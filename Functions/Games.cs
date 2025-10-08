@@ -44,4 +44,31 @@ public class Games
         await response.WriteAsJsonAsync(dto);
         return response;
     }
+
+    [Function("GetGameById")]
+    public async Task<HttpResponseData> GetGameById(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "Games/{id}")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("GetGameById called for id {Id}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Invalid GUID.");
+            return bad;
+        }
+
+        var dto = await _gameService.GetGameAsync(guid);
+        if (dto == null)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteStringAsync($"Game not found (guid:{guid}).");
+            return notFound;
+        }
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync(dto);
+        return ok;
+    }
 }

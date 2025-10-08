@@ -53,7 +53,8 @@ public class GameService
         var gs = new GameState(Guid.NewGuid());
 
         // Try to persist a DTO representation to blob storage (best-effort).
-        try {
+        try
+        {
             if (_container != null)
             {
                 var dto = new DTOs.GameStateDTO(gs);
@@ -80,5 +81,42 @@ public class GameService
         // TODO: initialize tiles/players based on gameType
 
         return gs;
+    }
+
+    public async Task<DTOs.GameStateDTO?> GetGameAsync(Guid id)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", id);
+            return null;
+        }
+
+        try
+        {
+            var blob = _container.GetBlobClient($"{id}.json");
+            var exists = await blob.ExistsAsync();
+            if (!exists.Value)
+            {
+                _logger.LogInformation("Game blob not found for {GameId}.", id);
+                return null;
+            }
+
+            var download = await blob.DownloadContentAsync();
+            string json = download.Value.Content.ToString();
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, options);
+            return dto;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve GameState for GUID {GameId}.", id);
+            return null;
+        }
     }
 }

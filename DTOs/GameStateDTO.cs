@@ -1,10 +1,11 @@
+using System.Text.Json.Serialization;
 using GameTest.Models;
 
 namespace GameTest.DTOs;
 
 public class GameStateDTO
 {
-    public Guid Id { get; private set; }
+    public string Id { get; private set; }
     public string Type { get; private set; }
 
     // TODO: I keep on going back and forth on whether I should only store occupied edges/vertices
@@ -15,10 +16,18 @@ public class GameStateDTO
     public List<EdgeDTO> Edges { get; } = new();
     public List<VertexDTO> Vertices { get; } = new();
 
+    // TODO: Need to populate all collections in the DTO (players, tiles, edges, vertices)
+    // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
+    [JsonConstructor]
+    public GameStateDTO(string id, string type)
+    {
+        Id = id ?? string.Empty;
+        Type = type ?? string.Empty;
+    }
 
     public GameStateDTO(GameState gameState)
     {
-        Id = gameState.Id;
+        Id = gameState.Id.ToString();
         Type = gameState.Type.ToString();
 
         foreach (var player in gameState.Players)
