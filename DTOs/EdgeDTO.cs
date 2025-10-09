@@ -5,7 +5,7 @@ namespace GameTest.DTOs;
 public class EdgeDTO
 {
     public string Id { get; private set; }
-    public string PlayerId { get; private set; }
+    public string? PlayerId { get; private set; }
     public string[] TileIds { get; init; }
 
     public EdgeDTO(Edge edge)

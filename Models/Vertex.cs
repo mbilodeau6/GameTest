@@ -87,8 +87,10 @@ public class Vertex
 
     public override string ToString()
     {
-        string buildingType = Building == BuildingType.Settlement ? "S" : "C";
-        string result = $"Vertex {Id} (Owner: {Owner.Name}; Building: {buildingType})";
+        string buildingType = Building == null? "None" : Building == BuildingType.Settlement ? "Settlement" : "City";
+        string ownerPart = Owner == null ? "None" : Owner.Name;
+
+        string result = $"Vertex {Id} (Owner: {ownerPart}; Building: {buildingType})";
 
         return result;
     }

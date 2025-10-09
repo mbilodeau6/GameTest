@@ -141,13 +141,14 @@ public class VertexTests
         // Assert
         Assert.NotNull(result);
 
+        Assert.NotNull(vertex.Owner);
         string expectedResult = $"Vertex {vertex.Id} (Owner: {vertex.Owner.Name}; Building: ";
 
         if (vertex.Building == BuildingType.Settlement)
-            expectedResult += "S)";
+            expectedResult += "Settlement)";
 
         if (vertex.Building == BuildingType.City)
-            expectedResult += "C)";
+            expectedResult += "City)";
 
         Assert.Equal(expectedResult, result);
     }

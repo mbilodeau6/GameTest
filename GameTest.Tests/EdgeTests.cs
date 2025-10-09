@@ -74,6 +74,7 @@ public class EdgeTests
         // Assert
         Assert.NotNull(result);
 
+        Assert.NotNull(edge.Owner);
         string expectedResult = $"Edge {edge.Id} (Owner: {edge.Owner.Name})";
         Assert.Equal(expectedResult, result);
     }

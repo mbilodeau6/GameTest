@@ -181,4 +181,36 @@ public static class BoardCreationHelpers
 
     }
 
+    public static GameState CreateNewBoard(GameType gameType)
+    {
+        var gameState = new GameState(new Guid());
+
+        switch (gameType)
+        {
+            case GameType.Default:
+                foreach (var tile in CreateTilesForRandomBoard())
+                        gameState.AddTile(tile);
+                    break;            
+            case GameType.Expansion6:
+                throw new NotImplementedException("Default and Expansion6 board types are not implemented yet.");
+            case GameType.Expansion8:
+                throw new NotImplementedException("Expansion8 board type is not implemented yet.");
+            case GameType.Starter:
+                foreach (var tile in CreateTilesForStarterBoard())
+                    gameState.AddTile(tile);
+                break;
+            case GameType.Test:
+                foreach (var tile in CreateTilesForTestBoard())
+                    gameState.AddTile(tile);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(gameType), $"Unhandled game type: {gameType}");
+        }
+
+        gameState.PlaceRobberOnDesert();
+        CreateEdgesAndVerticesForBoard(gameState);
+
+        return gameState;
+    }
+
 }

@@ -61,6 +61,7 @@ public class Edge
 
     public override string ToString()
     {
-        return $"Edge {Id} (Owner: {Owner.Name})";
+        string ownerPart = Owner == null ? "None" : Owner.Name;
+        return $"Edge {Id} (Owner: {ownerPart})";
     }
 }

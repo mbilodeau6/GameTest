@@ -114,19 +114,11 @@ public class BoardCreationHelpersTests
     [Fact]
     public void CreateEdgesAndVerticesForTestBoard_AllCreated()
     {
-        // Arrange
-        var gameState = new GameState(new Guid());
+        // Act
+        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+
         gameState.Players.Add(new Player("Alice", PlayerColor.Red));
         gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
-
-        // TODO: provide a way to provide all tiles at once
-        foreach (var tile in BoardCreationHelpers.CreateTilesForTestBoard())
-            gameState.AddTile(tile);
-
-        gameState.PlaceRobberOnDesert();
-
-        // Act
-        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gameState);
 
         // Assert
         Assert.Equal(30, gameState.Edges.Count);
@@ -153,20 +145,11 @@ public class BoardCreationHelpersTests
     [Fact]
     public void CreateEdgesAndVerticesForStarterBoard_AllCreated()
     {
-        // Arrange
-        var gameState = new GameState(new Guid());
+        // Act
+        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+
         gameState.Players.Add(new Player("Alice", PlayerColor.Red));
         gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
-
-
-        // TODO: provide a way to provide all tiles at once
-        foreach (var tile in BoardCreationHelpers.CreateTilesForStarterBoard())
-            gameState.AddTile(tile);
-
-        gameState.PlaceRobberOnDesert();
-
-        // Act
-        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gameState);
 
         // Assert
         Assert.Equal(72, gameState.Edges.Count);

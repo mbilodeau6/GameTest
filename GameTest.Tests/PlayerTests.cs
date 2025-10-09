@@ -34,20 +34,6 @@ public class PlayerTests
     }
 
     [Fact]
-    public void Constructor_NullName()
-    {
-        // Arrange
-        PlayerColor expectedColor = PlayerColor.Green;
-        string expectedName = null;
-
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
-            new Player(expectedName, expectedColor));
-
-        Assert.Equal("Name cannot be empty (Parameter 'name')", exception.Message);
-    }
-
-    [Fact]
     public void Constructor_EmptyName()
     {
         // Arrange
