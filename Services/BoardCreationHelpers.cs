@@ -5,6 +5,9 @@ namespace GameTest.Services;
 
 public static class BoardCreationHelpers
 {
+    public static Tile GetRequiredTileAt(this IEnumerable<Tile> tiles, int x, int y)
+       => tiles.First(t => t.X == x && t.Y == y);
+
     public static List<Tile> CreateTilesForRandomBoard()
     {
         var resourceValues = new List<ResourceType>();
@@ -71,7 +74,7 @@ public static class BoardCreationHelpers
             new Tile(ResourceType.Wood, 8, -3, 1),
             new Tile(ResourceType.Brick, 5, -2, 2),
             new Tile(ResourceType.Grain, 6, 0, 2),
-            new Tile(ResourceType.Wool, 11, 3, 2),
+            new Tile(ResourceType.Wool, 11, 2, 2),
             new Tile(ResourceType.Wool, 5, 3, 1),
             new Tile(ResourceType.Ore, 8, 4, 0),
             new Tile(ResourceType.Brick, 10, 3, -1),
@@ -87,6 +90,45 @@ public static class BoardCreationHelpers
         };
 
         return tiles;
+    }
+
+    public static Stack<Tile> GetNeighborTiles(Tile tile, List<Tile> tiles)
+    {
+        var stack = new Stack<Tile>();
+
+        var directions = new (int dx, int dy)[]
+        {
+            (tile.X-2, tile.Y), (tile.X+2, tile.Y),
+            (tile.X-1, tile.Y-1), (tile.X+1, tile.Y-1),
+            (tile.X-1, tile.Y+1), (tile.X+1, tile.Y+1)
+        };
+
+        foreach (var (dx, dy) in directions)
+        {
+            var neighbor = tiles.FirstOrDefault(t => t.X == dx && t.Y == dy);
+            if (neighbor != null)
+            {
+                stack.Push(neighbor);
+            }
+        }
+
+        return stack;
+    }
+
+    public static void CreateEdgesAndVerticesForBoard(GameState gameState)
+    {
+        var stack = new Stack<Tile>();
+        stack.Push(GetRequiredTileAt(gameState.Tiles, 0, 0));
+
+        while (stack.Count > 0)
+        {
+            var tile = stack.Pop();
+
+            var neighbors = GetNeighborTiles(tile, gameState.Tiles);
+
+            // TODO: Finish implementation
+        }
+
     }
 
 }

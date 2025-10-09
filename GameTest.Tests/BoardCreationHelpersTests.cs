@@ -4,12 +4,6 @@ using GameTest.Models;
 
 namespace GameTest.Tests;
 
-public static class TileTestHelpers
-{
-    public static Tile GetRequiredTileAt(this IEnumerable<Tile> tiles, int x, int y)
-       => tiles.First(t => t.X == x && t.Y == y);
-}
-
 public class BoardCreationHelpersTests
 {
     private void ValidateGeneralRulesForDefaultBoard(List<Tile> tiles)
@@ -92,5 +86,129 @@ public class BoardCreationHelpersTests
         Assert.Equal(8, tiles.GetRequiredTileAt(-3, 1).DiceNumber);
         Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(0, -2).Resource);
         Assert.Equal(2, tiles.GetRequiredTileAt(0, -2).DiceNumber);
+    }
+
+    [Fact]
+    public void GetNeighborTiles_Center()
+    {
+        // Arrange
+        var tiles = BoardCreationHelpers.CreateTilesForStarterBoard();
+        var centerTile = tiles.GetRequiredTileAt(0, 0);
+
+        // Act
+        var neighbors = BoardCreationHelpers.GetNeighborTiles(centerTile, tiles);
+
+        // Assert
+        Assert.Equal(6, neighbors.Count);
+        var expectedCoordinates = new HashSet<(int, int)>
+        {
+            (-2, 0), (2, 0), (-1, -1), (1, -1), (-1, 1), (1, 1)
+        };
+
+        int expectedTileFound = 0;
+
+        foreach (var tile in neighbors)
+        {
+            Assert.Contains((tile.X, tile.Y), expectedCoordinates);
+
+            if ((tile.Resource == ResourceType.Brick && tile.DiceNumber == 6) ||
+                (tile.Resource == ResourceType.Wood && tile.DiceNumber == 11) ||
+                (tile.Resource == ResourceType.Ore && tile.DiceNumber == 3) ||
+                (tile.Resource == ResourceType.Grain && tile.DiceNumber == 4) ||
+                (tile.Resource == ResourceType.Wood && tile.DiceNumber == 3) ||
+                (tile.Resource == ResourceType.Wool && tile.DiceNumber == 4))
+            {
+                expectedTileFound++;
+            }
+        }
+
+        Assert.Equal(6, expectedTileFound);
+    }
+
+    [Fact]
+    public void GetNeighborTiles_TopRight()
+    {
+        // Arrange
+        var tiles = BoardCreationHelpers.CreateTilesForStarterBoard();
+        var upperRightTile = tiles.GetRequiredTileAt(2, -2);
+
+        // Act
+        var neighbors = BoardCreationHelpers.GetNeighborTiles(upperRightTile, tiles);
+
+        // Assert
+        Assert.Equal(3, neighbors.Count);
+        var expectedCoordinates = new HashSet<(int, int)>
+        {
+            (0, -2), (1, -1), (3, -1)
+        };
+
+        int expectedTileFound = 0;
+
+        foreach (var tile in neighbors)
+        {
+            Assert.Contains((tile.X, tile.Y), expectedCoordinates);
+
+            if ((tile.Resource == ResourceType.Wool && tile.DiceNumber == 2) ||
+                (tile.Resource == ResourceType.Wool && tile.DiceNumber == 4) ||
+                (tile.Resource == ResourceType.Brick && tile.DiceNumber == 10))
+            {
+                expectedTileFound++;
+            }
+        }
+
+        Assert.Equal(3, expectedTileFound);
+    }
+
+    [Fact]
+    public void GetNeighborTiles_BottomCenter()
+    {
+        // Arrange
+        var tiles = BoardCreationHelpers.CreateTilesForStarterBoard();
+        var bottomCenterTile = tiles.GetRequiredTileAt(0, 2);
+
+        // Act
+        var neighbors = BoardCreationHelpers.GetNeighborTiles(bottomCenterTile, tiles);
+
+        // Assert
+        Assert.Equal(4, neighbors.Count);
+        var expectedCoordinates = new HashSet<(int, int)>
+        {
+            (-2, 2), (-1, 1), (1, 1), (2, 2)
+        };
+
+        int expectedTileFound = 0;
+
+        foreach (var tile in neighbors)
+        {
+            Assert.Contains((tile.X, tile.Y), expectedCoordinates);
+
+            if ((tile.Resource == ResourceType.Brick && tile.DiceNumber == 5) ||
+                (tile.Resource == ResourceType.Ore && tile.DiceNumber == 3) ||
+                (tile.Resource == ResourceType.Grain && tile.DiceNumber == 4) ||
+                (tile.Resource == ResourceType.Wool && tile.DiceNumber == 11))
+            {
+                expectedTileFound++;
+            }
+        }
+
+        Assert.Equal(4, expectedTileFound);
+    }
+
+    [Fact]
+    public void CreateEdgesAndVerticesForBoard_AllCreated()
+    {
+        // Arrange
+        var gameState = new GameState(new Guid());
+        
+        // TODO: provide a way to provide all tiles at once
+        foreach (var tile in BoardCreationHelpers.CreateTilesForStarterBoard())
+            gameState.AddTile(tile);
+
+        // Act
+        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gameState);
+
+        // Assert
+        Assert.Equal(72, gameState.Edges.Count);
+        Assert.Equal(54, gameState.Vertices.Count);   
     }
 }
