@@ -51,7 +51,7 @@ public class GameStateTests
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var edge = new Edge(new Player("PlayerA", PlayerColor.Red), tile);
+        var edge = new Edge(tile, HexDirection.NE);
         var expectedEdgeId = edge.Id;
 
         // Act

@@ -10,42 +10,42 @@ public class HexProximityTests
     public void GetDirectionOffset_NE()
     {
         // Assert
-        Assert.Equal((1, -1), HexProximity.GetDirectionOffset(HexProximity.Direction.NE));
+        Assert.Equal((1, -1), HexProximity.GetDirectionOffset(HexDirection.NE));
     }
 
     [Fact]
     public void GetDirectionOffset_E()
     {
         // Assert
-        Assert.Equal((2, 0), HexProximity.GetDirectionOffset(HexProximity.Direction.E));
+        Assert.Equal((2, 0), HexProximity.GetDirectionOffset(HexDirection.E));
     }
 
     [Fact]
     public void GetDirectionOffset_SE()
     {
         // Assert
-        Assert.Equal((1, 1), HexProximity.GetDirectionOffset(HexProximity.Direction.SE));
+        Assert.Equal((1, 1), HexProximity.GetDirectionOffset(HexDirection.SE));
     }
 
     [Fact]
     public void GetDirectionOffset_SW()
     {
         // Assert
-        Assert.Equal((-1, 1), HexProximity.GetDirectionOffset(HexProximity.Direction.SW));
+        Assert.Equal((-1, 1), HexProximity.GetDirectionOffset(HexDirection.SW));
     }
 
     [Fact]
     public void GetDirectionOffset_W()
     {
         // Assert
-        Assert.Equal((-2, 0), HexProximity.GetDirectionOffset(HexProximity.Direction.W));
+        Assert.Equal((-2, 0), HexProximity.GetDirectionOffset(HexDirection.W));
     }
 
     [Fact]
     public void GetDirectionOffset_NW()
     {
         // Assert
-        Assert.Equal((-1, -1), HexProximity.GetDirectionOffset(HexProximity.Direction.NW));
+        Assert.Equal((-1, -1), HexProximity.GetDirectionOffset(HexDirection.NW));
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class HexProximityTests
         var origin = (-1, -1);
 
         // Act
-        var result = HexProximity.GetCoordinates(origin, HexProximity.Direction.SE);
+        var result = HexProximity.GetCoordinates(origin, HexDirection.SE);
 
         // Assert
         Assert.Equal((0, 0), result);
@@ -68,7 +68,7 @@ public class HexProximityTests
         var origin = (4, 0);
 
         // Act
-        var result = HexProximity.GetCoordinates(origin, HexProximity.Direction.W);
+        var result = HexProximity.GetCoordinates(origin, HexDirection.W);
 
         // Assert
         Assert.Equal((2, 0), result);
@@ -78,19 +78,19 @@ public class HexProximityTests
     public void GetPrecedingDirection_FromNE()
     {
         // Act
-        var result = HexProximity.getPrecedingDirection(HexProximity.Direction.NE);
+        var result = HexProximity.getPrecedingDirection(HexDirection.NE);
 
         // Assert
-        Assert.Equal(HexProximity.Direction.NW, result);
+        Assert.Equal(HexDirection.NW, result);
     }
 
     [Fact]
     public void GetPrecedingDirection_FromE()
     {
         // Act
-        var result = HexProximity.getPrecedingDirection(HexProximity.Direction.E);
+        var result = HexProximity.getPrecedingDirection(HexDirection.E);
 
         // Assert
-        Assert.Equal(HexProximity.Direction.NE, result);
+        Assert.Equal(HexDirection.NE, result);
     }
 }

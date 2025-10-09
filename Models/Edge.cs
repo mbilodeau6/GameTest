@@ -19,29 +19,45 @@ public class Edge
     public Vertex[] Vertices { get; } = new Vertex[2];
 
     // References to up to two adjacent tiles (nullable)
-    public Tile[] Tiles { get; }
+    public List<Tile> Tiles { get; }
 
-    public Edge(Player owner, Tile t1, Tile? t2 = null)
+    public HexDirection Direction { get; }
+
+    private Edge(Tile t1)
     {
         Id = $"E{Interlocked.Increment(ref s_nextId)}";
 
-        var tileList = new List<Tile> { t1 ?? throw new ArgumentNullException(nameof(t1)) };
+        Tiles = new List<Tile>();
+        Tiles.Add(t1 ?? throw new ArgumentNullException(nameof(t1)));
+    }
 
-        if (t2 != null)
-            tileList.Add(t2);
-
-        // Convert the list to an array, ensuring no nulls
-        Tiles = tileList.ToArray();
-
-        Tiles[0] = t1;
-
-        if (t2 != null)
-            Tiles[1] = t2;
-
+    // TODO: Remove version that creates new edge with owner once I add method to add/remove roads.
+    public Edge(Player owner, Tile t1, Tile t2) : this(t1, t2)
+    {
         Owner = owner;
     }
 
+    public Edge(Tile t1, HexDirection direction) : this(t1)
+    {
+        Direction = direction;
+    }
+
+    public Edge(Tile t1, Tile t2) : this(t1)
+    {
+        if (t2 != null)
+            Tiles.Add(t2);
+    }
+
     // TODO: Consider adding methods to add/remove vertices with validation
+
+    public bool ConnectsTiles(string tileId1, string tileId2)
+    {
+        if (Tiles.Count == 1)
+            return false;
+
+        return (Tiles[0].Id == tileId1 && Tiles[1].Id == tileId2) ||
+               (Tiles[0].Id == tileId2 && Tiles[1].Id == tileId1);
+    }
 
     public override string ToString()
     {

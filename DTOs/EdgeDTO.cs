@@ -11,7 +11,9 @@ public class EdgeDTO
     public EdgeDTO(Edge edge)
     {
         Id = edge.Id;
-        PlayerId = edge.Owner.Id;
+
+        if (edge.Owner != null)
+            PlayerId = edge.Owner.Id;
 
         var tileIdList = new List<string>();
 

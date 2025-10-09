@@ -1,6 +1,5 @@
 using GameTest.Models;
 
-
 namespace GameTest.Services;
 
 public static class BoardCreationHelpers
@@ -108,27 +107,6 @@ public static class BoardCreationHelpers
         return tiles;
     }
 
-    public static List<Tile> GetNeighborTiles(Tile tile, List<Tile> tiles)
-    {
-        var neighbors = new List<Tile>();
-
-        var directions = new (int dx, int dy)[]
-        {
-            (tile.X+1, tile.Y-1), (tile.X+2, tile.Y), (tile.X+1, tile.Y+1), (tile.X-1, tile.Y+1), (tile.X-2, tile.Y), (tile.X-1, tile.Y-1)
-        };
-
-        foreach (var (dx, dy) in directions)
-        {
-            var neighbor = tiles.FirstOrDefault(t => t.X == dx && t.Y == dy);
-            if (neighbor != null)
-            {
-                neighbors.Add(neighbor);
-            }
-        }
-
-        return neighbors;
-    }
-
     public static void CreateEdgesAndVerticesForBoard(GameState gameState)
     {
         var stack = new Stack<Tile>();
@@ -138,18 +116,30 @@ public static class BoardCreationHelpers
         {
             var tile = stack.Pop();
 
-            var neighbors = GetNeighborTiles(tile, gameState.Tiles);
-
-            foreach(var neighborTile in neighbors)
+            foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection)))
             {
-                if (!gameState.Tiles.Contains(tile))
+                var neighborCoordinates = HexProximity.GetCoordinates((tile.X, tile.Y), dir);
+                var neighborTile = gameState.Tiles.FirstOrDefault(t => t.X == neighborCoordinates.Item1 && t.Y == neighborCoordinates.Item2);
+                if (neighborTile != null)
                 {
-                    gameState.AddTile(tile);
-                    stack.Push(tile);
+                    if (!gameState.Edges.Any(e => e.ConnectsTiles(tile.Id, neighborTile.Id)))
+                    {
+                        var edge = new Edge(tile, neighborTile);
+                        gameState.AddEdge(edge);
+                        stack.Push(neighborTile);
+                    }
+                }
+                else
+                {
+                    if (!gameState.Edges.Any(e => e.Tiles[0].Id == tile.Id && e.Direction == dir))
+                    {
+                        var edge = new Edge(tile, dir);
+                        gameState.AddEdge(edge);
+                    }
                 }
             }
 
-            // TODO: Finish implementation
+            // TODO: Add code to add vertices
         }
 
     }

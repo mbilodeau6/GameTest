@@ -18,13 +18,13 @@ public class GameStateDTOTests
         gameState.Players.Add(player2);
 
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
-        var tile2 = new Tile(ResourceType.Wood, 5, -1, 0);
+        var tile2 = new Tile(ResourceType.Wood, 5, -1, -1);
         gameState.Tiles.Add(tile1);
         gameState.Tiles.Add(tile2);
 
         gameState.Edges.Add(new Edge(player1, tile1, tile2));
-        gameState.Edges.Add(new Edge(player2, tile1));
-        gameState.Edges.Add(new Edge(player1, tile2));
+        gameState.Edges.Add(new Edge(tile1, HexDirection.NE));
+        gameState.Edges.Add(new Edge(tile2, HexDirection.SW));
 
         gameState.Vertices.Add(new Vertex(player2, tile1, tile2));
 
