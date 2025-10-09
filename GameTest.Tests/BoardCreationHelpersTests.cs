@@ -89,6 +89,29 @@ public class BoardCreationHelpersTests
     }
 
     [Fact]
+    public void CreateTilesForTestBoard_CorrectTiles()
+    {
+        // Act
+        var tiles = BoardCreationHelpers.CreateTilesForTestBoard();
+
+        // Assert
+        Assert.Equal(7, tiles.Count);
+        Assert.Equal(ResourceType.Desert, tiles.GetRequiredTileAt(-1, -1).Resource);
+        Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(1, -1).Resource);
+        Assert.Equal(8, tiles.GetRequiredTileAt(1, -1).DiceNumber);
+        Assert.Equal(ResourceType.Brick, tiles.GetRequiredTileAt(-2, 0).Resource);
+        Assert.Equal(5, tiles.GetRequiredTileAt(-2, 0).DiceNumber);
+        Assert.Equal(ResourceType.Grain, tiles.GetRequiredTileAt(0, 0).Resource);
+        Assert.Equal(10, tiles.GetRequiredTileAt(0, 0).DiceNumber);
+        Assert.Equal(ResourceType.Ore, tiles.GetRequiredTileAt(2, 0).Resource);
+        Assert.Equal(3, tiles.GetRequiredTileAt(2, 0).DiceNumber);
+        Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(-1, 1).Resource);
+        Assert.Equal(2, tiles.GetRequiredTileAt(-1, 1).DiceNumber);
+        Assert.Equal(ResourceType.Wood, tiles.GetRequiredTileAt(1, 1).Resource);
+        Assert.Equal(6, tiles.GetRequiredTileAt(1, 1).DiceNumber);
+    }
+
+    [Fact]
     public void GetNeighborTiles_Center()
     {
         // Arrange
@@ -192,6 +215,24 @@ public class BoardCreationHelpersTests
         }
 
         Assert.Equal(4, expectedTileFound);
+    }
+
+    [Fact]
+    public void CreateEdgesAndVerticesForTestBoard_AllCreated()
+    {
+        // Arrange
+        var gameState = new GameState(new Guid());
+        
+        // TODO: provide a way to provide all tiles at once
+        foreach (var tile in BoardCreationHelpers.CreateTilesForTestBoard())
+            gameState.AddTile(tile);
+
+        // Act
+        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gameState);
+
+        // Assert
+        Assert.Equal(30, gameState.Edges.Count);
+        Assert.Equal(24, gameState.Vertices.Count);   
     }
 
     [Fact]

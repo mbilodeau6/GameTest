@@ -92,15 +92,29 @@ public static class BoardCreationHelpers
         return tiles;
     }
 
-    public static Stack<Tile> GetNeighborTiles(Tile tile, List<Tile> tiles)
+    public static List<Tile> CreateTilesForTestBoard()
     {
-        var stack = new Stack<Tile>();
+        List<Tile> tiles = new List<Tile>
+        {
+            new Tile(ResourceType.Desert, 0, -1, -1),
+            new Tile(ResourceType.Wool, 8, 1, -1),
+            new Tile(ResourceType.Brick, 5, -2, 0),
+            new Tile(ResourceType.Grain, 10, 0, 0),
+            new Tile(ResourceType.Ore, 3, 2, 0),
+            new Tile(ResourceType.Wool, 2, -1, 1),
+            new Tile(ResourceType.Wood, 6, 1, 1),
+        };
+
+        return tiles;
+    }
+
+    public static List<Tile> GetNeighborTiles(Tile tile, List<Tile> tiles)
+    {
+        var neighbors = new List<Tile>();
 
         var directions = new (int dx, int dy)[]
         {
-            (tile.X-2, tile.Y), (tile.X+2, tile.Y),
-            (tile.X-1, tile.Y-1), (tile.X+1, tile.Y-1),
-            (tile.X-1, tile.Y+1), (tile.X+1, tile.Y+1)
+            (tile.X+1, tile.Y-1), (tile.X+2, tile.Y), (tile.X+1, tile.Y+1), (tile.X-1, tile.Y+1), (tile.X-2, tile.Y), (tile.X-1, tile.Y-1)
         };
 
         foreach (var (dx, dy) in directions)
@@ -108,11 +122,11 @@ public static class BoardCreationHelpers
             var neighbor = tiles.FirstOrDefault(t => t.X == dx && t.Y == dy);
             if (neighbor != null)
             {
-                stack.Push(neighbor);
+                neighbors.Add(neighbor);
             }
         }
 
-        return stack;
+        return neighbors;
     }
 
     public static void CreateEdgesAndVerticesForBoard(GameState gameState)
@@ -125,6 +139,15 @@ public static class BoardCreationHelpers
             var tile = stack.Pop();
 
             var neighbors = GetNeighborTiles(tile, gameState.Tiles);
+
+            foreach(var neighborTile in neighbors)
+            {
+                if (!gameState.Tiles.Contains(tile))
+                {
+                    gameState.AddTile(tile);
+                    stack.Push(tile);
+                }
+            }
 
             // TODO: Finish implementation
         }
