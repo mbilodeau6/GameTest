@@ -151,4 +151,39 @@ public class VertexTests
 
         Assert.Equal(expectedResult, result);
     }
+
+    [Fact]
+    public void ConnectsTiles_OnlyTwo()
+    {
+        // Arrange
+        var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        var tile2 = new Tile(ResourceType.Ore, 6, 2, 0);
+        var vertex = new Vertex(tile1, tile2);
+
+        // Assert
+        Assert.True(vertex.ConnectsTiles(tile1, tile2));
+        Assert.True(vertex.ConnectsTiles(tile2, tile1));
+        Assert.False(vertex.ConnectsTiles(tile1, tile2, new Tile(ResourceType.Wood, 4, 1, -1)));
+    }
+
+    [Fact]
+    public void ConnectsTiles_AllThree()
+    {
+        // Arrange
+        var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        var tile2 = new Tile(ResourceType.Ore, 6, 2, 0);
+        var tile3 = new Tile(ResourceType.Wood, 4, 1, -1);
+        var vertex = new Vertex(tile1, tile2, tile3);
+
+        // Assert
+        Assert.True(vertex.ConnectsTiles(tile1, tile2, tile3));
+        Assert.True(vertex.ConnectsTiles(tile1, tile3, tile2));
+        Assert.True(vertex.ConnectsTiles(tile2, tile1, tile3));
+        Assert.True(vertex.ConnectsTiles(tile2, tile3, tile1));
+        Assert.True(vertex.ConnectsTiles(tile3, tile1, tile2));
+        Assert.True(vertex.ConnectsTiles(tile3, tile2, tile1));
+        Assert.False(vertex.ConnectsTiles(tile1, tile2));
+        Assert.False(vertex.ConnectsTiles(tile1, tile3)); 
+    }
+
 }

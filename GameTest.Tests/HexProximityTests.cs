@@ -93,4 +93,64 @@ public class HexProximityTests
         // Assert
         Assert.Equal(HexDirection.NE, result);
     }
+
+    [Fact]
+    public void GetVertexDirectionForEdgeDirection_FromNE()
+    {
+        // Act
+        var result = HexProximity.GetVertexDirectionForEdgeDirection(HexDirection.NE);
+
+        // Assert
+        Assert.Equal(VertexDirection.N, result);
+    }
+
+    [Fact] 
+    public void GetVertexDirectionForEdgeDirection_FromE()
+    {
+        // Act
+        var result = HexProximity.GetVertexDirectionForEdgeDirection(HexDirection.E);
+
+        // Assert
+        Assert.Equal(VertexDirection.NE, result);
+    }
+
+    [Fact] 
+    public void GetVertexDirectionForEdgeDirection_FromSE()
+    {
+        // Act
+        var result = HexProximity.GetVertexDirectionForEdgeDirection(HexDirection.SE);
+
+        // Assert
+        Assert.Equal(VertexDirection.SE, result);
+    }
+
+    [Fact] 
+    public void GetVertexDirectionForEdgeDirection_FromSW()
+    {
+        // Act
+        var result = HexProximity.GetVertexDirectionForEdgeDirection(HexDirection.SW);
+
+        // Assert
+        Assert.Equal(VertexDirection.S, result);
+    }
+
+    [Fact] 
+    public void GetVertexDirectionForEdgeDirection_FromW()
+    {
+        // Act
+        var result = HexProximity.GetVertexDirectionForEdgeDirection(HexDirection.W);
+
+        // Assert
+        Assert.Equal(VertexDirection.SW, result);
+    }
+
+    [Fact] 
+    public void GetVertexDirectionForEdgeDirection_FromNW()
+    {
+        // Act
+        var result = HexProximity.GetVertexDirectionForEdgeDirection(HexDirection.NW);
+
+        // Assert
+        Assert.Equal(VertexDirection.NW, result);
+    }
 }

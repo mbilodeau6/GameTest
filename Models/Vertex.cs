@@ -73,6 +73,18 @@ public class Vertex
         Building = BuildingType.Settlement;
     }
 
+    public Boolean ConnectsTiles(Tile tile1, Tile tile2, Tile? tile3 = null)
+    {
+        if (tile3 == null && Tiles.Count == 3)
+            return false;
+
+        bool hasTile1 = Tiles.Any(t => t.Id == tile1.Id);
+        bool hasTile2 = Tiles.Any(t => t.Id == tile2.Id);
+        bool hasTile3 = tile3 == null || Tiles.Any(t => t.Id == tile3.Id);
+
+        return hasTile1 && hasTile2 && hasTile3;
+    }
+
     public override string ToString()
     {
         string buildingType = Building == BuildingType.Settlement ? "S" : "C";

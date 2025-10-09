@@ -137,9 +137,46 @@ public static class BoardCreationHelpers
                         gameState.AddEdge(edge);
                     }
                 }
-            }
 
-            // TODO: Add code to add vertices
+                var neighbor2Coordinates = HexProximity.GetCoordinates((tile.X, tile.Y), HexProximity.getPrecedingDirection(dir));
+                var neighbor2Tile = gameState.Tiles.FirstOrDefault(t => t.X == neighbor2Coordinates.Item1 && t.Y == neighbor2Coordinates.Item2);
+                var vertexDir = HexProximity.GetVertexDirectionForEdgeDirection(dir);
+
+                // If no neighboring tiles, create vertex with just this tile and direction
+                if (neighborTile == null && neighbor2Tile == null)
+                {
+                    if (!gameState.Vertices.Any(v => v.Tiles[0].Id == tile.Id && v.Direction == vertexDir))
+                    {
+                        var vertex = new Vertex(tile, vertexDir);
+                        gameState.AddVertex(vertex);
+                    }
+                }
+                // Otherwise, create vertex with this tile and any neighboring tiles
+                else if (neighborTile != null && neighbor2Tile != null)
+                {
+                    if (!gameState.Vertices.Any(v => v.ConnectsTiles(tile, neighborTile, neighbor2Tile)))
+                    {
+                        var vertex = new Vertex(tile, neighborTile, neighbor2Tile);
+                        gameState.AddVertex(vertex);
+                    }
+                }
+                else if (neighborTile != null)
+                {
+                    if (!gameState.Vertices.Any(v => v.ConnectsTiles(tile, neighborTile)))
+                    {
+                        var vertex = new Vertex(tile, neighborTile);
+                        gameState.AddVertex(vertex);
+                    }
+                }
+                else if (neighbor2Tile != null)
+                {
+                    if (!gameState.Vertices.Any(v => v.ConnectsTiles(tile, neighbor2Tile)))
+                    {
+                        var vertex = new Vertex(tile, neighbor2Tile);
+                        gameState.AddVertex(vertex);
+                    }
+                }
+            }
         }
 
     }

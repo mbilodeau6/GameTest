@@ -116,7 +116,7 @@ public class BoardCreationHelpersTests
     {
         // Arrange
         var gameState = new GameState(new Guid());
-        
+
         // TODO: provide a way to provide all tiles at once
         foreach (var tile in BoardCreationHelpers.CreateTilesForTestBoard())
             gameState.AddTile(tile);
@@ -126,7 +126,9 @@ public class BoardCreationHelpersTests
 
         // Assert
         Assert.Equal(30, gameState.Edges.Count);
-        Assert.Equal(24, gameState.Vertices.Count);   
+        Assert.Equal(24, gameState.Vertices.Count);
+        
+        // TODO: Need to check more than just the count
     }
 
     [Fact]
@@ -134,7 +136,7 @@ public class BoardCreationHelpersTests
     {
         // Arrange
         var gameState = new GameState(new Guid());
-        
+
         // TODO: provide a way to provide all tiles at once
         foreach (var tile in BoardCreationHelpers.CreateTilesForStarterBoard())
             gameState.AddTile(tile);
@@ -145,5 +147,7 @@ public class BoardCreationHelpersTests
         // Assert
         Assert.Equal(72, gameState.Edges.Count);
         Assert.Equal(54, gameState.Vertices.Count);   
+        
+        // TODO: Need to check more than just the count
     }
 }

@@ -28,4 +28,18 @@ public class HexProximity
     {
         return dir == HexDirection.NE ? HexDirection.NW : dir - 1;
     }
+
+    public static VertexDirection GetVertexDirectionForEdgeDirection(HexDirection edgeDir)
+    {
+        return edgeDir switch
+        {
+            HexDirection.NE => VertexDirection.N,
+            HexDirection.E => VertexDirection.NE,
+            HexDirection.SE => VertexDirection.SE,
+            HexDirection.SW => VertexDirection.S,
+            HexDirection.W => VertexDirection.SW,
+            HexDirection.NW => VertexDirection.NW,
+            _ => throw new ArgumentOutOfRangeException(nameof(edgeDir), edgeDir, null)
+        };
+    }
 }
