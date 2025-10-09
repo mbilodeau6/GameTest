@@ -45,7 +45,7 @@ public class GameState
     {
         Vertices.Add(vertex);
     }
-    
+
     public void SetRobberTile(string tileId)
     {
         if (tileId.Equals(RobberTileId, StringComparison.OrdinalIgnoreCase))
@@ -55,5 +55,14 @@ public class GameState
             throw new ArgumentException("The specified tile does not exist in the game.");
 
         RobberTileId = tileId;
+    }
+    
+    public void PlaceRobberOnDesert()
+    {
+        var desertTile = Tiles.FirstOrDefault(t => t.Resource == ResourceType.Desert);
+        if (desertTile == null)
+            throw new InvalidOperationException("No desert tile found in the game.");
+
+        RobberTileId = desertTile.Id;
     }
 }

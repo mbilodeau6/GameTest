@@ -116,10 +116,14 @@ public class BoardCreationHelpersTests
     {
         // Arrange
         var gameState = new GameState(new Guid());
+        gameState.Players.Add(new Player("Alice", PlayerColor.Red));
+        gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
 
         // TODO: provide a way to provide all tiles at once
         foreach (var tile in BoardCreationHelpers.CreateTilesForTestBoard())
             gameState.AddTile(tile);
+
+        gameState.PlaceRobberOnDesert();
 
         // Act
         BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gameState);
@@ -127,27 +131,55 @@ public class BoardCreationHelpersTests
         // Assert
         Assert.Equal(30, gameState.Edges.Count);
         Assert.Equal(24, gameState.Vertices.Count);
-        
-        // TODO: Need to check more than just the count
+        Assert.True(TestHelpers.IsGameStateValid(gameState));
+
+        // Check specific edges and vertices
+        // Check that inner tile at (0,0) has edges and vertices connected correctly
+        var t1 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 0);
+        var t2 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 2, 0);
+        var t3 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 1, -1);
+        Assert.NotNull(gameState.Edges.FirstOrDefault(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t2)));
+        Assert.NotNull(gameState.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Tiles.Contains(t2) && v.Tiles.Contains(t3)));
+
+        // Check that corner tile at (-2,0) has edges and vertices connected correctly
+        var t4 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, -2, 0);
+        Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t4)));
+        Assert.Equal(3, gameState.Edges.Count(e => e.Tiles.Contains(t4) && e.Direction != null));
+        Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t4)));
+        Assert.Equal(2, gameState.Vertices.Count(v => v.Tiles.Contains(t4) && v.Direction != null));
+        Assert.NotNull(gameState.Edges.FirstOrDefault(e => e.Tiles.Contains(t4) && e.Direction == HexDirection.W));
     }
 
     [Fact]
-    public void CreateEdgesAndVerticesForBoard_AllCreated()
+    public void CreateEdgesAndVerticesForStarterBoard_AllCreated()
     {
         // Arrange
         var gameState = new GameState(new Guid());
+        gameState.Players.Add(new Player("Alice", PlayerColor.Red));
+        gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
+
 
         // TODO: provide a way to provide all tiles at once
         foreach (var tile in BoardCreationHelpers.CreateTilesForStarterBoard())
             gameState.AddTile(tile);
+
+        gameState.PlaceRobberOnDesert();
 
         // Act
         BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gameState);
 
         // Assert
         Assert.Equal(72, gameState.Edges.Count);
-        Assert.Equal(54, gameState.Vertices.Count);   
-        
-        // TODO: Need to check more than just the count
+        Assert.Equal(54, gameState.Vertices.Count);
+        Assert.True(TestHelpers.IsGameStateValid(gameState));
+
+        // Check that corner tile at (0, 2) has edges and vertices connected correctly
+        var t1 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 2);
+        Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t1)));
+        Assert.Equal(2, gameState.Edges.Count(e => e.Tiles.Contains(t1) && e.Direction != null));
+        Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t1)));
+        var v1 = gameState.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Direction != null);
+        Assert.NotNull(v1);
+        Assert.Equal(VertexDirection.S, v1.Direction);
     }
 }

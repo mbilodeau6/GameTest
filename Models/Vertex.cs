@@ -13,7 +13,7 @@ public class Vertex
     private static int s_nextId;
 
     public string Id { get; init; }
-    public BuildingType Building { get; private set; }
+    public BuildingType? Building { get; private set; }
     public Player? Owner { get; set; }
     public VertexDirection? Direction { get; init; }
 

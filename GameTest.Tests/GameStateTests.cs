@@ -96,7 +96,7 @@ public class GameStateTests
 
         // Assert
         Assert.Equal(tileId, game.RobberTileId);
-    } 
+    }
 
     [Fact]
     public void SetRobberTileId_NonexistentTile()
@@ -112,7 +112,7 @@ public class GameStateTests
             game.SetRobberTile("TX"));
 
         Assert.Equal("The specified tile does not exist in the game.", exception.Message);
-    } 
+    }
 
     [Fact]
     public void SetRobberTileId_AlreadySet()
@@ -129,5 +129,49 @@ public class GameStateTests
             game.SetRobberTile(tileId));
 
         Assert.Equal("Robber is already on the specified tile.", exception.Message);
-    } 
+    }
+
+    [Fact]
+    public void PlaceRobberOnDesert_OneDesert()
+    {
+        // Arrange
+        var desertTile = new Tile(ResourceType.Desert, 0, 0, 0);
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(desertTile);
+
+        // Act
+        game.PlaceRobberOnDesert();
+
+        // Assert
+        Assert.Equal(desertTile.Id, game.RobberTileId);
+    }
+
+    [Fact]
+    public void PlaceRobberOnDesert_TwoDeserts()
+    {
+        // Arrange
+        var desertTile1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var desertTile2 = new Tile(ResourceType.Desert, 0, 1, -1);
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(desertTile1);
+        game.AddTile(desertTile2);
+
+        // Assert
+        game.PlaceRobberOnDesert();
+
+        Assert.True(game.RobberTileId == desertTile1.Id || game.RobberTileId == desertTile2.Id);
+    }
+
+    [Fact]
+    public void PlaceRobberOnDesert_NoDesert_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(tile);
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => game.PlaceRobberOnDesert());
+        Assert.Equal("No desert tile found in the game.", exception.Message);
+    }
 }
