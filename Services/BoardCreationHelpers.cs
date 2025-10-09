@@ -31,7 +31,7 @@ public static class BoardCreationHelpers
 
         var xCoordinates = new List<int>
         {
-            -1, -2, -2, -2, -1, 0, 1, 2, 2, 2, 1, 0, -1, -1, -1, 1, 1, 1, 0
+            -2, -3, -4, -3, -2, 0, 2, 3, 4, 3, 2, 0, -1, -2, -1, 1, 2, 1, 0
         };
 
         var yCoordinates = new List<int>
@@ -65,23 +65,23 @@ public static class BoardCreationHelpers
     {
         List<Tile> tiles = new List<Tile>
         {
-            new Tile(ResourceType.Ore, 10, -1, -2),
-            new Tile(ResourceType.Grain, 12, -2, -1),
-            new Tile(ResourceType.Grain, 9, -2, 0),
-            new Tile(ResourceType.Wood, 8, -2, 1),
-            new Tile(ResourceType.Brick, 5, -1, 2),
+            new Tile(ResourceType.Ore, 10, -2, -2),
+            new Tile(ResourceType.Grain, 12, -3, -1),
+            new Tile(ResourceType.Grain, 9, -4, 0),
+            new Tile(ResourceType.Wood, 8, -3, 1),
+            new Tile(ResourceType.Brick, 5, -2, 2),
             new Tile(ResourceType.Grain, 6, 0, 2),
-            new Tile(ResourceType.Wool, 11, 1, 2),
-            new Tile(ResourceType.Wool, 5, 2, 1),
-            new Tile(ResourceType.Ore, 8, 2, 0),
-            new Tile(ResourceType.Brick, 10, 2, -1),
-            new Tile(ResourceType.Wood, 9, 1, -2),
+            new Tile(ResourceType.Wool, 11, 3, 2),
+            new Tile(ResourceType.Wool, 5, 3, 1),
+            new Tile(ResourceType.Ore, 8, 4, 0),
+            new Tile(ResourceType.Brick, 10, 3, -1),
+            new Tile(ResourceType.Wood, 9, 2, -2),
             new Tile(ResourceType.Wool, 2, 0, -2),
             new Tile(ResourceType.Brick, 6, -1, -1),
-            new Tile(ResourceType.Wood, 11, -1, 0),
+            new Tile(ResourceType.Wood, 11, -2, 0),
             new Tile(ResourceType.Ore, 3, -1, 1),
             new Tile(ResourceType.Grain, 4, 1, 1),
-            new Tile(ResourceType.Wood, 3, 1, 0),
+            new Tile(ResourceType.Wood, 3, 2, 0),
             new Tile(ResourceType.Wool, 4, 1, -1),
             new Tile(ResourceType.Desert, 7, 0, 0), // Desert tile
         };

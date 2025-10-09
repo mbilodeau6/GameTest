@@ -86,10 +86,10 @@ public class BoardCreationHelpersTests
         Assert.Equal(6, tiles.GetRequiredTileAt(-1, -1).DiceNumber);
         Assert.Equal(ResourceType.Grain, tiles.GetRequiredTileAt(0, 2).Resource);
         Assert.Equal(6, tiles.GetRequiredTileAt(0, 2).DiceNumber);
-        Assert.Equal(ResourceType.Ore, tiles.GetRequiredTileAt(2, 0).Resource);
-        Assert.Equal(8, tiles.GetRequiredTileAt(2, 0).DiceNumber);
-        Assert.Equal(ResourceType.Wood, tiles.GetRequiredTileAt(-2, 1).Resource);
-        Assert.Equal(8, tiles.GetRequiredTileAt(-2, 1).DiceNumber);
+        Assert.Equal(ResourceType.Ore, tiles.GetRequiredTileAt(4, 0).Resource);
+        Assert.Equal(8, tiles.GetRequiredTileAt(4, 0).DiceNumber);
+        Assert.Equal(ResourceType.Wood, tiles.GetRequiredTileAt(-3, 1).Resource);
+        Assert.Equal(8, tiles.GetRequiredTileAt(-3, 1).DiceNumber);
         Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(0, -2).Resource);
         Assert.Equal(2, tiles.GetRequiredTileAt(0, -2).DiceNumber);
     }
