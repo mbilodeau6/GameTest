@@ -14,33 +14,47 @@ public class Vertex
 
     public string Id { get; init; }
     public BuildingType Building { get; private set; }
-    public Player Owner { get; set; }
+    public Player? Owner { get; set; }
+    public VertexDirection? Direction { get; init; }
 
 
     // Up to two edges that meet at this vertex
     public Edge?[] Edges { get; } = new Edge?[2];
 
     // Up to three tiles that touch this vertex
-    public Tile[] Tiles { get; }
+    public List<Tile> Tiles { get; }
 
-    // Parameterless ctor for serializers
-    public Vertex(Player owner, Tile tile1, Tile? tile2 = null, Tile? tile3 = null)
+    private Vertex(Tile tile1)
+    {
+        Id = $"V{Interlocked.Increment(ref s_nextId)}";
+        Tiles = new List<Tile>();
+        Tiles.Add(tile1 ?? throw new ArgumentNullException(nameof(tile1)));
+    }
+
+    public Vertex(Tile tile1, VertexDirection direction) : this(tile1)
+    {
+        Direction = direction;
+    }
+
+    public Vertex(Tile tile1, Tile tile2, Tile? tile3 = null) : this(tile1)
+    {
+        Tiles.Add(tile2 ?? throw new ArgumentNullException(nameof(tile2)));
+
+        if (tile3 != null)
+            Tiles.Add(tile3);
+    }
+
+    // TODO: Remove version that creates new vertex with owner once I add method to add/remove settlements/cities.
+    public Vertex(Player owner, Tile tile1, Tile? tile2 = null, Tile? tile3 = null) : this(tile1)
     {
         Owner = owner;
         Building = BuildingType.Settlement;
 
-        // Use a list to collect non-null tiles
-        var tileList = new List<Tile> { tile1 ?? throw new ArgumentNullException(nameof(tile1)) };
-
         if (tile2 != null)
-            tileList.Add(tile2);
+            Tiles.Add(tile2);
 
         if (tile3 != null)
-            tileList.Add(tile3);
-
-        Tiles = tileList.ToArray();
-
-        Id = $"V{Interlocked.Increment(ref s_nextId)}";
+            Tiles.Add(tile3);
     }
 
     // TODO: Consider adding methods to add/remove edges with validation

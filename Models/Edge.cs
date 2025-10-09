@@ -12,7 +12,7 @@ public class Edge
     private static int s_nextId;
 
     public string Id { get; init; }
-    public Player Owner { get; init; }
+    public Player? Owner { get; init; }
     // TODO: If I want to support ships, may need EdgeType (Road, ShipRoute)
 
     // References to the two vertices this edge connects (required)
@@ -21,7 +21,7 @@ public class Edge
     // References to up to two adjacent tiles (nullable)
     public List<Tile> Tiles { get; }
 
-    public HexDirection Direction { get; }
+    public HexDirection? Direction { get; }
 
     private Edge(Tile t1)
     {

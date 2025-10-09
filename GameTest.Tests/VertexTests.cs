@@ -6,7 +6,7 @@ namespace GameTest.Tests;
 public class VertexTests
 {
     [Fact]
-    public void Constructor_VertexOfSingleTile_CreatesExpectedVertex()
+    public void Constructor_VertexWithOwner_CreatesExpectedVertex()
     {
         // Arrange
         var player = new Player("Alice", PlayerColor.Blue);
@@ -22,19 +22,33 @@ public class VertexTests
     }
 
     [Fact]
+    public void Constructor_VertexOfSingleTile_CreatesExpectedVertex()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+
+        // Act
+        var vertex = new Vertex(tile, VertexDirection.N);
+
+        // Assert
+        Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
+        Assert.Single(vertex.Tiles);
+        Assert.All(vertex.Tiles, t => Assert.NotNull(t));
+    }
+
+    [Fact]
     public void Constructor_VertexWith2Tiles_CreatesExpectedVertex()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Orange);
         var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var t2 = new Tile(ResourceType.Ore, 6, 1, 0);
 
         // Act
-        var vertex = new Vertex(player, t1, t2);
+        var vertex = new Vertex(t1, t2);
 
         // Assert
         Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
-        Assert.Equal(2, vertex.Tiles.Length);
+        Assert.Equal(2, vertex.Tiles.Count);
         Assert.All(vertex.Tiles, t => Assert.NotNull(t));
     }
 
@@ -42,17 +56,16 @@ public class VertexTests
     public void Constructor_VertexWith3Tiles_CreatesExpectedVertex()
     {
         // Arrange
-        var player = new Player("Frank", PlayerColor.Orange);
         var t1 = new Tile(ResourceType.Brick, 2, 0, 0);
         var t2 = new Tile(ResourceType.Ore, 6, 1, 0);
         var t3 = new Tile(ResourceType.Wood, 4, 0, 1);
 
         // Act
-        var vertex = new Vertex(player, t1, t2, t3);
+        var vertex = new Vertex(t1, t2, t3);
 
         // Assert
         Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
-        Assert.Equal(3, vertex.Tiles.Length);
+        Assert.Equal(3, vertex.Tiles.Count);
         Assert.All(vertex.Tiles, t => Assert.NotNull(t));
     }
 
