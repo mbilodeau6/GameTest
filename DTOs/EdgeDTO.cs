@@ -26,13 +26,13 @@ public class EdgeDTO
 
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
-    public EdgeDTO(string id, string playerId, string direction) //, List<string>? tileIds = null)
+    public EdgeDTO(string id, string playerId, string direction, List<string>? tileIds = null)
     {
         Id = id ?? string.Empty;
         PlayerId = playerId;
         Direction = direction;
-        // foreach (var tileId in tileIds ?? Enumerable.Empty<string>())
-        //     TileIds.Add(tileId);
+        foreach (var tileId in tileIds ?? Enumerable.Empty<string>())
+            TileIds.Add(tileId);
     }
 
 }

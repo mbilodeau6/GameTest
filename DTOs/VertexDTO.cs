@@ -29,12 +29,13 @@ public class VertexDTO
     
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
-    public VertexDTO(string id, string building, string playerId, string direction) //, string[] tileIds)
+    public VertexDTO(string id, string building, string playerId, string direction, List<string>? tileIds = null)
     {
         Id = id ?? string.Empty;
         Building = building;
         PlayerId = playerId;
         Direction = direction;
-        // TileIds = tileIds ?? Array.Empty<string>();
+        foreach (var tileId in tileIds ?? Enumerable.Empty<string>())
+            TileIds.Add(tileId);
     }
 }
