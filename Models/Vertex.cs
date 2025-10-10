@@ -58,6 +58,14 @@ public class Vertex
     }
 
     // TODO: Consider adding methods to add/remove edges with validation
+    public void BuildSettlement(Player owner)
+    {
+        if (Building != null)
+            throw new InvalidOperationException("A building already exists on this vertex.");
+
+        Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+        Building = BuildingType.Settlement;
+    }
 
     public void UpgradeToCity()
     {

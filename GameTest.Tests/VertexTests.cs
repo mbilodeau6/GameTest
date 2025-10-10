@@ -70,6 +70,64 @@ public class VertexTests
     }
 
     [Fact]
+    public void BuildSettlement_EmptyVertex_SetsOwnerAndBuilding()
+    {
+        // Arrange
+        var player = new Player("Alice", PlayerColor.Blue);
+        var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        var t2 = new Tile(ResourceType.Grain, 8, -1, -1);
+        var vertex = new Vertex(t1, t2);
+
+        // Act
+        vertex.BuildSettlement(player);
+
+        // Assert
+        Assert.Equal(player, vertex.Owner);
+        Assert.Equal(BuildingType.Settlement, vertex.Building);
+    }
+
+    [Fact]
+    public void BuildSettlement_VertexHasSettlement_ThrowsException()
+    {
+        // Arrange
+        var p1 = new Player("Alice", PlayerColor.Blue);
+        var p2 = new Player("Bob", PlayerColor.Red);
+
+        var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        var t2 = new Tile(ResourceType.Grain, 8, -1, -1);
+        var vertex = new Vertex(t1, t2);
+        vertex.BuildSettlement(p1);
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() => vertex.BuildSettlement(p2));
+        Assert.Equal("A building already exists on this vertex.", exception.Message);
+
+        // Assert
+        Assert.Equal(p1, vertex.Owner);
+        Assert.Equal(BuildingType.Settlement, vertex.Building);
+    }
+
+    [Fact]
+    public void BuildSettlement_VertexHasCity_ThrowsException()
+    {
+        // Arrange
+        var p1 = new Player("Alice", PlayerColor.Blue);
+
+        var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        var vertex = new Vertex(t1, VertexDirection.N);
+        vertex.BuildSettlement(p1);
+        vertex.UpgradeToCity();
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() => vertex.BuildSettlement(p1));
+        Assert.Equal("A building already exists on this vertex.", exception.Message);
+
+        // Assert
+        Assert.Equal(p1, vertex.Owner);
+        Assert.Equal(BuildingType.City, vertex.Building);
+    }
+
+    [Fact]
     public void UpgradeToCity_ExistingSettlement_UpgradesBuildingToCity()
     {
         // Arrange

@@ -12,7 +12,7 @@ public class Edge
     private static int s_nextId;
 
     public string Id { get; init; }
-    public Player? Owner { get; init; }
+    public Player? Owner { get; private set; }
     // TODO: If I want to support ships, may need EdgeType (Road, ShipRoute)
 
     // References to the two vertices this edge connects (required)
@@ -57,6 +57,15 @@ public class Edge
 
         return (Tiles[0].Id == tileId1 && Tiles[1].Id == tileId2) ||
                (Tiles[0].Id == tileId2 && Tiles[1].Id == tileId1);
+    }
+
+    public bool BuildRoad(Player player)
+    {
+        if (Owner != null)
+            return false; // Edge already has an owner
+
+        Owner = player;
+        return true;
     }
 
     public override string ToString()
