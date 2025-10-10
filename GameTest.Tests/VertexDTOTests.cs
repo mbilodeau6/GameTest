@@ -22,7 +22,7 @@ public class VertexDTOTests
 
         // Assert
         Assert.Equal(vertex.Id, dto.Id);
-        Assert.Equal(3, dto.TileIds.Length);
+        Assert.Equal(3, dto.TileIds.Count);
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
         Assert.Contains(tile3.Id, dto.TileIds);
@@ -45,7 +45,7 @@ public class VertexDTOTests
 
         // Assert
         Assert.Equal(vertex.Id, dto.Id);
-        Assert.Equal(2, dto.TileIds.Length);
+        Assert.Equal(2, dto.TileIds.Count);
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
         Assert.Null(dto.Building);
@@ -70,7 +70,7 @@ public class VertexDTOTests
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Null(dto.Building);
         Assert.Null(dto.PlayerId);
-        Assert.Equal(VertexDirection.N, dto.Direction);
+        Assert.Equal(VertexDirection.N.ToString(), dto.Direction);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class VertexDTOTests
 
         // Assert
         Assert.Equal(vertex.Id, dto.Id);
-        Assert.Equal(3, dto.TileIds.Length);
+        Assert.Equal(3, dto.TileIds.Count);
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
         Assert.Contains(tile3.Id, dto.TileIds);
@@ -116,7 +116,7 @@ public class VertexDTOTests
 
         // Assert
         Assert.Equal(vertex.Id, dto.Id);
-        Assert.Equal(2, dto.TileIds.Length);
+        Assert.Equal(2, dto.TileIds.Count);
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
         Assert.Equal(BuildingType.City.ToString(), dto.Building);
@@ -143,6 +143,6 @@ public class VertexDTOTests
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Equal(BuildingType.Settlement.ToString(), dto.Building);
         Assert.Equal(owner.Id, dto.PlayerId);
-        Assert.Equal(VertexDirection.N, dto.Direction);
+        Assert.Equal(VertexDirection.N.ToString(), dto.Direction);
     }
 }

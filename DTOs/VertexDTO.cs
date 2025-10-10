@@ -8,8 +8,8 @@ public class VertexDTO
     public string Id { get; init; }
     public string? Building { get; init; }
     public string? PlayerId { get; init; }
-    public VertexDirection? Direction { get; init; }
-    public string[] TileIds { get; init; }
+    public string? Direction { get; init; }
+    public List<string> TileIds { get; init; } = new List<string>();
 
     public VertexDTO(Vertex vertex)
     {
@@ -21,24 +21,20 @@ public class VertexDTO
         PlayerId = vertex.Owner != null ? vertex.Owner.Id : null;
 
         if (vertex.Direction != null)
-            Direction = vertex.Direction;
-
-        var tileIdList = new List<string>();
+            Direction = vertex.Direction.ToString();
 
         foreach (var tile in vertex.Tiles)
-            tileIdList.Add(tile.Id);
-
-        TileIds = tileIdList.ToArray();
+            TileIds.Add(tile.Id);
     }
     
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
-    public VertexDTO(string id, string building, string playerId, VertexDirection vertexDirection, string[] tileIds)
+    public VertexDTO(string id, string building, string playerId, string direction) //, string[] tileIds)
     {
         Id = id ?? string.Empty;
         Building = building;
         PlayerId = playerId;
-        Direction = vertexDirection;
-        TileIds = tileIds ?? Array.Empty<string>();
+        Direction = direction;
+        // TileIds = tileIds ?? Array.Empty<string>();
     }
 }

@@ -21,7 +21,8 @@ public class GameStateDTO
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public GameStateDTO(string id, string type, List<PlayerDTO>? players = null,
-        List<TileDTO>? tiles = null, List<EdgeDTO>? edges = null, string? robberTileId = null) 
+        List<TileDTO>? tiles = null, List<EdgeDTO>? edges = null,
+        List<VertexDTO>? vertices = null, string? robberTileId = null) 
     {
         Id = id ?? string.Empty;
         Type = type ?? string.Empty;
@@ -35,6 +36,9 @@ public class GameStateDTO
 
         foreach (var edge in edges ?? Enumerable.Empty<EdgeDTO>())
             Edges.Add(edge);
+
+        foreach (var vertex in vertices ?? Enumerable.Empty<VertexDTO>())
+            Vertices.Add(vertex);
     }
 
     public GameStateDTO(GameState gameState)
