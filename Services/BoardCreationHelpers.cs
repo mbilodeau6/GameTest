@@ -183,7 +183,7 @@ public static class BoardCreationHelpers
 
     public static GameState CreateNewBoard(GameType gameType)
     {
-        var gameState = new GameState(new Guid());
+        var gameState = new GameState(Guid.NewGuid());
 
         switch (gameType)
         {

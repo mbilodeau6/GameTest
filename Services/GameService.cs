@@ -47,10 +47,10 @@ public class GameService
         }
     }
 
-    public GameState CreateGame(string gameType)
+    public GameState CreateGame(string gameTypeString)
     {
-        // Minimal behavior: create and return a new GameState with a new GUID
-        var gs = new GameState(Guid.NewGuid());
+        GameType gameType = Enum.Parse<GameType>(gameTypeString, ignoreCase: true);
+        var gs = BoardCreationHelpers.CreateNewBoard(gameType);
 
         // Try to persist a DTO representation to blob storage (best-effort).
         try
@@ -66,7 +66,7 @@ public class GameService
                 };
 
                 var json = JsonSerializer.Serialize(dto, options);
-                var blob = _container.GetBlobClient($"{gs.Id}.json");
+                var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
                 using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
                 // synchronous wait on async upload to keep CreateGame signature unchanged

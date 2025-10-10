@@ -1,5 +1,6 @@
 using Xunit;
 using GameTest.Models;
+using GameTest.DTOs;
 
 namespace GameTest.Tests;
 
@@ -45,6 +46,22 @@ public class PlayerTests
             new Player(expectedName, expectedColor));
 
         Assert.Equal("Name cannot be empty (Parameter 'name')", exception.Message);
+    }
+
+    [Fact]
+    public void Constructor_FromDTO_ValidData()
+    {
+        // Arrange
+        var orig_player = new Player("Mary", PlayerColor.White);
+        var dto = new DTOs.PlayerDTO(orig_player);
+
+        // Act
+        var new_player = new Player(dto);
+
+        // Assert
+        Assert.Equal(orig_player.Id, new_player.Id);
+        Assert.Equal(orig_player.Name, new_player.Name);
+        Assert.Equal(orig_player.Color, new_player.Color);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using Xunit;
 using GameTest.Models;
+using GameTest.DTOs;
 
 namespace GameTest.Tests;
 
@@ -12,6 +13,24 @@ public class GameStateTests
         var game = new GameState(Guid.NewGuid());
 
         // Assert
+        Assert.Empty(game.Players);
+        Assert.Empty(game.Tiles);
+    }
+
+    [Fact]
+    public void Constructor_FromDTO_ValidData()
+    {
+        // Arrange
+        var dto = new GameStateDTO(Guid.NewGuid().ToString(), GameType.Default.ToString());
+
+        // Act
+        var game = new GameState(dto);
+
+        // Assert
+        Assert.Equal(dto.Id, game.Id.ToString());
+        Assert.Equal(dto.Type, game.Type.ToString());
+
+        // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
     }

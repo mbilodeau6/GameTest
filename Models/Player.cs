@@ -1,4 +1,5 @@
 using System;
+using GameTest.DTOs;
 
 namespace GameTest.Models;
 
@@ -44,6 +45,13 @@ public class Player
 
         Name = name;
         Color = color;
+    }
+
+    public Player(PlayerDTO dto)
+    {
+        Id = dto.Id;
+        Name = dto.Name;
+        Color = Enum.Parse<PlayerColor>(dto.Color);
     }
 
     public override string ToString() => $"{Name} ({Id}) - {Color}";

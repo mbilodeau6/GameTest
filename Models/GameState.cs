@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GameTest.DTOs;
 
 namespace GameTest.Models;
 
@@ -24,6 +25,26 @@ public class GameState
     public GameState(Guid guid)
     {
         Id = guid;
+    }
+
+    public GameState(GameStateDTO dto)
+    {
+        Id = Guid.Parse(dto.Id);
+        Type = Enum.Parse<GameType>(dto.Type);
+
+        foreach (var playerDto in dto.Players)
+            Players.Add(new Player(playerDto));
+
+        // foreach (var tileDto in dto.Tiles)
+        //     Tiles.Add(new Tile(tileDto));
+
+        // foreach (var edgeDto in dto.Edges)
+        //     Edges.Add(new Edge(edgeDto, this));
+
+        // foreach (var vertexDto in dto.Vertices)
+        //     Vertices.Add(new Vertex(vertexDto, this));
+
+        RobberTileId = dto.RobberTileId;
     }
 
     public void AddPlayer(Player player)
