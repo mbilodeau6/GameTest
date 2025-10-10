@@ -170,7 +170,7 @@ public class BoardCreationHelpersTests
     public void AddPlayers_AddTwoPlayers()
     {
         // Arrange
-        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        var gameState = new GameState(Guid.NewGuid(), GameType.Default);
 
         // Act
         BoardCreationHelpers.AddPlayers(gameState);

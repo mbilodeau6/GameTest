@@ -210,6 +210,37 @@ public static class BoardCreationHelpers
         gameState.PlaceRobberOnDesert();
         CreateEdgesAndVerticesForBoard(gameState);
 
+        if (gameType == GameType.Test)
+        {
+            // Add some roads/settlements for testing purposes
+            var player1 = new Player("Julie", PlayerColor.Red);
+            var player2 = new Player("John", PlayerColor.Blue);
+            gameState.AddPlayer(player1);
+            gameState.AddPlayer(player2);
+
+            var BrickTile = GetRequiredTileAt(gameState.Tiles, -2, 0);
+            var GrainTile = GetRequiredTileAt(gameState.Tiles, 0, 0);
+            var OreTile = GetRequiredTileAt(gameState.Tiles, 2, 0);
+            var LowerWoolTile = GetRequiredTileAt(gameState.Tiles, -1, 1);
+            var WoodTile = GetRequiredTileAt(gameState.Tiles, 1, 1);
+
+            var redEdge = gameState.Edges.First(e => e.Tiles.Contains(BrickTile) && e.Tiles.Contains(LowerWoolTile));
+            redEdge.BuildRoad(player1);
+
+            var redVertex = gameState.Vertices.First(v => v.Tiles.Contains(BrickTile) && v.Tiles.Contains(GrainTile) && v.Tiles.Contains(LowerWoolTile));
+            redVertex.BuildSettlement(player1);
+
+            var blueEdge = gameState.Edges.First(e => e.Tiles.Contains(GrainTile) && e.Tiles.Contains(WoodTile));
+            blueEdge.BuildRoad(player2);
+
+            var blueVertex = gameState.Vertices.First(v => v.Tiles.Contains(OreTile) && v.Tiles.Contains(GrainTile) && v.Tiles.Contains(WoodTile));
+            blueVertex.BuildSettlement(player2);
+        }
+        else
+        {
+            BoardCreationHelpers.AddPlayers(gameState);
+        }
+
         return gameState;
     }
     
