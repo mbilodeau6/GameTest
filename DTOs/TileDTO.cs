@@ -1,4 +1,5 @@
 using GameTest.Models;
+using System.Text.Json.Serialization;
 
 namespace GameTest.DTOs;
 
@@ -17,5 +18,16 @@ public class TileDTO
         DiceNumber = tile.DiceNumber;
         X = tile.X;
         Y = tile.Y;
+    }
+
+    // JsonConstructor parameters must match the JSON property names (case-insensitive).
+    [JsonConstructor]
+    public TileDTO(string id, string resource, int diceNumber, int x, int y)
+    {
+        Id = id ?? string.Empty;
+        Resource = resource ?? string.Empty;
+        DiceNumber = diceNumber;
+        X = x;
+        Y = y;
     }
 }

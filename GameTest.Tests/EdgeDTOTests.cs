@@ -20,7 +20,7 @@ public class EdgeDTOTests
 
         // Assert
         Assert.Equal(edge.Id, dto.Id);
-        Assert.Equal(2, dto.TileIds.Length);
+        Assert.Equal(2, dto.TileIds.Count);
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
         Assert.Null(dto.Direction);
@@ -43,7 +43,7 @@ public class EdgeDTOTests
 
         // Assert
         Assert.Equal(edge.Id, dto.Id);
-        Assert.Equal(2, dto.TileIds.Length);
+        Assert.Equal(2, dto.TileIds.Count);
         Assert.Equal(owner.Id, dto.PlayerId);
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
@@ -68,7 +68,7 @@ public class EdgeDTOTests
         Assert.Single(dto.TileIds);
         Assert.Equal(owner.Id, dto.PlayerId);
         Assert.Contains(tile1.Id, dto.TileIds);
-        Assert.Equal(HexDirection.NE, dto.Direction);
+        Assert.Equal(HexDirection.NE.ToString(), dto.Direction);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class EdgeDTOTests
         Assert.Single(dto.TileIds);
         Assert.Null(dto.PlayerId);
         Assert.Contains(tile1.Id, dto.TileIds);
-        Assert.Equal(HexDirection.NE, dto.Direction);
+        Assert.Equal(HexDirection.NE.ToString(), dto.Direction);
     }
 
 }

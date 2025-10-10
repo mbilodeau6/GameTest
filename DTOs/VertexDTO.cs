@@ -1,4 +1,5 @@
 using GameTest.Models;
+using System.Text.Json.Serialization;
 
 namespace GameTest.DTOs;
 
@@ -14,7 +15,7 @@ public class VertexDTO
     {
         if (vertex == null)
             throw new ArgumentNullException(nameof(vertex));
-            
+
         Id = vertex.Id;
         Building = vertex.Building != null ? vertex.Building.ToString() : null;
         PlayerId = vertex.Owner != null ? vertex.Owner.Id : null;
@@ -28,5 +29,16 @@ public class VertexDTO
             tileIdList.Add(tile.Id);
 
         TileIds = tileIdList.ToArray();
+    }
+    
+    // JsonConstructor parameters must match the JSON property names (case-insensitive).
+    [JsonConstructor]
+    public VertexDTO(string id, string building, string playerId, VertexDirection vertexDirection, string[] tileIds)
+    {
+        Id = id ?? string.Empty;
+        Building = building;
+        PlayerId = playerId;
+        Direction = vertexDirection;
+        TileIds = tileIds ?? Array.Empty<string>();
     }
 }
