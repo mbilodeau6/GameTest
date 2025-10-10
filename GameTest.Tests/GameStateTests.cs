@@ -7,7 +7,7 @@ namespace GameTest.Tests;
 public class GameStateTests
 {
     [Fact]
-    public void Constructor_Default_EmptyState()
+    public void Constructor_DefaultNoGameType_EmptyState()
     {
         // Act
         var game = new GameState(Guid.NewGuid());
@@ -15,10 +15,23 @@ public class GameStateTests
         // Assert
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
+        Assert.Equal(GameType.Default, game.Type);
     }
 
     [Fact]
-    public void Constructor_FromDTO_ValidData()
+    public void Constructor_DefaultWithGameType_EmptyState()
+    {
+        // Act
+        var game = new GameState(Guid.NewGuid(), GameType.Starter);
+
+        // Assert
+        Assert.Empty(game.Players);
+        Assert.Empty(game.Tiles);
+        Assert.Equal(GameType.Starter, game.Type);
+    }
+
+    [Fact]
+    public void Constructor_FromDTO_CreatesValidObject()
     {
         // Arrange
         var dto = new GameStateDTO(Guid.NewGuid().ToString(), GameType.Default.ToString());

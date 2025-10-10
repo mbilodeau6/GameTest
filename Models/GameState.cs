@@ -6,14 +6,7 @@ namespace GameTest.Models;
 public class GameState
 {
     public Guid Id { get; init; }
-    public GameType Type { get; init; } = GameType.Default;
-
-    // TODO: I keep on going back and forth on whether I should only store occupied edges/vertices
-    // or all edges/vertices in the game. Right now I'm only storing occupied ones. Thinking about
-    // changing but need to check with Eric.
-
-    // TODO: Also realized I need to come up with a standard for associating edge/vertex indexes
-    // with the tiles. Current thought is top starts at top and goes clockwise.
+    public GameType Type { get; init; }
     public List<Player> Players { get; } = new();
     public List<Tile> Tiles { get; } = new();
     public List<Edge> Edges { get; } = new();
@@ -22,9 +15,10 @@ public class GameState
 
     // Future: Add collections for Ports
 
-    public GameState(Guid guid)
+    public GameState(Guid guid, GameType? type = GameType.Default)
     {
         Id = guid;
+        Type = type ?? GameType.Default;
     }
 
     public GameState(GameStateDTO dto)
