@@ -20,10 +20,14 @@ public class GameStateDTO
     // TODO: Need to populate all collections in the DTO (players, tiles, edges, vertices)
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public GameStateDTO(string id, string type)
+    public GameStateDTO(string id, string type, List<PlayerDTO>? players =  null, string? robberTileId = null) 
     {
         Id = id ?? string.Empty;
         Type = type ?? string.Empty;
+        RobberTileId = robberTileId ?? string.Empty;
+
+        foreach (var player in players ?? Enumerable.Empty<PlayerDTO>())
+            Players.Add(player);
     }
 
     public GameStateDTO(GameState gameState)
