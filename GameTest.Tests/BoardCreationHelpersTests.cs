@@ -165,4 +165,19 @@ public class BoardCreationHelpersTests
         Assert.NotNull(v1);
         Assert.Equal(VertexDirection.S, v1.Direction);
     }
+
+    [Fact]
+    public void AddPlayers_AddTwoPlayers()
+    {
+        // Arrange
+        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+
+        // Act
+        BoardCreationHelpers.AddPlayers(gameState);
+
+        // Assert
+        Assert.Equal(2, gameState.Players.Count);
+        Assert.Contains(gameState.Players, p => p.Name == "Bob" && p.Color == PlayerColor.Blue);
+        Assert.Contains(gameState.Players, p => p.Name == "Mary" && p.Color == PlayerColor.Red);
+    }
 }

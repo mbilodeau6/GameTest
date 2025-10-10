@@ -189,8 +189,8 @@ public static class BoardCreationHelpers
         {
             case GameType.Default:
                 foreach (var tile in CreateTilesForRandomBoard())
-                        gameState.AddTile(tile);
-                    break;            
+                    gameState.AddTile(tile);
+                break;
             case GameType.Expansion6:
                 throw new NotImplementedException("Default and Expansion6 board types are not implemented yet.");
             case GameType.Expansion8:
@@ -212,5 +212,13 @@ public static class BoardCreationHelpers
 
         return gameState;
     }
+    
+    public static void AddPlayers(GameState gameState)
+    {
+        var p1 = new Player("Bob", PlayerColor.Blue);
+        var p2 = new Player("Mary", PlayerColor.Red);
 
+        gameState.AddPlayer(p1);
+        gameState.AddPlayer(p2);
+    }
 }
