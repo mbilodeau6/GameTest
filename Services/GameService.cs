@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 using Azure;
 using Azure.Storage.Blobs;
 using GameTest.Models;
@@ -119,4 +120,107 @@ public class GameService
             return null;
         }
     }
+
+    public async Task<string?> BuildRoadAsync(Guid gameId, string edgeId, string playerId)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot modify game {GameId}.", gameId);
+            return null;
+        }
+
+        try
+        {
+            var blob = _container.GetBlobClient($"{gameId}.json");
+            var exists = await blob.ExistsAsync();
+            if (!exists.Value)
+            {
+                _logger.LogInformation("Game blob not found for {GameId}.", gameId);
+                return null;
+            }
+
+            var download = await blob.DownloadContentAsync();
+            string json = download.Value.Content.ToString();
+
+            var root = JsonNode.Parse(json) as JsonObject;
+            if (root == null)
+            {
+                _logger.LogError("Invalid JSON for game {GameId}.", gameId);
+                return null;
+            }
+
+            // Ensure player exists
+            var players = root["players"] as JsonArray;
+            var playerExists = players?.Any(p => (p?["id"]?.ToString() ?? "") == playerId) ?? false;
+            if (!playerExists)
+            {
+                _logger.LogInformation("Player {PlayerId} not found in game {GameId}.", playerId, gameId);
+                return null;
+            }
+
+            // Find edge
+            var edges = root["edges"] as JsonArray;
+            if (edges == null)
+            {
+                _logger.LogInformation("No edges present in game {GameId}.", gameId);
+                return null;
+            }
+
+            JsonObject? targetEdge = null;
+            foreach (var en in edges)
+            {
+                if (en is JsonObject jo && (jo["id"]?.ToString() ?? "") == edgeId)
+                {
+                    targetEdge = jo;
+                    break;
+                }
+            }
+
+            if (targetEdge == null)
+            {
+                _logger.LogInformation("Edge {EdgeId} not found in game {GameId}.", edgeId, gameId);
+                return null;
+            }
+
+            // Check already has road
+            var hasRoad = !string.IsNullOrEmpty(targetEdge["playerId"]?.GetValue<string>());
+            if (hasRoad)
+            {
+                _logger.LogInformation("Edge {EdgeId} in game {GameId} already has a road.", edgeId, gameId);
+                return null;
+            }
+
+            targetEdge["playerId"] = playerId;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            string newJson = root.ToJsonString(options);
+
+            // upload updated blob
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(newJson));
+            await blob.UploadAsync(ms, overwrite: true);
+
+            // TODO: Original version returned full updated DTO. To return to this, change the method signature to return
+            // Task<GameStateDTO?> and return dto below.
+            // // return the updated DTO
+            // var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(newJson, new JsonSerializerOptions
+            // {
+            //     PropertyNameCaseInsensitive = true,
+            //     Converters = { new JsonStringEnumConverter() }
+            // });
+
+            _logger.LogInformation("Built road on edge {EdgeId} for player {PlayerId} in game {GameId}.", edgeId, playerId, gameId);
+            return $"Built road on edge {edgeId} for player {playerId} in game {gameId}.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to build road on edge {EdgeId} for game {GameId}.", edgeId, gameId);
+            return null;
+        }
+    }
+
 }

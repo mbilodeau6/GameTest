@@ -1,10 +1,7 @@
-using System.IO;
 using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using GameTest.DTOs;
 using GameTest.Services;
-using GameTest.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -43,6 +40,41 @@ public class Games
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(dto);
         return response;
+    }
+
+    [Function("BuildRoad")]
+    public async Task<HttpResponseData> BuildRoad(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/build/road")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("BuildRoad called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Invalid game id.");
+            return bad;
+        }
+
+        var request = await req.ReadFromJsonAsync<BuildRoadRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.EdgeId))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Request must include 'playerId' and 'edgeId'.");
+            return bad;
+        }
+
+        var updated = await _gameService.BuildRoadAsync(guid, request.EdgeId, request.PlayerId);
+        if (updated == null)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteStringAsync("Could not build road (game/player/edge missing or edge occupied).");
+            return notFound;
+        }
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync(updated);
+        return ok;
     }
 
     [Function("GetGameById")]
