@@ -1,5 +1,6 @@
 using Xunit;
 using GameTest.Models;
+using GameTest.DTOs;
 
 namespace GameTest.Tests;
 
@@ -56,6 +57,31 @@ public class EdgeTests
         Assert.Single(edge.Tiles);
         Assert.Equal(HexDirection.NE, edge.Direction);
         Assert.All(edge.Tiles, t => Assert.NotNull(t));
+    }
+
+    [Fact]
+    public void Constructor_FromDTO_CreatesValidObject()
+    {
+        var tiles = new List<Tile>();
+        var t1 = new Tile(ResourceType.Brick, 3, -3, -1);
+        tiles.Add(t1);
+        var t2 = new Tile(ResourceType.Wool, 4, -2, 0);
+        tiles.Add(t2); 
+
+        var expectedEdge = new Edge(t1, t2);
+
+        var dto = new EdgeDTO(expectedEdge);
+
+        // TODO: Add owner and direction to test all edge properties
+
+        // Act
+        var edge = new Edge(dto, new List<Player>(), tiles);
+
+        // Assert
+        Assert.Equal(expectedEdge.Id, edge.Id);
+        Assert.True(edge.Tiles.Count == expectedEdge.Tiles.Count);
+        Assert.True(edge.Tiles.Any(t => t.Id == t1.Id));
+        Assert.True(edge.Tiles.Any(t => t.Id == t2.Id));
     }
 
 

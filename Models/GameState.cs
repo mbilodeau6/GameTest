@@ -29,14 +29,14 @@ public class GameState
         foreach (var playerDto in dto.Players)
             Players.Add(new Player(playerDto));
 
-        // foreach (var tileDto in dto.Tiles)
-        //     Tiles.Add(new Tile(tileDto));
+        foreach (var tileDto in dto.Tiles)
+            Tiles.Add(new Tile(tileDto));
 
-        // foreach (var edgeDto in dto.Edges)
-        //     Edges.Add(new Edge(edgeDto, this));
+        foreach (var edgeDto in dto.Edges)
+            Edges.Add(new Edge(edgeDto, Players, Tiles));
 
-        // foreach (var vertexDto in dto.Vertices)
-        //     Vertices.Add(new Vertex(vertexDto, this));
+        foreach (var vertexDto in dto.Vertices)
+            Vertices.Add(new Vertex(vertexDto, Players, Tiles));
 
         RobberTileId = dto.RobberTileId;
     }

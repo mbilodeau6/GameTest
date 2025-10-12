@@ -1,5 +1,6 @@
 ﻿using Xunit;
 using GameTest.Models;
+using GameTest.DTOs;
 
 namespace GameTest.Tests;
 
@@ -76,5 +77,23 @@ public class TileTests
         // Assert
         Assert.Equal("Ore (-1,-1)(10)", tileString);
         Assert.Equal("Desert (1,0)(7)", desertTileString);
+    }
+
+    [Fact]
+    public void Constructor_FromDTO_CreatesValidObject()
+    {
+        var expectedTile = new Tile(ResourceType.Brick, 3, -3, -1);
+
+        var dto = new TileDTO(expectedTile);
+
+        // Act
+        var tile = new Tile(dto);
+
+        // Assert
+        Assert.Equal(expectedTile.Id, tile.Id);
+        Assert.Equal(expectedTile.Resource, tile.Resource);
+        Assert.Equal(expectedTile.DiceNumber, tile.DiceNumber);
+        Assert.Equal(expectedTile.X, tile.X);
+        Assert.Equal(expectedTile.Y, tile.Y);
     }
 }

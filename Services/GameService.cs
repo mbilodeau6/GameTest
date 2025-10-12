@@ -84,7 +84,7 @@ public class GameService
         return gs;
     }
 
-    public async Task<DTOs.GameStateDTO?> GetGameAsync(Guid id)
+    private async Task<DTOs.GameStateDTO?> GetGameDTO(string id)
     {
         if (_container == null)
         {
@@ -121,76 +121,37 @@ public class GameService
         }
     }
 
+    public async Task<DTOs.GameStateDTO?> GetGameAsync(Guid id)
+    {
+        return await GetGameDTO(id.ToString());
+    }
+
     public async Task<string?> BuildRoadAsync(Guid gameId, string edgeId, string playerId)
     {
         if (_container == null)
         {
-            _logger.LogInformation("Blob container not configured; cannot modify game {GameId}.", gameId);
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
             return null;
         }
 
-        try
-        {
-            var blob = _container.GetBlobClient($"{gameId}.json");
-            var exists = await blob.ExistsAsync();
-            if (!exists.Value)
-            {
-                _logger.LogInformation("Game blob not found for {GameId}.", gameId);
-                return null;
-            }
+        try {
+            var dto = await GetGameDTO(gameId.ToString());
+            if (dto == null)
+                return $"Unable to retrieve game {gameId}";
 
-            var download = await blob.DownloadContentAsync();
-            string json = download.Value.Content.ToString();
+            var gs = new GameState(dto);
+            var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+            if (player == null)
+                return $"Player {playerId} not found in game {gameId}";
 
-            var root = JsonNode.Parse(json) as JsonObject;
-            if (root == null)
-            {
-                _logger.LogError("Invalid JSON for game {GameId}.", gameId);
-                return null;
-            }
+            var edge = gs.Edges.FirstOrDefault(e => e.Id == edgeId);
+            if (edge == null)
+                return $"Edge {edgeId} not found in game {gameId}";
 
-            // Ensure player exists
-            var players = root["players"] as JsonArray;
-            var playerExists = players?.Any(p => (p?["id"]?.ToString() ?? "") == playerId) ?? false;
-            if (!playerExists)
-            {
-                _logger.LogInformation("Player {PlayerId} not found in game {GameId}.", playerId, gameId);
-                return null;
-            }
+            if (edge.Owner != null)
+                return $"Edge {edgeId} in game {gameId} already has a road.";
 
-            // Find edge
-            var edges = root["edges"] as JsonArray;
-            if (edges == null)
-            {
-                _logger.LogInformation("No edges present in game {GameId}.", gameId);
-                return null;
-            }
-
-            JsonObject? targetEdge = null;
-            foreach (var en in edges)
-            {
-                if (en is JsonObject jo && (jo["id"]?.ToString() ?? "") == edgeId)
-                {
-                    targetEdge = jo;
-                    break;
-                }
-            }
-
-            if (targetEdge == null)
-            {
-                _logger.LogInformation("Edge {EdgeId} not found in game {GameId}.", edgeId, gameId);
-                return null;
-            }
-
-            // Check already has road
-            var hasRoad = !string.IsNullOrEmpty(targetEdge["playerId"]?.GetValue<string>());
-            if (hasRoad)
-            {
-                _logger.LogInformation("Edge {EdgeId} in game {GameId} already has a road.", edgeId, gameId);
-                return null;
-            }
-
-            targetEdge["playerId"] = playerId;
+            edge.BuildRoad(player);
 
             var options = new JsonSerializerOptions
             {
@@ -198,20 +159,14 @@ public class GameService
                 Converters = { new JsonStringEnumConverter() }
             };
 
-            string newJson = root.ToJsonString(options);
+            var updatedDto = new DTOs.GameStateDTO(gs);
 
-            // upload updated blob
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(newJson));
-            await blob.UploadAsync(ms, overwrite: true);
+            var json = JsonSerializer.Serialize(updatedDto, options);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
-            // TODO: Original version returned full updated DTO. To return to this, change the method signature to return
-            // Task<GameStateDTO?> and return dto below.
-            // // return the updated DTO
-            // var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(newJson, new JsonSerializerOptions
-            // {
-            //     PropertyNameCaseInsensitive = true,
-            //     Converters = { new JsonStringEnumConverter() }
-            // });
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
 
             _logger.LogInformation("Built road on edge {EdgeId} for player {PlayerId} in game {GameId}.", edgeId, playerId, gameId);
             return $"Built road on edge {edgeId} for player {playerId} in game {gameId}.";

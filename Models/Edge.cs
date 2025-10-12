@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using GameTest.DTOs;
 
 namespace GameTest.Models;
 
@@ -46,6 +47,24 @@ public class Edge
     {
         if (t2 != null)
             Tiles.Add(t2);
+    }
+
+    public Edge(EdgeDTO edgeDto, List<Player> players, List<Tile> tiles)
+    {
+        Id = edgeDto.Id;
+
+        if (edgeDto.PlayerId != null)
+            Owner = players.FirstOrDefault(p => p.Id == edgeDto.PlayerId);
+
+        Tiles = new List<Tile>();
+        foreach (var tileDto in edgeDto.TileIds)
+        {
+            var tile = tiles.FirstOrDefault(t => t.Id == tileDto);
+            if (tile != null)
+                Tiles.Add(tile);
+        }
+
+        Direction = edgeDto.Direction != null ? Enum.Parse<HexDirection>(edgeDto.Direction) : null;      
     }
 
     // TODO: Consider adding methods to add/remove vertices with validation

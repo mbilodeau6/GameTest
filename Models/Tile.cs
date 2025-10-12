@@ -1,3 +1,5 @@
+using GameTest.DTOs;
+
 namespace GameTest.Models;
 
 public class Tile
@@ -21,6 +23,15 @@ public class Tile
         DiceNumber = resource == ResourceType.Desert ? 7 : diceNumber;
         X = x;
         Y = y;
+    }
+
+    public Tile(TileDTO dto)
+    {
+        Id = dto.Id;
+        Resource = Enum.Parse<ResourceType>(dto.Resource);
+        DiceNumber = dto.DiceNumber;
+        X = dto.X;
+        Y = dto.Y;
     }
 
     public override string ToString()

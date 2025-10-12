@@ -46,6 +46,8 @@ public class GameStateTests
         // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
+        Assert.Empty(game.Edges);
+        Assert.Empty(game.Vertices);
     }
 
     [Fact]

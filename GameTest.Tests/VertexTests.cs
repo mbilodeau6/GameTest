@@ -1,5 +1,6 @@
 using Xunit;
 using GameTest.Models;
+using GameTest.DTOs;
 
 namespace GameTest.Tests;
 
@@ -68,6 +69,26 @@ public class VertexTests
         Assert.Equal(3, vertex.Tiles.Count);
         Assert.All(vertex.Tiles, t => Assert.NotNull(t));
     }
+
+    [Fact]
+    public void Constructor_FromDTO_CreatesValidObject()
+    {
+        var t1 = new Tile(ResourceType.Brick, 3, -3, -1);
+        var t2 = new Tile(ResourceType.Wool, 4, -2, 0);
+        var expectedVertex = new Vertex(t1, t2);
+
+        var vertexDto = new VertexDTO(expectedVertex);
+
+        // Act
+        var vertex = new Vertex(vertexDto, new List<Player>(), new List<Tile> { t1, t2 });
+
+        // Assert
+        Assert.Equal(expectedVertex.Id, vertex.Id);
+        Assert.True(vertex.Tiles.Count == expectedVertex.Tiles.Count);
+        Assert.True(vertex.Tiles.Any(t => t.Id == t1.Id));
+        Assert.True(vertex.Tiles.Any(t => t.Id == t2.Id));
+    }
+
 
     [Fact]
     public void BuildSettlement_EmptyVertex_SetsOwnerAndBuilding()
