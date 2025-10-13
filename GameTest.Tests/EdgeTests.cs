@@ -65,23 +65,25 @@ public class EdgeTests
         var tiles = new List<Tile>();
         var t1 = new Tile(ResourceType.Brick, 3, -3, -1);
         tiles.Add(t1);
-        var t2 = new Tile(ResourceType.Wool, 4, -2, 0);
-        tiles.Add(t2); 
 
-        var expectedEdge = new Edge(t1, t2);
+        var expectedEdge = new Edge(t1, HexDirection.W);
+
+        var p1 = new Player("Alice", PlayerColor.Red);
+        var p2 = new Player("Bob", PlayerColor.Blue);
+        expectedEdge.BuildRoad(p1);
 
         var dto = new EdgeDTO(expectedEdge);
 
-        // TODO: Add owner and direction to test all edge properties
-
         // Act
-        var edge = new Edge(dto, new List<Player>(), tiles);
+        var edge = new Edge(dto, new List<Player>() {p1, p2}, tiles);
 
         // Assert
         Assert.Equal(expectedEdge.Id, edge.Id);
         Assert.True(edge.Tiles.Count == expectedEdge.Tiles.Count);
-        Assert.True(edge.Tiles.Any(t => t.Id == t1.Id));
-        Assert.True(edge.Tiles.Any(t => t.Id == t2.Id));
+        Assert.Contains(edge.Tiles, t => t.Id == t1.Id);
+        Assert.Equal(expectedEdge.Direction, edge.Direction);
+        Assert.NotNull(edge.Owner);
+        Assert.Equal(p1.Id, edge.Owner.Id);
     }
 
 

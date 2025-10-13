@@ -73,7 +73,8 @@ public class Vertex
                 Tiles.Add(tile);
         }
 
-        Direction = vertexDto.Direction != null ? Enum.Parse<VertexDirection>(vertexDto.Direction) : null;      
+        Direction = vertexDto.Direction != null ? Enum.Parse<VertexDirection>(vertexDto.Direction) : null;
+        Building = vertexDto.Building != null ? Enum.Parse<BuildingType>(vertexDto.Building) : null; 
     }
 
     // TODO: Consider adding methods to add/remove edges with validation

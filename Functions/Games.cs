@@ -51,9 +51,9 @@ public class Games
 
         if (!Guid.TryParse(id, out var guid))
         {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Invalid game id.");
-            return bad;
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteStringAsync("Invalid game id.");
+            return notFound;
         }
 
         var request = await req.ReadFromJsonAsync<BuildRoadRequest>();
@@ -67,9 +67,9 @@ public class Games
         var updated = await _gameService.BuildRoadAsync(guid, request.EdgeId, request.PlayerId);
         if (updated == null)
         {
-            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFound.WriteStringAsync("Could not build road (game/player/edge missing or edge occupied).");
-            return notFound;
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Could not build road (game/player/edge missing or edge occupied).");
+            return bad;
         }
 
         var ok = req.CreateResponse(HttpStatusCode.OK);

@@ -73,23 +73,30 @@ public class VertexTests
     [Fact]
     public void Constructor_FromDTO_CreatesValidObject()
     {
+        // Arrange
         var t1 = new Tile(ResourceType.Brick, 3, -3, -1);
-        var t2 = new Tile(ResourceType.Wool, 4, -2, 0);
-        var expectedVertex = new Vertex(t1, t2);
+        var expectedVertex = new Vertex(t1, VertexDirection.S);
+        var p1 = new Player("Alice", PlayerColor.Blue);
+        var p2 = new Player("Bob", PlayerColor.Red);
+        expectedVertex.BuildSettlement(p2);
 
         var vertexDto = new VertexDTO(expectedVertex);
 
         // Act
-        var vertex = new Vertex(vertexDto, new List<Player>(), new List<Tile> { t1, t2 });
+        var vertex = new Vertex(vertexDto, new List<Player>() { p1, p2}, new List<Tile> { t1 });
 
         // Assert
         Assert.Equal(expectedVertex.Id, vertex.Id);
         Assert.True(vertex.Tiles.Count == expectedVertex.Tiles.Count);
-        Assert.True(vertex.Tiles.Any(t => t.Id == t1.Id));
-        Assert.True(vertex.Tiles.Any(t => t.Id == t2.Id));
+        Assert.Contains(vertex.Tiles, t => t.Id == t1.Id);
+        Assert.Equal(BuildingType.Settlement, vertex.Building);
+
+        Assert.NotNull(vertex.Owner);
+        Assert.Equal(p2.Id, vertex.Owner.Id);
+
+        Assert.Equal(VertexDirection.S, vertex.Direction);
     }
-
-
+        
     [Fact]
     public void BuildSettlement_EmptyVertex_SetsOwnerAndBuilding()
     {
