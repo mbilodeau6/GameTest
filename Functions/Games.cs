@@ -77,6 +77,76 @@ public class Games
         return ok;
     }
 
+    [Function("BuildSettlement")]
+    public async Task<HttpResponseData> BuildSettlement(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/build/settlement")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("BuildSettlement called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteStringAsync("Invalid game id.");
+            return notFound;
+        }
+
+        var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Request must include 'playerId' and 'vertexId'.");
+            return bad;
+        }
+
+        var updated = await _gameService.BuildSettlementAsync(guid, request.VertexId, request.PlayerId);
+        if (updated == null)
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Could not build settlement (game/player/vertex missing or vertex occupied).");
+            return bad;
+        }
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync(updated);
+        return ok;
+    }
+
+    [Function("BuildCity")]
+    public async Task<HttpResponseData> BuildCity(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/build/city")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("BuildCity called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteStringAsync("Invalid game id.");
+            return notFound;
+        }
+
+        var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Request must include 'playerId' and 'vertexId'.");
+            return bad;
+        }
+
+        var updated = await _gameService.BuildCityAsync(guid, request.VertexId, request.PlayerId);
+        if (updated == null)
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteStringAsync("Could not build city (game/player missing or vertex not appropriate for city build).");
+            return bad;
+        }
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync(updated);
+        return ok;
+    }
+
     [Function("GetGameById")]
     public async Task<HttpResponseData> GetGameById(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "Games/{id}")] HttpRequestData req,

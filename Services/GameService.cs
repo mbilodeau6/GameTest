@@ -134,7 +134,8 @@ public class GameService
             return null;
         }
 
-        try {
+        try
+        {
             var dto = await GetGameDTO(gameId.ToString());
             if (dto == null)
                 return $"Unable to retrieve game {gameId}";
@@ -174,6 +175,121 @@ public class GameService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to build road on edge {EdgeId} for game {GameId}.", edgeId, gameId);
+            return null;
+        }
+    }
+
+    public async Task<string?> BuildSettlementAsync(Guid gameId, string vertexId, string playerId)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return null;
+        }
+
+        try
+        {
+            var dto = await GetGameDTO(gameId.ToString());
+            if (dto == null)
+                return $"Unable to retrieve game {gameId}";
+
+            var gs = new GameState(dto);
+            var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+            if (player == null)
+                return $"Player {playerId} not found in game {gameId}";
+
+            var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
+            if (vertex == null)
+                return $"Vertex {vertexId} not found in game {gameId}";
+
+            if (vertex.Building == BuildingType.Settlement )
+                return $"Vertex {vertexId} in game {gameId} already has a settlement.";
+
+            if (vertex.Building == BuildingType.City )
+                return $"Vertex {vertexId} in game {gameId} already has a city.";
+
+            vertex.BuildSettlement(player);
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var updatedDto = new DTOs.GameStateDTO(gs);
+
+            var json = JsonSerializer.Serialize(updatedDto, options);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Built settlement on vertex {VertexId} for player {PlayerId} in game {GameId}.", vertexId, playerId, gameId);
+            return $"Built settlement on vertex {vertexId} for player {playerId} in game {gameId}.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to build settlement on vertex {VertexId} for game {GameId}.", vertexId, gameId);
+            return null;
+        }
+    }
+
+    public async Task<string?> BuildCityAsync(Guid gameId, string vertexId, string playerId)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return null;
+        }
+
+        try
+        {
+            var dto = await GetGameDTO(gameId.ToString());
+            if (dto == null)
+                return $"Unable to retrieve game {gameId}";
+
+            var gs = new GameState(dto);
+            var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+            if (player == null)
+                return $"Player {playerId} not found in game {gameId}";
+
+            var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
+            if (vertex == null)
+                return $"Vertex {vertexId} not found in game {gameId}";
+
+            if (vertex.Building == null || vertex.Owner == null )
+                return $"Vertex {vertexId} in game {gameId} does not have a settlement to upgrade.";
+
+            if (vertex.Building == BuildingType.City)
+                return $"Vertex {vertexId} in game {gameId} already has a city.";
+                
+            if (vertex.Owner.Id != playerId)
+                return $"Vertex {vertexId} in game {gameId} is owned by another player.";
+
+            vertex.UpgradeToCity();
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var updatedDto = new DTOs.GameStateDTO(gs);
+
+            var json = JsonSerializer.Serialize(updatedDto, options);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Built city on vertex {VertexId} for player {PlayerId} in game {GameId}.", vertexId, playerId, gameId);
+            return $"Built city on vertex {vertexId} for player {playerId} in game {gameId}.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to build city on vertex {VertexId} for game {GameId}.", vertexId, gameId);
             return null;
         }
     }
