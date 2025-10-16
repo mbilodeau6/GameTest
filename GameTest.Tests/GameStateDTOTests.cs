@@ -27,6 +27,7 @@ public class GameStateDTOTests
         gameState.Edges.Add(new Edge(tile2, HexDirection.SW));
 
         gameState.Vertices.Add(new Vertex(player2, tile1, tile2));
+        gameState.SetRobberTile(tile2);
 
         // Act
         var gameStateDTO = new GameStateDTO(gameState);
@@ -42,7 +43,7 @@ public class GameStateDTOTests
         Assert.Equal("Settlement", gameStateDTO.Vertices[0].Building);
         Assert.Equal(guid.ToString(), gameStateDTO.Id);
         Assert.Equal("Default", gameStateDTO.Type);
-        Assert.Empty(gameStateDTO.RobberTileId);
+        Assert.Equal(tile2.Id, gameStateDTO.RobberTileId);
     }
 
         [Fact]
@@ -55,7 +56,7 @@ public class GameStateDTOTests
         var tile2 = new Tile(ResourceType.Wood, 5, -1, 0);
         gameState.Tiles.Add(tile1);
         gameState.Tiles.Add(tile2);
-        gameState.SetRobberTile(tile1.Id);
+        gameState.SetRobberTile(tile1);
 
         // Act
         var gameStateDTO = new GameStateDTO(gameState);

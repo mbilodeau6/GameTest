@@ -58,6 +58,6 @@ public class GameStateDTO
         foreach (var vertex in gameState.Vertices)
             Vertices.Add(new VertexDTO(vertex));
 
-        RobberTileId = gameState.RobberTileId;
+        RobberTileId = gameState.RobberTile.Id;
     }
 }

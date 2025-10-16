@@ -52,8 +52,8 @@ public static class TestHelpers
             || (v.Building == null && v.Owner != null)))
             throw new ArgumentException("All vertices must be non-null and have valid Tiles, Direction, Building, and Owner.");
 
-        if (gameState.RobberTileId != null && !gameState.Tiles.Any(t => t.Id == gameState.RobberTileId))
-            throw new ArgumentException("RobberTileId must correspond to an existing tile in the game.");
+        if (gameState.RobberTile != null && !gameState.Tiles.Contains(gameState.RobberTile))
+            throw new ArgumentException("RobberTile must correspond to an existing tile in the game.");
 
         return true;
     }

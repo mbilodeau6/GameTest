@@ -27,7 +27,7 @@ public class GameBoard
 
         var t6 = new Tile(ResourceType.Desert, 0, -1, -1);
         gameState.AddTile(t6);
-        gameState.SetRobberTile(t6.Id);
+        gameState.SetRobberTile(t6);
 
         gameState.AddTile(new Tile(ResourceType.Wool, 8, 1, -1));
 

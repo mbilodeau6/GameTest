@@ -31,7 +31,7 @@ public class GameStateTests
     }
 
     [Fact]
-    public void Constructor_FromDTO_CreatesValidObject()
+    public void Constructor_FromDTO_CreatesEmptyObject()
     {
         // Arrange
         var dto = new GameStateDTO(Guid.NewGuid().ToString(), GameType.Default.ToString());
@@ -48,6 +48,81 @@ public class GameStateTests
         Assert.Empty(game.Tiles);
         Assert.Empty(game.Edges);
         Assert.Empty(game.Vertices);
+    }
+
+    [Fact]
+    public void Constructor_FromDTO_CreatesValidObject()
+    {
+        // Arrange
+        var gs = new GameState(Guid.NewGuid());
+        gs.AddPlayer(new Player("Alice", PlayerColor.Blue));
+        gs.AddPlayer(new Player("Bob", PlayerColor.Red));
+        gs.AddTile(new Tile(ResourceType.Brick, 8, 0, 0));
+        gs.AddTile(new Tile(ResourceType.Desert, 0, 2, 0));
+        gs.AddEdge(new Edge(gs.Tiles[0], HexDirection.NE));
+        gs.Edges[0].BuildRoad(gs.Players[1]);
+        gs.AddVertex(new Vertex(gs.Tiles[0], gs.Tiles[1]));
+        gs.Vertices[0].BuildSettlement(gs.Players[0]);
+
+
+        var dto = new GameStateDTO(Guid.NewGuid().ToString(), GameType.Default.ToString());
+
+        // Act
+        var game = new GameState(dto);
+
+        // Assert
+        Assert.Equal(dto.Id, game.Id.ToString());
+        Assert.Equal(dto.Type, game.Type.ToString());
+
+        // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
+        Assert.Empty(game.Players);
+        Assert.Empty(game.Tiles);
+        Assert.Empty(game.Edges);
+        Assert.Empty(game.Vertices);
+    }
+
+    [Fact]
+    public void PlaceRobberOnDesert_OneDesert()
+    {
+        // Arrange
+        var desertTile = new Tile(ResourceType.Desert, 0, 0, 0);
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(desertTile);
+
+        // Act
+        game.PlaceRobberOnDesert();
+
+        // Assert
+        Assert.Equal(desertTile, game.RobberTile);
+    }
+
+    [Fact]
+    public void PlaceRobberOnDesert_TwoDeserts()
+    {
+        // Arrange
+        var desertTile1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var desertTile2 = new Tile(ResourceType.Desert, 0, 1, -1);
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(desertTile1);
+        game.AddTile(desertTile2);
+
+        // Assert
+        game.PlaceRobberOnDesert();
+
+        Assert.True(game.RobberTile == desertTile1 || game.RobberTile == desertTile2);
+    }
+
+    [Fact]
+    public void PlaceRobberOnDesert_NoDesert_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
+        var game = new GameState(Guid.NewGuid());
+        game.AddTile(tile);
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => game.PlaceRobberOnDesert());
+        Assert.Equal("No desert tile found in the game.", exception.Message);
     }
 
     [Fact]
@@ -117,33 +192,33 @@ public class GameStateTests
     }
 
     [Fact]
-    public void SetRobberTileId_ValidLocation()
+    public void SetRobberTile_ValidLocation()
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var tileId = tile.Id;
         var game = new GameState(Guid.NewGuid());
         game.AddTile(tile);
 
         // Act
-        game.SetRobberTile(tileId);
+        game.SetRobberTile(tile);
 
         // Assert
-        Assert.Equal(tileId, game.RobberTileId);
+        Assert.Equal(tile, game.RobberTile);
     }
 
     [Fact]
-    public void SetRobberTileId_NonexistentTile()
+    public void SetRobberTile_NonexistentTile()
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var tileId = tile.Id;
         var game = new GameState(Guid.NewGuid());
         game.AddTile(tile);
 
+        var tileNotOnBoard = new Tile(ResourceType.Wood, 5, 1, -1);
+
         // Assert
         var exception = Assert.Throws<ArgumentException>(() =>
-            game.SetRobberTile("TX"));
+            game.SetRobberTile(tileNotOnBoard));
 
         Assert.Equal("The specified tile does not exist in the game.", exception.Message);
     }
@@ -153,59 +228,15 @@ public class GameStateTests
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var tileId = tile.Id;
         var game = new GameState(Guid.NewGuid());
         game.AddTile(tile);
-        game.SetRobberTile(tileId);
+        game.SetRobberTile(tile);
 
         // Assert
         var exception = Assert.Throws<ArgumentException>(() =>
-            game.SetRobberTile(tileId));
+            game.SetRobberTile(tile));
 
         Assert.Equal("Robber is already on the specified tile.", exception.Message);
     }
 
-    [Fact]
-    public void PlaceRobberOnDesert_OneDesert()
-    {
-        // Arrange
-        var desertTile = new Tile(ResourceType.Desert, 0, 0, 0);
-        var game = new GameState(Guid.NewGuid());
-        game.AddTile(desertTile);
-
-        // Act
-        game.PlaceRobberOnDesert();
-
-        // Assert
-        Assert.Equal(desertTile.Id, game.RobberTileId);
-    }
-
-    [Fact]
-    public void PlaceRobberOnDesert_TwoDeserts()
-    {
-        // Arrange
-        var desertTile1 = new Tile(ResourceType.Desert, 0, 0, 0);
-        var desertTile2 = new Tile(ResourceType.Desert, 0, 1, -1);
-        var game = new GameState(Guid.NewGuid());
-        game.AddTile(desertTile1);
-        game.AddTile(desertTile2);
-
-        // Assert
-        game.PlaceRobberOnDesert();
-
-        Assert.True(game.RobberTileId == desertTile1.Id || game.RobberTileId == desertTile2.Id);
-    }
-
-    [Fact]
-    public void PlaceRobberOnDesert_NoDesert_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var game = new GameState(Guid.NewGuid());
-        game.AddTile(tile);
-
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => game.PlaceRobberOnDesert());
-        Assert.Equal("No desert tile found in the game.", exception.Message);
-    }
 }

@@ -11,7 +11,20 @@ public class GameState
     public List<Tile> Tiles { get; } = new();
     public List<Edge> Edges { get; } = new();
     public List<Vertex> Vertices { get; } = new();
-    public string RobberTileId { get; set; } = string.Empty;
+    public Tile RobberTile { get; private set; } = null!;
+    public Player PlayerWithLongestRoad { get; private set; } = null!;
+    public Player PlayerWithLargestArmy { get; private set; } = null!;
+
+    public Dictionary<ResourceType, int> Resources { get; } = new()
+    {
+        { ResourceType.Brick, 0 },
+        { ResourceType.Wood, 0 },
+        { ResourceType.Ore, 0 },
+        { ResourceType.Grain, 0 },
+        { ResourceType.Wool, 0 }
+    };
+
+    public List<DevelopmentCardType> DevelopmentCards { get; } = new List<DevelopmentCardType>();
 
     // Future: Add collections for Ports
 
@@ -30,15 +43,18 @@ public class GameState
             Players.Add(new Player(playerDto));
 
         foreach (var tileDto in dto.Tiles)
+        {
+            Tile tile = new Tile(tileDto);
             Tiles.Add(new Tile(tileDto));
+            if (tile.Id == dto.RobberTileId)
+                RobberTile = tile;
+        }
 
         foreach (var edgeDto in dto.Edges)
             Edges.Add(new Edge(edgeDto, Players, Tiles));
 
         foreach (var vertexDto in dto.Vertices)
             Vertices.Add(new Vertex(vertexDto, Players, Tiles));
-
-        RobberTileId = dto.RobberTileId;
     }
 
     public void AddPlayer(Player player)
@@ -61,15 +77,15 @@ public class GameState
         Vertices.Add(vertex);
     }
 
-    public void SetRobberTile(string tileId)
+    public void SetRobberTile(Tile tile)
     {
-        if (tileId.Equals(RobberTileId, StringComparison.OrdinalIgnoreCase))
+        if (tile.Equals(RobberTile))
             throw new ArgumentException("Robber is already on the specified tile.");
 
-        if (!Tiles.Any(t => t.Id == tileId))
+        if (!Tiles.Contains(tile))
             throw new ArgumentException("The specified tile does not exist in the game.");
 
-        RobberTileId = tileId;
+        RobberTile = tile;
     }
     
     public void PlaceRobberOnDesert()
@@ -78,6 +94,6 @@ public class GameState
         if (desertTile == null)
             throw new InvalidOperationException("No desert tile found in the game.");
 
-        RobberTileId = desertTile.Id;
+        RobberTile = desertTile;
     }
 }

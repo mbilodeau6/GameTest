@@ -23,6 +23,28 @@ public class Player
     public string Name { get; set; }
     public PlayerColor Color { get; set; }
 
+    public Dictionary<ResourceType, int> Resources { get; } = new()
+    {
+        { ResourceType.Brick, 0 },
+        { ResourceType.Wood, 0 },
+        { ResourceType.Ore, 0 },
+        { ResourceType.Grain, 0 },
+        { ResourceType.Wool, 0 }
+    };
+
+    public int ResourceCount { get; set; } = 0;
+
+    public Dictionary<DevelopmentCardType, int> DevelopmentCards { get; } = new()
+    {
+        { DevelopmentCardType.BuildTwoRoads, 0 },
+        { DevelopmentCardType.VictoryPoint, 0 },
+        { DevelopmentCardType.Monopoly, 0 },
+        { DevelopmentCardType.YearOfPlenty, 0 },
+        { DevelopmentCardType.Knight, 0 }
+    };
+
+    public int DevelopmentCardCount { get; set; } = 0;
+
     // Parameterless ctor for serializers
     public Player()
     {
