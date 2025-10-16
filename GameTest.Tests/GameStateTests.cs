@@ -15,7 +15,21 @@ public class GameStateTests
         // Assert
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
-        Assert.Equal(GameType.Default, game.Type);
+        Assert.Null(game.RobberTile);
+        Assert.Null(game.PlayerWithLongestRoad);
+        Assert.Null(game.PlayerWithLargestArmy);
+        Assert.All(game.Resources.Values, v => Assert.Equal(19, v));
+        Assert.Equal(25, game.DevelopmentCards.Count);
+        Assert.Equal(2, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.Monopoly));
+        Assert.Equal(2, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.RoadBuilding));
+        Assert.Equal(2, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.YearOfPlenty));
+        Assert.Equal(14, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.Knight));
+        Assert.Equal(5, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.VictoryPoint));
+        Assert.Null(game.CurrentPlayer);
+        Assert.Equal(GameStates.PrePlay, game.CurrentState);
+        Assert.Equal(GameType.Default, game.Settings.Type);
+        Assert.Equal(10, game.Settings.VictoryPointsToWin);
+        Assert.Equal(10, game.Settings.VictoryPointsToWin);
     }
 
     [Fact]
@@ -27,7 +41,7 @@ public class GameStateTests
         // Assert
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
-        Assert.Equal(GameType.Starter, game.Type);
+        Assert.Equal(GameType.Starter, game.Settings.Type);
     }
 
     [Fact]

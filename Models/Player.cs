@@ -36,7 +36,7 @@ public class Player
 
     public Dictionary<DevelopmentCardType, int> DevelopmentCards { get; } = new()
     {
-        { DevelopmentCardType.BuildTwoRoads, 0 },
+        { DevelopmentCardType.RoadBuilding, 0 },
         { DevelopmentCardType.VictoryPoint, 0 },
         { DevelopmentCardType.Monopoly, 0 },
         { DevelopmentCardType.YearOfPlenty, 0 },

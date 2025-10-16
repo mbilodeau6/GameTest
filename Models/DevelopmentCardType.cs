@@ -2,7 +2,7 @@ namespace GameTest.Models;
 
 public enum DevelopmentCardType
 {
-    BuildTwoRoads,
+    RoadBuilding,
     VictoryPoint,
     Monopoly,
     YearOfPlenty,

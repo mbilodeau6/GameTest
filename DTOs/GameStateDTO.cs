@@ -6,18 +6,21 @@ namespace GameTest.DTOs;
 public class GameStateDTO
 {
     public string Id { get; private set; }
-    public string Type { get; private set; }
+    // TODO: Remove copy of Type (already exists in Settings) once Eric confirms he no longer needs
+    public string Type { get; private set; }    
+    public GameSettings Settings { get; set; } = new GameSettings();
 
-    // TODO: I keep on going back and forth on whether I should only store occupied edges/vertices
-    // or all edges/vertices in the game. Right now I'm only storing occupied ones. Thinking about
-    // changing but need to check with Eric.
     public List<PlayerDTO> Players { get; } = new();
     public List<TileDTO> Tiles { get; } = new();
     public List<EdgeDTO> Edges { get; } = new();
     public List<VertexDTO> Vertices { get; } = new();
     public string RobberTileId { get; } = string.Empty;
 
-    // TODO: Need to populate all collections in the DTO (players, tiles, edges, vertices)
+    public string CurrentPlayerId { get; } = string.Empty;
+    public string CurrentState { get; } = string.Empty;
+    public string HasLongestRoadPlayerId { get; } = string.Empty;
+    public string HasLargestArmyPlayerId { get; } = string.Empty;
+
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public GameStateDTO(string id, string type, List<PlayerDTO>? players = null,

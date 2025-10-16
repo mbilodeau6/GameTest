@@ -6,7 +6,10 @@ namespace GameTest.Models;
 public class GameState
 {
     public Guid Id { get; init; }
+
+    // TODO: Remove (already covered in Settings) once Eric has confirmed he is no longer using
     public GameType Type { get; init; }
+    public GameSettings Settings { get; private set; } = new GameSettings();
     public List<Player> Players { get; } = new();
     public List<Tile> Tiles { get; } = new();
     public List<Edge> Edges { get; } = new();
@@ -17,21 +20,49 @@ public class GameState
 
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
-        { ResourceType.Brick, 0 },
-        { ResourceType.Wood, 0 },
-        { ResourceType.Ore, 0 },
-        { ResourceType.Grain, 0 },
-        { ResourceType.Wool, 0 }
+        { ResourceType.Brick, 19 },
+        { ResourceType.Wood, 19 },
+        { ResourceType.Ore, 19 },
+        { ResourceType.Grain, 19 },
+        { ResourceType.Wool, 19 }
     };
 
-    public List<DevelopmentCardType> DevelopmentCards { get; } = new List<DevelopmentCardType>();
+    public List<DevelopmentCardType> DevelopmentCards { get; private set; } = new List<DevelopmentCardType>();
+
+    public Player CurrentPlayer { get; private set; } = null!;
+    public GameStates CurrentState { get; private set; } = GameStates.PrePlay;
 
     // Future: Add collections for Ports
+
+    private void InitializeDevelopmentCards()
+    {
+        List<DevelopmentCardType> developmentCards = new List<DevelopmentCardType>();
+
+        for (int i = 0; i < 2; i++)
+        {
+            developmentCards.Add(DevelopmentCardType.Monopoly);
+            developmentCards.Add(DevelopmentCardType.RoadBuilding);
+            developmentCards.Add(DevelopmentCardType.YearOfPlenty);
+        }
+
+        for (int i = 0; i < 14; i++)
+            developmentCards.Add(DevelopmentCardType.Knight);
+
+        for (int i = 0; i < 5; i++)
+            developmentCards.Add(DevelopmentCardType.VictoryPoint);
+
+        // Shuffle the development cards
+        var rnd = new Random();
+        DevelopmentCards = developmentCards.OrderBy(x => rnd.Next()).ToList();
+    }
 
     public GameState(Guid guid, GameType? type = GameType.Default)
     {
         Id = guid;
-        Type = type ?? GameType.Default;
+        Settings.Type = type ?? GameType.Default;
+        Type = Settings.Type;
+
+        InitializeDevelopmentCards();
     }
 
     public GameState(GameStateDTO dto)
