@@ -43,7 +43,7 @@ public class GameStateDTOTests
         Assert.Single(gameStateDTO.Vertices);
         Assert.Equal("Settlement", gameStateDTO.Vertices[0].Building);
         Assert.Equal(guid.ToString(), gameStateDTO.Id);
-        Assert.Equal("Default", gameStateDTO.Type);
+        Assert.Equal("Default", gameStateDTO.Settings.Type.ToString());
         Assert.Equal(tile2.Id, gameStateDTO.RobberTileId);
     }
 

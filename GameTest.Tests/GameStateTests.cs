@@ -48,14 +48,14 @@ public class GameStateTests
     public void Constructor_FromDTO_CreatesEmptyObject()
     {
         // Arrange
-        var dto = new GameStateDTO(Guid.NewGuid().ToString(), GameType.Default.ToString());
+        var dto = new GameStateDTO(Guid.NewGuid().ToString(), new GameSettingsDTO(new GameSettings()));
 
         // Act
         var game = new GameState(dto);
 
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
-        Assert.Equal(dto.Type, game.Settings.Type.ToString());
+        Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
 
         // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
         Assert.Empty(game.Players);
@@ -68,30 +68,48 @@ public class GameStateTests
     public void Constructor_FromDTO_CreatesValidObject()
     {
         // Arrange
-        var gs = new GameState(Guid.NewGuid());
-        gs.AddPlayer(new Player("Alice", PlayerColor.Blue));
-        gs.AddPlayer(new Player("Bob", PlayerColor.Red));
-        gs.AddTile(new Tile(ResourceType.Brick, 8, 0, 0));
-        gs.AddTile(new Tile(ResourceType.Desert, 0, 2, 0));
-        gs.AddEdge(new Edge(gs.Tiles[0], HexDirection.NE));
-        gs.Edges[0].BuildRoad(gs.Players[1]);
-        gs.AddVertex(new Vertex(gs.Tiles[0], gs.Tiles[1]));
-        gs.Vertices[0].BuildSettlement(gs.Players[0]);
+        var gs = new GameState(Guid.NewGuid(), GameType.Test);
+        var player1 = new Player("Alice", PlayerColor.Blue);
+        gs.AddPlayer(player1);
+        var player2 = new Player("Bob", PlayerColor.Red);
+        gs.AddPlayer(player2);
 
-        var dto = new GameStateDTO(Guid.NewGuid().ToString(), GameType.Default.ToString());
+        var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
+        gs.AddTile(tile1);
+        var tile2 = new Tile(ResourceType.Desert, 0, 2, 0);
+        gs.AddTile(tile2);
+        gs.AddEdge(new Edge(tile1, HexDirection.NE));
+        gs.Edges[0].BuildRoad(player2);
+        gs.AddVertex(new Vertex(tile1, tile2));
+        gs.Vertices[0].BuildSettlement(player1);
+        gs.SetRobberTile(tile1);
+
+        var dto = new GameStateDTO(gs);
 
         // Act
         var game = new GameState(dto);
 
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
-        Assert.Equal(dto.Type, game.Settings.Type.ToString());
+        Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
 
         // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
-        Assert.Empty(game.Players);
-        Assert.Empty(game.Tiles);
-        Assert.Empty(game.Edges);
-        Assert.Empty(game.Vertices);
+        Assert.Equal(2, game.Settings.MaxPlayers);
+        Assert.Equal(10, game.Settings.VictoryPointsToWin);
+        Assert.Equal(15, game.Settings.RoadsPerPlayer);
+        Assert.Equal(5, game.Settings.SettlementsPerPlayer);
+        Assert.Equal(4, game.Settings.CitiesPerPlayer);
+        Assert.Equal(2, game.Players.Count);
+        Assert.Equal(player2.Name, game.Players[1].Name);
+        Assert.Equal(player1.Color, game.Players[0].Color);
+        Assert.Equal(2, game.Tiles.Count);
+        Assert.Equal(ResourceType.Brick, game.Tiles[0].Resource);
+        Assert.Equal(8, game.Tiles[0].DiceNumber);
+        Assert.Single(game.Edges);
+        Assert.NotNull(game.Edges[0].Owner);
+        Assert.Equal(player2.Id, game.Edges[0].Owner.Id);
+        Assert.Single(game.Vertices);
+        Assert.Equal(BuildingType.Settlement, game.Vertices[0].Building);
     }
 
     [Fact]

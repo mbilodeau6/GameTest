@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Configuration;
 using GameTest.DTOs;
 
 namespace GameTest.Models;
@@ -53,10 +54,10 @@ public class GameState
         DevelopmentCards = developmentCards.OrderBy(x => rnd.Next()).ToList();
     }
 
-    public GameState(Guid guid, GameType? type = GameType.Default)
+    public GameState(Guid guid, GameType type = GameType.Default)
     {
         Id = guid;
-        Settings.Type = type ?? GameType.Default;
+        Settings = new GameSettings(type);
 
         InitializeDevelopmentCards();
     }
@@ -64,6 +65,8 @@ public class GameState
     public GameState(GameStateDTO dto)
     {
         Id = Guid.Parse(dto.Id);
+
+        Settings = new GameSettings(dto.Settings);
 
         foreach (var playerDto in dto.Players)
             Players.Add(new Player(playerDto));

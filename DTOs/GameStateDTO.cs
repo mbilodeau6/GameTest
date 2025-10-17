@@ -6,9 +6,7 @@ namespace GameTest.DTOs;
 public class GameStateDTO
 {
     public string Id { get; private set; }
-    // TODO: Remove copy of Type (already exists in Settings) once Eric confirms he no longer needs
-    public string Type { get; private set; }    
-    public GameSettings Settings { get; set; } = new GameSettings();
+    public GameSettingsDTO Settings { get; }
 
     public List<PlayerDTO> Players { get; } = new();
     public List<TileDTO> Tiles { get; } = new();
@@ -23,12 +21,12 @@ public class GameStateDTO
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public GameStateDTO(string id, string type, List<PlayerDTO>? players = null,
+    public GameStateDTO(string id, GameSettingsDTO settings, List<PlayerDTO>? players = null,
         List<TileDTO>? tiles = null, List<EdgeDTO>? edges = null,
         List<VertexDTO>? vertices = null, string? robberTileId = null) 
     {
         Id = id ?? string.Empty;
-        Type = type ?? string.Empty;
+        Settings = settings;
         RobberTileId = robberTileId ?? string.Empty;
 
         foreach (var player in players ?? Enumerable.Empty<PlayerDTO>())
@@ -47,7 +45,7 @@ public class GameStateDTO
     public GameStateDTO(GameState gameState)
     {
         Id = gameState.Id.ToString();
-        Type = gameState.Settings.Type.ToString();
+        Settings = new GameSettingsDTO(gameState.Settings);
 
         foreach (var player in gameState.Players)
             Players.Add(new PlayerDTO(player));
