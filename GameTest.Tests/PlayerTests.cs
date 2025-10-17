@@ -16,6 +16,10 @@ public class PlayerTests
         Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
         Assert.Equal(string.Empty, player.Name);
         Assert.Equal(PlayerColor.Red, player.Color);
+        Assert.All(player.Resources.Values, v => Assert.Equal(0, v));
+        Assert.All(player.DevelopmentCards.Values, v => Assert.Equal(0, v));
+        Assert.Equal(0, player.DevelopmentCardCount);
+        Assert.Equal(0, player.ResourceCount);
     }
 
     [Fact]
@@ -53,6 +57,11 @@ public class PlayerTests
     {
         // Arrange
         var orig_player = new Player("Mary", PlayerColor.White);
+        orig_player.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        orig_player.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        orig_player.AssignResource(ResourceType.Brick, 2);
+        orig_player.AssignResource(ResourceType.Ore, 1);
+
         var dto = new DTOs.PlayerDTO(orig_player);
 
         // Act
@@ -62,6 +71,14 @@ public class PlayerTests
         Assert.Equal(orig_player.Id, new_player.Id);
         Assert.Equal(orig_player.Name, new_player.Name);
         Assert.Equal(orig_player.Color, new_player.Color);
+        Assert.Equal(2, new_player.DevelopmentCardCount);
+        Assert.Equal(1, new_player.DevelopmentCards[DevelopmentCardType.RoadBuilding]);
+        Assert.Equal(1, new_player.DevelopmentCards[DevelopmentCardType.Knight]);
+        Assert.Equal(0, new_player.DevelopmentCards[DevelopmentCardType.VictoryPoint]);
+        Assert.Equal(3, new_player.ResourceCount);
+        Assert.Equal(2, new_player.Resources[ResourceType.Brick]);
+        Assert.Equal(1, new_player.Resources[ResourceType.Ore]);
+        Assert.Equal(0, new_player.Resources[ResourceType.Grain]);
     }
 
     [Fact]
@@ -82,7 +99,7 @@ public class PlayerTests
         Assert.Equal(expectedColor, player.Color);
     }
 
-[Fact]
+    [Fact]
     public void ToString_Verify()
     {
         // Arrange
@@ -96,4 +113,77 @@ public class PlayerTests
         Assert.Equal("Mary (" + player.Id + ") - White", player.ToString());
     }
 
+    [Fact]
+    public void AssignResource_Single()
+    {
+        // Arrange
+        var player = new Player("Mary", PlayerColor.Red);
+
+        // Act
+        player.AssignResource(ResourceType.Grain, 1);
+
+        // Assert
+        Assert.Equal(1, player.Resources[ResourceType.Grain]);
+        Assert.Equal(1, player.ResourceCount);
+    }
+
+    [Fact]
+    public void AssignResource_Multiple()
+    {
+        // Arrange
+        var player = new Player("Mary", PlayerColor.Red);
+        player.AssignResource(ResourceType.Brick, 1);
+        player.AssignResource(ResourceType.Ore, 1);
+
+        // Act
+        player.AssignResource(ResourceType.Ore, 2);
+
+        // Assert
+        Assert.Equal(3, player.Resources[ResourceType.Ore]);
+        Assert.Equal(4, player.ResourceCount);
+    }
+
+    [Fact]
+    public void AssignResource_Desert_ThrowsException()
+    {
+        // Arrange
+        var player = new Player("Mary", PlayerColor.Red);
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() =>
+            player.AssignResource(ResourceType.Desert, 1));
+
+        Assert.Equal("Desert is not a resource that can be earned/owned.", exception.Message);
+    }
+
+    [Fact]
+    public void AssignDevelopmentCard_FirstCard()
+    {
+        // Arrange
+        var player = new Player("Mary", PlayerColor.Red);
+
+        // Act
+        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
+
+        // Assert
+        Assert.Equal(1, player.DevelopmentCards[DevelopmentCardType.Knight]);
+        Assert.Equal(1, player.DevelopmentCardCount);
+    }
+    
+    [Fact]
+    public void AssignDevelopmentCard_AdditionalCard()
+    {
+        // Arrange
+        var player = new Player("Mary", PlayerColor.Red);
+        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        player.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+
+        // Act
+        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
+
+        // Assert
+        Assert.Equal(3, player.DevelopmentCards[DevelopmentCardType.Knight]);
+        Assert.Equal(4, player.DevelopmentCardCount);
+    }
 }

@@ -74,6 +74,30 @@ public class Player
         Id = dto.Id;
         Name = dto.Name;
         Color = Enum.Parse<PlayerColor>(dto.Color);
+
+        DevelopmentCardCount = dto.DevelopmentCardCount;
+        foreach (var kvp in dto.DevelopmentCards)
+            DevelopmentCards[kvp.Key] = kvp.Value;
+
+        ResourceCount = dto.ResourceCount;
+        foreach (var kvp in dto.Resources)
+            Resources[kvp.Key] = kvp.Value;
+    }
+
+    public void AssignResource(ResourceType type, int count)
+    {
+        if (type == ResourceType.Desert)
+            throw new ArgumentException("Desert is not a resource that can be earned/owned.");
+
+        Resources[type] += count;
+        ResourceCount += count;
+
+    }
+
+    public void AssignDevelopmentCard(DevelopmentCardType type)
+    {
+        DevelopmentCards[type]++;
+        DevelopmentCardCount++;
     }
 
     public override string ToString() => $"{Name} ({Id}) - {Color}";
