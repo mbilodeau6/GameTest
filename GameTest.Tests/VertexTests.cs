@@ -7,22 +7,6 @@ namespace GameTest.Tests;
 public class VertexTests
 {
     [Fact]
-    public void Constructor_VertexWithOwner_CreatesExpectedVertex()
-    {
-        // Arrange
-        var player = new Player("Alice", PlayerColor.Blue);
-        var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-
-        // Act
-        var vertex = new Vertex(player, tile);
-
-        // Assert
-        Assert.True(TestHelpers.ValidateId(vertex.Id, 'V'));
-        Assert.Single(vertex.Tiles);
-        Assert.All(vertex.Tiles, t => Assert.NotNull(t));
-    }
-
-    [Fact]
     public void Constructor_VertexOfSingleTile_CreatesExpectedVertex()
     {
         // Arrange
@@ -161,7 +145,8 @@ public class VertexTests
         // Arrange
         var player = new Player("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var vertex = new Vertex(player, tile);
+        var vertex = new Vertex(tile, VertexDirection.S);
+        vertex.BuildSettlement(player);
 
         // Act
         vertex.UpgradeToCity();
@@ -176,7 +161,8 @@ public class VertexTests
         // Arrange
         var player = new Player("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var vertex = new Vertex(player, tile);
+        var vertex = new Vertex(tile, VertexDirection.SW);
+        vertex.BuildSettlement(player);
         vertex.UpgradeToCity();
 
         // Act & Assert
@@ -190,7 +176,8 @@ public class VertexTests
         // Arrange
         var player = new Player("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var vertex = new Vertex(player, tile);
+        var vertex = new Vertex(tile, VertexDirection.SE);
+        vertex.BuildSettlement(player);
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => vertex.DowngradeToSettlement());
@@ -203,7 +190,8 @@ public class VertexTests
         // Arrange
         var player = new Player("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var vertex = new Vertex(player, tile);
+        var vertex = new Vertex(tile, VertexDirection.S);
+        vertex.BuildSettlement(player);
         vertex.UpgradeToCity();
 
         // Act
@@ -219,7 +207,8 @@ public class VertexTests
         // Arrange
         var player = new Player("Bob", PlayerColor.Green);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var vertex = new Vertex(player, tile);
+        var vertex = new Vertex(tile, VertexDirection.N);
+        vertex.BuildSettlement(player);
 
         // Act
         var result = vertex.ToString();

@@ -47,7 +47,7 @@ public class GameStateDTO
     public GameStateDTO(GameState gameState)
     {
         Id = gameState.Id.ToString();
-        Type = gameState.Type.ToString();
+        Type = gameState.Settings.Type.ToString();
 
         foreach (var player in gameState.Players)
             Players.Add(new PlayerDTO(player));

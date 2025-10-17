@@ -45,19 +45,6 @@ public class Vertex
             Tiles.Add(tile3);
     }
 
-    // TODO: Remove version that creates new vertex with owner once I add method to add/remove settlements/cities.
-    public Vertex(Player owner, Tile tile1, Tile? tile2 = null, Tile? tile3 = null) : this(tile1)
-    {
-        Owner = owner;
-        Building = BuildingType.Settlement;
-
-        if (tile2 != null)
-            Tiles.Add(tile2);
-
-        if (tile3 != null)
-            Tiles.Add(tile3);
-    }
-
     public Vertex(VertexDTO vertexDto, List<Player> players, List<Tile> tiles)
     {
         Id = vertexDto.Id;

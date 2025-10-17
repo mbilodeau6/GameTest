@@ -22,11 +22,12 @@ public class GameStateDTOTests
         gameState.Tiles.Add(tile1);
         gameState.Tiles.Add(tile2);
 
-        gameState.Edges.Add(new Edge(player1, tile1, tile2));
+        gameState.Edges.Add(new Edge(tile1, tile2));
         gameState.Edges.Add(new Edge(tile1, HexDirection.NE));
         gameState.Edges.Add(new Edge(tile2, HexDirection.SW));
 
-        gameState.Vertices.Add(new Vertex(player2, tile1, tile2));
+        gameState.Vertices.Add(new Vertex(tile1, tile2));
+        gameState.Vertices[0].BuildSettlement(player1);
         gameState.SetRobberTile(tile2);
 
         // Act

@@ -32,12 +32,6 @@ public class Edge
         Tiles.Add(t1 ?? throw new ArgumentNullException(nameof(t1)));
     }
 
-    // TODO: Remove version that creates new edge with owner once I add method to add/remove roads.
-    public Edge(Player owner, Tile t1, Tile t2) : this(t1, t2)
-    {
-        Owner = owner;
-    }
-
     public Edge(Tile t1, HexDirection direction) : this(t1)
     {
         Direction = direction;

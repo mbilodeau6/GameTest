@@ -6,9 +6,6 @@ namespace GameTest.Models;
 public class GameState
 {
     public Guid Id { get; init; }
-
-    // TODO: Remove (already covered in Settings) once Eric has confirmed he is no longer using
-    public GameType Type { get; init; }
     public GameSettings Settings { get; private set; } = new GameSettings();
     public List<Player> Players { get; } = new();
     public List<Tile> Tiles { get; } = new();
@@ -60,7 +57,6 @@ public class GameState
     {
         Id = guid;
         Settings.Type = type ?? GameType.Default;
-        Type = Settings.Type;
 
         InitializeDevelopmentCards();
     }
@@ -68,7 +64,6 @@ public class GameState
     public GameState(GameStateDTO dto)
     {
         Id = Guid.Parse(dto.Id);
-        Type = Enum.Parse<GameType>(dto.Type);
 
         foreach (var playerDto in dto.Players)
             Players.Add(new Player(playerDto));

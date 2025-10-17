@@ -55,7 +55,7 @@ public class GameStateTests
 
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
-        Assert.Equal(dto.Type, game.Type.ToString());
+        Assert.Equal(dto.Type, game.Settings.Type.ToString());
 
         // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
         Assert.Empty(game.Players);
@@ -78,7 +78,6 @@ public class GameStateTests
         gs.AddVertex(new Vertex(gs.Tiles[0], gs.Tiles[1]));
         gs.Vertices[0].BuildSettlement(gs.Players[0]);
 
-
         var dto = new GameStateDTO(Guid.NewGuid().ToString(), GameType.Default.ToString());
 
         // Act
@@ -86,7 +85,7 @@ public class GameStateTests
 
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
-        Assert.Equal(dto.Type, game.Type.ToString());
+        Assert.Equal(dto.Type, game.Settings.Type.ToString());
 
         // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
         Assert.Empty(game.Players);
@@ -191,9 +190,8 @@ public class GameStateTests
     public void AddVertex_AddSingleVertex()
     {
         // Arrange
-        var player = new Player("PlayerA", PlayerColor.Red);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var vertex = new Vertex(player, tile);
+        var vertex = new Vertex(tile, VertexDirection.N);
         var expectedVertexId = vertex.Id;
 
         // Act
