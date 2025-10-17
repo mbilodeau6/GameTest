@@ -45,6 +45,10 @@ public class GameStateDTOTests
         Assert.Equal(guid.ToString(), gameStateDTO.Id);
         Assert.Equal("Default", gameStateDTO.Settings.Type.ToString());
         Assert.Equal(tile2.Id, gameStateDTO.RobberTileId);
+        Assert.Equal(gameState.Settings.Type.ToString(), gameStateDTO.Settings.Type);
+        if (gameState.CurrentPlayer != null) 
+            Assert.Equal(gameState.CurrentPlayer.Id, gameStateDTO.CurrentPlayerId);
+        Assert.Equal(gameState.CurrentState.ToString(), gameStateDTO.CurrentState);
     }
 
         [Fact]

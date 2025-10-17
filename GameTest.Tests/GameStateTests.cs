@@ -42,6 +42,7 @@ public class GameStateTests
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
         Assert.Equal(GameType.Starter, game.Settings.Type);
+        Assert.Equal(GameStates.PrePlay, game.CurrentState);
     }
 
     [Fact]
@@ -110,6 +111,7 @@ public class GameStateTests
         Assert.Equal(player2.Id, game.Edges[0].Owner.Id);
         Assert.Single(game.Vertices);
         Assert.Equal(BuildingType.Settlement, game.Vertices[0].Building);
+        Assert.Equal(gs.CurrentState, game.CurrentState);
     }
 
     [Fact]

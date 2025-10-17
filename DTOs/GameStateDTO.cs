@@ -8,22 +8,24 @@ public class GameStateDTO
     public string Id { get; private set; }
     public GameSettingsDTO Settings { get; }
 
-    public List<PlayerDTO> Players { get; } = new();
-    public List<TileDTO> Tiles { get; } = new();
-    public List<EdgeDTO> Edges { get; } = new();
-    public List<VertexDTO> Vertices { get; } = new();
-    public string RobberTileId { get; } = string.Empty;
-
     public string CurrentPlayerId { get; } = string.Empty;
     public string CurrentState { get; } = string.Empty;
     public string HasLongestRoadPlayerId { get; } = string.Empty;
     public string HasLargestArmyPlayerId { get; } = string.Empty;
+    public string RobberTileId { get; } = string.Empty;
+    public List<PlayerDTO> Players { get; } = new();
+    public List<TileDTO> Tiles { get; } = new();
+    public List<EdgeDTO> Edges { get; } = new();
+    public List<VertexDTO> Vertices { get; } = new();
+
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public GameStateDTO(string id, GameSettingsDTO settings, List<PlayerDTO>? players = null,
-        List<TileDTO>? tiles = null, List<EdgeDTO>? edges = null,
-        List<VertexDTO>? vertices = null, string? robberTileId = null) 
+    public GameStateDTO(string id, GameSettingsDTO settings, string? robberTileId = null,
+        string? currentPlayerId = null, string? currentState = null,
+        string? hasLongestRoadPlayerId = null, string? hasLargestArmyPlayerId = null,
+        List<PlayerDTO>? players = null, List<TileDTO>? tiles = null,
+        List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null) 
     {
         Id = id ?? string.Empty;
         Settings = settings;
@@ -40,6 +42,11 @@ public class GameStateDTO
 
         foreach (var vertex in vertices ?? Enumerable.Empty<VertexDTO>())
             Vertices.Add(vertex);
+
+        CurrentPlayerId = currentPlayerId ?? string.Empty;
+        CurrentState = currentState ?? string.Empty;
+        HasLongestRoadPlayerId = hasLongestRoadPlayerId ?? string.Empty;
+        HasLargestArmyPlayerId = hasLargestArmyPlayerId ?? string.Empty;
     }
 
     public GameStateDTO(GameState gameState)
@@ -60,5 +67,16 @@ public class GameStateDTO
             Vertices.Add(new VertexDTO(vertex));
 
         RobberTileId = gameState.RobberTile.Id;
+
+        if (gameState.CurrentPlayer != null)
+            CurrentPlayerId = gameState.CurrentPlayer.Id;
+
+        CurrentState = gameState.CurrentState.ToString();
+
+        if (gameState.PlayerWithLongestRoad != null)
+            HasLongestRoadPlayerId = gameState.PlayerWithLongestRoad.Id;
+
+        if (gameState.PlayerWithLargestArmy != null)
+            HasLargestArmyPlayerId = gameState.PlayerWithLargestArmy.Id; 
     }
 }
