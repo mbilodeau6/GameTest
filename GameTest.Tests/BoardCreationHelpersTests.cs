@@ -177,7 +177,7 @@ public class BoardCreationHelpersTests
 
         // Assert
         Assert.Equal(2, gameState.Players.Count);
-        Assert.Contains(gameState.Players, p => p.Name == "Bob" && p.Color == PlayerColor.Blue);
-        Assert.Contains(gameState.Players, p => p.Name == "Mary" && p.Color == PlayerColor.Red);
+        Assert.Contains(gameState.Players, p => p.Name == "Lisa" && p.Color == PlayerColor.Blue);
+        Assert.Contains(gameState.Players, p => p.Name == "Hal" && p.Color == PlayerColor.Red);
     }
 }

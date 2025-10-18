@@ -20,8 +20,9 @@ public class Player
     private static int s_nextId = 0;
 
     public string Id { get; init; }
-    public string Name { get; set; }
+    public string Name { get; set;  }
     public PlayerColor Color { get; set; }
+    public bool IsBot { get;  }
 
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
@@ -57,7 +58,7 @@ public class Player
         Color = PlayerColor.Red;
     }
 
-    public Player(string name, PlayerColor color)
+    public Player(string name, PlayerColor color, bool isBot = false)
     {
         Id = $"P{Interlocked.Increment(ref s_nextId)}";
 
@@ -67,6 +68,7 @@ public class Player
 
         Name = name;
         Color = color;
+        IsBot = isBot;
     }
 
     public Player(PlayerDTO dto)
@@ -82,6 +84,8 @@ public class Player
         ResourceCount = dto.ResourceCount;
         foreach (var kvp in dto.Resources)
             Resources[kvp.Key] = kvp.Value;
+
+        IsBot = dto.IsBot;
     }
 
     public void AssignResource(ResourceType type, int count)

@@ -1,4 +1,5 @@
 using GameTest.Models;
+using GameTest.Tests;
 
 namespace GameTest.Services;
 
@@ -209,15 +210,11 @@ public static class BoardCreationHelpers
 
         gameState.PlaceRobberOnDesert();
         CreateEdgesAndVerticesForBoard(gameState);
+        BoardCreationHelpers.AddPlayers(gameState);
 
         if (gameType == GameType.Test)
         {
             // Add some roads/settlements for testing purposes
-            var player1 = new Player("Julie", PlayerColor.Red);
-            var player2 = new Player("John", PlayerColor.Blue);
-            gameState.AddPlayer(player1);
-            gameState.AddPlayer(player2);
-
             var BrickTile = GetRequiredTileAt(gameState.Tiles, -2, 0);
             var GrainTile = GetRequiredTileAt(gameState.Tiles, 0, 0);
             var OreTile = GetRequiredTileAt(gameState.Tiles, 2, 0);
@@ -225,20 +222,16 @@ public static class BoardCreationHelpers
             var WoodTile = GetRequiredTileAt(gameState.Tiles, 1, 1);
 
             var redEdge = gameState.Edges.First(e => e.Tiles.Contains(BrickTile) && e.Tiles.Contains(LowerWoolTile));
-            redEdge.BuildRoad(player1);
+            redEdge.BuildRoad(gameState.Players[0]);
 
             var redVertex = gameState.Vertices.First(v => v.Tiles.Contains(BrickTile) && v.Tiles.Contains(GrainTile) && v.Tiles.Contains(LowerWoolTile));
-            redVertex.BuildSettlement(player1);
+            redVertex.BuildSettlement(gameState.Players[0]);
 
             var blueEdge = gameState.Edges.First(e => e.Tiles.Contains(GrainTile) && e.Tiles.Contains(WoodTile));
-            blueEdge.BuildRoad(player2);
+            blueEdge.BuildRoad(gameState.Players[1]);
 
             var blueVertex = gameState.Vertices.First(v => v.Tiles.Contains(OreTile) && v.Tiles.Contains(GrainTile) && v.Tiles.Contains(WoodTile));
-            blueVertex.BuildSettlement(player2);
-        }
-        else
-        {
-            BoardCreationHelpers.AddPlayers(gameState);
+            blueVertex.BuildSettlement(gameState.Players[1]);
         }
 
         return gameState;
@@ -246,8 +239,8 @@ public static class BoardCreationHelpers
     
     public static void AddPlayers(GameState gameState)
     {
-        var p1 = new Player("Bob", PlayerColor.Blue);
-        var p2 = new Player("Mary", PlayerColor.Red);
+        var p1 = new Player("Lisa", PlayerColor.Blue);
+        var p2 = new Player("Hal", PlayerColor.Red, true);
 
         gameState.AddPlayer(p1);
         gameState.AddPlayer(p2);

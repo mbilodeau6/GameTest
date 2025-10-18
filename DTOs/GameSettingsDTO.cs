@@ -35,4 +35,14 @@ public class GameSettingsDTO
         SettlementsPerPlayer = settings.SettlementsPerPlayer;
         CitiesPerPlayer = settings.CitiesPerPlayer;
     }
+
+    public GameSettingsDTO(GameSettingsDTO dto)
+    {
+        Type = dto.Type;
+        MaxPlayers = dto.MaxPlayers;
+        VictoryPointsToWin = dto.VictoryPointsToWin;
+        RoadsPerPlayer = dto.RoadsPerPlayer;
+        SettlementsPerPlayer = dto.SettlementsPerPlayer;
+        CitiesPerPlayer = dto.CitiesPerPlayer;
+    }
 }

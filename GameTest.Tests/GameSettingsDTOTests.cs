@@ -23,4 +23,24 @@ public class GameSettingsDTOTests
         Assert.Equal(settings.SettlementsPerPlayer, settingsDTO.SettlementsPerPlayer);
         Assert.Equal(settings.VictoryPointsToWin, settingsDTO.VictoryPointsToWin);
     }
+
+    [Fact]
+    public void Constructor_CopyConstructor()
+    {
+        // Arrange
+        var settings = new GameSettings();
+        var settingsDTO = new GameSettingsDTO(settings);
+
+        // Act
+        var copiedDTO = new GameSettingsDTO(settingsDTO);
+
+        // Assert
+        Assert.Equal(settings.Type.ToString(), copiedDTO.Type);
+        Assert.Equal(settings.CitiesPerPlayer, copiedDTO.CitiesPerPlayer);
+        Assert.Equal(settings.MaxPlayers, copiedDTO.MaxPlayers);
+        Assert.Equal(settings.RoadsPerPlayer, copiedDTO.RoadsPerPlayer);
+        Assert.Equal(settings.SettlementsPerPlayer, copiedDTO.SettlementsPerPlayer);
+        Assert.Equal(settings.VictoryPointsToWin, copiedDTO.VictoryPointsToWin);
+
+    }
 }

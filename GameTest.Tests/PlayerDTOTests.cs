@@ -20,7 +20,7 @@ public class PlayerDTOTests
     {
         var player = createTestPlayer();
 
-        var playerDto = new PlayerDTO(player);
+        var playerDto = new PlayerDTO(player, false);
 
         Assert.Equal(player.Name, playerDto.Name);
         Assert.Equal(player.Color.ToString(), playerDto.Color);
@@ -28,6 +28,7 @@ public class PlayerDTOTests
         Assert.Equal(player.Resources[ResourceType.Wool], playerDto.Resources[ResourceType.Wool]);
         Assert.Equal(player.DevelopmentCardCount, playerDto.DevelopmentCardCount);
         Assert.Equal(player.DevelopmentCards[DevelopmentCardType.Monopoly], playerDto.DevelopmentCards[DevelopmentCardType.Monopoly]);
+        Assert.False(player.IsBot);
     }
 
     [Fact]
@@ -35,7 +36,7 @@ public class PlayerDTOTests
     {
         var player = createTestPlayer();
 
-        var playerDto = new PlayerDTO(player, false);
+        var playerDto = new PlayerDTO(player, true);
 
         Assert.Equal(player.Name, playerDto.Name);
         Assert.Equal(player.Color.ToString(), playerDto.Color);

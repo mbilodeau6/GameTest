@@ -20,6 +20,7 @@ public class PlayerTests
         Assert.All(player.DevelopmentCards.Values, v => Assert.Equal(0, v));
         Assert.Equal(0, player.DevelopmentCardCount);
         Assert.Equal(0, player.ResourceCount);
+        Assert.False(player.IsBot);
     }
 
     [Fact]
@@ -30,12 +31,13 @@ public class PlayerTests
         string expectedName = "Robert";
 
         // Act
-        var player = new Player(expectedName, expectedColor);
+        var player = new Player(expectedName, expectedColor, true);
 
         // Assert
         Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
         Assert.Equal(expectedName, player.Name);
         Assert.Equal(expectedColor, player.Color);
+        Assert.True(player.IsBot);
     }
 
     [Fact]
@@ -56,13 +58,13 @@ public class PlayerTests
     public void Constructor_FromDTO_ValidData()
     {
         // Arrange
-        var orig_player = new Player("Mary", PlayerColor.White);
+        var orig_player = new Player("Mary", PlayerColor.White, true);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.Knight);
         orig_player.AssignResource(ResourceType.Brick, 2);
         orig_player.AssignResource(ResourceType.Ore, 1);
 
-        var dto = new DTOs.PlayerDTO(orig_player);
+        var dto = new DTOs.PlayerDTO(orig_player, false);
 
         // Act
         var new_player = new Player(dto);
@@ -79,6 +81,7 @@ public class PlayerTests
         Assert.Equal(2, new_player.Resources[ResourceType.Brick]);
         Assert.Equal(1, new_player.Resources[ResourceType.Ore]);
         Assert.Equal(0, new_player.Resources[ResourceType.Grain]);
+        Assert.True(new_player.IsBot);
     }
 
     [Fact]

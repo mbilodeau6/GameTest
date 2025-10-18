@@ -9,6 +9,7 @@ using Azure.Storage.Blobs;
 using GameTest.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using GameTest.DTOs;
 
 namespace GameTest.Services;
 
@@ -123,7 +124,9 @@ public class GameService
 
     public async Task<DTOs.GameStateDTO?> GetGameAsync(Guid id)
     {
-        return await GetGameDTO(id.ToString());
+        GameStateDTO? fullDTO = await GetGameDTO(id.ToString());
+
+        return fullDTO;
     }
 
     public async Task<string?> BuildRoadAsync(Guid gameId, string edgeId, string playerId)
