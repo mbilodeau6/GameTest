@@ -15,6 +15,7 @@ public class GameState
     public Tile RobberTile { get; private set; } = null!;
     public Player PlayerWithLongestRoad { get; private set; } = null!;
     public Player PlayerWithLargestArmy { get; private set; } = null!;
+    public GameDice Dice { get; } = new GameDice(true);
 
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
@@ -59,6 +60,9 @@ public class GameState
         Id = guid;
         Settings = new GameSettings(type);
 
+        if (type == GameType.Test)
+            Dice = new GameDice(false);
+
         InitializeDevelopmentCards();
     }
 
@@ -84,6 +88,8 @@ public class GameState
 
         foreach (var vertexDto in dto.Vertices)
             Vertices.Add(new Vertex(vertexDto, Players, Tiles));
+
+        Dice = dto.Dice;
     }
 
     public void AddPlayer(Player player)

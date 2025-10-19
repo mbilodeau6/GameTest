@@ -15,6 +15,7 @@ public class GameStateDTO
     public string HasLongestRoadPlayerId { get; } = string.Empty;
     public string HasLargestArmyPlayerId { get; } = string.Empty;
     public string RobberTileId { get; } = string.Empty;
+    public GameDice Dice { get; } = new GameDice(true);
     public List<PlayerDTO> Players { get; } = new();
     public List<TileDTO> Tiles { get; } = new();
     public List<EdgeDTO> Edges { get; } = new();
@@ -24,6 +25,7 @@ public class GameStateDTO
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public GameStateDTO(string id, GameSettingsDTO settings, string? robberTileId = null,
+        GameDice? dice = null, 
         string? currentPlayerId = null, string? currentState = null,
         string? hasLongestRoadPlayerId = null, string? hasLargestArmyPlayerId = null,
         List<PlayerDTO>? players = null, List<TileDTO>? tiles = null,
@@ -32,6 +34,7 @@ public class GameStateDTO
         Id = id ?? string.Empty;
         Settings = settings;
         RobberTileId = robberTileId ?? string.Empty;
+        Dice = dice ?? new GameDice(true);
 
         foreach (var player in players ?? Enumerable.Empty<PlayerDTO>())
             Players.Add(player);
@@ -73,6 +76,8 @@ public class GameStateDTO
 
         foreach (var vertex in dto.Vertices)
             Vertices.Add(vertex);
+
+        Dice = dto.Dice;
     }
 
     public GameStateDTO(GameState gameState)
@@ -104,6 +109,8 @@ public class GameStateDTO
 
         if (gameState.PlayerWithLargestArmy != null)
             HasLargestArmyPlayerId = gameState.PlayerWithLargestArmy.Id;
+
+        Dice = gameState.Dice;
     }
 
     public GameStateDTO GetStateForPlayer(Player player)

@@ -30,6 +30,7 @@ public class GameStateTests
         Assert.Equal(GameType.Default, game.Settings.Type);
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
+        Assert.True(game.Dice.Die1.Random);
     }
 
     [Fact]
@@ -93,8 +94,6 @@ public class GameStateTests
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
         Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
-
-        // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
         Assert.Equal(2, game.Settings.MaxPlayers);
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
         Assert.Equal(15, game.Settings.RoadsPerPlayer);
@@ -112,6 +111,8 @@ public class GameStateTests
         Assert.Single(game.Vertices);
         Assert.Equal(BuildingType.Settlement, game.Vertices[0].Building);
         Assert.Equal(gs.CurrentState, game.CurrentState);
+        Assert.False(gs.Dice.Die1.Random);
+        Assert.False(gs.Dice.Die2.Random);
     }
 
     [Fact]

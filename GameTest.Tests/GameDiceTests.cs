@@ -8,7 +8,7 @@ public class GameDiceTests
     [Fact]
     public void Constructor_Random()
     {
-        GameDice dice = new GameDice();
+        GameDice dice = new GameDice(true);
 
         Assert.True(dice.Die1.Random);
         Assert.True(dice.Die2.Random);
@@ -35,5 +35,16 @@ public class GameDiceTests
         Assert.Equal(4, dice.Die1.Value + dice.Die2.Value);
         dice.Roll();
         Assert.Equal(9, dice.Die1.Value + dice.Die2.Value);
+    }
+
+    [Fact]
+    public void Constructor_Serialization()
+    {
+        GameDice dice = new GameDice(5, 1);
+
+        Assert.True(dice.Die1.Random);
+        Assert.Equal(5, dice.Die1.Value);
+        Assert.True(dice.Die2.Random);
+        Assert.Equal(1, dice.Die2.Value);
     }
 }

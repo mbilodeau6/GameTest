@@ -1,4 +1,6 @@
 namespace GameTest.Models;
+using System.Text.Json.Serialization;
+
 
 public class GameDie
 {
@@ -13,7 +15,16 @@ public class GameDie
     {
         Random = random;
     }
-    
+
+    // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
+    // Only used for serialization/deserialized for displaying last roll
+    [JsonConstructor]
+    public GameDie(int value, bool random = true)
+    {
+        Random = random;
+        Value = value;
+    }
+
     public void Roll()
     {
         if (Random)

@@ -35,4 +35,12 @@ public class GameDieTests
         die.Roll();
         Assert.Equal(6, die.Value);
     }
+
+    [Fact]
+    public void Constructor_Serialization()
+    {
+        GameDie die = new GameDie(4);
+        Assert.True(die.Random);
+        Assert.Equal(4, die.Value);
+    }
 }

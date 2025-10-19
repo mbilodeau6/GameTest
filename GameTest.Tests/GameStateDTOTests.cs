@@ -63,6 +63,7 @@ public class GameStateDTOTests
         if (gameState.CurrentPlayer != null) 
             Assert.Equal(gameState.CurrentPlayer.Id, gameStateDTO.CurrentPlayerId);
         Assert.Equal(gameState.CurrentState.ToString(), gameStateDTO.CurrentState);
+        Assert.True(gameStateDTO.Dice.Die1.Random);
     }
 
     [Fact]
