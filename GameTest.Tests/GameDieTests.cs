@@ -27,13 +27,18 @@ public class GameDieTests
         Assert.False(die.Random);
 
         die.Roll();
-        Assert.Equal(2, die.Value);
-        die.Roll();
         Assert.Equal(1, die.Value);
+        die.Roll();
+        Assert.Equal(2, die.Value);
         die.Roll();
         Assert.Equal(3, die.Value);
         die.Roll();
+        die.Roll();
+        die.Roll();
         Assert.Equal(6, die.Value);
+        die.Roll();
+        Assert.Equal(1, die.Value);
+
     }
 
     [Fact]

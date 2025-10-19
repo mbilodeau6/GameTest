@@ -56,9 +56,9 @@ public class GameDiceTests
         dice.Roll();
         Assert.Equal(3, dice.Die1.Value + dice.Die2.Value);
         dice.Roll();
-        Assert.Equal(4, dice.Die1.Value + dice.Die2.Value);
+        Assert.Equal(5, dice.Die1.Value + dice.Die2.Value);
         dice.Roll();
-        Assert.Equal(9, dice.Die1.Value + dice.Die2.Value);
+        Assert.Equal(7, dice.Die1.Value + dice.Die2.Value);
     }
 
 }

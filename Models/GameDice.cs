@@ -11,7 +11,8 @@ public class GameDice
         Die1 = new GameDie(random);
         Die2 = new GameDie(random);
 
-        Die2.Roll();
+        if (!random) 
+            Die2.Roll();
     }
 
     // Only used for serialization/deserialized for displaying last roll

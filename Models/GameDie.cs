@@ -6,8 +6,6 @@ public class GameDie
 {
     public int Value { get; private set; } = 0;
     public bool Random { get; }
-    private int RollCount = 0;
-    private List<int> nonRandomRolls = new List<int> { 2, 1, 3, 6, 4, 4, 1, 2, 5, 3 };
 
     private static readonly Random _random = new();
 
@@ -33,9 +31,7 @@ public class GameDie
         }
         else
         {
-            Value = nonRandomRolls[RollCount % nonRandomRolls.Count];
+            Value = (Value % 6) +1;
         }
-        
-        RollCount++;
     }
 }
