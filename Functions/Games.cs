@@ -19,6 +19,13 @@ public class Games
         _gameService = gameService;
     }
 
+    private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode code, string msg)
+    {
+        var response = req.CreateResponse(HttpStatusCode.NotFound);
+        await response.WriteStringAsync(msg);
+        return response;
+    }
+
     [Function("Games")]
     public async Task<HttpResponseData> CreateGame(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games")] HttpRequestData req)
@@ -28,11 +35,7 @@ public class Games
         var request = JsonSerializer.Deserialize<CreateGameRequest>(body, options);
 
         if (request == null || string.IsNullOrWhiteSpace(request.GameType))
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Request must include non-empty 'gameType'.");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include non-empty 'gameType'.");
 
         var gameState = _gameService.CreateGame(request.GameType);
         var dto = new GameStateDTO(gameState);
@@ -50,27 +53,15 @@ public class Games
         _logger.LogInformation("BuildRoad called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-        {
-            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFound.WriteStringAsync("Invalid game id.");
-            return notFound;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
 
         var request = await req.ReadFromJsonAsync<BuildRoadRequest>();
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.EdgeId))
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Request must include 'playerId' and 'edgeId'.");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId' and 'edgeId'.");
 
         var updated = await _gameService.BuildRoadAsync(guid, request.EdgeId, request.PlayerId);
         if (updated == null)
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Could not build road (game/player/edge missing or edge occupied).");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not build road (game/player/edge missing or edge occupied).");
 
         var ok = req.CreateResponse(HttpStatusCode.OK);
         await ok.WriteAsJsonAsync(updated);
@@ -85,33 +76,21 @@ public class Games
         _logger.LogInformation("BuildSettlement called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-        {
-            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFound.WriteStringAsync("Invalid game id.");
-            return notFound;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
 
         var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Request must include 'playerId' and 'vertexId'.");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId' and 'vertexId'.");
 
         var updated = await _gameService.BuildSettlementAsync(guid, request.VertexId, request.PlayerId);
         if (updated == null)
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Could not build settlement (game/player/vertex missing or vertex occupied).");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not build settlement (game/player/vertex missing or vertex occupied).");
 
         var ok = req.CreateResponse(HttpStatusCode.OK);
         await ok.WriteAsJsonAsync(updated);
         return ok;
     }
-
+    
     [Function("BuildCity")]
     public async Task<HttpResponseData> BuildCity(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/build/city")] HttpRequestData req,
@@ -120,27 +99,15 @@ public class Games
         _logger.LogInformation("BuildCity called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-        {
-            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFound.WriteStringAsync("Invalid game id.");
-            return notFound;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
 
         var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Request must include 'playerId' and 'vertexId'.");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId' and 'vertexId'.");
 
         var updated = await _gameService.BuildCityAsync(guid, request.VertexId, request.PlayerId);
         if (updated == null)
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Could not build city (game/player missing or vertex not appropriate for city build).");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not build city (game/player missing or vertex not appropriate for city build).");
 
         var ok = req.CreateResponse(HttpStatusCode.OK);
         await ok.WriteAsJsonAsync(updated);
@@ -155,22 +122,34 @@ public class Games
         _logger.LogInformation("GetGameById called for id {Id}", id);
 
         if (!Guid.TryParse(id, out var guid))
-        {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Invalid GUID.");
-            return bad;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
 
         var dto = await _gameService.GetGameAsync(guid);
         if (dto == null)
-        {
-            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFound.WriteStringAsync($"Game not found (guid:{guid}).");
-            return notFound;
-        }
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, $"Game not found (guid:{guid}).");
 
         var ok = req.CreateResponse(HttpStatusCode.OK);
         await ok.WriteAsJsonAsync(dto);
         return ok;
     }
+
+    [Function("RollDice")]
+    public async Task<HttpResponseData> RollDice(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/roll")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("RollDice called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+
+        var diceRolled = await _gameService.RollDiceAsync(guid);
+        if (diceRolled == null)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not roll dice.");
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync(diceRolled);
+        return ok;
+    }
+
 }

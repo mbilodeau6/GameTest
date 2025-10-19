@@ -271,5 +271,4 @@ public class GameStateTests
 
         Assert.Equal("Robber is already on the specified tile.", exception.Message);
     }
-
 }

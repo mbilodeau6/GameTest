@@ -205,10 +205,10 @@ public class GameService
             if (vertex == null)
                 return $"Vertex {vertexId} not found in game {gameId}";
 
-            if (vertex.Building == BuildingType.Settlement )
+            if (vertex.Building == BuildingType.Settlement)
                 return $"Vertex {vertexId} in game {gameId} already has a settlement.";
 
-            if (vertex.Building == BuildingType.City )
+            if (vertex.Building == BuildingType.City)
                 return $"Vertex {vertexId} in game {gameId} already has a city.";
 
             vertex.BuildSettlement(player);
@@ -261,12 +261,12 @@ public class GameService
             if (vertex == null)
                 return $"Vertex {vertexId} not found in game {gameId}";
 
-            if (vertex.Building == null || vertex.Owner == null )
+            if (vertex.Building == null || vertex.Owner == null)
                 return $"Vertex {vertexId} in game {gameId} does not have a settlement to upgrade.";
 
             if (vertex.Building == BuildingType.City)
                 return $"Vertex {vertexId} in game {gameId} already has a city.";
-                
+
             if (vertex.Owner.Id != playerId)
                 return $"Vertex {vertexId} in game {gameId} is owned by another player.";
 
@@ -293,6 +293,54 @@ public class GameService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to build city on vertex {VertexId} for game {GameId}.", vertexId, gameId);
+            return null;
+        }
+    }
+
+    public async Task<GameDice?> RollDiceAsync(Guid gameId)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return null;
+        }
+
+        try
+        {
+            var dto = await GetGameDTO(gameId.ToString());
+            if (dto == null)
+            {
+                _logger.LogError("Unable to retrieve game {GameId}.", gameId);
+                return null;
+            }
+
+            var gs = new GameState(dto);
+            gs.Dice.Roll();
+
+            // TODO: Need to assign resources based on the dice roll.
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var updatedDto = new DTOs.GameStateDTO(gs);
+
+            var json = JsonSerializer.Serialize(updatedDto, options);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Rolled: {die1}, {die2}.", gs.Dice.Die1.Value, gs.Dice.Die2.Value);
+
+            return gs.Dice;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to rolle dice for game {GameId}.", gameId);
             return null;
         }
     }
