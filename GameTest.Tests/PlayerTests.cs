@@ -61,8 +61,8 @@ public class PlayerTests
         var orig_player = new Player("Mary", PlayerColor.White, true);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.Knight);
-        orig_player.AssignResource(ResourceType.Brick, 2);
-        orig_player.AssignResource(ResourceType.Ore, 1);
+        orig_player.AssignResources(ResourceType.Brick, 2);
+        orig_player.AssignResources(ResourceType.Ore, 1);
 
         var dto = new DTOs.PlayerDTO(orig_player, false);
 
@@ -123,7 +123,7 @@ public class PlayerTests
         var player = new Player("Mary", PlayerColor.Red);
 
         // Act
-        player.AssignResource(ResourceType.Grain, 1);
+        player.AssignResources(ResourceType.Grain, 1);
 
         // Assert
         Assert.Equal(1, player.Resources[ResourceType.Grain]);
@@ -135,11 +135,11 @@ public class PlayerTests
     {
         // Arrange
         var player = new Player("Mary", PlayerColor.Red);
-        player.AssignResource(ResourceType.Brick, 1);
-        player.AssignResource(ResourceType.Ore, 1);
+        player.AssignResources(ResourceType.Brick, 1);
+        player.AssignResources(ResourceType.Ore, 1);
 
         // Act
-        player.AssignResource(ResourceType.Ore, 2);
+        player.AssignResources(ResourceType.Ore, 2);
 
         // Assert
         Assert.Equal(3, player.Resources[ResourceType.Ore]);
@@ -154,7 +154,7 @@ public class PlayerTests
 
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
-            player.AssignResource(ResourceType.Desert, 1));
+            player.AssignResources(ResourceType.Desert, 1));
 
         Assert.Equal("Desert is not a resource that can be earned/owned.", exception.Message);
     }
@@ -172,7 +172,7 @@ public class PlayerTests
         Assert.Equal(1, player.DevelopmentCards[DevelopmentCardType.Knight]);
         Assert.Equal(1, player.DevelopmentCardCount);
     }
-    
+
     [Fact]
     public void AssignDevelopmentCard_AdditionalCard()
     {
@@ -188,5 +188,60 @@ public class PlayerTests
         // Assert
         Assert.Equal(3, player.DevelopmentCards[DevelopmentCardType.Knight]);
         Assert.Equal(4, player.DevelopmentCardCount);
+    }
+
+    private Player CreatePlayerWithResources()
+    {
+        var player = new Player("Mary", PlayerColor.Red);
+        player.AssignResources(ResourceType.Brick, 2);
+        player.AssignResources(ResourceType.Ore, 3);
+
+        return player;
+    }
+
+    [Fact]
+    public void RemoveResources_ExactAmount()
+    {
+        // Arrange
+        var player = CreatePlayerWithResources();
+        Assert.Equal(2, player.Resources[ResourceType.Brick]);
+
+        // Act
+        player.RemoveResources(ResourceType.Brick, 2);
+
+        // Assert
+        Assert.Equal(0, player.Resources[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void RemoveResources_FewerThanOwn()
+    {
+        // Arrange
+        var player = CreatePlayerWithResources();
+        Assert.Equal(3, player.Resources[ResourceType.Ore]);
+
+        // Act
+        player.RemoveResources(ResourceType.Ore, 2);
+
+        // Assert
+        Assert.Equal(1, player.Resources[ResourceType.Ore]);
+    }
+    
+    [Fact]
+    public void RemoveResources_MoreThanOwn()
+    {
+        // Arrange
+        var player = CreatePlayerWithResources();
+        Assert.Equal(2, player.Resources[ResourceType.Brick]);
+
+        // Act
+        // Assert
+        var exception = Assert.Throws<ArgumentException>(() =>
+            player.RemoveResources(ResourceType.Brick, 3));
+
+        Assert.Equal("Player doesn't have 3 Brick.", exception.Message);
+
+        // Assert
+        Assert.Equal(2, player.Resources[ResourceType.Brick]);
     }
 }

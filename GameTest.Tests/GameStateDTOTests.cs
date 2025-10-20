@@ -30,10 +30,10 @@ public class GameStateDTOTests
         gameState.SetRobberTile(tile2);
 
         gameState.Players[0].AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
-        gameState.Players[0].AssignResource(ResourceType.Ore, 2);
+        gameState.Players[0].AssignResources(ResourceType.Ore, 2);
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
-        gameState.Players[1].AssignResource(ResourceType.Brick, 1);
+        gameState.Players[1].AssignResources(ResourceType.Brick, 1);
 
         return gameState;
     }

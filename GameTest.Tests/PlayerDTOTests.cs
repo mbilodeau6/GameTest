@@ -10,7 +10,7 @@ public class PlayerDTOTests
     {
         var player = new Player("Henry", PlayerColor.White);
         player.AssignDevelopmentCard(DevelopmentCardType.Monopoly);
-        player.AssignResource(ResourceType.Wool, 2);
+        player.AssignResources(ResourceType.Wool, 2);
 
         return player;
     }

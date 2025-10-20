@@ -88,7 +88,7 @@ public class Player
         IsBot = dto.IsBot;
     }
 
-    public void AssignResource(ResourceType type, int count)
+    public void AssignResources(ResourceType type, int count)
     {
         if (type == ResourceType.Desert)
             throw new ArgumentException("Desert is not a resource that can be earned/owned.");
@@ -96,6 +96,14 @@ public class Player
         Resources[type] += count;
         ResourceCount += count;
 
+    }
+
+    public void RemoveResources(ResourceType type, int count)
+    {
+        if (!Resources.ContainsKey(type) || Resources[type] < count)
+            throw new ArgumentException($"Player doesn't have {count} {type.ToString()}.");
+
+        Resources[type] -= count;
     }
 
     public void AssignDevelopmentCard(DevelopmentCardType type)

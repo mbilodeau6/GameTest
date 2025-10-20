@@ -54,7 +54,7 @@ public static class GamePlayHelpers
         {
             foreach (var kvpResource in kvpPlayer.Value)
             {
-                kvpPlayer.Key.AssignResource(kvpResource.Key, kvpResource.Value);
+                kvpPlayer.Key.AssignResources(kvpResource.Key, kvpResource.Value);
             }
         }
 
