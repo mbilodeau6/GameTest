@@ -97,9 +97,9 @@ public static class BoardCreationHelpers
         List<Tile> tiles = new List<Tile>
         {
             new Tile(ResourceType.Desert, 0, -1, -1),
-            new Tile(ResourceType.Wool, 8, 1, -1),
+            new Tile(ResourceType.Wool, 11, 1, -1),
             new Tile(ResourceType.Brick, 5, -2, 0),
-            new Tile(ResourceType.Grain, 10, 0, 0),
+            new Tile(ResourceType.Grain, 9, 0, 0),
             new Tile(ResourceType.Ore, 3, 2, 0),
             new Tile(ResourceType.Wool, 2, -1, 1),
             new Tile(ResourceType.Wood, 6, 1, 1),
@@ -239,8 +239,8 @@ public static class BoardCreationHelpers
     
     public static void AddPlayers(GameState gameState)
     {
-        var p1 = new Player("Lisa", PlayerColor.Blue);
-        var p2 = new Player("Hal", PlayerColor.Red, true);
+        var p1 = new Player("Lisa", PlayerColor.Red);
+        var p2 = new Player("Hal", PlayerColor.Blue, true);
 
         gameState.AddPlayer(p1);
         gameState.AddPlayer(p2);

@@ -29,7 +29,7 @@ public class GamePlayHelpersTests
 
         var targetTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 0);
         Assert.NotNull(targetTile);
-        Assert.Equal(10, targetTile.DiceNumber);
+        Assert.Equal(9, targetTile.DiceNumber);
 
         var bluePlayer = gameState.Players.First(p => p.Color == PlayerColor.Blue);
         Assert.NotNull(bluePlayer);
@@ -41,7 +41,7 @@ public class GamePlayHelpersTests
         Assert.Equal(BuildingType.Settlement, blueVertex.Building);
         blueVertex.UpgradeToCity();
 
-        gameState.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(6)));
+        gameState.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(5)));
 
         // Act
         var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(gameState);
@@ -63,7 +63,7 @@ public class GamePlayHelpersTests
         // Act
         // Assert
         Assert.Equal(1, GamePlayHelpers.GetVictoryPointsForBuild(BuildingType.Settlement));
-    }    
+    }
 
     [Fact]
     public void GetVictoryPointsForBuild_ForCity()
@@ -72,6 +72,38 @@ public class GamePlayHelpersTests
         // Act
         // Assert
         Assert.Equal(2, GamePlayHelpers.GetVictoryPointsForBuild(BuildingType.City));
-    }    
+    }
+
+    [Fact]
+    public void AssignResourcesToPlayers()
+    {
+        // Arrange
+        GameState gameState = new GameState(new Guid());
+
+        var player1 = new Player("Fred", PlayerColor.Blue);
+        var player2 = new Player("Marge", PlayerColor.Orange);
+        gameState.AddPlayer(player1);
+        gameState.AddPlayer(player2);
+
+        Dictionary<Player, Dictionary<ResourceType, int>> resources = new Dictionary<Player, Dictionary<ResourceType, int>>();
+        resources.Add(player1, new Dictionary<ResourceType, int>());
+        resources[player1].Add(ResourceType.Ore, 4);
+        resources.Add(player2, new Dictionary<ResourceType, int>());
+        resources[player2].Add(ResourceType.Wood, 1);
+        resources[player2].Add(ResourceType.Brick, 2);
+
+        // Act
+        GamePlayHelpers.AssignResourcesToPlayers(gameState, resources);
+
+        // Assert
+        Assert.Equal(4, gameState.Players[0].Resources[ResourceType.Ore]);
+        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Brick]);
+        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(4, gameState.Players[0].ResourceCount);
+        Assert.Equal(0, gameState.Players[1].Resources[ResourceType.Ore]);
+        Assert.Equal(2, gameState.Players[1].Resources[ResourceType.Brick]);
+        Assert.Equal(1, gameState.Players[1].Resources[ResourceType.Wood]);
+        Assert.Equal(3, gameState.Players[1].ResourceCount);
+    }  
 
 }

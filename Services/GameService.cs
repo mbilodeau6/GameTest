@@ -317,7 +317,7 @@ public class GameService
             var gs = new GameState(dto);
             gs.Dice.Roll();
 
-            // TODO: Need to assign resources based on the dice roll.
+            GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
 
             var options = new JsonSerializerOptions
             {

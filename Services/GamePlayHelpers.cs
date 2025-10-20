@@ -47,4 +47,22 @@ public static class GamePlayHelpers
 
         return resourcesEarned;
     }
+
+    public static void AssignResourcesToPlayers(GameState gameState, Dictionary<Player, Dictionary<ResourceType, int>> resources)
+    {
+        foreach (var kvpPlayer in resources)
+        {
+            foreach (var kvpResource in kvpPlayer.Value)
+            {
+                kvpPlayer.Key.AssignResource(kvpResource.Key, kvpResource.Value);
+            }
+        }
+
+    }
+
+    public static void AssignResourcesBasedOnLastDiceRoll(GameState gameState)
+    {
+        var resources = GetResourcesEarnedOnLastRoll(gameState);
+        AssignResourcesToPlayers(gameState, resources);
+    }
 }

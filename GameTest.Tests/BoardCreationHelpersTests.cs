@@ -98,11 +98,11 @@ public class BoardCreationHelpersTests
         Assert.Equal(7, tiles.Count);
         Assert.Equal(ResourceType.Desert, tiles.GetRequiredTileAt(-1, -1).Resource);
         Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(1, -1).Resource);
-        Assert.Equal(8, tiles.GetRequiredTileAt(1, -1).DiceNumber);
+        Assert.Equal(11, tiles.GetRequiredTileAt(1, -1).DiceNumber);
         Assert.Equal(ResourceType.Brick, tiles.GetRequiredTileAt(-2, 0).Resource);
         Assert.Equal(5, tiles.GetRequiredTileAt(-2, 0).DiceNumber);
         Assert.Equal(ResourceType.Grain, tiles.GetRequiredTileAt(0, 0).Resource);
-        Assert.Equal(10, tiles.GetRequiredTileAt(0, 0).DiceNumber);
+        Assert.Equal(9, tiles.GetRequiredTileAt(0, 0).DiceNumber);
         Assert.Equal(ResourceType.Ore, tiles.GetRequiredTileAt(2, 0).Resource);
         Assert.Equal(3, tiles.GetRequiredTileAt(2, 0).DiceNumber);
         Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(-1, 1).Resource);
@@ -177,7 +177,7 @@ public class BoardCreationHelpersTests
 
         // Assert
         Assert.Equal(2, gameState.Players.Count);
-        Assert.Contains(gameState.Players, p => p.Name == "Lisa" && p.Color == PlayerColor.Blue);
-        Assert.Contains(gameState.Players, p => p.Name == "Hal" && p.Color == PlayerColor.Red);
+        Assert.Contains(gameState.Players, p => p.Name == "Lisa" && p.Color == PlayerColor.Red);
+        Assert.Contains(gameState.Players, p => p.Name == "Hal" && p.Color == PlayerColor.Blue);
     }
 }
