@@ -1,5 +1,6 @@
 using Xunit;
 using GameTest.Models;
+using System.Collections;
 
 namespace GameTest.Tests;
 
@@ -47,7 +48,7 @@ public class GameDiceTests
         }
 
     }
-    
+
     [Fact]
     public void Roll_NonRandomDice()
     {
@@ -59,6 +60,18 @@ public class GameDiceTests
         Assert.Equal(5, dice.Die1.Value + dice.Die2.Value);
         dice.Roll();
         Assert.Equal(7, dice.Die1.Value + dice.Die2.Value);
+    }
+    
+    [Fact]
+    public void GetCombinedValue_Valid()
+    {
+        // Arrange
+        GameDice dice = new GameDice(false);
+        dice.Roll();
+
+        // Act
+        // Assert
+        Assert.Equal(3, dice.GetCombinedValue());
     }
 
 }

@@ -271,4 +271,19 @@ public class GameStateTests
 
         Assert.Equal("Robber is already on the specified tile.", exception.Message);
     }
+
+    [Fact]
+    public void SetDiceForTesting_ChangeDice()
+    {
+        // Arrange
+        var game = new GameState(Guid.NewGuid());
+        var newDice = new GameDice(new GameDie(1), new GameDie(1));
+
+        // Act
+        game.SetDiceForTesting(newDice);
+
+        // Assert
+        Assert.Equal(1, game.Dice.Die1.Value); 
+        Assert.Equal(1, game.Dice.Die2.Value); 
+    }
 }

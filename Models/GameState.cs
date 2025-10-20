@@ -15,7 +15,7 @@ public class GameState
     public Tile RobberTile { get; private set; } = null!;
     public Player PlayerWithLongestRoad { get; private set; } = null!;
     public Player PlayerWithLargestArmy { get; private set; } = null!;
-    public GameDice Dice { get; } = new GameDice(true);
+    public GameDice Dice { get; private set; } = new GameDice(true);
 
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
@@ -122,7 +122,7 @@ public class GameState
 
         RobberTile = tile;
     }
-    
+
     public void PlaceRobberOnDesert()
     {
         var desertTile = Tiles.FirstOrDefault(t => t.Resource == ResourceType.Desert);
@@ -130,5 +130,10 @@ public class GameState
             throw new InvalidOperationException("No desert tile found in the game.");
 
         RobberTile = desertTile;
+    }
+    
+    public void SetDiceForTesting(GameDice dice)
+    {
+       Dice = dice;
     }
 }

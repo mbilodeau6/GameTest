@@ -35,4 +35,9 @@ public class GameDice
         Die1.Roll();
         Die2.Roll();
     }
+
+    public int GetCombinedValue()
+    {
+        return Die1.Value + Die2.Value;
+    }
 }
