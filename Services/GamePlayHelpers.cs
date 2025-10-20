@@ -65,4 +65,62 @@ public static class GamePlayHelpers
         var resources = GetResourcesEarnedOnLastRoll(gameState);
         AssignResourcesToPlayers(gameState, resources);
     }
+
+    public static bool WithdrawResourcesToBuildRoad(Player player)
+    {
+        if (player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
+            player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1)
+        {
+            player.RemoveResources(ResourceType.Wood, 1);
+            player.RemoveResources(ResourceType.Brick, 1);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool WithdrawResourcesToBuildSettlement(Player player)
+    {
+        if (player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
+            player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1 &&
+            player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1 &&
+            player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1)
+        {
+            player.RemoveResources(ResourceType.Wood, 1);
+            player.RemoveResources(ResourceType.Brick, 1);
+            player.RemoveResources(ResourceType.Wool, 1);
+            player.RemoveResources(ResourceType.Grain, 1);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool WithdrawResourcesToBuildCity(Player player)
+    {
+        if (player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 2 &&
+            player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 3)
+        {
+            player.RemoveResources(ResourceType.Ore, 3);
+            player.RemoveResources(ResourceType.Grain, 2);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool WithdrawResourcesToBuyDevCard(Player player)
+    {
+        if (player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 1 &&
+            player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1 &&
+            player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1)
+        {
+            player.RemoveResources(ResourceType.Ore, 1);
+            player.RemoveResources(ResourceType.Wool, 1);
+            player.RemoveResources(ResourceType.Grain, 1);
+            return true;
+        }
+
+        return false;
+    }
 }
