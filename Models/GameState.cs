@@ -28,8 +28,7 @@ public class GameState
 
     public List<DevelopmentCardType> DevelopmentCards { get; private set; } = new List<DevelopmentCardType>();
 
-    public Player CurrentPlayer { get; private set; } = null!;
-    public GameStates CurrentState { get; private set; } = GameStates.PrePlay;
+    public GamePhase Phase { get; set; } = new GamePhase(GameStates.PrePlay);
 
     // Future: Add collections for Ports
 
@@ -72,8 +71,20 @@ public class GameState
 
         Settings = new GameSettings(dto.Settings);
 
+        Player? currentPlayer = null;
+        Player? endPlayer = null;
+
         foreach (var playerDto in dto.Players)
-            Players.Add(new Player(playerDto));
+        {
+            var player = new Player(playerDto);
+            Players.Add(player);
+
+            if (player.Id == dto.Phase.CurrentPlayerId)
+                currentPlayer = player;
+
+            if (player.Id == dto.Phase.EndPlayerId)
+                endPlayer = player;
+        }
 
         foreach (var tileDto in dto.Tiles)
         {
@@ -90,6 +101,9 @@ public class GameState
             Vertices.Add(new Vertex(vertexDto, Players, Tiles));
 
         Dice = dto.Dice;
+
+        if (dto.Phase != null)
+            Phase = new GamePhase(Enum.Parse<GameStates>(dto.Phase.PhaseState), currentPlayer, endPlayer);
     }
 
     public void AddPlayer(Player player)

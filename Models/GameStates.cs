@@ -1,7 +1,10 @@
 public enum GameStates
 {
     PrePlay,
-    PlayerSetUp,
+    SetUpSettlementAsc,
+    SetUpRoadAsc,
+    SetUpSettlementDesc,
+    SetUpRoadDesc,
     PreRoll,
     PostRoll,
     GameOver

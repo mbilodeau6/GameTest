@@ -35,6 +35,8 @@ public class GameStateDTOTests
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
         gameState.Players[1].AssignResources(ResourceType.Brick, 1);
 
+        gameState.Phase = new GamePhase(GameStates.PrePlay, player1);
+
         return gameState;
     }
     
@@ -60,9 +62,10 @@ public class GameStateDTOTests
         Assert.Equal("Default", gameStateDTO.Settings.Type.ToString());
         Assert.Equal(gameState.Tiles[1].Id, gameStateDTO.RobberTileId);
         Assert.Equal(gameState.Settings.Type.ToString(), gameStateDTO.Settings.Type);
-        if (gameState.CurrentPlayer != null) 
-            Assert.Equal(gameState.CurrentPlayer.Id, gameStateDTO.CurrentPlayerId);
-        Assert.Equal(gameState.CurrentState.ToString(), gameStateDTO.CurrentState);
+        Assert.NotNull(gameState.Phase);
+        if (gameState.Phase.CurrentPlayer != null) 
+            Assert.Equal(gameState.Phase.CurrentPlayer.Id, gameStateDTO.Phase.CurrentPlayerId);
+        Assert.Equal(gameState.Phase.PhaseState.ToString(), gameStateDTO.Phase.PhaseState);
         Assert.True(gameStateDTO.Dice.Die1.Random);
     }
 

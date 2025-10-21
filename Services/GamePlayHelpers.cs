@@ -123,4 +123,9 @@ public static class GamePlayHelpers
 
         return false;
     }
+
+    public static GamePhase GetNextPhase(GameState gameState)
+    {
+        return null;
+    }
 }

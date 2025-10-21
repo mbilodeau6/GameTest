@@ -25,8 +25,10 @@ public class GameStateTests
         Assert.Equal(2, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.YearOfPlenty));
         Assert.Equal(14, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.Knight));
         Assert.Equal(5, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.VictoryPoint));
-        Assert.Null(game.CurrentPlayer);
-        Assert.Equal(GameStates.PrePlay, game.CurrentState);
+        Assert.NotNull(game.Phase);
+        Assert.Null(game.Phase.CurrentPlayer);
+        Assert.Equal(GameStates.PrePlay, game.Phase.PhaseState);
+        Assert.Null(game.Phase.EndPlayer);
         Assert.Equal(GameType.Default, game.Settings.Type);
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
@@ -43,7 +45,7 @@ public class GameStateTests
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
         Assert.Equal(GameType.Starter, game.Settings.Type);
-        Assert.Equal(GameStates.PrePlay, game.CurrentState);
+        Assert.Equal(GameStates.PrePlay, game.Phase.PhaseState);
     }
 
     [Fact]
@@ -67,6 +69,25 @@ public class GameStateTests
     }
 
     [Fact]
+    public void Constructor_FromDTO_NoPlayersForPhaseState()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        gs.Phase = new GamePhase(GameStates.PostRoll);
+        var dto = new GameStateDTO(gs);
+
+        // Act
+        var game = new GameState(dto);
+
+        // Assert
+        Assert.Equal(dto.Id, game.Id.ToString());
+        Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
+        Assert.Equal(gs.Phase.PhaseState, game.Phase.PhaseState);
+        Assert.Null(game.Phase.CurrentPlayer);
+        Assert.Null(game.Phase.EndPlayer);
+    }
+
+    [Fact]
     public void Constructor_FromDTO_CreatesValidObject()
     {
         // Arrange
@@ -85,6 +106,7 @@ public class GameStateTests
         gs.AddVertex(new Vertex(tile1, tile2));
         gs.Vertices[0].BuildSettlement(player1);
         gs.SetRobberTile(tile1);
+        gs.Phase = new GamePhase(GameStates.PrePlay, player1, player2);
 
         var dto = new GameStateDTO(gs);
 
@@ -110,7 +132,13 @@ public class GameStateTests
         Assert.Equal(player2.Id, game.Edges[0].Owner.Id);
         Assert.Single(game.Vertices);
         Assert.Equal(BuildingType.Settlement, game.Vertices[0].Building);
-        Assert.Equal(gs.CurrentState, game.CurrentState);
+        Assert.Equal(gs.Phase.PhaseState, game.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.NotNull(game.Phase.CurrentPlayer);
+        Assert.Equal(gs.Phase.CurrentPlayer.Id, game.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.NotNull(game.Phase.EndPlayer);
+        Assert.Equal(gs.Phase.EndPlayer.Id, game.Phase.EndPlayer.Id);
         Assert.False(gs.Dice.Die1.Random);
         Assert.False(gs.Dice.Die2.Random);
     }

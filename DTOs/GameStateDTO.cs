@@ -10,8 +10,7 @@ public class GameStateDTO
     public string Id { get; private set; }
     public GameSettingsDTO Settings { get; }
 
-    public string CurrentPlayerId { get; } = string.Empty;
-    public string CurrentState { get; } = string.Empty;
+    public GamePhaseDTO? Phase { get;  }
     public string HasLongestRoadPlayerId { get; } = string.Empty;
     public string HasLargestArmyPlayerId { get; } = string.Empty;
     public string RobberTileId { get; } = string.Empty;
@@ -25,8 +24,7 @@ public class GameStateDTO
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public GameStateDTO(string id, GameSettingsDTO settings, string? robberTileId = null,
-        GameDice? dice = null, 
-        string? currentPlayerId = null, string? currentState = null,
+        GameDice? dice = null, GamePhaseDTO? phase = null,
         string? hasLongestRoadPlayerId = null, string? hasLargestArmyPlayerId = null,
         List<PlayerDTO>? players = null, List<TileDTO>? tiles = null,
         List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null)
@@ -48,8 +46,7 @@ public class GameStateDTO
         foreach (var vertex in vertices ?? Enumerable.Empty<VertexDTO>())
             Vertices.Add(vertex);
 
-        CurrentPlayerId = currentPlayerId ?? string.Empty;
-        CurrentState = currentState ?? string.Empty;
+        Phase = phase;
         HasLongestRoadPlayerId = hasLongestRoadPlayerId ?? string.Empty;
         HasLargestArmyPlayerId = hasLargestArmyPlayerId ?? string.Empty;
     }
@@ -59,8 +56,7 @@ public class GameStateDTO
         Id = dto.Id;
         Settings = new GameSettingsDTO(dto.Settings);
 
-        CurrentPlayerId = dto.CurrentPlayerId;
-        CurrentState = dto.CurrentState;
+        Phase = dto.Phase;
         HasLongestRoadPlayerId = dto.HasLongestRoadPlayerId;
         HasLargestArmyPlayerId = dto.HasLargestArmyPlayerId;
         RobberTileId = dto.RobberTileId;
@@ -97,12 +93,10 @@ public class GameStateDTO
         foreach (var vertex in gameState.Vertices)
             Vertices.Add(new VertexDTO(vertex));
 
-        RobberTileId = gameState.RobberTile.Id;
+        if (gameState.RobberTile != null)
+            RobberTileId = gameState.RobberTile.Id;
 
-        if (gameState.CurrentPlayer != null)
-            CurrentPlayerId = gameState.CurrentPlayer.Id;
-
-        CurrentState = gameState.CurrentState.ToString();
+        Phase = new GamePhaseDTO(gameState.Phase);
 
         if (gameState.PlayerWithLongestRoad != null)
             HasLongestRoadPlayerId = gameState.PlayerWithLongestRoad.Id;

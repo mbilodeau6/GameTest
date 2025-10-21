@@ -279,4 +279,72 @@ public class GamePlayHelpersTests
         Assert.Equal(woolCount, player.Resources[ResourceType.Wool]);
         Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
     }
+
+    [Fact]
+    public void GetNextPhase_PlaySetup_MoveToNextPlayer()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaySetup_MoveToSetupSettlementAsc()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_SetupSettlementAsc_MoveToSetupRoadAsc()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_SetupRoadAsc_MoveToNextPlayer()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_SetupRoadAsc_MoveToSetupSettlementDesc()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_SetupSettlement_MoveToSetupRoadDesc()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_SetupRoadDesc_MoveToNextPlayer()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_SetupRoadDesc_MoveToPreRoll()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_PreRoll_MoveToPostRoll()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_PostRoll_MoveToNextPlayer()
+    {
+
+    }
+
+    [Fact]
+    public void GetNextPhase_PostRoll_MoveToGameOver()
+    {
+
+    }
+
+
 }
