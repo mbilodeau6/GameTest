@@ -533,7 +533,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void GetNextPhase_PlaceFirstRoad_MoveToNextPlayer()
     {
-         var gs = CreateGameStateForPhaseTesting();
+        var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[0], gs.Players[1]);
         Assert.NotNull(gs.Phase.CurrentPlayer);
         gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
@@ -680,15 +680,69 @@ public class GamePlayHelpersTests
         Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
+    // TODO: Seems like moving from BuildOrTrade to NextPlayer will be an explicit
+    // call by the user to end turn. Not currently seeing a case where the state
+    // of the game would cause play to move to the next player. Maybe if we have
+    // time limits.
+
     [Fact]
-    public void GetNextPhase_PostRoll_MoveToNextPlayer()
+    public void GetNextPhase_RollOrUserDevCard_MoveToGameOverWin()
     {
+        // TODO: Need to create routine to calculate victory points.
         Assert.True(false);
     }
 
+    // TODO: Seems like moving from any state to GameOver due to the resignation
+    // of all other players would be from explicit calls from the users vs
+    // something that would happen due to a call to GetNextPhase.
+
     [Fact]
-    public void GetNextPhase_PostRoll_MoveToGameOver()
+    public void EndTurn_MovesToNextPlayer()
     {
-        Assert.True(false);
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        GamePlayHelpers.EndTurn(gs.Phase.CurrentPlayer, gs);
+
+        Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
+        Assert.Equal(gs.Players[1], gs.Phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], gs.Phase.EndPlayer);
+    }
+
+    [Fact]
+    public void EndTurn_ExceptionIfNoCurrentPlayer()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        Assert.Null(gs.Phase.CurrentPlayer);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           GamePlayHelpers.EndTurn(gs.Players[0], gs));
+
+        Assert.Equal("Can not end turn without a CurrentPlayer.", exception.Message);
+    }
+
+    [Fact]
+    public void EndTurn_ExceptionIfNotPlayersTurn()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           GamePlayHelpers.EndTurn(gs.Players[1], gs));
+
+        Assert.Equal("Can not end the turn for another player.", exception.Message);
+    }
+
+    [Fact]
+    public void EndTurn_ExceptionIfNotBuildOrTradePhase()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           GamePlayHelpers.EndTurn(gs.Players[0], gs));
+
+        Assert.Equal("Can not end turn on any phase but BuildOrTrade.", exception.Message);
     }
 }

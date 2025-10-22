@@ -345,4 +345,60 @@ public class GameService
         }
     }
 
+    public async Task<bool> EndTurnAsync(Guid gameId)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return false;
+        }
+
+        try
+        {
+            var dto = await GetGameDTO(gameId.ToString());
+            if (dto == null)
+            {
+                _logger.LogError("Unable to retrieve game {GameId}.", gameId);
+                return false;
+            }
+
+            var gs = new GameState(dto);
+
+            // TODO: Need to get player from authorization. Using CurrentPlayer for now.
+            if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.BuildOrTrade)
+            {
+                _logger.LogError("Game isn't in a state where EndTurn is valid.");
+                return false;
+            }
+            var player = gs.Phase.CurrentPlayer;
+            GamePlayHelpers.EndTurn(player, gs);
+
+            GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var updatedDto = new DTOs.GameStateDTO(gs);
+
+            var json = JsonSerializer.Serialize(updatedDto, options);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Ended turn for Player {playerId}.", player);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to end turn in {GameId}.", gameId);
+            return false;
+        }
+    }
+
 }

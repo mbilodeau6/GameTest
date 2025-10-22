@@ -90,7 +90,7 @@ public class Games
         await ok.WriteAsJsonAsync(updated);
         return ok;
     }
-    
+
     [Function("BuildCity")]
     public async Task<HttpResponseData> BuildCity(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/build/city")] HttpRequestData req,
@@ -152,4 +152,26 @@ public class Games
         return ok;
     }
 
+    // TODO: Need to get player from authorization. In other entry points I've been talking player
+    // as a paramter in the meantime but it is useful to be able to end any players turn for testing.
+    // The current player is selected instead GameService.EndTurnAsync.
+    [Function("EndTurn")]
+    public async Task<HttpResponseData> EndTurn (
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/end-turn")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("End-Turn called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+
+        var success = await _gameService.EndTurnAsync(guid);
+
+        if (!success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Unable to end turn. See log for details.");
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync("Turn ended.");
+        return ok;
+    }
 }

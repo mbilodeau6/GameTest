@@ -218,4 +218,21 @@ public static class GamePlayHelpers
 
         return nextPhase;
     }
+
+    public static void EndTurn(Player player, GameState gameState)
+    {
+        // Verify EndTurn is only called in appropriate circumstances. Expect callers to protects
+        // against these scenarios.
+        if (gameState.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("Can not end turn without a CurrentPlayer.");
+
+        if (gameState.Phase.PhaseState != GameStates.BuildOrTrade)
+            throw new InvalidOperationException("Can not end turn on any phase but BuildOrTrade.");
+
+        if (player.Id != gameState.Phase.CurrentPlayer.Id)
+            throw new InvalidOperationException("Can not end the turn for another player.");
+
+        gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+        gameState.Phase.PhaseState = GameStates.RollOrUseDevCard;
+    }
 }
