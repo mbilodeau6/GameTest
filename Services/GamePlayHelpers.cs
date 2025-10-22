@@ -147,6 +147,11 @@ public static class GamePlayHelpers
         return gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
     }
 
+    public static int CountRoadsForPlayer(GameState gs, Player player)
+    {
+        return gs.Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
+    }
+
     public static GamePhase GetNextPhase(GameState gameState)
     {
         var nextPhase = gameState.Phase;
@@ -166,6 +171,15 @@ public static class GamePlayHelpers
             {
                 if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
                     nextPhase.PhaseState = GameStates.PlaceFirstRoad;
+            }
+
+            if (gameState.Phase.PhaseState == GameStates.PlaceFirstRoad)
+            {
+                if (CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
+                {
+                    nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
+                    gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                }
             }
         }
 

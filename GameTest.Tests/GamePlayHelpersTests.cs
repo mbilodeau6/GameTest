@@ -409,6 +409,48 @@ public class GamePlayHelpersTests
         Assert.Equal(0, count);
     }
 
+    [Fact]
+    public void CountRoadsForPlayer_CountRedPlayer_1()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = GamePlayHelpers.CountRoadsForPlayer(gs, gs.Players[0]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void CountRoadsForPlayer_CountBluePlayer_3()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = GamePlayHelpers.CountRoadsForPlayer(gs, gs.Players[1]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Blue, gs.Players[1].Color);
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public void CountRoadsForPlayer_CountOrangePlayer_0()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = GamePlayHelpers.CountRoadsForPlayer(gs, gs.Players[2]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Orange, gs.Players[2].Color);
+        Assert.Equal(2, count);
+    }
+
     private GameState CreateGameStateForPhaseTesting()
     {
         var gs = new GameState(new Guid());
@@ -491,13 +533,23 @@ public class GamePlayHelpersTests
     [Fact]
     public void GetNextPhase_SetupRoadAsc_MoveToNextPlayer()
     {
-        Assert.False(true);
+         var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[0], gs.Players[1]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Edges[0].BuildRoad(gs.Players[0]);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceSecondSettlement, phase.PhaseState);
+        Assert.Equal(gs.Players[1], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
     [Fact]
     public void GetNextPhase_SetupRoadAsc_MoveToSetupSettlementDesc()
     {
-
+        Assert.True(false);
     }
 
     [Fact]
