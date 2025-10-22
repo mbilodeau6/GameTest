@@ -649,15 +649,35 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_SetupRoadDesc_MoveToPreRoll()
+    public void GetNextPhase_RollOrUserDevCard_NoRollStayPut()
     {
-        Assert.True(false);
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+        gs.Dice.SetWaiting();
+        Assert.True(gs.Dice.WaitingForRoll);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
     [Fact]
-    public void GetNextPhase_PreRoll_MoveToPostRoll()
+    public void GetNextPhase_RollOrUserDevCard_MoveToBuildOrTrade()
     {
-        Assert.True(false);
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+        gs.Dice.SetWaiting();
+        Assert.True(gs.Dice.WaitingForRoll);
+
+        gs.Dice.Roll();
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.BuildOrTrade, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
     [Fact]

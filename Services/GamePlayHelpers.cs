@@ -200,6 +200,7 @@ public static class GamePlayHelpers
                     if (gameState.Phase.CurrentPlayer == gameState.Phase.EndPlayer)
                     {
                         nextPhase.PhaseState = GameStates.RollOrUseDevCard;
+                        gameState.Dice.SetWaiting();
                         gameState.Phase.EndPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
                     }
                     else
@@ -208,6 +209,10 @@ public static class GamePlayHelpers
                         gameState.Phase.CurrentPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
                     }
                 }
+            }
+            else if (gameState.Phase.PhaseState == GameStates.RollOrUseDevCard && !gameState.Dice.WaitingForRoll)
+            {
+                nextPhase.PhaseState = GameStates.BuildOrTrade;
             }
         }
 
