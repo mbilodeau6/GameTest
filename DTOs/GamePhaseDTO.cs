@@ -8,7 +8,7 @@ namespace GameTest.DTOs;
 public class GamePhaseDTO
 {
     public string? CurrentPlayerId { get; }
-    public string PhaseState { get; } = GameStates.PrePlay.ToString();
+    public string PhaseState { get; } = GameStates.SettingUpBoard.ToString();
     public string? EndPlayerId { get; }
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.

@@ -151,9 +151,9 @@ public static class GamePlayHelpers
     {
         var nextPhase = gameState.Phase;
 
-        if (gameState.Phase.PhaseState == GameStates.PrePlay)
+        if (gameState.Phase.PhaseState == GameStates.SettingUpBoard)
         {
-            nextPhase.PhaseState = GameStates.SetUpSettlementAsc;
+            nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
             nextPhase.CurrentPlayer = gameState.Players[_random.Next(1, gameState.Players.Count)];
             nextPhase.EndPlayer = GamePlayHelpers.GetPreviousPlayer(nextPhase.CurrentPlayer, gameState.Players);
         }
@@ -162,10 +162,10 @@ public static class GamePlayHelpers
             if (gameState.Phase.CurrentPlayer == null)
                 throw new InvalidOperationException("CurrentPlayer expected to be set to a valid value.");
 
-            if (gameState.Phase.PhaseState == GameStates.SetUpSettlementAsc)
+            if (gameState.Phase.PhaseState == GameStates.PlaceFirstSettlement)
             {
                 if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
-                    nextPhase.PhaseState = GameStates.SetUpRoadAsc;
+                    nextPhase.PhaseState = GameStates.PlaceFirstRoad;
             }
         }
 

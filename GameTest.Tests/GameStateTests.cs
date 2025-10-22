@@ -27,7 +27,7 @@ public class GameStateTests
         Assert.Equal(5, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.VictoryPoint));
         Assert.NotNull(game.Phase);
         Assert.Null(game.Phase.CurrentPlayer);
-        Assert.Equal(GameStates.PrePlay, game.Phase.PhaseState);
+        Assert.Equal(GameStates.SettingUpBoard, game.Phase.PhaseState);
         Assert.Null(game.Phase.EndPlayer);
         Assert.Equal(GameType.Default, game.Settings.Type);
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
@@ -45,7 +45,7 @@ public class GameStateTests
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
         Assert.Equal(GameType.Starter, game.Settings.Type);
-        Assert.Equal(GameStates.PrePlay, game.Phase.PhaseState);
+        Assert.Equal(GameStates.SettingUpBoard, game.Phase.PhaseState);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class GameStateTests
     {
         // Arrange
         var gs = new GameState(new Guid());
-        gs.Phase = new GamePhase(GameStates.PostRoll);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade);
         var dto = new GameStateDTO(gs);
 
         // Act
@@ -106,7 +106,7 @@ public class GameStateTests
         gs.AddVertex(new Vertex(tile1, tile2));
         gs.Vertices[0].BuildSettlement(player1);
         gs.SetRobberTile(tile1);
-        gs.Phase = new GamePhase(GameStates.PrePlay, player1, player2);
+        gs.Phase = new GamePhase(GameStates.SettingUpBoard, player1, player2);
 
         var dto = new GameStateDTO(gs);
 

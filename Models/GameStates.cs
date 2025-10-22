@@ -1,11 +1,11 @@
 public enum GameStates
 {
-    PrePlay,
-    SetUpSettlementAsc,
-    SetUpRoadAsc,
-    SetUpSettlementDesc,
-    SetUpRoadDesc,
-    PreRoll,
-    PostRoll,
+    SettingUpBoard,
+    PlaceFirstSettlement,
+    PlaceFirstRoad,
+    PlaceSecondSettlement,
+    PlaceSecondRoad,
+    RollOrUseDevCard,
+    BuildOrTrade,
     GameOver
 }

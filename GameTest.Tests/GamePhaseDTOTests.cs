@@ -12,7 +12,7 @@ public class GamePhaseDTOTests
         // Arrange
         var player1 = new Player("Mary", PlayerColor.Red);
         var player2 = new Player("Bill", PlayerColor.Blue);
-        GamePhase gamePhase = new GamePhase(GameStates.SetUpRoadAsc, player1, player2);
+        GamePhase gamePhase = new GamePhase(GameStates.PlaceFirstRoad, player1, player2);
 
         // Act
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
@@ -20,7 +20,7 @@ public class GamePhaseDTOTests
         // Assert
         Assert.Equal(player1.Id, dto.CurrentPlayerId);
         Assert.Equal(player2.Id, dto.EndPlayerId);
-        Assert.Equal(GameStates.SetUpRoadAsc.ToString(), dto.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public class GamePhaseDTOTests
     {
         // Arrange
         var player1 = new Player("Mary", PlayerColor.Red);
-        GamePhase gamePhase = new GamePhase(GameStates.SetUpRoadAsc, player1);
+        GamePhase gamePhase = new GamePhase(GameStates.PlaceFirstRoad, player1);
 
         // Act
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
@@ -36,14 +36,14 @@ public class GamePhaseDTOTests
         // Assert
         Assert.Equal(player1.Id, dto.CurrentPlayerId);
         Assert.Null(dto.EndPlayerId);
-        Assert.Equal(GameStates.SetUpRoadAsc.ToString(), dto.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
     }
 
     [Fact]
     public void Constructor_WithoutEitherPlayer()
     {
         // Arrange
-        GamePhase gamePhase = new GamePhase(GameStates.SetUpRoadAsc);
+        GamePhase gamePhase = new GamePhase(GameStates.PlaceFirstRoad);
 
         // Act
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
@@ -51,7 +51,7 @@ public class GamePhaseDTOTests
         // Assert
         Assert.Null(dto.CurrentPlayerId);
         Assert.Null(dto.EndPlayerId);
-        Assert.Equal(GameStates.SetUpRoadAsc.ToString(), dto.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
     }
 
 }

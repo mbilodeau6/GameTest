@@ -35,7 +35,7 @@ public class GameStateDTOTests
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
         gameState.Players[1].AssignResources(ResourceType.Brick, 1);
 
-        gameState.Phase = new GamePhase(GameStates.PrePlay, player1);
+        gameState.Phase = new GamePhase(GameStates.SettingUpBoard, player1);
 
         return gameState;
     }

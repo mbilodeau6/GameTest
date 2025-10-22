@@ -4,7 +4,7 @@ using GameTest.DTOs;
 
 public class GamePhase
 {
-    public GameStates PhaseState { get; set; } = GameStates.PrePlay;
+    public GameStates PhaseState { get; set; } = GameStates.SettingUpBoard;
     public Player? CurrentPlayer { get; set; }
     public Player? EndPlayer { get; set; }
 

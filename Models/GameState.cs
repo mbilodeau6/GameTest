@@ -28,7 +28,7 @@ public class GameState
 
     public List<DevelopmentCardType> DevelopmentCards { get; private set; } = new List<DevelopmentCardType>();
 
-    public GamePhase Phase { get; set; } = new GamePhase(GameStates.PrePlay);
+    public GamePhase Phase { get; set; } = new GamePhase(GameStates.SettingUpBoard);
 
     // Future: Add collections for Ports
 

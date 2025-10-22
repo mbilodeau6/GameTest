@@ -424,11 +424,11 @@ public class GamePlayHelpersTests
     public void GetNextPhase_PrePlay_MoveToSetupSettlementAsc()
     {
         var gs = CreateGameStateForPhaseTesting();
-        gs.Phase = new GamePhase(GameStates.PrePlay);
+        gs.Phase = new GamePhase(GameStates.SettingUpBoard);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
-        Assert.Equal(GameStates.SetUpSettlementAsc, phase.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstSettlement, phase.PhaseState);
 
         Assert.NotNull(phase.CurrentPlayer);
         Assert.NotNull(phase.EndPlayer);
@@ -449,11 +449,11 @@ public class GamePlayHelpersTests
     public void GetNextPhase_SetupSettlementAsc_NoSettlementStayPut()
     {
         var gs = CreateGameStateForPhaseTesting();
-        gs.Phase = new GamePhase(GameStates.SetUpSettlementAsc, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
-        Assert.Equal(GameStates.SetUpSettlementAsc, phase.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstSettlement, phase.PhaseState);
         Assert.Equal(gs.Players[0], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
@@ -462,13 +462,13 @@ public class GamePlayHelpersTests
     public void GetNextPhase_SetupSettlementAsc_MoveToSetupRoadAsc()
     {
         var gs = CreateGameStateForPhaseTesting();
-        gs.Phase = new GamePhase(GameStates.SetUpSettlementAsc, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
         Assert.NotNull(gs.Phase.CurrentPlayer);
         gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
-        Assert.Equal(GameStates.SetUpRoadAsc, phase.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad, phase.PhaseState);
         Assert.Equal(gs.Players[0], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
@@ -477,13 +477,13 @@ public class GamePlayHelpersTests
     public void GetNextPhase_SetupRoadAsc_NoRoadStayPut()
     {
         var gs = CreateGameStateForPhaseTesting();
-        gs.Phase = new GamePhase(GameStates.SetUpRoadAsc, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[0], gs.Players[1]);
         Assert.NotNull(gs.Phase.CurrentPlayer);
         gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
-        Assert.Equal(GameStates.SetUpRoadAsc, phase.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad, phase.PhaseState);
         Assert.Equal(gs.Players[0], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
