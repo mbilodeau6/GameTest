@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Azure.Storage.Blobs.Models;
 using GameTest.Models;
 using GameTest.Tests;
@@ -7,6 +8,7 @@ namespace GameTest.Services;
 
 public static class GamePlayHelpers
 {
+    private static readonly Random _random = new();
 
     // TODO: Need test and implementation
     public static int GetVictoryPointsForBuild(BuildingType? type)
@@ -124,8 +126,49 @@ public static class GamePlayHelpers
         return false;
     }
 
+    public static Player GetNextPlayer(Player currentPlayer, List<Player> players)
+    {
+        int currentPlayerIndex = players.FindIndex(p => p.Id == currentPlayer.Id);
+        int nextPlayerIndex = (currentPlayerIndex + 1) % players.Count;
+
+        return players[nextPlayerIndex];
+    }
+
+    public static Player GetPreviousPlayer(Player currentPlayer, List<Player> players)
+    {
+        int currentPlayerIndex = players.FindIndex(p => p.Id == currentPlayer.Id);
+        int previousPlayerIndex = (currentPlayerIndex + players.Count - 1) % players.Count;
+
+        return players[previousPlayerIndex];
+    }
+
+    public static int CountSettlementsForPlayer(GameState gs, Player player)
+    {
+        return gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
+    }
+
     public static GamePhase GetNextPhase(GameState gameState)
     {
-        return null;
+        var nextPhase = gameState.Phase;
+
+        if (gameState.Phase.PhaseState == GameStates.PrePlay)
+        {
+            nextPhase.PhaseState = GameStates.SetUpSettlementAsc;
+            nextPhase.CurrentPlayer = gameState.Players[_random.Next(1, gameState.Players.Count)];
+            nextPhase.EndPlayer = GamePlayHelpers.GetPreviousPlayer(nextPhase.CurrentPlayer, gameState.Players);
+        }
+        else
+        {
+            if (gameState.Phase.CurrentPlayer == null)
+                throw new InvalidOperationException("CurrentPlayer expected to be set to a valid value.");
+
+            if (gameState.Phase.PhaseState == GameStates.SetUpSettlementAsc)
+            {
+                if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
+                    nextPhase.PhaseState = GameStates.SetUpRoadAsc;
+            }
+        }
+
+        return nextPhase;
     }
 }
