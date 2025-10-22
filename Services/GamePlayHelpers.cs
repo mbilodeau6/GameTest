@@ -172,13 +172,41 @@ public static class GamePlayHelpers
                 if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
                     nextPhase.PhaseState = GameStates.PlaceFirstRoad;
             }
-
-            if (gameState.Phase.PhaseState == GameStates.PlaceFirstRoad)
+            else if (gameState.Phase.PhaseState == GameStates.PlaceFirstRoad)
             {
                 if (CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
                 {
-                    nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
-                    gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                    if (gameState.Phase.CurrentPlayer == gameState.Phase.EndPlayer)
+                    {
+                        nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
+                        gameState.Phase.EndPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                    }
+                    else
+                    {
+                        nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
+                        gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                    }
+                }
+            }
+            else if (gameState.Phase.PhaseState == GameStates.PlaceSecondSettlement)
+            {
+                if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 1)
+                    nextPhase.PhaseState = GameStates.PlaceSecondRoad;
+            }
+            else if (gameState.Phase.PhaseState == GameStates.PlaceSecondRoad)
+            {
+                if (CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 1)
+                {
+                    if (gameState.Phase.CurrentPlayer == gameState.Phase.EndPlayer)
+                    {
+                        nextPhase.PhaseState = GameStates.RollOrUseDevCard;
+                        gameState.Phase.EndPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                    }
+                    else
+                    {
+                        nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
+                        gameState.Phase.CurrentPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                    }
                 }
             }
         }

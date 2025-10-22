@@ -463,7 +463,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_PrePlay_MoveToSetupSettlementAsc()
+    public void GetNextPhase_SettingUpBoard_MoveToPlaceFirstSettlement()
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.SettingUpBoard);
@@ -488,7 +488,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_SetupSettlementAsc_NoSettlementStayPut()
+    public void GetNextPhase_PlaceFirstSettlement_NoSettlementStayPut()
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
@@ -501,7 +501,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_SetupSettlementAsc_MoveToSetupRoadAsc()
+    public void GetNextPhase_PlaceFirstSettlement_MoveToPlaceFirstRoad()
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
@@ -516,7 +516,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_SetupRoadAsc_NoRoadStayPut()
+    public void GetNextPhase_PlaceFirstRoad_NoRoadStayPut()
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[0], gs.Players[1]);
@@ -531,7 +531,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_SetupRoadAsc_MoveToNextPlayer()
+    public void GetNextPhase_PlaceFirstRoad_MoveToNextPlayer()
     {
          var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[0], gs.Players[1]);
@@ -541,52 +541,134 @@ public class GamePlayHelpersTests
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
-        Assert.Equal(GameStates.PlaceSecondSettlement, phase.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstSettlement, phase.PhaseState);
         Assert.Equal(gs.Players[1], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
     [Fact]
-    public void GetNextPhase_SetupRoadAsc_MoveToSetupSettlementDesc()
+    public void GetNextPhase_PlaceFirstRoad_MoveToPlaceSecondSettlement()
     {
-        Assert.True(false);
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[1], gs.Players[1]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Edges[0].BuildRoad(gs.Phase.CurrentPlayer);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceSecondSettlement, phase.PhaseState);
+        Assert.Equal(gs.Players[1], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[0], phase.EndPlayer);
     }
 
     [Fact]
-    public void GetNextPhase_SetupSettlement_MoveToSetupRoadDesc()
+    public void GetNextPhase_PlaceSecondSettlement_No2ndStayPut()
     {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, gs.Players[1], gs.Players[0]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Edges[0].BuildRoad(gs.Phase.CurrentPlayer);
 
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceSecondSettlement, phase.PhaseState);
+        Assert.Equal(gs.Players[1], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[0], phase.EndPlayer);
     }
 
     [Fact]
-    public void GetNextPhase_SetupRoadDesc_MoveToNextPlayer()
+    public void GetNextPhase_PlaceSecondSettlement_MoveToPlaceSecondRoad()
     {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, gs.Players[1], gs.Players[0]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Vertices[1].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Edges[0].BuildRoad(gs.Phase.CurrentPlayer);
 
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceSecondRoad, phase.PhaseState);
+        Assert.Equal(gs.Players[1], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[0], phase.EndPlayer);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondRoad_No2ndStayPut()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceSecondRoad, gs.Players[1], gs.Players[0]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Vertices[1].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Edges[0].BuildRoad(gs.Phase.CurrentPlayer);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceSecondRoad, phase.PhaseState);
+        Assert.Equal(gs.Players[1], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[0], phase.EndPlayer);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondRoad_MoveToNextPlayer()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceSecondRoad, gs.Players[1], gs.Players[0]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Vertices[1].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Edges[0].BuildRoad(gs.Phase.CurrentPlayer);
+        gs.Edges[1].BuildRoad(gs.Phase.CurrentPlayer);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceSecondSettlement, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[0], phase.EndPlayer);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondRoad_MoveToRollOrUseDevCard()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceSecondRoad, gs.Players[0], gs.Players[0]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        gs.Vertices[0].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Vertices[1].BuildSettlement(gs.Phase.CurrentPlayer);
+        gs.Edges[0].BuildRoad(gs.Phase.CurrentPlayer);
+        gs.Edges[1].BuildRoad(gs.Phase.CurrentPlayer);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
     [Fact]
     public void GetNextPhase_SetupRoadDesc_MoveToPreRoll()
     {
-
+        Assert.True(false);
     }
 
     [Fact]
     public void GetNextPhase_PreRoll_MoveToPostRoll()
     {
-
+        Assert.True(false);
     }
 
     [Fact]
     public void GetNextPhase_PostRoll_MoveToNextPlayer()
     {
-
+        Assert.True(false);
     }
 
     [Fact]
     public void GetNextPhase_PostRoll_MoveToGameOver()
     {
-
+        Assert.True(false);
     }
-
-
 }
