@@ -152,6 +152,16 @@ public static class GamePlayHelpers
         return gs.Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
     }
 
+    public static bool PlayerHasWon(GameState gs, Player player)
+    {
+        int settlementCount = gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
+        int cityCount = gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City);
+
+        int victoryPoints = settlementCount + (cityCount * 2); 
+
+        return victoryPoints >= gs.Settings.VictoryPointsToWin;
+    }
+
     public static GamePhase GetNextPhase(GameState gameState)
     {
         var nextPhase = gameState.Phase;
@@ -213,6 +223,10 @@ public static class GamePlayHelpers
             else if (gameState.Phase.PhaseState == GameStates.RollOrUseDevCard && !gameState.Dice.WaitingForRoll)
             {
                 nextPhase.PhaseState = GameStates.BuildOrTrade;
+            }
+            else if (gameState.Phase.PhaseState == GameStates.BuildOrTrade && PlayerHasWon(gameState, gameState.Phase.CurrentPlayer))
+            {
+                nextPhase.PhaseState = GameStates.GameOver;
             }
         }
 

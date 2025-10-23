@@ -3,6 +3,7 @@ using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
 using GameTest.Functions;
+using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 
 namespace GameTest.Tests;
 
@@ -462,6 +463,61 @@ public class GamePlayHelpersTests
         return gs;
     }
 
+
+    private void BuildTestCities(GameState gs, Player player, int count)
+    {
+        int vIndex = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            while (gs.Vertices[vIndex].Building != null)
+                vIndex++;
+
+            gs.Vertices[vIndex].BuildSettlement(player);
+            gs.Vertices[vIndex].UpgradeToCity();
+        }
+    }
+
+    private void BuildTestSettlements(GameState gs, Player player, int count)
+    {
+        int vIndex = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            while (gs.Vertices[vIndex].Building != null)
+                vIndex++;
+
+            gs.Vertices[vIndex].BuildSettlement(player);
+        }
+    }
+
+    [Fact]
+    public void PlayerHasWon_DefaultThreshold_Not_Met()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        BuildTestCities(gs, gs.Phase.CurrentPlayer, 4);
+        BuildTestSettlements(gs, gs.Phase.CurrentPlayer, 1);
+
+        Assert.False(GamePlayHelpers.PlayerHasWon(gs, gs.Phase.CurrentPlayer));
+    }
+
+    [Fact]
+    public void PlayerHasWon_DefaultThreshold_Met()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        BuildTestCities(gs, gs.Phase.CurrentPlayer, 4);
+        BuildTestSettlements(gs, gs.Phase.CurrentPlayer, 2);
+
+        Assert.True(GamePlayHelpers.PlayerHasWon(gs, gs.Phase.CurrentPlayer));
+    }
+
+    // TODO: Add tests where victory points come from dev cards, longest road, and largest army
+
+
     [Fact]
     public void GetNextPhase_SettingUpBoard_MoveToPlaceFirstSettlement()
     {
@@ -686,10 +742,19 @@ public class GamePlayHelpersTests
     // time limits.
 
     [Fact]
-    public void GetNextPhase_RollOrUserDevCard_MoveToGameOverWin()
+    public void GetNextPhase_BuildOrTrade_MoveToGameOverWin()
     {
-        // TODO: Need to create routine to calculate victory points.
-        Assert.True(false);
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        BuildTestCities(gs, gs.Phase.CurrentPlayer, 4);
+        BuildTestSettlements(gs, gs.Phase.CurrentPlayer, 2);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.GameOver, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
     // TODO: Seems like moving from any state to GameOver due to the resignation
