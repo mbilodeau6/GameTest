@@ -261,6 +261,14 @@ public static class GamePlayHelpers
         return gs.Vertices.First(e => e.Id == vertexId);
     }
 
+    private static bool IsPlayerSetupPhase(GameState gs)
+    {
+        return gs.Phase.PhaseState == GameStates.PlaceFirstSettlement ||
+            gs.Phase.PhaseState == GameStates.PlaceFirstRoad ||
+            gs.Phase.PhaseState == GameStates.PlaceSecondSettlement ||
+            gs.Phase.PhaseState == GameStates.PlaceSecondRoad;
+    }
+
     public static void StartGame(GameState gameState)
     {
         gameState.Phase = GetNextPhase(gameState);
@@ -268,7 +276,8 @@ public static class GamePlayHelpers
         if (gameState.Phase.CurrentPlayer == null)
             throw new InvalidOperationException("Can not start game without a current player.");
 
-        if (gameState.Phase.CurrentPlayer.IsBot)
+        // Play for bot until bot's turn is over
+        while (gameState.Phase.CurrentPlayer.IsBot && IsPlayerSetupPhase(gameState))
         {
             var bot = new BotAI(gameState);
             var move = bot.GetSetUpMove();
@@ -284,6 +293,8 @@ public static class GamePlayHelpers
                 var vertex = GetVertexFromVertexId(gameState, move.VertexMove.Id);
                 vertex.BuildSettlement(gameState.Phase.CurrentPlayer);
             }
+
+            gameState.Phase = GetNextPhase(gameState);
         }
     }
 }
