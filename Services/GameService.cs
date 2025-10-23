@@ -373,8 +373,6 @@ public class GameService
             var player = gs.Phase.CurrentPlayer;
             GamePlayHelpers.EndTurn(player, gs);
 
-            GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
-
             var options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -397,6 +395,63 @@ public class GameService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to end turn in {GameId}.", gameId);
+            return false;
+        }
+    }
+
+        public async Task<bool> StartGameAsync(Guid gameId)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return false;
+        }
+
+        try
+        {
+            var dto = await GetGameDTO(gameId.ToString());
+            if (dto == null)
+            {
+                _logger.LogError("Unable to retrieve game {GameId}.", gameId);
+                return false;
+            }
+
+            var gs = new GameState(dto);
+
+            if (gs.Phase.PhaseState != GameStates.SettingUpBoard)
+            {
+                _logger.LogError("Game isn't in a state where StartGame is valid.");
+                return false;
+            }
+
+            // TODO: In the future, will need every human player to hit start before a game starts.
+            // Current version only needs one start call and it starts the game for everyone.
+            GamePlayHelpers.StartGame(gs);
+
+            GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var updatedDto = new DTOs.GameStateDTO(gs);
+
+            var json = JsonSerializer.Serialize(updatedDto, options);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Started game.");
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start game {GameId}.", gameId);
             return false;
         }
     }

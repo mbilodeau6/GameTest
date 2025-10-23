@@ -154,9 +154,9 @@ public class Games
 
     // TODO: Need to get player from authorization. In other entry points I've been talking player
     // as a paramter in the meantime but it is useful to be able to end any players turn for testing.
-    // The current player is selected instead GameService.EndTurnAsync.
+    // The current player is selected in GameService.EndTurnAsync.
     [Function("EndTurn")]
-    public async Task<HttpResponseData> EndTurn (
+    public async Task<HttpResponseData> EndTurn(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/end-turn")] HttpRequestData req,
         string id)
     {
@@ -174,4 +174,28 @@ public class Games
         await ok.WriteAsJsonAsync("Turn ended.");
         return ok;
     }
+    
+    // TODO: Need to get player from authorization. In other entry points I've been talking player
+    // as a paramter. Right now I'm just implementing a single human player against a bot. StartGameAsync
+    // will just start the game when it is called (regardless of which player is hitting start).
+    [Function("StartGame")]
+    public async Task<HttpResponseData> StartGame (
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/start")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("Start called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+
+        var success = await _gameService.StartGameAsync(guid);
+
+        if (!success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Unable to start game. See log for details.");
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync("Game started.");
+        return ok;
+    }
+
 }

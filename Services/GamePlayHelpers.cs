@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using Azure.Storage.Blobs.Models;
+using GameTest.DTOs;
 using GameTest.Models;
 using GameTest.Tests;
 using Google.Protobuf.WellKnownTypes;
@@ -248,5 +249,41 @@ public static class GamePlayHelpers
 
         gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
         gameState.Phase.PhaseState = GameStates.RollOrUseDevCard;
+    }
+
+    private static Edge GetEdgeFromEdgeId(GameState gs, string edgeId)
+    {
+        return gs.Edges.First(e => e.Id == edgeId);
+    }
+
+    private static Vertex GetVertexFromVertexId(GameState gs, string vertexId)
+    {
+        return gs.Vertices.First(e => e.Id == vertexId);
+    }
+
+    public static void StartGame(GameState gameState)
+    {
+        gameState.Phase = GetNextPhase(gameState);
+
+        if (gameState.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("Can not start game without a current player.");
+
+        if (gameState.Phase.CurrentPlayer.IsBot)
+        {
+            var bot = new BotAI(gameState);
+            var move = bot.GetSetUpMove();
+
+            if (move.EdgeMove != null)
+            {
+                var edge = GetEdgeFromEdgeId(gameState, move.EdgeMove.Id);
+                edge.BuildRoad(gameState.Phase.CurrentPlayer);
+            }
+
+            if (move.VertexMove != null)
+            {
+                var vertex = GetVertexFromVertexId(gameState, move.VertexMove.Id);
+                vertex.BuildSettlement(gameState.Phase.CurrentPlayer);
+            }
+        }
     }
 }
