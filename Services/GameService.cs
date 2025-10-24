@@ -144,18 +144,10 @@ public class GameService
                 return $"Unable to retrieve game {gameId}";
 
             var gs = new GameState(dto);
-            var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
-            if (player == null)
-                return $"Player {playerId} not found in game {gameId}";
+            var resultString = GamePlayHelpers.BuildRoad(gs, playerId, edgeId);
 
-            var edge = gs.Edges.FirstOrDefault(e => e.Id == edgeId);
-            if (edge == null)
-                return $"Edge {edgeId} not found in game {gameId}";
-
-            if (edge.Owner != null)
-                return $"Edge {edgeId} in game {gameId} already has a road.";
-
-            edge.BuildRoad(player);
+            if (String.IsNullOrEmpty(resultString))
+                return resultString;
 
             var options = new JsonSerializerOptions
             {

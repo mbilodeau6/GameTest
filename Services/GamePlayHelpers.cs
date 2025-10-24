@@ -1,9 +1,4 @@
-using System.IO.Compression;
-using Azure.Storage.Blobs.Models;
-using GameTest.DTOs;
 using GameTest.Models;
-using GameTest.Tests;
-using Google.Protobuf.WellKnownTypes;
 
 namespace GameTest.Services;
 
@@ -296,5 +291,48 @@ public static class GamePlayHelpers
 
             gameState.Phase = GetNextPhase(gameState);
         }
+
+        if (gameState.Phase.CurrentPlayer.IsBot && gameState.Phase.PhaseState == GameStates.RollOrUseDevCard)
+        {
+            // TODO: Need to call RollOrUserDevCard logic for Bots
+        }
     }
-}
+
+
+    private static bool BuildRoadPhase(GameState gs)
+    {
+        return gs.Phase.PhaseState == GameStates.PlaceFirstRoad ||
+            gs.Phase.PhaseState == GameStates.PlaceSecondRoad ||
+            gs.Phase.PhaseState == GameStates.BuildOrTrade;
+    }
+
+    // TODO: Return a GameResult type that can indicate success/failure and include messages.
+    // Right now, an empty string indicates success.
+    public static string BuildRoad(GameState gs, string playerId, string edgeId)
+    {
+        if (!BuildRoadPhase(gs))
+        {
+            return $"Game is not in a state that allows building roads. Current state: {gs.Phase.PhaseState}";
+        }
+        
+        var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player == null)
+            return $"Player {playerId} not found in game {gs.Id}";
+
+        if (gs.Phase.CurrentPlayer.Id != playerId)
+            return $"It is not {playerId}'s turn.";
+
+        var edge = gs.Edges.FirstOrDefault(e => e.Id == edgeId);
+        if (edge == null)
+            return $"Edge {edgeId} not found in game {gs.Id}";
+
+        if (edge.Owner != null)
+            return $"Edge {edgeId} in game {gs.Id} already has a road.";
+
+        edge.BuildRoad(player);
+
+
+
+        return string.Empty;
+    }
+    }
