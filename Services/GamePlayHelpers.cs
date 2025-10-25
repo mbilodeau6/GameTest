@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GameTest.Models;
 
 namespace GameTest.Services;
@@ -266,38 +267,8 @@ public static class GamePlayHelpers
 
     public static void StartGame(GameState gameState)
     {
-        gameState.Phase = GetNextPhase(gameState);
-
-        if (gameState.Phase.CurrentPlayer == null)
-            throw new InvalidOperationException("Can not start game without a current player.");
-
-        // Play for bot until bot's turn is over
-        while (gameState.Phase.CurrentPlayer.IsBot && IsPlayerSetupPhase(gameState))
-        {
-            var bot = new BotAI(gameState);
-            var move = bot.GetSetUpMove();
-
-            if (move.EdgeMove != null)
-            {
-                var edge = GetEdgeFromEdgeId(gameState, move.EdgeMove.Id);
-                edge.BuildRoad(gameState.Phase.CurrentPlayer);
-            }
-
-            if (move.VertexMove != null)
-            {
-                var vertex = GetVertexFromVertexId(gameState, move.VertexMove.Id);
-                vertex.BuildSettlement(gameState.Phase.CurrentPlayer);
-            }
-
-            gameState.Phase = GetNextPhase(gameState);
-        }
-
-        if (gameState.Phase.CurrentPlayer.IsBot && gameState.Phase.PhaseState == GameStates.RollOrUseDevCard)
-        {
-            // TODO: Need to call RollOrUserDevCard logic for Bots
-        }
+        GameLoop(gameState);
     }
-
 
     private static bool BuildRoadPhase(GameState gs)
     {
@@ -347,7 +318,7 @@ public static class GamePlayHelpers
 
         return string.Empty;
     }
-    
+
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
     // Right now, an empty string indicates success.
     public static string BuildSettlement(GameState gs, string playerId, string vertexId)
@@ -379,5 +350,55 @@ public static class GamePlayHelpers
         gs.Phase = GetNextPhase(gs);
 
         return string.Empty;
+    }
+    
+    public static void GameLoop(GameState gs)
+    {
+        int loopCounter = 0;   // Failsafe to prevent infinite loops
+
+        gs.Phase = GetNextPhase(gs);
+
+        if (gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("Shouldn't call GameLoop before current player set.");
+
+        while (gs.Phase.CurrentPlayer.IsBot)
+        {
+            if (loopCounter > 100)
+                throw new InvalidOperationException("GameLoop appears to be stuck in an infinite loop");
+
+            loopCounter++;
+
+            var bot = new BotAI(gs);
+            BotMove move;
+
+            // TODO: Would a swtich be more appropriate than if elseif?
+            if (IsPlayerSetupPhase(gs))
+            {
+                move = bot.GetSetUpMove();
+
+            }
+            else if (gs.Phase.PhaseState == GameStates.RollOrUseDevCard)
+            {
+                move = bot.GetPreRollMove();
+            }
+            else
+            {
+                move = bot.GetBuildMove();
+            }
+
+            if (move.EdgeMove != null)
+            {
+                var edge = GetEdgeFromEdgeId(gs, move.EdgeMove.Id);
+                edge.BuildRoad(gs.Phase.CurrentPlayer);
+            }
+
+            if (move.VertexMove != null)
+            {
+                var vertex = GetVertexFromVertexId(gs, move.VertexMove.Id);
+                vertex.BuildSettlement(gs.Phase.CurrentPlayer);
+            }
+
+            gs.Phase = GetNextPhase(gs);
+        }
     }
 }

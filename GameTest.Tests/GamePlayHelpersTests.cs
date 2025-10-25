@@ -930,7 +930,7 @@ public class GamePlayHelpersTests
         Assert.Equal(BuildingType.Settlement, gs.Vertices[0].Building);
     }
 
-        [Fact]
+    [Fact]
     public void BuildRoad_PlaceFirstSettlementPhase_BuildsSettlementAndPhaseChange()
     {
         var gs = CreateGameStateForPhaseTesting();
@@ -945,5 +945,17 @@ public class GamePlayHelpersTests
         Assert.Equal(gs.Players[0].Id, gs.Vertices[0].Owner.Id);
         Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
         Assert.Equal(gs.Phase.CurrentPlayer.Id, gs.Players[0].Id);
+    }
+
+    [Fact]
+    public void GameLoop_DropOutIfNotBotsTurn()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
+
+        GamePlayHelpers.GameLoop(gs);
+
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.False(gs.Phase.CurrentPlayer.IsBot);
     }
 }
