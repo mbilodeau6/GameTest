@@ -836,7 +836,7 @@ public class GamePlayHelpersTests
         Assert.EndsWith(" turn.", resultString); 
     }
 
-    // TODO: Need to add additional BuildSettlement tests.
+    // TODO: Need to add additional BuildSRoad tests.
 
     [Fact]
     public void BuildRoad_FailIfWrongPhase()
@@ -850,7 +850,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void BuildRoad_ValidAndBuildsRoad()
+    public void BuildRoad_BuildOrTradePhase_BuildsRoadNoPhaseChange()
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
@@ -859,7 +859,91 @@ public class GamePlayHelpersTests
 
         Assert.Equal(string.Empty, resultString);
         Assert.NotNull(gs.Edges[0].Owner);
-        Assert.Equal(gs.Edges[0].Owner.Id, gs.Players[0].Id);
+        Assert.Equal(gs.Players[0].Id, gs.Edges[0].Owner.Id);
     }
 
+    [Fact]
+    public void BuildRoad_PlaceFirstRoadPhase_BuildsRoadAndPhaseChange()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[1], gs.Players[1]);
+
+        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, gs.Edges[0].Id);
+
+        Assert.Equal(string.Empty, resultString);
+        Assert.NotNull(gs.Edges[0].Owner);
+        Assert.Equal(gs.Players[1].Id, gs.Edges[0].Owner.Id);
+        Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
+        Assert.Equal(gs.Phase.CurrentPlayer.Id, gs.Players[1].Id);
+    }
+    
+    [Fact]
+    public void BuildSettlement_MissingPlayer()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
+
+        var resultString = GamePlayHelpers.BuildSettlement(gs, "PP1", gs.Vertices[0].Id);
+
+        Assert.NotNull(resultString);
+        Assert.StartsWith("Player PP1 not found in game ", resultString);
+    }
+
+    [Fact]
+    public void BuildSettlement_NotPlayersTurn()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
+
+        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+
+        Assert.NotNull(resultString);
+        Assert.StartsWith("It is not ", resultString);
+        Assert.EndsWith(" turn.", resultString); 
+    }
+
+    // TODO: Need to add additional BuildSettlement tests.
+
+    [Fact]
+    public void BuildSettlement_FailIfWrongPhase()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+
+        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+
+        Assert.Equal($"Game is not in a state that allows building settlements. Current state: {gs.Phase.PhaseState}", resultString);
+    }
+
+    [Fact]
+    public void BuildSettlement_BuildOrTradePhase_BuildsSettlementNoPhaseChange()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+
+        Assert.Equal(string.Empty, resultString);
+        Assert.NotNull(gs.Vertices[0].Owner);
+        Assert.NotNull(gs.Vertices[0].Building);
+        Assert.Equal(gs.Players[0].Id, gs.Vertices[0].Owner.Id);
+        Assert.Equal(BuildingType.Settlement, gs.Vertices[0].Building);
+    }
+
+        [Fact]
+    public void BuildRoad_PlaceFirstSettlementPhase_BuildsSettlementAndPhaseChange()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
+
+        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+
+        Assert.Equal(string.Empty, resultString);
+        Assert.NotNull(gs.Vertices[0].Building);
+        Assert.Equal(BuildingType.Settlement, gs.Vertices[0].Building);
+        Assert.NotNull(gs.Vertices[0].Owner);
+        Assert.Equal(gs.Players[0].Id, gs.Vertices[0].Owner.Id);
+        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        Assert.Equal(gs.Phase.CurrentPlayer.Id, gs.Players[0].Id);
+    }
 }

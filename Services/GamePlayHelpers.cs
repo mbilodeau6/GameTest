@@ -306,6 +306,18 @@ public static class GamePlayHelpers
             gs.Phase.PhaseState == GameStates.BuildOrTrade;
     }
 
+    private static bool BuildSettlementPhase(GameState gs)
+    {
+        return gs.Phase.PhaseState == GameStates.PlaceFirstSettlement ||
+            gs.Phase.PhaseState == GameStates.PlaceSecondSettlement ||
+            gs.Phase.PhaseState == GameStates.BuildOrTrade;
+    }
+
+    private static bool BuildCityPhase(GameState gs)
+    {
+        return gs.Phase.PhaseState == GameStates.BuildOrTrade;
+    }
+
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
     // Right now, an empty string indicates success.
     public static string BuildRoad(GameState gs, string playerId, string edgeId)
@@ -314,7 +326,7 @@ public static class GamePlayHelpers
         {
             return $"Game is not in a state that allows building roads. Current state: {gs.Phase.PhaseState}";
         }
-        
+
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
             return $"Player {playerId} not found in game {gs.Id}";
@@ -331,8 +343,41 @@ public static class GamePlayHelpers
 
         edge.BuildRoad(player);
 
-
+        gs.Phase = GetNextPhase(gs);
 
         return string.Empty;
     }
+    
+    // TODO: Return a GameResult type that can indicate success/failure and include messages.
+    // Right now, an empty string indicates success.
+    public static string BuildSettlement(GameState gs, string playerId, string vertexId)
+    {
+        if (!BuildSettlementPhase(gs))
+        {
+            return $"Game is not in a state that allows building settlements. Current state: {gs.Phase.PhaseState}";
+        }
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player == null)
+            return $"Player {playerId} not found in game {gs.Id}";
+
+        if (gs.Phase.CurrentPlayer.Id != playerId)
+            return $"It is not {playerId}'s turn.";
+
+        var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
+        if (vertex == null)
+            return $"Vertex {vertexId} not found in game {gs.Id}";
+
+        if (vertex.Building == BuildingType.Settlement)
+            return $"Vertex {vertexId} in game {gs.Id} already has a settlement.";
+
+        if (vertex.Building == BuildingType.City)
+            return $"Vertex {vertexId} in game {gs.Id} already has a city.";
+
+        vertex.BuildSettlement(player);
+
+        gs.Phase = GetNextPhase(gs);
+
+        return string.Empty;
     }
+}

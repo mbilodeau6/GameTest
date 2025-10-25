@@ -146,7 +146,7 @@ public class GameService
             var gs = new GameState(dto);
             var resultString = GamePlayHelpers.BuildRoad(gs, playerId, edgeId);
 
-            if (String.IsNullOrEmpty(resultString))
+            if (!String.IsNullOrEmpty(resultString))
                 return resultString;
 
             var options = new JsonSerializerOptions
@@ -189,21 +189,11 @@ public class GameService
                 return $"Unable to retrieve game {gameId}";
 
             var gs = new GameState(dto);
-            var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
-            if (player == null)
-                return $"Player {playerId} not found in game {gameId}";
+            var resultString = GamePlayHelpers.BuildSettlement(gs, playerId, vertexId);
 
-            var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
-            if (vertex == null)
-                return $"Vertex {vertexId} not found in game {gameId}";
+            if (!String.IsNullOrEmpty(resultString))
+                return resultString;
 
-            if (vertex.Building == BuildingType.Settlement)
-                return $"Vertex {vertexId} in game {gameId} already has a settlement.";
-
-            if (vertex.Building == BuildingType.City)
-                return $"Vertex {vertexId} in game {gameId} already has a city.";
-
-            vertex.BuildSettlement(player);
 
             var options = new JsonSerializerOptions
             {
