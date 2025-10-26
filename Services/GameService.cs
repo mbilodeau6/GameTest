@@ -297,9 +297,7 @@ public class GameService
             }
 
             var gs = new GameState(dto);
-            gs.Dice.Roll();
-
-            GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
+            GamePlayHelpers.RollDice(gs);
 
             var options = new JsonSerializerOptions
             {

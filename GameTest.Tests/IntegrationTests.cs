@@ -1,0 +1,42 @@
+using Xunit;
+using GameTest.Models;
+using GameTest.DTOs;
+using GameTest.Services;
+using GameTest.Functions;
+using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
+using System.Drawing.Printing;
+
+namespace GameTest.Tests;
+
+public class IntegrationTests
+{
+    private GameState CreateGameStateForGameLoopTesting()
+    {
+        var gs = new GameState(new Guid());
+        gs.Tiles.AddRange(BoardCreationHelpers.CreateTilesForTestBoard());
+        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
+        gs.AddPlayer(new Player("List", PlayerColor.White));
+        gs.AddPlayer(new Player("Hal", PlayerColor.Green, true));
+
+        return gs;
+    }
+
+    [Fact]
+    public void BotBuildAtEndOfSetupPhase_TriggeredByBuildSettlementByUser()
+    {
+        var gs = CreateGameStateForGameLoopTesting();
+        gs.Vertices[0].BuildSettlement(gs.Players[1]);
+        gs.Edges[0].BuildRoad(gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, gs.Players[1], gs.Players[1]);
+
+        GamePlayHelpers.GameLoop(gs);
+
+        Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
+        Assert.Equal(gs.Players[0].Id, gs.Phase.CurrentPlayer.Id);
+
+        // TODO: Figure out a way to know the type/count of vertices/edges. Will likely need
+        // mock dice implemented.
+        Assert.True(gs.Vertices.Count(v => v.Building == BuildingType.Settlement && v.Owner.Id == gs.Players[1].Id) >= 2);
+        Assert.True(gs.Edges.Count(e => e.Owner != null && e.Owner.Id == gs.Players[1].Id) >= 2);
+    }
+}

@@ -23,6 +23,9 @@ public static class GamePlayHelpers
     {
         var resourcesEarned = new Dictionary<Player, Dictionary<ResourceType, int>>();
 
+        if (gameState.Dice.GetCombinedValue() == 7)
+            return resourcesEarned;
+
         var matchingTiles = gameState.Tiles.FindAll(t => t.DiceNumber == gameState.Dice.GetCombinedValue());
 
         foreach (var tile in matchingTiles)
@@ -230,7 +233,7 @@ public static class GamePlayHelpers
         return nextPhase;
     }
 
-    public static void EndTurn(Player player, GameState gameState)
+    public static void EndTurn(Player player, GameState gameState, bool skipGameLoop = false)
     {
         // Verify EndTurn is only called in appropriate circumstances. Expect callers to protects
         // against these scenarios.
@@ -245,6 +248,10 @@ public static class GamePlayHelpers
 
         gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
         gameState.Phase.PhaseState = GameStates.RollOrUseDevCard;
+        gameState.Dice.SetWaiting();
+
+        if (!skipGameLoop)
+            GameLoop(gameState);
     }
 
     private static Edge GetEdgeFromEdgeId(GameState gs, string edgeId)
@@ -257,7 +264,7 @@ public static class GamePlayHelpers
         return gs.Vertices.First(e => e.Id == vertexId);
     }
 
-    private static bool IsPlayerSetupPhase(GameState gs)
+    public static bool IsPlayerSetupPhase(GameState gs)
     {
         return gs.Phase.PhaseState == GameStates.PlaceFirstSettlement ||
             gs.Phase.PhaseState == GameStates.PlaceFirstRoad ||
@@ -314,7 +321,7 @@ public static class GamePlayHelpers
 
         edge.BuildRoad(player);
 
-        gs.Phase = GetNextPhase(gs);
+        GameLoop(gs);
 
         return string.Empty;
     }
@@ -347,14 +354,15 @@ public static class GamePlayHelpers
 
         vertex.BuildSettlement(player);
 
-        gs.Phase = GetNextPhase(gs);
+        GameLoop(gs);
 
         return string.Empty;
     }
-    
+
     public static void GameLoop(GameState gs)
     {
-        int loopCounter = 0;   // Failsafe to prevent infinite loops
+        int loopCounter = 0; // Failsafe to prevent infinite loops
+        int pointCounter = 0; // TEMP - Limit bot plays until resource/placement constraints finished
 
         gs.Phase = GetNextPhase(gs);
 
@@ -371,19 +379,23 @@ public static class GamePlayHelpers
             var bot = new BotAI(gs);
             BotMove move;
 
-            // TODO: Would a swtich be more appropriate than if elseif?
+            // TODO: Would a swtich be more appropriate than if/elseif?
             if (IsPlayerSetupPhase(gs))
             {
                 move = bot.GetSetUpMove();
-
             }
             else if (gs.Phase.PhaseState == GameStates.RollOrUseDevCard)
             {
                 move = bot.GetPreRollMove();
             }
-            else
+            else if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
             {
                 move = bot.GetBuildMove();
+            }
+            else
+            {
+                // TODO: Other states not implemented yet.
+                break;
             }
 
             if (move.EdgeMove != null)
@@ -395,10 +407,42 @@ public static class GamePlayHelpers
             if (move.VertexMove != null)
             {
                 var vertex = GetVertexFromVertexId(gs, move.VertexMove.Id);
-                vertex.BuildSettlement(gs.Phase.CurrentPlayer);
+
+                if (move.VertexMove.Building == BuildingType.Settlement.ToString())
+                {
+                    vertex.BuildSettlement(gs.Phase.CurrentPlayer);
+                    pointCounter++;
+                }
+                else
+                {
+                    vertex.UpgradeToCity();
+                    pointCounter += 2;
+                }
+            }
+
+            if (move.RollDice)
+            {
+                GamePlayHelpers.RollDice(gs, true);
             }
 
             gs.Phase = GetNextPhase(gs);
+
+            // TODO: Remove following (and pointCounter) when resources are required
+            // for building. This code is a hack to limit how much the Bot can build
+            // when resources aren't required for building.
+            if (gs.Phase.PhaseState == GameStates.BuildOrTrade && pointCounter >= 2)
+            {
+                GamePlayHelpers.EndTurn(gs.Phase.CurrentPlayer, gs, true);
+            }
         }
+    }
+    
+    public static void RollDice(GameState gs, bool skipGameLoop = false)
+    {
+        gs.Dice.Roll();
+        GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
+
+        if (!skipGameLoop)
+            GameLoop(gs);
     }
 }

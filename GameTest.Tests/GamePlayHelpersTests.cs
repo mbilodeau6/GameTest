@@ -59,6 +59,40 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void GetResourcesEarnedOnLastRoll_DontIncludeDesert()
+    {
+        // Arrage
+        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+
+        var desertTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 0);
+        Assert.NotNull(desertTile);
+        Assert.Equal(ResourceType.Desert, desertTile.Resource);
+
+        var brickTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, -1, -1);
+        Assert.NotNull(brickTile);
+        Assert.Equal(ResourceType.Brick, brickTile.Resource);
+
+        var woolTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 1, -1);
+        Assert.NotNull(woolTile);
+        Assert.Equal(ResourceType.Wool, woolTile.Resource);
+
+        var bluePlayer = gameState.Players.First(p => p.Color == PlayerColor.Blue);
+        Assert.NotNull(bluePlayer);
+        var redPlayer = gameState.Players.First(p => p.Color == PlayerColor.Red);
+        Assert.NotNull(redPlayer);
+
+        gameState.Vertices[0].BuildSettlement(bluePlayer);
+
+        gameState.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(3)));
+
+        // Act
+        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(gameState);
+
+        // Assert
+        Assert.Empty(resources);
+    }
+
+    [Fact]
     public void GetVictoryPointsForBuild_ForSettlement()
     {
         // Arrange

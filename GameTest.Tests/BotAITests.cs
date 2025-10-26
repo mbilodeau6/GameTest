@@ -64,6 +64,20 @@ public class BotAITests
     }
 
     [Fact]
+    public void GetSetUpMove_WrongCurrentState()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        var bai = new BotAI(gs);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            bai.GetSetUpMove());
+
+        Assert.StartsWith("GetSetUp should only be called if in one of the phases. Current phase is", exception.Message);
+    }
+
+    [Fact]
     public void GetSetUpMove_FirstSettlement()
     {
         // Arrange
@@ -141,5 +155,81 @@ public class BotAITests
         Assert.True(move.EdgeMove.Id != gs.Edges[0].Id);
         Assert.True(move.EdgeMove.Id != gs.Edges[1].Id);
         Assert.Null(move.VertexMove);
+    }
+
+    [Fact]
+    public void GetPreRollMove_WrongCurrentState()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        var bai = new BotAI(gs);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            bai.GetPreRollMove());
+
+        Assert.StartsWith("GetPreRollMove should only be called if phase is RollOrUseDevCard. Current phase is", exception.Message);
+    }
+
+
+    // TODO: Need to figure out how to determine when AI should buy dev card
+    // vs roll and adjust test to refelct.
+    [Fact]
+    public void GetPreRollMove_RollDice()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.RollOrUseDevCard);
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+
+        var bai = new BotAI(gs);
+
+        var move = bai.GetPreRollMove();
+
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.False(move.BuyDevelopmentCard);
+        Assert.True(move.RollDice);
+    }
+
+    [Fact]
+    public void GetBuildMove_WrongCurrentState()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.RollOrUseDevCard);
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+
+        var bai = new BotAI(gs);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            bai.GetBuildMove());
+
+        Assert.StartsWith("GetBuildMove should only be called if phase is BuildOrTrade. Current phase is", exception.Message);
+    }
+
+    // TODO: Will need to adjust when code changed to require resources and proper
+    // spacing from other development. Current version of GetBuildMove() just
+    // picks the next open spot for a road and settlement.
+    // TODO: Also need to figure out when Bot should build each resource, buy dev
+    // card, trade, and end turn.
+    [Fact]
+    public void GetBuildMove_BuildRoadAndSettlement()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        var bai = new BotAI(gs);
+
+        var move = bai.GetBuildMove();
+
+        Assert.NotNull(move.EdgeMove);
+        Assert.Equal(gs.Players[0].Id, move.EdgeMove.PlayerId);
+        var selectedEdge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
+        Assert.Null(selectedEdge.Owner);
+
+        Assert.NotNull(move.VertexMove);
+        Assert.Equal(gs.Players[0].Id, move.VertexMove.PlayerId);
+        var selectedVertex = gs.Vertices.First(v => v.Id == move.VertexMove.Id);
+        Assert.Null(selectedVertex.Building);
+
+        Assert.False(move.BuyDevelopmentCard);
+        Assert.False(move.RollDice);
     }
 }
