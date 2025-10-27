@@ -16,8 +16,8 @@ public class Edge
     public Player? Owner { get; private set; }
     // TODO: If I want to support ships, may need EdgeType (Road, ShipRoute)
 
-    // References to the two vertices this edge connects (required)
-    public Vertex[] Vertices { get; } = new Vertex[2];
+    // References to the three edges this vertex connects (required)
+    public List<Vertex> Vertices { get; private set; } = new List<Vertex>();
 
     // References to up to two adjacent tiles (nullable)
     public List<Tile> Tiles { get; }
@@ -85,5 +85,16 @@ public class Edge
     {
         string ownerPart = Owner == null ? "None" : Owner.Name;
         return $"Edge {Id} (Owner: {ownerPart})";
+    }
+
+    public bool AddVertexReference(Vertex vertex)
+    {
+        if (Vertices.Count < 2 && !Vertices.Contains(vertex))
+        {
+            Vertices.Add(vertex);
+            return true;
+        }
+
+        return false;
     }
 }

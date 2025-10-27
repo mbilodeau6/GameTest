@@ -18,7 +18,7 @@ public class EdgeTests
 
         // Assert
         Assert.True(TestHelpers.ValidateId(edge.Id, 'E'));
-        Assert.Equal(2, edge.Vertices.Length);
+        Assert.NotNull(edge.Vertices);
         Assert.All(edge.Vertices, e => Assert.Null(e));
         Assert.Equal(2, edge.Tiles.Count);
         Assert.All(edge.Tiles, t => Assert.NotNull(t));
@@ -125,5 +125,53 @@ public class EdgeTests
         Assert.False(result);
         Assert.NotNull(edge.Owner);
         Assert.Equal(player1.Id, edge.Owner.Id);
+    }
+
+    [Fact]
+    public void AddVertexReference_Valid()
+    {
+        var gs = TestHelpers.CreateEdgesAndVertexForRefTests();
+
+        var result = gs.Edges[0].AddVertexReference(gs.Vertices[0]);
+        Assert.True(result);
+
+        result = gs.Edges[0].AddVertexReference(gs.Vertices[1]);
+        Assert.True(result);
+
+        Assert.Contains(gs.Vertices[0], gs.Edges[0].Vertices);
+        Assert.Contains(gs.Vertices[1], gs.Edges[0].Vertices);
+    }
+
+    [Fact]
+    public void AddVertexReference_TooMany()
+    {
+        var gs = TestHelpers.CreateEdgesAndVertexForRefTests();
+
+        var result = gs.Edges[0].AddVertexReference(gs.Vertices[0]);
+        Assert.True(result);
+
+        result = gs.Edges[0].AddVertexReference(gs.Vertices[1]);
+        Assert.True(result);
+
+        result = gs.Edges[0].AddVertexReference(gs.Vertices[2]);
+        Assert.False(result);
+
+        Assert.Contains(gs.Vertices[0], gs.Edges[0].Vertices);
+        Assert.Contains(gs.Vertices[1], gs.Edges[0].Vertices);
+        Assert.DoesNotContain(gs.Vertices[2], gs.Edges[0].Vertices);
+    }
+
+    [Fact]
+    public void AddVertexReference_Duplicate()
+    {
+        var gs = TestHelpers.CreateEdgesAndVertexForRefTests();
+
+        var result = gs.Edges[0].AddVertexReference(gs.Vertices[0]);
+        Assert.True(result);
+
+        result = gs.Edges[0].AddVertexReference(gs.Vertices[0]);
+        Assert.False(result);
+
+        Assert.Contains(gs.Vertices[0], gs.Edges[0].Vertices);
     }
 }

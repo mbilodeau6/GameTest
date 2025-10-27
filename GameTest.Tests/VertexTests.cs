@@ -67,7 +67,7 @@ public class VertexTests
         var vertexDto = new VertexDTO(expectedVertex);
 
         // Act
-        var vertex = new Vertex(vertexDto, new List<Player>() { p1, p2}, new List<Tile> { t1 });
+        var vertex = new Vertex(vertexDto, new List<Player>() { p1, p2 }, new List<Tile> { t1 });
 
         // Assert
         Assert.Equal(expectedVertex.Id, vertex.Id);
@@ -80,7 +80,7 @@ public class VertexTests
 
         Assert.Equal(VertexDirection.S, vertex.Direction);
     }
-        
+
     [Fact]
     public void BuildSettlement_EmptyVertex_SetsOwnerAndBuilding()
     {
@@ -259,7 +259,63 @@ public class VertexTests
         Assert.True(vertex.ConnectsTiles(tile3, tile1, tile2));
         Assert.True(vertex.ConnectsTiles(tile3, tile2, tile1));
         Assert.False(vertex.ConnectsTiles(tile1, tile2));
-        Assert.False(vertex.ConnectsTiles(tile1, tile3)); 
+        Assert.False(vertex.ConnectsTiles(tile1, tile3));
     }
 
+[Fact]
+    public void AddEdgeReference_Valid()
+    {
+        var gs = TestHelpers.CreateEdgesAndVertexForRefTests();
+
+        var result = gs.Vertices[0].AddEdgeReference(gs.Edges[0]);
+        Assert.True(result);
+
+        result = gs.Vertices[0].AddEdgeReference(gs.Edges[1]);
+        Assert.True(result);
+
+        result = gs.Vertices[0].AddEdgeReference(gs.Edges[2]);
+        Assert.True(result);
+
+        Assert.Contains(gs.Edges[0], gs.Vertices[0].Edges);
+        Assert.Contains(gs.Edges[1], gs.Vertices[0].Edges);
+        Assert.Contains(gs.Edges[2], gs.Vertices[0].Edges);
+    }
+
+    [Fact]
+    public void AddEdgeReference_TooMany()
+    {
+        var gs = TestHelpers.CreateEdgesAndVertexForRefTests();
+
+        var result = gs.Vertices[0].AddEdgeReference(gs.Edges[0]);
+        Assert.True(result);
+
+        result = gs.Vertices[0].AddEdgeReference(gs.Edges[1]);
+        Assert.True(result);
+
+        result = gs.Vertices[0].AddEdgeReference(gs.Edges[2]);
+        Assert.True(result);
+
+        result = gs.Vertices[0].AddEdgeReference(gs.Edges[3]);
+        Assert.False(result);
+
+
+        Assert.Contains(gs.Edges[0], gs.Vertices[0].Edges);
+        Assert.Contains(gs.Edges[1], gs.Vertices[0].Edges);
+        Assert.Contains(gs.Edges[2], gs.Vertices[0].Edges);
+        Assert.DoesNotContain(gs.Edges[3], gs.Vertices[0].Edges);
+    }
+
+    [Fact]
+    public void AddEdgeReference_Duplicate()
+    {
+        var gs = TestHelpers.CreateEdgesAndVertexForRefTests();
+
+        var result = gs.Vertices[0].AddEdgeReference(gs.Edges[0]);
+        Assert.True(result);
+
+        result = gs.Vertices[0].AddEdgeReference(gs.Edges[0]);
+        Assert.False(result);
+
+        Assert.Contains(gs.Edges[0], gs.Vertices[0].Edges);
+    }
 }

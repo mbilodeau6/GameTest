@@ -18,9 +18,8 @@ public class Vertex
     public Player? Owner { get; set; }
     public VertexDirection? Direction { get; init; }
 
-
     // Up to two edges that meet at this vertex
-    public Edge?[] Edges { get; } = new Edge?[2];
+    public List<Edge> Edges { get; private set; } = new List<Edge>();
 
     // Up to three tiles that touch this vertex
     public List<Tile> Tiles { get; }
@@ -102,11 +101,22 @@ public class Vertex
 
     public override string ToString()
     {
-        string buildingType = Building == null? "None" : Building == BuildingType.Settlement ? "Settlement" : "City";
+        string buildingType = Building == null ? "None" : Building == BuildingType.Settlement ? "Settlement" : "City";
         string ownerPart = Owner == null ? "None" : Owner.Name;
 
         string result = $"Vertex {Id} (Owner: {ownerPart}; Building: {buildingType})";
 
         return result;
+    }
+    
+    public bool AddEdgeReference(Edge edge)
+    {
+        if (Edges.Count < 3 && !Edges.Contains(edge))
+        {
+            Edges.Add(edge);
+            return true;
+        }
+
+        return false;
     }
 }

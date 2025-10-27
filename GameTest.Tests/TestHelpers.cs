@@ -57,4 +57,38 @@ public static class TestHelpers
 
         return true;
     }
+
+    public static GameState CreateEdgesAndVertexForRefTests()
+    {
+        var gs = new GameState(new Guid());
+
+        var t1 = new Tile(ResourceType.Wood, 10, 0, 0);
+        gs.Tiles.Add(t1);
+        var t2 = new Tile(ResourceType.Brick, 2, -1, -1);
+        gs.Tiles.Add(t2);
+        var t3 = new Tile(ResourceType.Grain, 9, 1, -1);
+        gs.Tiles.Add(t3);
+        var t4 = new Tile(ResourceType.Wool, 8, -2, 0);
+        gs.Tiles.Add(t4);
+        var t5 = new Tile(ResourceType.Ore, 5, 0, -2);
+        gs.Tiles.Add(t5);
+
+        var v1 = new Vertex(t1, t2, t3);
+        gs.Vertices.Add(v1);
+        var v2 = new Vertex(t1, t2, t4);
+        gs.Vertices.Add(v2);
+        var v3 = new Vertex(t2, t2, t5);
+        gs.Vertices.Add(v3);
+
+        var e1 = new Edge(t1, t2);
+        gs.Edges.Add(e1);
+        var e2 = new Edge(t1, t3);
+        gs.Edges.Add(e2);
+        var e3 = new Edge(t2, t3);
+        gs.Edges.Add(e3);
+        var e4 = new Edge(t2, t4);
+        gs.Edges.Add(e4);
+
+        return gs;
+    }
 }

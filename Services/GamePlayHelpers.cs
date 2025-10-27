@@ -369,70 +369,72 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer == null)
             throw new InvalidOperationException("Shouldn't call GameLoop before current player set.");
 
-        while (gs.Phase.CurrentPlayer.IsBot)
+        if (gs.Phase.CurrentPlayer.IsBot)
         {
-            if (loopCounter > 100)
-                throw new InvalidOperationException("GameLoop appears to be stuck in an infinite loop");
-
-            loopCounter++;
-
             var bot = new BotAI(gs);
-            BotMove move;
 
-            // TODO: Would a swtich be more appropriate than if/elseif?
-            if (IsPlayerSetupPhase(gs))
+            while (gs.Phase.CurrentPlayer.IsBot)
             {
-                move = bot.GetSetUpMove();
-            }
-            else if (gs.Phase.PhaseState == GameStates.RollOrUseDevCard)
-            {
-                move = bot.GetPreRollMove();
-            }
-            else if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
-            {
-                move = bot.GetBuildMove();
-            }
-            else
-            {
-                // TODO: Other states not implemented yet.
-                break;
-            }
+                if (loopCounter++ > 100)
+                    throw new InvalidOperationException("GameLoop appears to be stuck in an infinite loop");
 
-            if (move.EdgeMove != null)
-            {
-                var edge = GetEdgeFromEdgeId(gs, move.EdgeMove.Id);
-                edge.BuildRoad(gs.Phase.CurrentPlayer);
-            }
+                BotMove move;
 
-            if (move.VertexMove != null)
-            {
-                var vertex = GetVertexFromVertexId(gs, move.VertexMove.Id);
-
-                if (move.VertexMove.Building == BuildingType.Settlement.ToString())
+                // TODO: Would a swtich be more appropriate than if/elseif?
+                if (IsPlayerSetupPhase(gs))
                 {
-                    vertex.BuildSettlement(gs.Phase.CurrentPlayer);
-                    pointCounter++;
+                    move = bot.GetSetUpMove();
+                }
+                else if (gs.Phase.PhaseState == GameStates.RollOrUseDevCard)
+                {
+                    move = bot.GetPreRollMove();
+                }
+                else if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
+                {
+                    move = bot.GetBuildMove();
                 }
                 else
                 {
-                    vertex.UpgradeToCity();
-                    pointCounter += 2;
+                    // TODO: Other states not implemented yet.
+                    break;
                 }
-            }
 
-            if (move.RollDice)
-            {
-                GamePlayHelpers.RollDice(gs, true);
-            }
+                if (move.EdgeMove != null)
+                {
+                    var edge = GetEdgeFromEdgeId(gs, move.EdgeMove.Id);
+                    edge.BuildRoad(gs.Phase.CurrentPlayer);
+                }
 
-            gs.Phase = GetNextPhase(gs);
+                if (move.VertexMove != null)
+                {
+                    var vertex = GetVertexFromVertexId(gs, move.VertexMove.Id);
 
-            // TODO: Remove following (and pointCounter) when resources are required
-            // for building. This code is a hack to limit how much the Bot can build
-            // when resources aren't required for building.
-            if (gs.Phase.PhaseState == GameStates.BuildOrTrade && pointCounter >= 2)
-            {
-                GamePlayHelpers.EndTurn(gs.Phase.CurrentPlayer, gs, true);
+                    if (move.VertexMove.Building == BuildingType.Settlement.ToString())
+                    {
+                        vertex.BuildSettlement(gs.Phase.CurrentPlayer);
+                        pointCounter++;
+                    }
+                    else
+                    {
+                        vertex.UpgradeToCity();
+                        pointCounter += 2;
+                    }
+                }
+
+                if (move.RollDice)
+                {
+                    GamePlayHelpers.RollDice(gs, true);
+                }
+
+                gs.Phase = GetNextPhase(gs);
+
+                // TODO: Remove following (and pointCounter) when resources are required
+                // for building. This code is a hack to limit how much the Bot can build
+                // when resources aren't required for building.
+                if (gs.Phase.PhaseState == GameStates.BuildOrTrade && pointCounter >= 2)
+                {
+                    GamePlayHelpers.EndTurn(gs.Phase.CurrentPlayer, gs, true);
+                }
             }
         }
     }
