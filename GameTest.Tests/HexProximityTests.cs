@@ -144,7 +144,7 @@ public class HexProximityTests
         Assert.Equal(VertexDirection.SW, result);
     }
 
-    [Fact] 
+    [Fact]
     public void GetVertexDirectionForEdgeDirection_FromNW()
     {
         // Act
@@ -152,5 +152,35 @@ public class HexProximityTests
 
         // Assert
         Assert.Equal(VertexDirection.NW, result);
+    }
+
+    [Fact]
+    public void GetHexDirectionForVertexDirection_FromN()
+    {
+        // Act
+        var result = HexProximity.GetHexDirectionForVertexDirection(VertexDirection.N);
+
+        // Assert
+        Assert.Equal(HexDirection.NE, result);
+    }
+    
+    [Fact]
+    public void GetHexDirectionForVertexDirection_FromNE()
+    {
+        // Act
+        var result = HexProximity.GetHexDirectionForVertexDirection(VertexDirection.NE);
+
+        // Assert
+        Assert.Equal(HexDirection.E, result);
+    }
+
+    [Fact]
+    public void GetHexDirectionForVertexDirection_FromNW()
+    {
+        // Act
+        var result = HexProximity.GetHexDirectionForVertexDirection(VertexDirection.NW);
+
+        // Assert
+        Assert.Equal(HexDirection.NW, result);
     }
 }

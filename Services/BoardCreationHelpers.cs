@@ -5,8 +5,22 @@ namespace GameTest.Services;
 
 public static class BoardCreationHelpers
 {
-    public static Tile GetRequiredTileAt(this IEnumerable<Tile> tiles, int x, int y)
+    public static Tile GetTileAt(this IEnumerable<Tile> tiles, int x, int y)
        => tiles.First(t => t.X == x && t.Y == y);
+
+    public static Tile GetVertexAt(this IEnumerable<Tile> tiles, int x, int y, VertexDirection dir)
+    {
+        // TODO: WIP
+        // var neighborCoordinates = HexProximity.GetCoordinates((x, y), dir);
+        // var neighborTile = tiles.FirstOrDefault(t => t.X == neighborCoordinates.Item1 && t.Y == neighborCoordinates.Item2);
+
+        // var neighbor2Coordinates = HexProximity.GetCoordinates((x, y), HexProximity.getPrecedingDirection(dir));
+        // var neighbor2Tile = tiles.FirstOrDefault(t => t.X == neighbor2Coordinates.Item1 && t.Y == neighbor2Coordinates.Item2);
+        // var vertexDir = HexProximity.GetVertexDirectionForEdgeDirection(dir);
+
+        return null;
+
+    }
 
     public static List<Tile> CreateTilesForRandomBoard()
     {
@@ -111,7 +125,7 @@ public static class BoardCreationHelpers
     public static void CreateEdgesAndVerticesForBoard(GameState gameState)
     {
         var stack = new Stack<Tile>();
-        stack.Push(GetRequiredTileAt(gameState.Tiles, 0, 0));
+        stack.Push(GetTileAt(gameState.Tiles, 0, 0));
 
         while (stack.Count > 0)
         {
@@ -179,7 +193,6 @@ public static class BoardCreationHelpers
                 }
             }
         }
-
     }
 
     public static GameState CreateNewBoard(GameType gameType)
@@ -215,11 +228,11 @@ public static class BoardCreationHelpers
         if (gameType == GameType.Test)
         {
             // Add some roads/settlements for testing purposes
-            var BrickTile = GetRequiredTileAt(gameState.Tiles, -2, 0);
-            var GrainTile = GetRequiredTileAt(gameState.Tiles, 0, 0);
-            var OreTile = GetRequiredTileAt(gameState.Tiles, 2, 0);
-            var LowerWoolTile = GetRequiredTileAt(gameState.Tiles, -1, 1);
-            var WoodTile = GetRequiredTileAt(gameState.Tiles, 1, 1);
+            var BrickTile = GetTileAt(gameState.Tiles, -2, 0);
+            var GrainTile = GetTileAt(gameState.Tiles, 0, 0);
+            var OreTile = GetTileAt(gameState.Tiles, 2, 0);
+            var LowerWoolTile = GetTileAt(gameState.Tiles, -1, 1);
+            var WoodTile = GetTileAt(gameState.Tiles, 1, 1);
 
             var redEdge = gameState.Edges.First(e => e.Tiles.Contains(BrickTile) && e.Tiles.Contains(LowerWoolTile));
             redEdge.BuildRoad(gameState.Players[0]);

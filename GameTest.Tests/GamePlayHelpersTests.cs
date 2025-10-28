@@ -4,6 +4,7 @@ using GameTest.DTOs;
 using GameTest.Services;
 using GameTest.Functions;
 using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GameTest.Tests;
 
@@ -29,7 +30,7 @@ public class GamePlayHelpersTests
         // Arrage
         var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Test);
 
-        var targetTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 0);
+        var targetTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 0);
         Assert.NotNull(targetTile);
         Assert.Equal(9, targetTile.DiceNumber);
 
@@ -64,15 +65,15 @@ public class GamePlayHelpersTests
         // Arrage
         var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var desertTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 0);
+        var desertTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 0);
         Assert.NotNull(desertTile);
         Assert.Equal(ResourceType.Desert, desertTile.Resource);
 
-        var brickTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, -1, -1);
+        var brickTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, -1, -1);
         Assert.NotNull(brickTile);
         Assert.Equal(ResourceType.Brick, brickTile.Resource);
 
-        var woolTile = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 1, -1);
+        var woolTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, 1, -1);
         Assert.NotNull(woolTile);
         Assert.Equal(ResourceType.Wool, woolTile.Resource);
 
@@ -867,7 +868,7 @@ public class GamePlayHelpersTests
 
         Assert.NotNull(resultString);
         Assert.StartsWith("It is not ", resultString);
-        Assert.EndsWith(" turn.", resultString); 
+        Assert.EndsWith(" turn.", resultString);
     }
 
     // TODO: Need to add additional BuildSRoad tests.
@@ -910,7 +911,7 @@ public class GamePlayHelpersTests
         Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
         Assert.Equal(gs.Phase.CurrentPlayer.Id, gs.Players[1].Id);
     }
-    
+
     [Fact]
     public void BuildSettlement_MissingPlayer()
     {
@@ -933,7 +934,7 @@ public class GamePlayHelpersTests
 
         Assert.NotNull(resultString);
         Assert.StartsWith("It is not ", resultString);
-        Assert.EndsWith(" turn.", resultString); 
+        Assert.EndsWith(" turn.", resultString);
     }
 
     // TODO: Need to add additional BuildSettlement tests.
@@ -992,4 +993,302 @@ public class GamePlayHelpersTests
         Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.False(gs.Phase.CurrentPlayer.IsBot);
     }
+
+    [Fact]
+    public void LinkEdgesAndVertices_AroundCenter()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        gs.Tiles.Add(t1);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        gs.Tiles.Add(t2);
+        var t3 = new Tile(ResourceType.Wood, 3, 2, 0);
+        gs.Tiles.Add(t3);
+        var t4 = new Tile(ResourceType.Ore, 8, 4, 0);
+        gs.Tiles.Add(t4);
+        var t5 = new Tile(ResourceType.Brick, 10, 3, -1);
+        gs.Tiles.Add(t5);
+
+        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
+
+        var edge12 = gs.Edges.First(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t2));
+        Assert.NotNull(edge12);
+        var edge1NW = gs.Edges.First(e => e.Tiles.Count() == 1 && e.Tiles.Contains(t1) && e.Direction == HexDirection.NW);
+        Assert.NotNull(edge1NW);
+        var edge2W = gs.Edges.First(e => e.Tiles.Count() == 1 && e.Tiles.Contains(t2) && e.Direction == HexDirection.W);
+        Assert.NotNull(edge2W);
+        var edge13 = gs.Edges.First(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t3));
+        Assert.NotNull(edge13);
+        var edge23 = gs.Edges.First(e => e.Tiles.Contains(t2) && e.Tiles.Contains(t3));
+        Assert.NotNull(edge23);
+        var edge34 = gs.Edges.First(e => e.Tiles.Contains(t3) && e.Tiles.Contains(t4));
+        Assert.NotNull(edge34);
+        var edge35 = gs.Edges.First(e => e.Tiles.Contains(t3) && e.Tiles.Contains(t5));
+        Assert.NotNull(edge35);
+        var edge45 = gs.Edges.First(e => e.Tiles.Contains(t4) && e.Tiles.Contains(t5));
+        Assert.NotNull(edge45);
+        var edge4NE = gs.Edges.First(e => e.Tiles.Count() == 1 && e.Tiles.Contains(t4) && e.Direction == HexDirection.NE);
+        Assert.NotNull(edge4NE);
+        var edge4E = gs.Edges.First(e => e.Tiles.Count() == 1 && e.Tiles.Contains(t4) && e.Direction == HexDirection.E);
+        Assert.NotNull(edge4E);
+
+        var vertex123 = gs.Vertices.First(v => v.Tiles.Contains(t1) && v.Tiles.Contains(t2) && v.Tiles.Contains(t3));
+        Assert.NotNull(vertex123);
+        var vertex12 = gs.Vertices.First(v => v.Tiles.Count == 2 && v.Tiles.Contains(t1) && v.Tiles.Contains(t2));
+        Assert.NotNull(vertex12);
+        var vertex34 = gs.Vertices.First(v => v.Tiles.Count == 2 && v.Tiles.Contains(t3) && v.Tiles.Contains(t4));
+        Assert.NotNull(vertex34);
+        var vertex345 = gs.Vertices.First(v => v.Tiles.Contains(t3) && v.Tiles.Contains(t4) && v.Tiles.Contains(t5));
+        Assert.NotNull(vertex345);
+        var vertex4SE = gs.Vertices.First(v => v.Tiles.Count == 1 && v.Tiles.Contains(t4) && v.Direction == VertexDirection.SE);
+        Assert.NotNull(vertex4SE);
+        var vertex4NE = gs.Vertices.First(v => v.Tiles.Count == 1 && v.Tiles.Contains(t4) && v.Direction == VertexDirection.NE);
+
+        // Act
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        // Assert
+        Assert.Equal(2, edge12.Vertices.Count());
+        Assert.Contains(vertex12, edge12.Vertices);
+        Assert.Contains(vertex123, edge12.Vertices);
+
+        Assert.Equal(3, vertex12.Edges.Count());
+        Assert.Contains(edge1NW, vertex12.Edges);
+        Assert.Contains(edge2W, vertex12.Edges);
+        Assert.Contains(edge12, vertex12.Edges);
+
+        Assert.Equal(3, vertex123.Edges.Count());
+        Assert.Contains(edge12, vertex123.Edges);
+        Assert.Contains(edge23, vertex123.Edges);
+        Assert.Contains(edge13, vertex123.Edges);
+
+        Assert.Equal(3, vertex345.Edges.Count());
+        Assert.Contains(edge34, vertex345.Edges);
+        Assert.Contains(edge35, vertex345.Edges);
+        Assert.Contains(edge45, vertex345.Edges);
+
+        Assert.Equal(2, edge4E.Vertices.Count());
+        Assert.Contains(vertex4NE, edge4E.Vertices);
+        Assert.Contains(vertex4SE, edge4E.Vertices);
+
+        Assert.Equal(2, vertex4NE.Edges.Count());
+        Assert.Contains(edge4NE, vertex4NE.Edges);
+        Assert.Contains(edge4E, vertex4NE.Edges);
+    }
+
+    [Fact]
+    public void GetEdgeFromTileInfo_2Tile()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var e1 = new Edge(t1, HexDirection.NW);
+        gs.Edges.Add(e1);
+        var e2 = new Edge(t1, HexDirection.E);
+        gs.Edges.Add(e2);
+        var e3 = new Edge(t1, t2);
+        gs.Edges.Add(e3);
+        var e4 = new Edge(t2, HexDirection.W);
+        gs.Edges.Add(e4);
+
+        // Act
+        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t1, t2, null);
+
+        // Assert
+        Assert.Equal(e3.Id, edge.Id);
+    }
+
+    [Fact]
+    public void GetEdgeFromTileInfo_1Tile()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var e1 = new Edge(t1, HexDirection.NW);
+        gs.Edges.Add(e1);
+        var e2 = new Edge(t1, HexDirection.E);
+        gs.Edges.Add(e2);
+        var e3 = new Edge(t1, t2);
+        gs.Edges.Add(e3);
+        var e4 = new Edge(t2, HexDirection.W);
+        gs.Edges.Add(e4);
+
+        // Act
+        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.E);
+
+        // Assert
+        Assert.Equal(e2.Id, edge.Id);
+    }
+
+    [Fact]
+    public void GetEdgeFromTileInfo_IgnoreDirIfMoreThan1Tile()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+
+        var e1 = new Edge(t1, HexDirection.W);
+        gs.Edges.Add(e1);
+        var e2 = new Edge(t1, t2);
+        gs.Edges.Add(e2);
+
+        // Act & Assert
+        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t1, t2, HexDirection.E);
+
+        Assert.Equal(e2.Id, edge.Id);
+    }
+
+    [Fact]
+    public void GetEdgeFromTileInfo_EdgeNotFound()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var t3 = new Tile(ResourceType.Wood, 11, -2, 0);
+
+        var e1 = new Edge(t1, t2);
+        gs.Edges.Add(e1);
+        var e2 = new Edge(t1, t3);
+        gs.Edges.Add(e2);
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+                GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t2, t3, null));
+
+        Assert.Equal("Sequence contains no matching element", exception.Message);
+    }
+
+    [Fact]
+    public void GetVertexFromTileInfo_IgnoreDirIfMoreThan1Tile()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
+
+        var v1 = new Vertex(t1, t2, t3);
+        gs.Vertices.Add(v1);
+        var v2 = new Vertex(t1, VertexDirection.SW);
+
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t2, t3, VertexDirection.N);
+
+        Assert.Equal(v1.Id, vertex.Id);
+    }
+
+    [Fact]
+    public void GetVertexFromTileInfo_VertexNotFound()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
+
+        var v1 = new Vertex(t1, t2);
+        gs.Vertices.Add(v1);
+        var v2 = new Vertex(t1, t3);
+        gs.Vertices.Add(v2);
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+                GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t2, t3, null));
+
+        Assert.Equal("Sequence contains no matching element", exception.Message);
+    }
+
+    [Fact]
+    public void GetVertexFromTileInfo_3Tiles()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
+
+        var v1 = new Vertex(t1, t2);
+        gs.Vertices.Add(v1);
+        var v2 = new Vertex(t1, t3);
+        gs.Vertices.Add(v2);
+        var v3 = new Vertex(t1, t2, t3);
+        gs.Vertices.Add(v3);
+
+        // Act & Assert
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t2, t3, null);
+
+        Assert.Equal(vertex.Id, v3.Id);
+    }
+
+    [Fact]
+    public void GetVertexFromTileInfo_2Tiles3rdMissing()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
+
+        var v1 = new Vertex(t1, t2);
+        gs.Vertices.Add(v1);
+        var v2 = new Vertex(t1, t3);
+        gs.Vertices.Add(v2);
+        var v3 = new Vertex(t1, t2, t3);
+        gs.Vertices.Add(v3);
+
+        // Act & Assert
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t3, null, null);
+
+        Assert.Equal(vertex.Id, v2.Id);
+    }
+
+    [Fact]
+    public void GetVertexFromTileInfo_2Tiles2ndMissing()
+    {
+        // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
+
+        var v1 = new Vertex(t1, t2);
+        gs.Vertices.Add(v1);
+        var v2 = new Vertex(t1, t3);
+        gs.Vertices.Add(v2);
+        var v3 = new Vertex(t1, t2, t3);
+        gs.Vertices.Add(v3);
+
+        // Act & Assert
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, null, t3, null);
+
+        Assert.Equal(vertex.Id, v2.Id);
+    }
+
+    [Fact]
+    public void GetVertexFromTileInfo_1Tiles()
+    {
+         // Arrange
+        GameState gs = new GameState(new Guid());
+        var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
+        var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
+        var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
+
+        var v1 = new Vertex(t1, t2);
+        gs.Vertices.Add(v1);
+        var v2 = new Vertex(t1, t3);
+        gs.Vertices.Add(v2);
+        var v3 = new Vertex(t1, VertexDirection.S);
+        gs.Vertices.Add(v3);
+
+        // Act & Assert
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, null, null, VertexDirection.S);
+
+        Assert.Equal(vertex.Id, v3.Id);
+    }
+
 }

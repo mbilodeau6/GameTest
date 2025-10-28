@@ -75,17 +75,17 @@ public class BoardCreationHelpersTests
 
         // Assert
         ValidateGeneralRulesForDefaultBoard(tiles);
-        Assert.Equal(ResourceType.Desert, tiles.GetRequiredTileAt(0, 0).Resource);
-        Assert.Equal(ResourceType.Brick, tiles.GetRequiredTileAt(-1, -1).Resource);
-        Assert.Equal(6, tiles.GetRequiredTileAt(-1, -1).DiceNumber);
-        Assert.Equal(ResourceType.Grain, tiles.GetRequiredTileAt(0, 2).Resource);
-        Assert.Equal(6, tiles.GetRequiredTileAt(0, 2).DiceNumber);
-        Assert.Equal(ResourceType.Ore, tiles.GetRequiredTileAt(4, 0).Resource);
-        Assert.Equal(8, tiles.GetRequiredTileAt(4, 0).DiceNumber);
-        Assert.Equal(ResourceType.Wood, tiles.GetRequiredTileAt(-3, 1).Resource);
-        Assert.Equal(8, tiles.GetRequiredTileAt(-3, 1).DiceNumber);
-        Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(0, -2).Resource);
-        Assert.Equal(2, tiles.GetRequiredTileAt(0, -2).DiceNumber);
+        Assert.Equal(ResourceType.Desert, tiles.GetTileAt(0, 0).Resource);
+        Assert.Equal(ResourceType.Brick, tiles.GetTileAt(-1, -1).Resource);
+        Assert.Equal(6, tiles.GetTileAt(-1, -1).DiceNumber);
+        Assert.Equal(ResourceType.Grain, tiles.GetTileAt(0, 2).Resource);
+        Assert.Equal(6, tiles.GetTileAt(0, 2).DiceNumber);
+        Assert.Equal(ResourceType.Ore, tiles.GetTileAt(4, 0).Resource);
+        Assert.Equal(8, tiles.GetTileAt(4, 0).DiceNumber);
+        Assert.Equal(ResourceType.Wood, tiles.GetTileAt(-3, 1).Resource);
+        Assert.Equal(8, tiles.GetTileAt(-3, 1).DiceNumber);
+        Assert.Equal(ResourceType.Wool, tiles.GetTileAt(0, -2).Resource);
+        Assert.Equal(2, tiles.GetTileAt(0, -2).DiceNumber);
     }
 
     [Fact]
@@ -96,19 +96,19 @@ public class BoardCreationHelpersTests
 
         // Assert
         Assert.Equal(7, tiles.Count);
-        Assert.Equal(ResourceType.Desert, tiles.GetRequiredTileAt(-1, -1).Resource);
-        Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(1, -1).Resource);
-        Assert.Equal(11, tiles.GetRequiredTileAt(1, -1).DiceNumber);
-        Assert.Equal(ResourceType.Brick, tiles.GetRequiredTileAt(-2, 0).Resource);
-        Assert.Equal(5, tiles.GetRequiredTileAt(-2, 0).DiceNumber);
-        Assert.Equal(ResourceType.Grain, tiles.GetRequiredTileAt(0, 0).Resource);
-        Assert.Equal(9, tiles.GetRequiredTileAt(0, 0).DiceNumber);
-        Assert.Equal(ResourceType.Ore, tiles.GetRequiredTileAt(2, 0).Resource);
-        Assert.Equal(3, tiles.GetRequiredTileAt(2, 0).DiceNumber);
-        Assert.Equal(ResourceType.Wool, tiles.GetRequiredTileAt(-1, 1).Resource);
-        Assert.Equal(2, tiles.GetRequiredTileAt(-1, 1).DiceNumber);
-        Assert.Equal(ResourceType.Wood, tiles.GetRequiredTileAt(1, 1).Resource);
-        Assert.Equal(6, tiles.GetRequiredTileAt(1, 1).DiceNumber);
+        Assert.Equal(ResourceType.Desert, tiles.GetTileAt(-1, -1).Resource);
+        Assert.Equal(ResourceType.Wool, tiles.GetTileAt(1, -1).Resource);
+        Assert.Equal(11, tiles.GetTileAt(1, -1).DiceNumber);
+        Assert.Equal(ResourceType.Brick, tiles.GetTileAt(-2, 0).Resource);
+        Assert.Equal(5, tiles.GetTileAt(-2, 0).DiceNumber);
+        Assert.Equal(ResourceType.Grain, tiles.GetTileAt(0, 0).Resource);
+        Assert.Equal(9, tiles.GetTileAt(0, 0).DiceNumber);
+        Assert.Equal(ResourceType.Ore, tiles.GetTileAt(2, 0).Resource);
+        Assert.Equal(3, tiles.GetTileAt(2, 0).DiceNumber);
+        Assert.Equal(ResourceType.Wool, tiles.GetTileAt(-1, 1).Resource);
+        Assert.Equal(2, tiles.GetTileAt(-1, 1).DiceNumber);
+        Assert.Equal(ResourceType.Wood, tiles.GetTileAt(1, 1).Resource);
+        Assert.Equal(6, tiles.GetTileAt(1, 1).DiceNumber);
     }
 
     [Fact]
@@ -127,14 +127,14 @@ public class BoardCreationHelpersTests
 
         // Check specific edges and vertices
         // Check that inner tile at (0,0) has edges and vertices connected correctly
-        var t1 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 0);
-        var t2 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 2, 0);
-        var t3 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 1, -1);
+        var t1 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 0);
+        var t2 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 2, 0);
+        var t3 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 1, -1);
         Assert.NotNull(gameState.Edges.FirstOrDefault(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t2)));
         Assert.NotNull(gameState.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Tiles.Contains(t2) && v.Tiles.Contains(t3)));
 
         // Check that corner tile at (-2,0) has edges and vertices connected correctly
-        var t4 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, -2, 0);
+        var t4 = BoardCreationHelpers.GetTileAt(gameState.Tiles, -2, 0);
         Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t4)));
         Assert.Equal(3, gameState.Edges.Count(e => e.Tiles.Contains(t4) && e.Direction != null));
         Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t4)));
@@ -157,7 +157,7 @@ public class BoardCreationHelpersTests
         Assert.True(TestHelpers.IsGameStateValid(gameState));
 
         // Check that corner tile at (0, 2) has edges and vertices connected correctly
-        var t1 = BoardCreationHelpers.GetRequiredTileAt(gameState.Tiles, 0, 2);
+        var t1 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 2);
         Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t1)));
         Assert.Equal(2, gameState.Edges.Count(e => e.Tiles.Contains(t1) && e.Direction != null));
         Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t1)));

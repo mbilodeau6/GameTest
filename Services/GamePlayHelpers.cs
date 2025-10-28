@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using GameTest.Models;
+using Microsoft.Identity.Client.Extensibility;
 
 namespace GameTest.Services;
 
@@ -7,7 +8,6 @@ public static class GamePlayHelpers
 {
     private static readonly Random _random = new();
 
-    // TODO: Need test and implementation
     public static int GetVictoryPointsForBuild(BuildingType? type)
     {
         if (type == BuildingType.Settlement)
@@ -438,7 +438,7 @@ public static class GamePlayHelpers
             }
         }
     }
-    
+
     public static void RollDice(GameState gs, bool skipGameLoop = false)
     {
         gs.Dice.Roll();
@@ -446,5 +446,68 @@ public static class GamePlayHelpers
 
         if (!skipGameLoop)
             GameLoop(gs);
+    }
+
+    public static void LinkEdgesAndVertices(GameState gs)
+    {
+        var stack = new Stack<Tile>();
+        var visitedTiles = new HashSet<string>();
+
+        stack.Push(BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0));
+
+        while (stack.Count > 0)
+        {
+            var tile = stack.Pop();
+            visitedTiles.Add(tile.Id);
+
+            foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection)))
+            {
+                // Get neighboring tiles (if they exist)
+                var neighborCoordinates = HexProximity.GetCoordinates((tile.X, tile.Y), dir);
+                var neighborTile = gs.Tiles.FirstOrDefault(t => t.X == neighborCoordinates.Item1 && t.Y == neighborCoordinates.Item2);
+                if (neighborTile != null && !visitedTiles.Contains(neighborTile.Id))
+                    stack.Push(neighborTile);
+
+                var preDir = HexProximity.getPrecedingDirection(dir);
+                var neighbor2Coordinates = HexProximity.GetCoordinates((tile.X, tile.Y), preDir);
+                var neighbor2Tile = gs.Tiles.FirstOrDefault(t => t.X == neighbor2Coordinates.Item1 && t.Y == neighbor2Coordinates.Item2);
+
+                // Find corresponding vertex and edges along the tile that go to that vertex (if any)
+                var forwardEdge = GetEdgeFromTileInfo(gs.Edges, tile, neighborTile, dir);
+                var backEdge = GetEdgeFromTileInfo(gs.Edges, tile, neighbor2Tile, preDir);
+                var vertexDir = HexProximity.GetVertexDirectionForEdgeDirection(dir);
+                var vertex = GetVertexFromTileInfo(gs.Vertices, tile, neighborTile, neighbor2Tile, vertexDir);
+
+                // Add forward & back edges to vertex (if not added already)
+                vertex.AddEdgeReference(forwardEdge);
+                vertex.AddEdgeReference(backEdge);
+
+                // Add vertex to forward & back edges (if not added already)
+                forwardEdge.AddVertexReference(vertex);
+                backEdge.AddVertexReference(vertex);
+            }
+        }
+    }
+
+    public static Edge GetEdgeFromTileInfo(List<Edge> edges, Tile t1, Tile? t2, HexDirection? dir)
+    {
+        if (t2 != null)
+            return edges.First(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t2));
+
+        return edges.First(e => e.Tiles.Contains(t1) && e.Direction == dir);
+    }
+    
+    public static Vertex GetVertexFromTileInfo(List<Vertex> vertices, Tile t1, Tile? t2, Tile? t3, VertexDirection? dir)
+    {
+        if (t1 != null && t2 != null && t3 != null)
+            return vertices.First(v => v.Tiles.Contains(t1) && v.Tiles.Contains(t2) && v.Tiles.Contains(t3));
+
+        if (t1 != null && t2 != null && t3 == null)
+            return vertices.First(v => v.Tiles.Count() == 2 && v.Tiles.Contains(t1) && v.Tiles.Contains(t2));
+
+        if (t1 != null && t2 == null && t3 != null)
+            return vertices.First(v => v.Tiles.Count() == 2 && v.Tiles.Contains(t1) && v.Tiles.Contains(t3));
+
+        return vertices.First(v => v.Tiles.Count() == 1 && v.Tiles.Contains(t1) && v.Direction == dir);
     }
 }

@@ -42,4 +42,18 @@ public class HexProximity
             _ => throw new ArgumentOutOfRangeException(nameof(edgeDir), edgeDir, null)
         };
     }
+
+    public static HexDirection GetHexDirectionForVertexDirection(VertexDirection dir)
+    {
+        return dir switch
+        {
+            VertexDirection.N => HexDirection.NE,
+            VertexDirection.NE => HexDirection.E,
+            VertexDirection.SE => HexDirection.SE,
+            VertexDirection.S => HexDirection.SW,
+            VertexDirection.SW => HexDirection.W,
+            VertexDirection.NW => HexDirection.NW,
+            _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
+        };
+    }
 }
