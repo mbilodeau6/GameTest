@@ -318,4 +318,49 @@ public class VertexTests
 
         Assert.Contains(gs.Edges[0], gs.Vertices[0].Edges);
     }
+
+    [Fact]
+    public void MarkBlocked_Valid()
+    {
+        var tile1 = new Tile(ResourceType.Wood, 10, 0, 0);
+        var tile2 = new Tile(ResourceType.Ore, 3, -2, 0);
+
+        var vertex = new Vertex(tile1, tile2);
+
+        vertex.MarkBlocked();
+
+        Assert.Equal(BuildingType.Blocked, vertex.Building);
+    }
+
+    [Fact]
+    public void MarkBlocked_SettlementExists()
+    {
+        var tile1 = new Tile(ResourceType.Wood, 10, 0, 0);
+        var tile2 = new Tile(ResourceType.Ore, 3, -2, 0);
+
+        var vertex = new Vertex(tile1, tile2);
+        vertex.BuildSettlement(new Player("Mary", PlayerColor.Blue));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => vertex.MarkBlocked());
+
+        Assert.Equal("Can't block a vertex that already has a building on it.", exception.Message);
+        Assert.Equal(BuildingType.Settlement, vertex.Building);
+    }
+    
+    [Fact]
+    public void MarkBlocked_CityExists()
+    {
+        var tile1 = new Tile(ResourceType.Wood, 10, 0, 0);
+        var tile2 = new Tile(ResourceType.Ore, 3, -2, 0);
+
+        var vertex = new Vertex(tile1, tile2);
+        vertex.BuildSettlement(new Player("Mary", PlayerColor.Blue));
+        vertex.UpgradeToCity();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => vertex.MarkBlocked());
+
+        Assert.Equal("Can't block a vertex that already has a building on it.", exception.Message);
+        Assert.Equal(BuildingType.City, vertex.Building);
+    }
+
 }

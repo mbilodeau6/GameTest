@@ -5,6 +5,7 @@ using GameTest.Services;
 using GameTest.Functions;
 using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 
 namespace GameTest.Tests;
 
@@ -1272,7 +1273,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void GetVertexFromTileInfo_1Tiles()
     {
-         // Arrange
+        // Arrange
         GameState gs = new GameState(new Guid());
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
@@ -1289,6 +1290,73 @@ public class GamePlayHelpersTests
         var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, null, null, VertexDirection.S);
 
         Assert.Equal(vertex.Id, v3.Id);
+    }
+    
+    [Fact]
+    public void MarkBlockedVertices_CitiesAndSettlements()
+    {
+        // Find tiles on vertices I will build or test
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var t9 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var t10 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var t17 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t3 = BoardCreationHelpers.GetTileAt(gs.Tiles, -4, 0);
+        var t4 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, 1);
+        var t14 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
+        var t15 = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
+        var t18 = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var t8 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var t16 = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
+        var t5 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 2);
+        var t2 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
+
+        // build on vertices
+        var v53 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t9, null, null, VertexDirection.NE);
+        v53.BuildSettlement(gs.Players[1]);
+        v53.UpgradeToCity();
+
+        var v43 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t9, t10, t17, null);
+        v43.BuildSettlement(gs.Players[0]);
+
+        var v19 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t3, t4, null, null);
+        v19.BuildSettlement(gs.Players[1]);
+
+        // Act
+        GamePlayHelpers.MarkBlockedVertices(gs);
+
+        // Assert
+        // Verify that vertices that should be blocked by above buildings is blocked
+        var v52 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t9, t10, null, null);
+        Assert.Equal(BuildingType.Blocked, v52.Building);
+        var v54 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t9, null, null, VertexDirection.SE);
+        Assert.Equal(BuildingType.Blocked, v54.Building);
+        var v42 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t10, t17, t18, null);
+        Assert.Equal(BuildingType.Blocked, v42.Building);
+        var v39 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t8, t9, t17, null);
+        Assert.Equal(BuildingType.Blocked, v39.Building);
+        var v18 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t3, t4, t14, null);
+        Assert.Equal(BuildingType.Blocked, v18.Building);
+        var v20 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t3, null, null, VertexDirection.SW);
+        Assert.Equal(BuildingType.Blocked, v20.Building);
+        var v25 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t4, null, null, VertexDirection.SW);
+        Assert.Equal(BuildingType.Blocked, v25.Building);
+
+        // Verify that vertices not blocked by above buildings is free (i.e. null)
+        var v51 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t10, null, null, VertexDirection.NE);
+        Assert.Null(v51.Building);
+        var v40 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t8, t9, null, null);
+        Assert.Null(v40.Building);
+        var v34 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t8, t16, t17, null);
+        Assert.Null(v34.Building);
+        var v21 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t3, null, null, VertexDirection.NW);
+        Assert.Null(v21.Building);
+        var v24 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t4, t5, null, null);
+        Assert.Null(v24.Building);
+        var v15 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t2, t3, t14, null);
+        Assert.Null(v15.Building);
+        var v22 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t4, t14, t15, null);
+        Assert.Null(v22.Building); 
+
     }
 
 }

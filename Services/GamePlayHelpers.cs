@@ -496,7 +496,7 @@ public static class GamePlayHelpers
 
         return edges.First(e => e.Tiles.Contains(t1) && e.Direction == dir);
     }
-    
+
     public static Vertex GetVertexFromTileInfo(List<Vertex> vertices, Tile t1, Tile? t2, Tile? t3, VertexDirection? dir)
     {
         if (t1 != null && t2 != null && t3 != null)
@@ -509,5 +509,19 @@ public static class GamePlayHelpers
             return vertices.First(v => v.Tiles.Count() == 2 && v.Tiles.Contains(t1) && v.Tiles.Contains(t3));
 
         return vertices.First(v => v.Tiles.Count() == 1 && v.Tiles.Contains(t1) && v.Direction == dir);
+    }
+
+    public static void MarkBlockedVertices(GameState gs)
+    {
+        LinkEdgesAndVertices(gs);
+
+        foreach (var vertex in gs.Vertices)
+        {
+            if (vertex.Building != null && (vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City))
+                foreach (var linkedEdge in vertex.Edges)
+                    foreach (var linkedVertex in linkedEdge.Vertices)
+                        if (linkedVertex.Building == null)
+                            linkedVertex.MarkBlocked();
+        }
     }
 }

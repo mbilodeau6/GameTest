@@ -108,7 +108,7 @@ public class Vertex
 
         return result;
     }
-    
+
     public bool AddEdgeReference(Edge edge)
     {
         if (Edges.Count < 3 && !Edges.Contains(edge))
@@ -118,5 +118,13 @@ public class Vertex
         }
 
         return false;
+    }
+    
+    public void MarkBlocked()
+    {
+        if (Building != null && Building != BuildingType.Blocked)
+            throw new InvalidOperationException("Can't block a vertex that already has a building on it.");
+            
+        Building = BuildingType.Blocked;
     }
 }
