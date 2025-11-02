@@ -143,7 +143,7 @@ public class GameService
             if (dto == null)
                 return $"Unable to retrieve game {gameId}";
 
-            var gs = new GameState(dto);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
             var resultString = GamePlayHelpers.BuildRoad(gs, playerId, edgeId);
 
             if (!String.IsNullOrEmpty(resultString))
@@ -188,7 +188,7 @@ public class GameService
             if (dto == null)
                 return $"Unable to retrieve game {gameId}";
 
-            var gs = new GameState(dto);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
             var resultString = GamePlayHelpers.BuildSettlement(gs, playerId, vertexId);
 
             if (!String.IsNullOrEmpty(resultString))
@@ -234,7 +234,7 @@ public class GameService
             if (dto == null)
                 return $"Unable to retrieve game {gameId}";
 
-            var gs = new GameState(dto);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
             var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
             if (player == null)
                 return $"Player {playerId} not found in game {gameId}";
@@ -396,7 +396,7 @@ public class GameService
                 return false;
             }
 
-            var gs = new GameState(dto);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
 
             if (gs.Phase.PhaseState != GameStates.SettingUpBoard)
             {

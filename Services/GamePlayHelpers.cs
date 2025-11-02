@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using GameTest.DTOs;
 using GameTest.Models;
 using Microsoft.Identity.Client.Extensibility;
 
@@ -352,7 +353,11 @@ public static class GamePlayHelpers
         if (vertex.Building == BuildingType.City)
             return $"Vertex {vertexId} in game {gs.Id} already has a city.";
 
+        if (vertex.Building == BuildingType.Blocked)
+            return $"Vertex {vertexId} in game {gs.Id} is too close to another development.";
+
         vertex.BuildSettlement(player);
+        MarkBlockedVertices(gs, vertex);
 
         GameLoop(gs);
 
@@ -412,6 +417,7 @@ public static class GamePlayHelpers
                     if (move.VertexMove.Building == BuildingType.Settlement.ToString())
                     {
                         vertex.BuildSettlement(gs.Phase.CurrentPlayer);
+                        MarkBlockedVertices(gs, vertex);
                         pointCounter++;
                     }
                     else
@@ -511,6 +517,14 @@ public static class GamePlayHelpers
         return vertices.First(v => v.Tiles.Count() == 1 && v.Tiles.Contains(t1) && v.Direction == dir);
     }
 
+    public static void MarkBlockedVertices(GameState gs, Vertex vertex)
+    {
+        foreach (var linkedEdge in vertex.Edges)
+            foreach (var linkedVertex in linkedEdge.Vertices)
+                if (linkedVertex.Id != vertex.Id && linkedVertex.Building == null)
+                    linkedVertex.MarkBlocked();
+    }
+
     public static void MarkBlockedVertices(GameState gs)
     {
         LinkEdgesAndVertices(gs);
@@ -518,10 +532,16 @@ public static class GamePlayHelpers
         foreach (var vertex in gs.Vertices)
         {
             if (vertex.Building != null && (vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City))
-                foreach (var linkedEdge in vertex.Edges)
-                    foreach (var linkedVertex in linkedEdge.Vertices)
-                        if (linkedVertex.Building == null)
-                            linkedVertex.MarkBlocked();
+                MarkBlockedVertices(gs, vertex);
         }
+    }
+    
+    public static GameState LoadAndPrepareGameStateDTO(GameStateDTO dto)
+    {
+        var gs = new GameState(dto);
+        LinkEdgesAndVertices(gs);
+        MarkBlockedVertices(gs);
+
+        return gs;
     }
 }

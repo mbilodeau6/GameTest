@@ -112,7 +112,7 @@ public class VertexTests
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => vertex.BuildSettlement(p2));
-        Assert.Equal("A building already exists on this vertex.", exception.Message);
+        Assert.Equal("A building already exists on this vertex or the vertex is too close to another building.", exception.Message);
 
         // Assert
         Assert.Equal(p1, vertex.Owner);
@@ -132,7 +132,7 @@ public class VertexTests
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => vertex.BuildSettlement(p1));
-        Assert.Equal("A building already exists on this vertex.", exception.Message);
+        Assert.Equal("A building already exists on this vertex or the vertex is too close to another building.", exception.Message);
 
         // Assert
         Assert.Equal(p1, vertex.Owner);

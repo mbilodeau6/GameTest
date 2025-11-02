@@ -67,7 +67,7 @@ public class Vertex
     public void BuildSettlement(Player owner)
     {
         if (Building != null)
-            throw new InvalidOperationException("A building already exists on this vertex.");
+            throw new InvalidOperationException("A building already exists on this vertex or the vertex is too close to another building.");
 
         Owner = owner ?? throw new ArgumentNullException(nameof(owner));
         Building = BuildingType.Settlement;
