@@ -226,9 +226,24 @@ public class BotAITests
         Assert.StartsWith("GetBuildMove should only be called if phase is BuildOrTrade. Current phase is", exception.Message);
     }
 
+    [Fact]
+    public void GetBuildMove_ExceptionIfNoStarterBuilds()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        var bai = new BotAI(gs);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            bai.GetBuildMove());
+
+        Assert.StartsWith("No valid build moves available for Bot.", exception.Message);
+    }
+
     // TODO: Will need to adjust when code changed to require resources and proper
     // spacing from other development. Current version of GetBuildMove() just
-    // picks the next open spot for a road and settlement.
+    // picks the next open spot for a settlement. If there isn't one, it picks the
+    // next open spot for a road.
     // TODO: Also need to figure out when Bot should build each resource, buy dev
     // card, trade, and end turn.
     [Fact]
@@ -236,6 +251,16 @@ public class BotAITests
     {
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+        var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
+        var sheepTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, desertTile, brickTile, sheepTile, null);
+        vertex.BuildSettlement(gs.Players[0]);
+        GamePlayHelpers.MarkBlockedVertices(gs, vertex);
+
+        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, desertTile, sheepTile, null);
+        edge.BuildRoad(gs.Players[0]);
 
         var bai = new BotAI(gs);
 
@@ -245,11 +270,6 @@ public class BotAITests
         Assert.Equal(gs.Players[0].Id, move.EdgeMove.PlayerId);
         var selectedEdge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
         Assert.Null(selectedEdge.Owner);
-
-        Assert.NotNull(move.VertexMove);
-        Assert.Equal(gs.Players[0].Id, move.VertexMove.PlayerId);
-        var selectedVertex = gs.Vertices.First(v => v.Id == move.VertexMove.Id);
-        Assert.Null(selectedVertex.Building);
 
         Assert.False(move.BuyDevelopmentCard);
         Assert.False(move.RollDice);

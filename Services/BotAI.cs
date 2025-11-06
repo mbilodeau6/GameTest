@@ -41,10 +41,10 @@ public class BotAI
         }
         else if (State.Phase.PhaseState == GameStates.PlaceFirstRoad || State.Phase.PhaseState == GameStates.PlaceSecondRoad)
         {
-            Edge? target = null; 
+            Edge? target = null;
 
             // Find settlment w/o road
-            foreach(var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer))
+            foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer))
             {
                 if (vertex.Edges[0].Owner == null && vertex.Edges[1].Owner == null)
                 {
@@ -63,7 +63,8 @@ public class BotAI
     }
 
     // TODO: Need to restrict bot to building things it has the resources to build and to make more intelligent choices. 
-    // Current code just picks next available spot for a road and settlement.
+    // Current code just picks next available spot for a settlement (if there is one). If there isn't, it picks the next
+    // spot for a road.
     public BotMove GetBuildMove()
     {
         if (State.Phase.PhaseState != GameStates.BuildOrTrade)
@@ -71,25 +72,34 @@ public class BotAI
 
         var move = new BotMove();
 
-        // build settlement
-        int vIndex = 0;
+        foreach(var edge in State.Edges.FindAll(e => e.Owner == State.Phase.CurrentPlayer))
+        {
+            // First loook for a place to build a settlement adjacent to an existing road
+            foreach (var vertex in edge.Vertices)
+            {
+                if (vertex.Building == null)
+                {
+                    move.VertexMove = new VertexDTO(vertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
+                    return move;
+                }
+            }
 
-        while (State.Vertices[vIndex].Building != null)
-            vIndex++;
+            // Otherwise look for a place to build a road adjacent to an existing road
+            foreach (var vertex in edge.Vertices)
+            {
+                foreach (var adjacentEdge in vertex.Edges)
+                {
+                    if (adjacentEdge.Owner == null)
+                    {
+                        move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
+                        return move;
+                    }
+                }
+            }
+        }
 
-        var newVertex = State.Vertices[vIndex];
-        move.VertexMove = new VertexDTO(newVertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
-
-        // build road
-        int eIndex = 0;
-
-        while (State.Edges[eIndex].Owner != null)
-            eIndex++;
-
-        var newEdge = State.Edges[eIndex];
-        move.EdgeMove = new EdgeDTO(newEdge.Id, State.Phase.CurrentPlayer.Id, null);
-
-        return move;
+        // TODO: Since the current version doesn't require resources to build, we should never reach this point.
+        throw new InvalidOperationException("No valid build moves available for Bot.");
     }
     
     public BotMove GetPreRollMove()
