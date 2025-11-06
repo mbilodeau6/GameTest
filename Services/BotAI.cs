@@ -41,12 +41,21 @@ public class BotAI
         }
         else if (State.Phase.PhaseState == GameStates.PlaceFirstRoad || State.Phase.PhaseState == GameStates.PlaceSecondRoad)
         {
-            int eIndex = 0;
+            Edge? target = null; 
 
-            while (State.Edges[eIndex].Owner != null)
-                eIndex++;
+            // Find settlment w/o road
+            foreach(var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer))
+            {
+                if (vertex.Edges[0].Owner == null && vertex.Edges[1].Owner == null)
+                {
+                    target = vertex.Edges[0];  // TODO: Add logic to pick which edge is better
+                    break;
+                }
+            }
 
-            var target = State.Edges[eIndex];
+            if (target == null)
+                throw new InvalidOperationException("Unexpected State. There should be a settlement without an edge.");
+
             move.EdgeMove = new EdgeDTO(target.Id, State.Phase.CurrentPlayer.Id, null);
         }
 

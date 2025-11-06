@@ -493,6 +493,7 @@ public class GamePlayHelpersTests
         var gs = new GameState(new Guid());
         gs.Tiles.AddRange(BoardCreationHelpers.CreateTilesForTestBoard());
         BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
         gs.AddPlayer(new Player("George", PlayerColor.White));
         gs.AddPlayer(new Player("Elaine", PlayerColor.Green));
 
@@ -888,11 +889,18 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuildRoad_BuildOrTradePhase_BuildsRoadNoPhaseChange()
     {
+        // Arrange
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
 
+        Assert.NotEmpty(gs.Edges[0].Vertices);
+        var adjacentVertex = gs.Edges[0].Vertices[0];
+        adjacentVertex.BuildSettlement(gs.Players[0]);
+
+        // Act
         var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, gs.Edges[0].Id);
 
+        // Assert
         Assert.Equal(string.Empty, resultString);
         Assert.NotNull(gs.Edges[0].Owner);
         Assert.Equal(gs.Players[0].Id, gs.Edges[0].Owner.Id);
@@ -901,16 +909,74 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuildRoad_PlaceFirstRoadPhase_BuildsRoadAndPhaseChange()
     {
+        // Arrange
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[1], gs.Players[1]);
 
+        Assert.NotEmpty(gs.Edges[0].Vertices);
+        var adjacentVertex = gs.Edges[0].Vertices[1];
+        adjacentVertex.BuildSettlement(gs.Players[1]);
+
+        // Act
         var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, gs.Edges[0].Id);
 
+        // Assert
         Assert.Equal(string.Empty, resultString);
         Assert.NotNull(gs.Edges[0].Owner);
         Assert.Equal(gs.Players[1].Id, gs.Edges[0].Owner.Id);
         Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
         Assert.Equal(gs.Phase.CurrentPlayer.Id, gs.Players[1].Id);
+    }
+
+    [Fact]
+    public void BuildRoad_NotAdjacentToBuilding()
+    {
+        // Arrange
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[1], gs.Players[1]);
+
+        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
+
+        // Retrieve non-adjacent vertex and edge.
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, oreTile, woodTile, null);
+        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, woolTile, null);
+                        
+        vertex.BuildSettlement(gs.Players[1]);
+
+        // Act
+        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, edge.Id);
+
+        // Assert
+        Assert.Equal(BuildingType.Settlement, vertex.Building);
+        Assert.Contains(" not adjacent to a city/settlement for player", resultString);
+    }
+    
+    [Fact]
+    public void BuildRoad_NotAdjacentToBuildingOfRightPlayer()
+    {
+        // Arrange
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, gs.Players[1], gs.Players[1]);
+
+        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
+
+        // Retrieve non-adjacent vertex and edge.
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, oreTile, woodTile, null);
+        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
+                        
+        vertex.BuildSettlement(gs.Players[0]);
+
+        // Act
+        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, edge.Id);
+
+        // Assert
+        Assert.Equal(BuildingType.Settlement, vertex.Building);
+        Assert.Contains(" not adjacent to a city/settlement for player", resultString);
     }
 
     [Fact]

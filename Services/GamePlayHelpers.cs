@@ -317,6 +317,9 @@ public static class GamePlayHelpers
         if (edge == null)
             return $"Edge {edgeId} not found in game {gs.Id}";
 
+        if (edge.Vertices.Count() == 0 || !edge.Vertices.Any(v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) && v.Owner.Id == playerId))
+            return $"Edge {edgeId} not adjacent to a city/settlement for player {playerId}.";
+
         if (edge.Owner != null)
             return $"Edge {edgeId} in game {gs.Id} already has a road.";
 
@@ -535,7 +538,7 @@ public static class GamePlayHelpers
                 MarkBlockedVertices(gs, vertex);
         }
     }
-    
+
     public static GameState LoadAndPrepareGameStateDTO(GameStateDTO dto)
     {
         var gs = new GameState(dto);
@@ -543,5 +546,10 @@ public static class GamePlayHelpers
         MarkBlockedVertices(gs);
 
         return gs;
+    }
+    
+    public static bool IsEdgeAdjacentToPlayerBuild(GameState gs, Edge edge, Player player)
+    {
+        return false;
     }
 }

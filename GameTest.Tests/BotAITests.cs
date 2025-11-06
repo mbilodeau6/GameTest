@@ -12,6 +12,7 @@ public class BotAITests
     private GameState CreateBoardForSetupTest(GameStates state)
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
         gs.Players.Clear();
         
         var player1 = new Player("Bot", PlayerColor.Blue, true);
@@ -101,6 +102,10 @@ public class BotAITests
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceFirstRoad);
         var bai = new BotAI(gs);
 
+        var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
+        vertex.BuildSettlement(gs.Players[0]);
+
         Assert.Equal(0, GamePlayHelpers.CountRoadsForPlayer(gs, gs.Players[0]));
 
         // Act
@@ -110,6 +115,11 @@ public class BotAITests
         Assert.NotNull(move.EdgeMove.PlayerId);
         Assert.Equal(gs.Players[0].Id, move.EdgeMove.PlayerId);
         Assert.Null(move.VertexMove);
+
+        var edge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
+        Assert.NotNull(edge);
+        Assert.NotEmpty(edge.Vertices);
+        Assert.Contains(edge.Vertices, v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) && v.Owner.Id == move.EdgeMove.PlayerId);
     }
 
     [Fact]
@@ -139,8 +149,16 @@ public class BotAITests
     {
         // Arrange
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceSecondRoad);
-        gs.Edges[0].BuildRoad(gs.Players[0]);
-        gs.Edges[1].BuildRoad(gs.Players[1]);
+        gs.Edges[0].BuildRoad(gs.Players[1]);
+
+        var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var v1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
+        v1.BuildSettlement(gs.Players[0]);
+        v1.Edges[0].BuildRoad(gs.Players[0]);
+
+        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
+        var v2 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, null, null, VertexDirection.NW);
+        v2.BuildSettlement(gs.Players[0]);
 
         var bai = new BotAI(gs);
 
@@ -153,8 +171,12 @@ public class BotAITests
         Assert.NotNull(move.EdgeMove.PlayerId);
         Assert.Equal(gs.Players[0].Id, move.EdgeMove.PlayerId);
         Assert.True(move.EdgeMove.Id != gs.Edges[0].Id);
-        Assert.True(move.EdgeMove.Id != gs.Edges[1].Id);
         Assert.Null(move.VertexMove);
+
+        var edge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
+        Assert.NotNull(edge);
+        Assert.NotEmpty(edge.Vertices);
+        Assert.Contains(edge.Vertices, v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) && v.Owner.Id == move.EdgeMove.PlayerId);
     }
 
     [Fact]
