@@ -28,7 +28,7 @@ public class IntegrationTests
         {
             foreach (var linkedVertex in edge.Vertices)
             {
-                if (linkedVertex.Id != vertex.Id && (linkedVertex.Building == BuildingType.Settlement || linkedVertex.Building == BuildingType.City))
+                if (linkedVertex.Id != vertex.Id && GamePlayHelpers.HasBuilding(linkedVertex))
                     return true; 
             }
         }
@@ -55,7 +55,7 @@ public class IntegrationTests
 
         foreach(var vertex in gs.Vertices)
         {
-            if (vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City)
+            if (GamePlayHelpers.HasBuilding(vertex))
                 Assert.False(IsTooCloseToAnotherBuilding(gs, vertex));
         }
     }

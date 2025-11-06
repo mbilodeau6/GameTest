@@ -534,7 +534,7 @@ public static class GamePlayHelpers
 
         foreach (var vertex in gs.Vertices)
         {
-            if (vertex.Building != null && (vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City))
+            if (vertex.Building != null && HasBuilding(vertex))
                 MarkBlockedVertices(gs, vertex);
         }
     }
@@ -547,17 +547,22 @@ public static class GamePlayHelpers
 
         return gs;
     }
+
+    public static bool HasBuilding(Vertex vertex)
+    {
+        return vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City;
+    }
     
     public static bool IsEdgeAdjacentToPlayerBuild(GameState gs, Edge edge, Player player)
     {
         foreach (var vertex in edge.Vertices)
         {
-            if ((vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City) && vertex.Owner != null && vertex.Owner.Id == player.Id)
+            if (HasBuilding(vertex) && vertex.Owner != null && vertex.Owner.Id == player.Id)
             {
                 return true;
             }
 
-            if (!(vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City) && vertex.Edges.Any(e => e.Owner != null && e.Owner.Id == player.Id))
+            if (!HasBuilding(vertex) && vertex.Edges.Any(e => e.Owner != null && e.Owner.Id == player.Id))
             {
                 return true;
             }

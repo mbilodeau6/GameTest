@@ -119,7 +119,7 @@ public class BotAITests
         var edge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
         Assert.NotNull(edge);
         Assert.NotEmpty(edge.Vertices);
-        Assert.Contains(edge.Vertices, v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) && v.Owner.Id == move.EdgeMove.PlayerId);
+        Assert.Contains(edge.Vertices, v => GamePlayHelpers.HasBuilding(v) && v.Owner.Id == move.EdgeMove.PlayerId);
     }
 
     [Fact]
