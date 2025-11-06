@@ -359,6 +359,9 @@ public static class GamePlayHelpers
         if (vertex.Building == BuildingType.Blocked)
             return $"Vertex {vertexId} in game {gs.Id} is too close to another development.";
 
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !IsVertexAdjacentToPlayerRoad(gs, vertex, player))
+            return $"Vertex {vertexId} not adjacent to a road for player {playerId}.";
+
         vertex.BuildSettlement(player);
         MarkBlockedVertices(gs, vertex);
 
@@ -552,7 +555,7 @@ public static class GamePlayHelpers
     {
         return vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City;
     }
-    
+
     public static bool IsEdgeAdjacentToPlayerBuild(GameState gs, Edge edge, Player player)
     {
         foreach (var vertex in edge.Vertices)
@@ -570,4 +573,18 @@ public static class GamePlayHelpers
 
         return false;
     }
+    
+    public static bool IsVertexAdjacentToPlayerRoad(GameState gs, Vertex vertex, Player player)
+    {
+        foreach (var edge in vertex.Edges)
+        {
+            if (edge.Owner != null && edge.Owner.Id == player.Id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }
