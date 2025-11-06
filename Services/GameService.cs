@@ -342,7 +342,7 @@ public class GameService
                 return false;
             }
 
-            var gs = new GameState(dto);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
 
             // TODO: Need to get player from authorization. Using CurrentPlayer for now.
             if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.BuildOrTrade)
