@@ -317,7 +317,7 @@ public static class GamePlayHelpers
         if (edge == null)
             return $"Edge {edgeId} not found in game {gs.Id}";
 
-        if (edge.Vertices.Count() == 0 || !edge.Vertices.Any(v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) && v.Owner.Id == playerId))
+        if (!IsEdgeAdjacentToPlayerBuild(gs, edge, player))
             return $"Edge {edgeId} not adjacent to a city/settlement for player {playerId}.";
 
         if (edge.Owner != null)
@@ -550,6 +550,19 @@ public static class GamePlayHelpers
     
     public static bool IsEdgeAdjacentToPlayerBuild(GameState gs, Edge edge, Player player)
     {
+        foreach (var vertex in edge.Vertices)
+        {
+            if ((vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City) && vertex.Owner != null && vertex.Owner.Id == player.Id)
+            {
+                return true;
+            }
+
+            if (!(vertex.Building == BuildingType.Settlement || vertex.Building == BuildingType.City) && vertex.Edges.Any(e => e.Owner != null && e.Owner.Id == player.Id))
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 }

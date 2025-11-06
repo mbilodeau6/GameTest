@@ -943,7 +943,7 @@ public class GamePlayHelpersTests
         // Retrieve non-adjacent vertex and edge.
         var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, oreTile, woodTile, null);
         var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, woolTile, null);
-                        
+
         vertex.BuildSettlement(gs.Players[1]);
 
         // Act
@@ -953,7 +953,7 @@ public class GamePlayHelpersTests
         Assert.Equal(BuildingType.Settlement, vertex.Building);
         Assert.Contains(" not adjacent to a city/settlement for player", resultString);
     }
-    
+
     [Fact]
     public void BuildRoad_NotAdjacentToBuildingOfRightPlayer()
     {
@@ -968,7 +968,7 @@ public class GamePlayHelpersTests
         // Retrieve non-adjacent vertex and edge.
         var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, oreTile, woodTile, null);
         var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
-                        
+
         vertex.BuildSettlement(gs.Players[0]);
 
         // Act
@@ -1357,7 +1357,7 @@ public class GamePlayHelpersTests
 
         Assert.Equal(vertex.Id, v3.Id);
     }
-    
+
     [Fact]
     public void MarkBlockedVertices_CitiesAndSettlements()
     {
@@ -1421,8 +1421,114 @@ public class GamePlayHelpersTests
         var v15 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t2, t3, t14, null);
         Assert.Null(v15.Building);
         var v22 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t4, t14, t15, null);
-        Assert.Null(v22.Building); 
+        Assert.Null(v22.Building);
 
+    }
+
+    [Fact]
+    public void IsEdgeAdjacentToPlayerBuild_AdjacentToRoad()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+
+        var testEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
+        var road = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
+        road.BuildRoad(gs.Players[0]);
+
+        Assert.True(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
+    }
+
+    [Fact]
+    public void IsEdgeAdjacentToPlayerBuild_AdjacentToSettlement()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+
+        var testEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
+        var settlement = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
+        settlement.BuildSettlement(gs.Players[0]);
+
+        Assert.True(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
+    }
+
+    [Fact]
+    public void IsEdgeAdjacentToPlayerBuild_AdjacentToCity()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+
+        var testEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
+        var city = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
+        city.BuildSettlement(gs.Players[0]);
+        city.UpgradeToCity();
+
+        Assert.True(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
+    }
+
+    [Fact]
+    public void IsEdgeAdjacentToPlayerBuild_NotAdjacentToAnything()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+
+        var testEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
+        var road = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woolTile, null, HexDirection.E);
+        road.BuildRoad(gs.Players[0]);
+
+        Assert.False(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
+    }
+
+    [Fact]
+    public void IsEdgeAdjacentToPlayerBuild_NotAdjacentToRightPlayer()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+
+        var testEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
+        var road = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
+        road.BuildRoad(gs.Players[1]);
+
+        Assert.False(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
+    }
+
+    [Fact]
+    public void IsEdgeAdjacentToPlayerBuild_NotAdjacentIfRoadSplitByOtherPlayer()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+
+        var testEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
+        var road = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
+        road.BuildRoad(gs.Players[0]);
+
+        var settlement = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
+        settlement.BuildSettlement(gs.Players[1]);
+
+        Assert.False(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
     }
 
 }
