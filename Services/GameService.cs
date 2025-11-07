@@ -189,7 +189,7 @@ public class GameService
                 return $"Unable to retrieve game {gameId}";
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            var resultString = GamePlayHelpers.BuildSettlement(gs, playerId, vertexId);
+            var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, playerId, vertexId);
 
             if (!String.IsNullOrEmpty(resultString))
                 return resultString;

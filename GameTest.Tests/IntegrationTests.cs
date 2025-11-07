@@ -16,7 +16,7 @@ public class IntegrationTests
         gs.Tiles.AddRange(BoardCreationHelpers.CreateTilesForTestBoard());
         BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
         GamePlayHelpers.LinkEdgesAndVertices(gs);
-        gs.AddPlayer(new Player("List", PlayerColor.White));
+        gs.AddPlayer(new Player("Lisa", PlayerColor.White));
         gs.AddPlayer(new Player("Hal", PlayerColor.Green, true));
 
         return gs;
@@ -36,15 +36,45 @@ public class IntegrationTests
     }
 
     [Fact]
-    public void BotBuildAtEndOfSetupPhase_TriggeredByBuildSettlementByUser()
+    public void BotBuildAtEndOfSetupPhase_TriggeredByBuildRoadByUser()
     {
         var gs = CreateGameStateForGameLoopTesting();
-        GamePlayHelpers.BuildSettlement(gs, gs.Players[1].Id, gs.Vertices[0].Id);
-        gs.Edges[0].BuildRoad(gs.Players[1]);
-        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, gs.Players[1], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[1], gs.Players[0]);
 
-        GamePlayHelpers.GameLoop(gs);
+        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
+        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
 
+        // Build Bot's first settlement and road
+        var v1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, brickTile, woolTile, null);
+        var result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[1].Id, v1.Id);
+        Assert.Empty(result);
+        // var e1 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, brickTile, null);
+        // result = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, e1.Id);
+        // Assert.Empty(result);
+
+        // Build User's settlements and first road
+        var v2 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, oreTile, grainTile, null);
+        result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v2.Id);
+        Assert.Empty(result);
+        var e2 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
+        result = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, e2.Id);
+        Assert.Empty(result);
+
+        var v3 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, null, null, VertexDirection.SE);
+        result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v3.Id);
+        Assert.Empty(result);
+
+        // Act
+        // Build user's second road - this should trigger the bot to build its second settlement and road
+        var e3 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, null, HexDirection.SE);
+        result = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, e3.Id);
+        Assert.Empty(result);
+
+
+        // Assert
         Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
         Assert.Equal(gs.Players[0].Id, gs.Phase.CurrentPlayer.Id);
 

@@ -43,7 +43,7 @@ public class BotAI
         {
             Edge? target = null;
 
-            // Find settlment w/o road
+            // Find settlment w/o road (i.e. the one we just built)
             foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer))
             {
                 if (vertex.Edges[0].Owner == null && vertex.Edges[1].Owner == null)
@@ -54,7 +54,7 @@ public class BotAI
             }
 
             if (target == null)
-                throw new InvalidOperationException("Unexpected State. There should be a settlement without an edge.");
+                throw new InvalidOperationException("Unexpected State. There should be a settlement without an edge during set up.");
 
             move.EdgeMove = new EdgeDTO(target.Id, State.Phase.CurrentPlayer.Id, null);
         }
@@ -75,14 +75,15 @@ public class BotAI
         foreach(var edge in State.Edges.FindAll(e => e.Owner == State.Phase.CurrentPlayer))
         {
             // First loook for a place to build a settlement adjacent to an existing road
-            foreach (var vertex in edge.Vertices)
-            {
-                if (vertex.Building == null)
+            if (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer))
+                foreach (var vertex in edge.Vertices)
                 {
-                    move.VertexMove = new VertexDTO(vertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
-                    return move;
+                    if (vertex.Building == null)
+                    {
+                        move.VertexMove = new VertexDTO(vertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
+                        return move;
+                    }
                 }
-            }
 
             // Otherwise look for a place to build a road adjacent to an existing road
             foreach (var vertex in edge.Vertices)
@@ -98,8 +99,8 @@ public class BotAI
             }
         }
 
-        // TODO: Since the current version doesn't require resources to build, we should never reach this point.
-        throw new InvalidOperationException("No valid build moves available for Bot.");
+        move.EndTurn = true;
+        return move;
     }
     
     public BotMove GetPreRollMove()

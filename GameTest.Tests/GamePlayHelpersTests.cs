@@ -204,6 +204,31 @@ public class GamePlayHelpersTests
         Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
     }
 
+    [Fact] void HasResourcesToBuildSettlment_SufficientResources()
+    {
+        // Arrange
+        var player = CreatePlayerWithSufficientResources();
+
+        // Act
+        var result = GamePlayHelpers.HasResourcesToBuildSettlement(player);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void HsResourcesToBuildSettlement_InufficientResources()
+    {
+        // Arrange
+        var player = CreatePlayerWithInsufficientResources();
+
+        // Act
+        var result = GamePlayHelpers.HasResourcesToBuildSettlement(player);
+
+        // Assert
+        Assert.False(result);
+    }
+
     [Fact]
     public void WithdrawResourcesToBuildSettlement_SufficientResources()
     {
@@ -215,10 +240,9 @@ public class GamePlayHelpersTests
         var grainCount = player.Resources[ResourceType.Grain];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuildSettlement(player);
+        GamePlayHelpers.WithdrawResourcesToBuildSettlement(player);
 
         // Assert
-        Assert.True(result);
         Assert.Equal(woodCount - 1, player.Resources[ResourceType.Wood]);
         Assert.Equal(brickCount - 1, player.Resources[ResourceType.Brick]);
         Assert.Equal(woolCount - 1, player.Resources[ResourceType.Wool]);
@@ -236,10 +260,11 @@ public class GamePlayHelpersTests
         var grainCount = player.Resources[ResourceType.Grain];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuildSettlement(player);
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           GamePlayHelpers.WithdrawResourcesToBuildSettlement(player));
 
         // Assert
-        Assert.False(result);
+        Assert.Equal("Player does not have required resources to build settlement.", exception.Message);
         Assert.Equal(woodCount, player.Resources[ResourceType.Wood]);
         Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
         Assert.Equal(woolCount, player.Resources[ResourceType.Wool]);
@@ -985,7 +1010,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlement(gs, "PP1", gs.Vertices[0].Id);
+        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, "PP1", gs.Vertices[0].Id);
 
         Assert.NotNull(resultString);
         Assert.StartsWith("Player PP1 not found in game ", resultString);
@@ -997,7 +1022,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
 
         Assert.NotNull(resultString);
         Assert.StartsWith("It is not ", resultString);
@@ -1012,7 +1037,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
 
         Assert.Equal($"Game is not in a state that allows building settlements. Current state: {gs.Phase.PhaseState}", resultString);
     }
@@ -1031,9 +1056,13 @@ public class GamePlayHelpersTests
         edge.BuildRoad(gs.Players[0]);
 
         var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, oreTile, woolTile, null);
+        gs.Players[0].Resources[ResourceType.Brick] = 1;
+        gs.Players[0].Resources[ResourceType.Wood] = 1;
+        gs.Players[0].Resources[ResourceType.Wool] = 1;
+        gs.Players[0].Resources[ResourceType.Grain] = 1;
 
         // Act
-        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, vertex.Id);
+        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, vertex.Id);
 
         // Assert
         Assert.Equal(string.Empty, resultString);
@@ -1049,7 +1078,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlement(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
 
         Assert.Equal(string.Empty, resultString);
         Assert.NotNull(gs.Vertices[0].Building);

@@ -82,21 +82,23 @@ public static class GamePlayHelpers
         return false;
     }
 
-    public static bool WithdrawResourcesToBuildSettlement(Player player)
+    public static bool HasResourcesToBuildSettlement(Player player)
     {
-        if (player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
-            player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1 &&
-            player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1 &&
-            player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1)
-        {
-            player.RemoveResources(ResourceType.Wood, 1);
-            player.RemoveResources(ResourceType.Brick, 1);
-            player.RemoveResources(ResourceType.Wool, 1);
-            player.RemoveResources(ResourceType.Grain, 1);
-            return true;
-        }
+        return player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
+               player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1 &&
+               player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1 &&
+               player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1;
+    }
 
-        return false;
+    public static void WithdrawResourcesToBuildSettlement(Player player)
+    {
+        if (!HasResourcesToBuildSettlement(player))
+            throw new InvalidOperationException("Player does not have required resources to build settlement.");
+
+        player.RemoveResources(ResourceType.Wood, 1);
+        player.RemoveResources(ResourceType.Brick, 1);
+        player.RemoveResources(ResourceType.Wool, 1);
+        player.RemoveResources(ResourceType.Grain, 1);
     }
 
     public static bool WithdrawResourcesToBuildCity(Player player)
@@ -330,9 +332,22 @@ public static class GamePlayHelpers
         return string.Empty;
     }
 
+    public static void BuildSettlement(GameState gs, Player player, Vertex vertex)
+    {
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
+            WithdrawResourcesToBuildSettlement(player);
+        else if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement)
+            foreach (var tile in vertex.Tiles)
+                if (tile.Resource != ResourceType.Desert)
+                    player.AssignResources(tile.Resource, 1);
+
+        vertex.BuildSettlement(player);
+        MarkBlockedVertices(gs, vertex);
+    }
+
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
     // Right now, an empty string indicates success.
-    public static string BuildSettlement(GameState gs, string playerId, string vertexId)
+    public static string BuildSettlementRequestFromUser(GameState gs, string playerId, string vertexId)
     {
         if (!BuildSettlementPhase(gs))
         {
@@ -362,8 +377,10 @@ public static class GamePlayHelpers
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !IsVertexAdjacentToPlayerRoad(gs, vertex, player))
             return $"Vertex {vertexId} not adjacent to a road for player {playerId}.";
 
-        vertex.BuildSettlement(player);
-        MarkBlockedVertices(gs, vertex);
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildSettlement(player))
+                return $"Player {player.Id} does not have the required resources to build a settlement.";
+
+        BuildSettlement(gs, player, vertex);
 
         GameLoop(gs);
 
@@ -373,7 +390,6 @@ public static class GamePlayHelpers
     public static void GameLoop(GameState gs)
     {
         int loopCounter = 0; // Failsafe to prevent infinite loops
-        int pointCounter = 0; // TEMP - Limit bot plays until resource/placement constraints finished
 
         gs.Phase = GetNextPhase(gs);
 
@@ -421,32 +437,18 @@ public static class GamePlayHelpers
                     var vertex = GetVertexFromVertexId(gs, move.VertexMove.Id);
 
                     if (move.VertexMove.Building == BuildingType.Settlement.ToString())
-                    {
-                        vertex.BuildSettlement(gs.Phase.CurrentPlayer);
-                        MarkBlockedVertices(gs, vertex);
-                        pointCounter++;
-                    }
+                        BuildSettlement(gs, gs.Phase.CurrentPlayer, vertex);
                     else
-                    {
                         vertex.UpgradeToCity();
-                        pointCounter += 2;
-                    }
                 }
 
                 if (move.RollDice)
-                {
                     GamePlayHelpers.RollDice(gs, true);
-                }
+
+                if (move.EndTurn)
+                    GamePlayHelpers.EndTurn(gs.Phase.CurrentPlayer, gs, true);
 
                 gs.Phase = GetNextPhase(gs);
-
-                // TODO: Remove following (and pointCounter) when resources are required
-                // for building. This code is a hack to limit how much the Bot can build
-                // when resources aren't required for building.
-                if (gs.Phase.PhaseState == GameStates.BuildOrTrade && pointCounter >= 2)
-                {
-                    GamePlayHelpers.EndTurn(gs.Phase.CurrentPlayer, gs, true);
-                }
             }
         }
     }
