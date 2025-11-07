@@ -194,7 +194,6 @@ public class GameService
             if (!String.IsNullOrEmpty(resultString))
                 return resultString;
 
-
             var options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -235,24 +234,10 @@ public class GameService
                 return $"Unable to retrieve game {gameId}";
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
-            if (player == null)
-                return $"Player {playerId} not found in game {gameId}";
+            var resultString = GamePlayHelpers.UpgradeToCityRequestFromUser(gs, playerId, vertexId);
 
-            var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
-            if (vertex == null)
-                return $"Vertex {vertexId} not found in game {gameId}";
-
-            if (vertex.Building == null || vertex.Owner == null)
-                return $"Vertex {vertexId} in game {gameId} does not have a settlement to upgrade.";
-
-            if (vertex.Building == BuildingType.City)
-                return $"Vertex {vertexId} in game {gameId} already has a city.";
-
-            if (vertex.Owner.Id != playerId)
-                return $"Vertex {vertexId} in game {gameId} is owned by another player.";
-
-            vertex.UpgradeToCity();
+            if (!String.IsNullOrEmpty(resultString))
+                return resultString;
 
             var options = new JsonSerializerOptions
             {

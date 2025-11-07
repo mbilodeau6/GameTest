@@ -119,7 +119,7 @@ public class BotAITests
         var edge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
         Assert.NotNull(edge);
         Assert.NotEmpty(edge.Vertices);
-        Assert.Contains(edge.Vertices, v => GamePlayHelpers.HasBuilding(v) && v.Owner.Id == move.EdgeMove.PlayerId);
+        Assert.Contains(edge.Vertices, v => GamePlayHelpers.HasBuilding(v) && v.Owner != null && v.Owner.Id == move.EdgeMove.PlayerId);
     }
 
     [Fact]
@@ -176,7 +176,8 @@ public class BotAITests
         var edge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
         Assert.NotNull(edge);
         Assert.NotEmpty(edge.Vertices);
-        Assert.Contains(edge.Vertices, v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) && v.Owner.Id == move.EdgeMove.PlayerId);
+        Assert.Contains(edge.Vertices, v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) 
+            && v.Owner != null && v.Owner.Id == move.EdgeMove.PlayerId);
     }
 
     [Fact]
@@ -241,12 +242,9 @@ public class BotAITests
         Assert.Null(move.VertexMove);
     }
 
-    // TODO: Will need to adjust when code changed to require resources and proper
-    // spacing from other development. Current version of GetBuildMove() just
-    // picks the next open spot for a settlement. If there isn't one, it picks the
-    // next open spot for a road.
-    // TODO: Also need to figure out when Bot should build each resource, buy dev
-    // card, trade, and end turn.
+    // TODO: Need to figure out when Bot should build each resource, buy dev
+    // card, trade, and end turn. Current version just builds settlement, if it can.
+    // If it can't build a settlement, it builds a road, if it can.
     [Fact]
     public void GetBuildMove_BuildRoadAndSettlement()
     {
@@ -262,6 +260,9 @@ public class BotAITests
 
         var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, desertTile, sheepTile, null);
         edge.BuildRoad(gs.Players[0]);
+
+        gs.Players[0].Resources[ResourceType.Brick] = 1;
+        gs.Players[0].Resources[ResourceType.Wood] = 1;
 
         var bai = new BotAI(gs);
 

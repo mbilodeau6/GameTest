@@ -104,6 +104,7 @@ public class Player
             throw new ArgumentException($"Player doesn't have {count} {type.ToString()}.");
 
         Resources[type] -= count;
+        ResourceCount -= count;
     }
 
     public void AssignDevelopmentCard(DevelopmentCardType type)

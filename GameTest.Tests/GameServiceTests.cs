@@ -14,7 +14,7 @@ public class GameServiceTests
         var game = gs.CreateGame("Default");
 
         // Assert
-        // TODO: Need to do a real test once CreateGame does something useful
-        Assert.NotNull(game.Id);
+        Assert.NotEmpty(game.Vertices);
+        Assert.NotEmpty(game.Edges);
     }
 }

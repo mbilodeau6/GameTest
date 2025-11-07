@@ -76,11 +76,12 @@ public class IntegrationTests
 
         // Assert
         Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(gs.Players[0].Id, gs.Phase.CurrentPlayer.Id);
 
         // TODO: Figure out a way to know the type/count of vertices/edges. Will likely need
         // mock dice implemented.
-        Assert.True(gs.Vertices.Count(v => v.Building == BuildingType.Settlement && v.Owner.Id == gs.Players[1].Id) >= 2);
+        Assert.True(gs.Vertices.Count(v => v.Building == BuildingType.Settlement && v.Owner != null && v.Owner.Id == gs.Players[1].Id) >= 2);
         Assert.True(gs.Edges.Count(e => e.Owner != null && e.Owner.Id == gs.Players[1].Id) >= 2);
 
         foreach(var vertex in gs.Vertices)

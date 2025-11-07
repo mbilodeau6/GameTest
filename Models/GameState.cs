@@ -79,10 +79,10 @@ public class GameState
             var player = new Player(playerDto);
             Players.Add(player);
 
-            if (player.Id == dto.Phase.CurrentPlayerId)
+            if (dto.Phase != null && player.Id == dto.Phase.CurrentPlayerId)
                 currentPlayer = player;
 
-            if (player.Id == dto.Phase.EndPlayerId)
+            if (dto.Phase != null && player.Id == dto.Phase.EndPlayerId)
                 endPlayer = player;
         }
 

@@ -319,10 +319,8 @@ public static class GamePlayHelpers
     // Right now, an empty string indicates success.
     public static string BuildRoadRequestFromUser(GameState gs, string playerId, string edgeId)
     {
-        if (!BuildRoadPhase(gs))
-        {
+        if (!BuildRoadPhase(gs) || gs.Phase.CurrentPlayer == null)
             return $"Game is not in a state that allows building roads. Current state: {gs.Phase.PhaseState}";
-        }
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
@@ -368,10 +366,8 @@ public static class GamePlayHelpers
     // Right now, an empty string indicates success.
     public static string BuildSettlementRequestFromUser(GameState gs, string playerId, string vertexId)
     {
-        if (!BuildSettlementPhase(gs))
-        {
+        if (!BuildSettlementPhase(gs) || gs.Phase.CurrentPlayer == null)
             return $"Game is not in a state that allows building settlements. Current state: {gs.Phase.PhaseState}";
-        }
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
@@ -397,9 +393,48 @@ public static class GamePlayHelpers
             return $"Vertex {vertexId} not adjacent to a road for player {playerId}.";
 
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildSettlement(player))
-                return $"Player {player.Id} does not have the required resources to build a settlement.";
+            return $"Player {player.Id} does not have the required resources to build a settlement.";
 
         BuildSettlement(gs, player, vertex);
+
+        GameLoop(gs);
+
+        return string.Empty;
+    }
+
+    public static void UpgradeToCity(GameState gs, Player player, Vertex vertex)
+    {
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
+        {
+            WithdrawResourcesToBuildCity(player);
+            vertex.UpgradeToCity();
+        }
+    }
+
+
+    public static string UpgradeToCityRequestFromUser(GameState gs, string playerId, string vertexId)
+    {
+        var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player == null)
+            return $"Player {playerId} not found in game {gs.Id}";
+
+        var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
+        if (vertex == null)
+            return $"Vertex {vertexId} not found in game {gs.Id}";
+
+        if (vertex.Building == null || vertex.Owner == null)
+            return $"Vertex {vertexId} in game {gs.Id} does not have a settlement to upgrade.";
+
+        if (vertex.Building == BuildingType.City)
+            return $"Vertex {vertexId} in game {gs.Id} already has a city.";
+
+        if (vertex.Owner.Id != playerId)
+            return $"Vertex {vertexId} in game {gs.Id} is owned by another player.";
+
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildCity(player))
+            return $"Player {player.Id} does not have the required resources to build a city.";
+
+        UpgradeToCity(gs, player, vertex);
 
         GameLoop(gs);
 
@@ -448,7 +483,7 @@ public static class GamePlayHelpers
                 if (move.EdgeMove != null)
                 {
                     var edge = GetEdgeFromEdgeId(gs, move.EdgeMove.Id);
-                    edge.BuildRoad(gs.Phase.CurrentPlayer);
+                    BuildRoad(gs, gs.Phase.CurrentPlayer, edge);
                 }
 
                 if (move.VertexMove != null)

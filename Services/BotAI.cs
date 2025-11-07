@@ -27,6 +27,9 @@ public class BotAI
         if (!GamePlayHelpers.IsPlayerSetupPhase(State))
             throw new InvalidOperationException($"GetSetUp should only be called if in one of the phases. Current phase is {State.Phase.PhaseState.ToString()}");
 
+        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
+            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
+
         var move = new BotMove();
 
         if (State.Phase.PhaseState == GameStates.PlaceFirstSettlement || State.Phase.PhaseState == GameStates.PlaceSecondSettlement)
@@ -70,33 +73,44 @@ public class BotAI
         if (State.Phase.PhaseState != GameStates.BuildOrTrade)
             throw new InvalidOperationException($"GetBuildMove should only be called if phase is BuildOrTrade. Current phase is {State.Phase.PhaseState.ToString()}");
 
+        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
+            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
+
         var move = new BotMove();
+        bool spotForSettlement = false;
 
         foreach(var edge in State.Edges.FindAll(e => e.Owner == State.Phase.CurrentPlayer))
         {
             // First loook for a place to build a settlement adjacent to an existing road
-            if (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer))
-                foreach (var vertex in edge.Vertices)
+            foreach (var vertex in edge.Vertices)
+            {
+                if (vertex.Building == null)
                 {
-                    if (vertex.Building == null)
+                    if (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer))
                     {
                         move.VertexMove = new VertexDTO(vertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
                         return move;
                     }
-                }
-
-            // Otherwise look for a place to build a road adjacent to an existing road
-            foreach (var vertex in edge.Vertices)
-            {
-                foreach (var adjacentEdge in vertex.Edges)
-                {
-                    if (adjacentEdge.Owner == null)
+                    else
                     {
-                        move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
-                        return move;
+                        spotForSettlement = true;
                     }
                 }
             }
+
+            // Otherwise look for a place to build a road adjacent to an existing road
+            if (!spotForSettlement && GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer))
+                foreach (var vertex in edge.Vertices)
+                {
+                    foreach (var adjacentEdge in vertex.Edges)
+                    {
+                        if (adjacentEdge.Owner == null)
+                        {
+                            move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
+                            return move;
+                        }
+                    }
+                }
         }
 
         move.EndTurn = true;

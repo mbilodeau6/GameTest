@@ -8,20 +8,6 @@ public static class BoardCreationHelpers
     public static Tile GetTileAt(this IEnumerable<Tile> tiles, int x, int y)
        => tiles.First(t => t.X == x && t.Y == y);
 
-    public static Tile GetVertexAt(this IEnumerable<Tile> tiles, int x, int y, VertexDirection dir)
-    {
-        // TODO: WIP
-        // var neighborCoordinates = HexProximity.GetCoordinates((x, y), dir);
-        // var neighborTile = tiles.FirstOrDefault(t => t.X == neighborCoordinates.Item1 && t.Y == neighborCoordinates.Item2);
-
-        // var neighbor2Coordinates = HexProximity.GetCoordinates((x, y), HexProximity.getPrecedingDirection(dir));
-        // var neighbor2Tile = tiles.FirstOrDefault(t => t.X == neighbor2Coordinates.Item1 && t.Y == neighbor2Coordinates.Item2);
-        // var vertexDir = HexProximity.GetVertexDirectionForEdgeDirection(dir);
-
-        return null;
-
-    }
-
     public static List<Tile> CreateTilesForRandomBoard()
     {
         var resourceValues = new List<ResourceType>();

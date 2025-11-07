@@ -1005,6 +1005,7 @@ public class GamePlayHelpersTests
         Assert.NotNull(gs.Edges[0].Owner);
         Assert.Equal(gs.Players[1].Id, gs.Edges[0].Owner.Id);
         Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(gs.Phase.CurrentPlayer.Id, gs.Players[1].Id);
     }
 
@@ -1141,6 +1142,7 @@ public class GamePlayHelpersTests
         Assert.NotNull(gs.Vertices[0].Owner);
         Assert.Equal(gs.Players[0].Id, gs.Vertices[0].Owner.Id);
         Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(gs.Phase.CurrentPlayer.Id, gs.Players[0].Id);
     }
 
