@@ -171,6 +171,32 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void HasResourcesToBuildRoad_SufficientResources()
+    {
+        // Arrange
+        var player = CreatePlayerWithSufficientResources();
+
+        // Act
+        var result = GamePlayHelpers.HasResourcesToBuildRoad(player);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void HasResourcesToBuildRoad_InsufficientResources()
+    {
+        // Arrange
+        var player = CreatePlayerWithInsufficientResources();
+
+        // Act
+        var result = GamePlayHelpers.HasResourcesToBuildRoad(player);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
     public void WithdrawResourcesToBuildRoad_SufficientResources()
     {
         // Arrange
@@ -179,10 +205,9 @@ public class GamePlayHelpersTests
         var brickCount = player.Resources[ResourceType.Brick];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuildRoad(player);
+        GamePlayHelpers.WithdrawResourcesToBuildRoad(player);
 
         // Assert
-        Assert.True(result);
         Assert.Equal(woodCount - 1, player.Resources[ResourceType.Wood]);
         Assert.Equal(brickCount - 1, player.Resources[ResourceType.Brick]);
     }
@@ -196,10 +221,11 @@ public class GamePlayHelpersTests
         var brickCount = player.Resources[ResourceType.Brick];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuildRoad(player);
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           GamePlayHelpers.WithdrawResourcesToBuildRoad(player));
 
         // Assert
-        Assert.False(result);
+        Assert.Equal("Player does not have required resources to build road.", exception.Message);
         Assert.Equal(woodCount, player.Resources[ResourceType.Wood]);
         Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
     }
@@ -272,6 +298,32 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void HasResourcesToBuildCity_SufficientResources()
+    {
+        // Arrange
+        var player = CreatePlayerWithSufficientResources();
+
+        // Act
+        var result = GamePlayHelpers.HasResourcesToBuildCity(player);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void HasResourcesToBuildCity_InsufficientResources()
+    {
+        // Arrange
+        var player = CreatePlayerWithInsufficientResources();
+
+        // Act
+        var result = GamePlayHelpers.HasResourcesToBuildCity(player);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
     public void WithdrawResourcesToBuildCity_SufficientResources()
     {
         // Arrange
@@ -280,10 +332,9 @@ public class GamePlayHelpersTests
         var grainCount = player.Resources[ResourceType.Grain];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuildCity(player);
+        GamePlayHelpers.WithdrawResourcesToBuildCity(player);
 
         // Assert
-        Assert.True(result);
         Assert.Equal(oreCount - 3, player.Resources[ResourceType.Ore]);
         Assert.Equal(grainCount - 2, player.Resources[ResourceType.Grain]);
     }
@@ -297,10 +348,11 @@ public class GamePlayHelpersTests
         var grainCount = player.Resources[ResourceType.Grain];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuildCity(player);
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           GamePlayHelpers.WithdrawResourcesToBuildCity(player));
 
         // Assert
-        Assert.False(result);
+        Assert.Equal("Player does not have required resources to build city.", exception.Message);
         Assert.Equal(oreCount, player.Resources[ResourceType.Ore]);
         Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
     }
@@ -879,7 +931,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildRoad(gs, "PP1", gs.Edges[0].Id);
+        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, "PP1", gs.Edges[0].Id);
 
         Assert.NotNull(resultString);
         Assert.StartsWith("Player PP1 not found in game ", resultString);
@@ -891,7 +943,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, gs.Edges[0].Id);
+        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
 
         Assert.NotNull(resultString);
         Assert.StartsWith("It is not ", resultString);
@@ -906,7 +958,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, gs.Edges[0].Id);
+        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
 
         Assert.Equal($"Game is not in a state that allows building roads. Current state: {gs.Phase.PhaseState}", resultString);
     }
@@ -922,8 +974,11 @@ public class GamePlayHelpersTests
         var adjacentVertex = gs.Edges[0].Vertices[0];
         adjacentVertex.BuildSettlement(gs.Players[0]);
 
+        gs.Players[0].Resources[ResourceType.Wood] = 1;
+        gs.Players[0].Resources[ResourceType.Brick] = 1;
+
         // Act
-        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, gs.Edges[0].Id);
+        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
 
         // Assert
         Assert.Equal(string.Empty, resultString);
@@ -943,7 +998,7 @@ public class GamePlayHelpersTests
         adjacentVertex.BuildSettlement(gs.Players[1]);
 
         // Act
-        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, gs.Edges[0].Id);
+        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, gs.Edges[0].Id);
 
         // Assert
         Assert.Equal(string.Empty, resultString);
@@ -972,7 +1027,7 @@ public class GamePlayHelpersTests
         vertex.BuildSettlement(gs.Players[1]);
 
         // Act
-        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, edge.Id);
+        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, edge.Id);
 
         // Assert
         Assert.Equal(BuildingType.Settlement, vertex.Building);
@@ -997,7 +1052,7 @@ public class GamePlayHelpersTests
         vertex.BuildSettlement(gs.Players[0]);
 
         // Act
-        var resultString = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, edge.Id);
+        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, edge.Id);
 
         // Assert
         Assert.Equal(BuildingType.Settlement, vertex.Building);

@@ -227,17 +227,18 @@ public class BotAITests
     }
 
     [Fact]
-    public void GetBuildMove_ExceptionIfNoStarterBuilds()
+    public void GetBuildMove_EndTurnIfNoResources()
     {
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
 
         var bai = new BotAI(gs);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            bai.GetBuildMove());
+        var move = bai.GetBuildMove();
 
-        Assert.StartsWith("No valid build moves available for Bot.", exception.Message);
+        Assert.True(move.EndTurn);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
     }
 
     // TODO: Will need to adjust when code changed to require resources and proper

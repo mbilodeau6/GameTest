@@ -69,17 +69,21 @@ public static class GamePlayHelpers
         AssignResourcesToPlayers(gameState, resources);
     }
 
-    public static bool WithdrawResourcesToBuildRoad(Player player)
+    public static bool HasResourcesToBuildRoad(Player player)
     {
-        if (player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
-            player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1)
+        return player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
+               player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1;
+    }
+
+    public static void WithdrawResourcesToBuildRoad(Player player)
+    {
+        if (HasResourcesToBuildRoad(player))
         {
             player.RemoveResources(ResourceType.Wood, 1);
             player.RemoveResources(ResourceType.Brick, 1);
-            return true;
         }
-
-        return false;
+        else
+            throw new InvalidOperationException("Player does not have required resources to build road.");
     }
 
     public static bool HasResourcesToBuildSettlement(Player player)
@@ -101,17 +105,21 @@ public static class GamePlayHelpers
         player.RemoveResources(ResourceType.Grain, 1);
     }
 
-    public static bool WithdrawResourcesToBuildCity(Player player)
+    public static bool HasResourcesToBuildCity(Player player)
     {
-        if (player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 2 &&
-            player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 3)
+        return player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 2 &&
+               player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 3;
+    }
+
+    public static void WithdrawResourcesToBuildCity(Player player)
+    {
+        if (HasResourcesToBuildCity(player))
         {
             player.RemoveResources(ResourceType.Ore, 3);
             player.RemoveResources(ResourceType.Grain, 2);
-            return true;
         }
-
-        return false;
+        else
+            throw new InvalidOperationException("Player does not have required resources to build city.");
     }
 
     public static bool WithdrawResourcesToBuyDevCard(Player player)
@@ -299,9 +307,17 @@ public static class GamePlayHelpers
         return gs.Phase.PhaseState == GameStates.BuildOrTrade;
     }
 
+    public static void BuildRoad(GameState gs, Player player, Edge edge)
+    {
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
+            WithdrawResourcesToBuildRoad(player);
+
+        edge.BuildRoad(player);
+    }
+
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
     // Right now, an empty string indicates success.
-    public static string BuildRoad(GameState gs, string playerId, string edgeId)
+    public static string BuildRoadRequestFromUser(GameState gs, string playerId, string edgeId)
     {
         if (!BuildRoadPhase(gs))
         {
@@ -325,7 +341,10 @@ public static class GamePlayHelpers
         if (edge.Owner != null)
             return $"Edge {edgeId} in game {gs.Id} already has a road.";
 
-        edge.BuildRoad(player);
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildRoad(player))
+                return $"Player {player.Id} does not have the required resources to build a road.";
+
+        BuildRoad(gs, player, edge);
 
         GameLoop(gs);
 

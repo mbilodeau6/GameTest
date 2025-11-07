@@ -60,7 +60,7 @@ public class IntegrationTests
         result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v2.Id);
         Assert.Empty(result);
         var e2 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
-        result = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, e2.Id);
+        result = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e2.Id);
         Assert.Empty(result);
 
         var v3 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, null, null, VertexDirection.SE);
@@ -70,7 +70,7 @@ public class IntegrationTests
         // Act
         // Build user's second road - this should trigger the bot to build its second settlement and road
         var e3 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, null, HexDirection.SE);
-        result = GamePlayHelpers.BuildRoad(gs, gs.Players[0].Id, e3.Id);
+        result = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e3.Id);
         Assert.Empty(result);
 
 

@@ -144,7 +144,7 @@ public class GameService
                 return $"Unable to retrieve game {gameId}";
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            var resultString = GamePlayHelpers.BuildRoad(gs, playerId, edgeId);
+            var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, playerId, edgeId);
 
             if (!String.IsNullOrEmpty(resultString))
                 return resultString;
