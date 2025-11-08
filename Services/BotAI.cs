@@ -79,9 +79,20 @@ public class BotAI
         var move = new BotMove();
         bool spotForSettlement = false;
 
-        foreach(var edge in State.Edges.FindAll(e => e.Owner == State.Phase.CurrentPlayer))
+
+        // First look to see if we can upgrade settlements to a city
+        foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer && v.Building == BuildingType.Settlement))
         {
-            // First loook for a place to build a settlement adjacent to an existing road
+            if (GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer))
+            {
+                move.VertexMove = new VertexDTO(vertex.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
+                return move;
+            }
+        }
+
+        foreach (var edge in State.Edges.FindAll(e => e.Owner == State.Phase.CurrentPlayer))
+        {
+            // Now loook for a place to build a settlement adjacent to an existing road
             foreach (var vertex in edge.Vertices)
             {
                 if (vertex.Building == null)
@@ -100,15 +111,26 @@ public class BotAI
 
             // Otherwise look for a place to build a road adjacent to an existing road
             if (!spotForSettlement && GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer))
-                foreach (var vertex in edge.Vertices)
+                foreach (var vertex in edge.Vertices.FindAll(v => !GamePlayHelpers.HasBuilding(v)))
                 {
-                    foreach (var adjacentEdge in vertex.Edges)
+                    foreach (var adjacentEdge in vertex.Edges.FindAll(e => e.Owner == null))
                     {
-                        if (adjacentEdge.Owner == null)
-                        {
                             move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
                             return move;
-                        }
+                    }
+                }
+        }
+
+        // Finally, see if ou can build a road off of a settlement or city
+        foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer && GamePlayHelpers.HasBuilding(v)))
+        {
+            if (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer))
+                foreach (var adjacentEdge in vertex.Edges)
+                {
+                    if (adjacentEdge.Owner == null)
+                    {
+                        move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
+                        return move;
                     }
                 }
         }
