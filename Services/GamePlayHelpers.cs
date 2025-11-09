@@ -496,6 +496,11 @@ public static class GamePlayHelpers
                         vertex.UpgradeToCity();
                 }
 
+                if (move.BankTrade != null)
+                {
+                    BankTradeFromUser(gs, move.BankTrade);
+                }
+
                 if (move.RollDice)
                     GamePlayHelpers.RollDice(gs, true);
 

@@ -14,7 +14,7 @@ public class BotAITests
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         GamePlayHelpers.LinkEdgesAndVertices(gs);
         gs.Players.Clear();
-        
+
         var player1 = new Player("Bot", PlayerColor.Blue, true);
         gs.Players.Add(player1);
         var player2 = new Player("Henry", PlayerColor.Red);
@@ -24,7 +24,7 @@ public class BotAITests
 
         return gs;
     }
-    
+
     [Fact]
     public void Constructor_ValidGameState()
     {
@@ -176,7 +176,7 @@ public class BotAITests
         var edge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
         Assert.NotNull(edge);
         Assert.NotEmpty(edge.Vertices);
-        Assert.Contains(edge.Vertices, v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City) 
+        Assert.Contains(edge.Vertices, v => (v.Building == BuildingType.Settlement || v.Building == BuildingType.City)
             && v.Owner != null && v.Owner.Id == move.EdgeMove.PlayerId);
     }
 
@@ -275,5 +275,74 @@ public class BotAITests
 
         Assert.False(move.BuyDevelopmentCard);
         Assert.False(move.RollDice);
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_NotEnoughResources_NoTradePossible()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Players[0].AssignResources(ResourceType.Wood, 3);
+
+        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+
+        Assert.False(canTrade);
+        Assert.Null(tradeRequest);
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_NotEnoughResources_NeedOreForCity()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Players[0].AssignResources(ResourceType.Ore, 6);
+
+        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+
+        Assert.False(canTrade);
+        Assert.Null(tradeRequest);
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_TradeRecommended_TradeWoodNotOre()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Players[0].AssignResources(ResourceType.Ore, 5);
+        gs.Players[0].AssignResources(ResourceType.Grain, 1);
+        gs.Players[0].AssignResources(ResourceType.Wood, 5);
+
+        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+
+        Assert.True(canTrade);
+        Assert.NotNull(tradeRequest);
+        Assert.Contains(ResourceType.Wood, tradeRequest.Offer);
+        Assert.DoesNotContain(ResourceType.Ore, tradeRequest.Offer);
+        Assert.Equal(4, tradeRequest.Offer[ResourceType.Wood]);
+        Assert.Contains(ResourceType.Grain, tradeRequest.Request);
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_TradeRecommended_TradeWoodForWool()
+    {
+        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
+        gs.Players[0].AssignResources(ResourceType.Ore, 2);
+        gs.Players[0].AssignResources(ResourceType.Grain, 1);
+        gs.Players[0].AssignResources(ResourceType.Wood, 5);
+        gs.Players[0].AssignResources(ResourceType.Brick, 1);
+
+        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+
+        Assert.True(canTrade);
+        Assert.NotNull(tradeRequest);
+        Assert.Contains(ResourceType.Wood, tradeRequest.Offer);
+        Assert.DoesNotContain(ResourceType.Ore, tradeRequest.Offer);
+        Assert.Equal(4, tradeRequest.Offer[ResourceType.Wood]);
+        Assert.Contains(ResourceType.Wool, tradeRequest.Request);
     }
 }

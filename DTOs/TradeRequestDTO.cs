@@ -11,9 +11,9 @@ public class TradeRequestDTO
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public TradeRequestDTO(string plyaerId, Dictionary<string, int> offer, Dictionary<string, int> request)
+    public TradeRequestDTO(string playerId, Dictionary<string, int> offer, Dictionary<string, int> request)
     {
-        PlayerId = plyaerId ?? string.Empty;
+        PlayerId = playerId ?? string.Empty;
         Offer = offer ?? new Dictionary<string, int>();
         Request = request ?? new Dictionary<string, int>();
     }

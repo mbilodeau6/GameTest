@@ -133,6 +133,25 @@ public class Games
         return ok;
     }
 
+    [Function("GetGameSummaryById")]
+    public async Task<HttpResponseData> GetGameSummaryById(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "Games/{id}/Summary")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("GetGameSummaryById called for id {Id}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+
+        var dto = await _gameService.GetGameSummaryAsync(guid);
+        if (dto == null)
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, $"Game not found (guid:{guid}).");
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync(dto);
+        return ok;
+    }
+
     [Function("RollDice")]
     public async Task<HttpResponseData> RollDice(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/roll")] HttpRequestData req,

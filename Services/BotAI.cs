@@ -65,6 +65,59 @@ public class BotAI
         return move;
     }
 
+    // TODO: Need to create a more robust implementation that considers the game board and bot's current and future
+    // opportunities. Remember to change the tests as well.
+    public (bool CanTrade, TradeRequest? TradeRequest) AnalyzePossibleBankTrades(GameState gs)
+    {
+        if (gs.Phase.CurrentPlayer == null || !gs.Phase.CurrentPlayer.IsBot)
+            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
+
+        ResourceType resourceToTrade = ResourceType.Desert;
+        ResourceType resourceToGet = ResourceType.Desert;
+
+        if (gs.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 5)
+            resourceToTrade = ResourceType.Wool;
+        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
+            resourceToTrade = ResourceType.Wood;
+        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
+            resourceToTrade = ResourceType.Brick;
+        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 6)
+            resourceToTrade = ResourceType.Grain;
+        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 7)
+            resourceToTrade = ResourceType.Ore;
+
+
+        if (resourceToTrade != ResourceType.Desert)
+        {
+            if (gs.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 3)
+                resourceToGet = ResourceType.Grain;
+            else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 2)
+                resourceToGet = ResourceType.Ore;
+            else
+                foreach (var resource in Enum.GetValues<ResourceType>())
+                {
+                    if (resource == ResourceType.Ore || resource == ResourceType.Desert)
+                        continue;
+
+                    if (gs.Phase.CurrentPlayer.Resources[resource] == 0)
+                    {
+                        resourceToGet = resource;
+                        break;
+                    }
+                }
+
+            if (resourceToGet == ResourceType.Desert)
+                resourceToGet = ResourceType.Ore;
+
+            return (true, new TradeRequest(gs.Phase.CurrentPlayer,
+                    new Dictionary<ResourceType, int>() { { resourceToTrade, 4 } },
+                    new Dictionary<ResourceType, int>() { { resourceToGet, 1 } }));
+
+        }
+
+        return (false, null);
+    }
+
     // TODO: Need to restrict bot to building things it has the resources to build and to make more intelligent choices. 
     // Current code just picks next available spot for a settlement (if there is one). If there isn't, it picks the next
     // spot for a road.
@@ -92,7 +145,7 @@ public class BotAI
 
         foreach (var edge in State.Edges.FindAll(e => e.Owner == State.Phase.CurrentPlayer))
         {
-            // Now loook for a place to build a settlement adjacent to an existing road
+            // Otherwise, look for a place to build a settlement adjacent to an existing road
             foreach (var vertex in edge.Vertices)
             {
                 if (vertex.Building == null)
@@ -109,19 +162,26 @@ public class BotAI
                 }
             }
 
-            // Otherwise look for a place to build a road adjacent to an existing road
+            // Otherwise, look for a place to build a road adjacent to an existing road
             if (!spotForSettlement && GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer))
                 foreach (var vertex in edge.Vertices.FindAll(v => !GamePlayHelpers.HasBuilding(v)))
                 {
                     foreach (var adjacentEdge in vertex.Edges.FindAll(e => e.Owner == null))
                     {
-                            move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
-                            return move;
+                        move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
+                        return move;
                     }
                 }
         }
 
-        // Finally, see if ou can build a road off of a settlement or city
+        var tradeAnalsysis = AnalyzePossibleBankTrades(State);
+        if (tradeAnalsysis.CanTrade)
+        {
+            move.BankTrade = new TradeRequestDTO(tradeAnalsysis.TradeRequest);
+            return move;
+        }
+
+        // Finally, see if you can build a road off of a settlement or city
         foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer && GamePlayHelpers.HasBuilding(v)))
         {
             if (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer))

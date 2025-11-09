@@ -13,7 +13,6 @@ public class BotMove
     
     public bool EndTurn { get; set; }
 
-    // TODO: Placeholder. Assume Trade will need info on players, resources offering, resources requesting
-    public bool Trade { get; set; }
+    public TradeRequestDTO? BankTrade { get; set; }
 }
 

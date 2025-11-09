@@ -129,6 +129,24 @@ public class GameService
         return fullDTO;
     }
 
+    public async Task<string?> GetGameSummaryAsync(Guid id)
+    {
+        GameStateDTO? fullDTO = await GetGameDTO(id.ToString());
+
+        if (fullDTO == null)
+            return null;
+
+        var stringBuilder = new StringBuilder();
+        
+        stringBuilder.Append($"Phase: {fullDTO.Phase.PhaseState} ## Current Player: {fullDTO.Phase.CurrentPlayerId} ## ");
+        stringBuilder.Append($"Dice: {fullDTO.Dice.Die1.Value}, {fullDTO.Dice.Die2.Value} ## ");
+
+        for (int i = 0; i < fullDTO.Players.Count; i++)
+            stringBuilder.Append($"P{i}: Wood={fullDTO.Players[i].Resources[ResourceType.Wood]}, Brick={fullDTO.Players[i].Resources[ResourceType.Brick]}, Wool={fullDTO.Players[i].Resources[ResourceType.Wool]}, Grain={fullDTO.Players[i].Resources[ResourceType.Grain]}, Ore={fullDTO.Players[i].Resources[ResourceType.Ore]} ## ");
+            
+        return stringBuilder.ToString();
+    }
+
     public async Task<string?> BuildRoadAsync(Guid gameId, string edgeId, string playerId)
     {
         if (_container == null)
