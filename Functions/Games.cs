@@ -174,12 +174,12 @@ public class Games
         await ok.WriteAsJsonAsync("Turn ended.");
         return ok;
     }
-    
+
     // TODO: Need to get player from authorization. In other entry points I've been talking player
     // as a paramter. Right now I'm just implementing a single human player against a bot. StartGameAsync
     // will just start the game when it is called (regardless of which player is hitting start).
     [Function("StartGame")]
-    public async Task<HttpResponseData> StartGame (
+    public async Task<HttpResponseData> StartGame(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/start")] HttpRequestData req,
         string id)
     {
@@ -195,6 +195,29 @@ public class Games
 
         var ok = req.CreateResponse(HttpStatusCode.OK);
         await ok.WriteAsJsonAsync("Game started.");
+        return ok;
+    }
+
+    [Function("BankTrade")]
+    public async Task<HttpResponseData> BankTrade(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/trades/bank")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("BankTrade called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+
+        var request = await req.ReadFromJsonAsync<TradeRequestDTO>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || request.Request.Count == 0 || request.Offer.Count == 0)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId', 'request', and 'offer'.");
+
+        var updated = await _gameService.BankTradeAsync(guid, request);
+        if (updated == null)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not execute requested bank trade.");
+
+        var ok = req.CreateResponse(HttpStatusCode.OK);
+        await ok.WriteAsJsonAsync(updated);
         return ok;
     }
 

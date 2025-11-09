@@ -364,7 +364,7 @@ public class GameService
         }
     }
 
-        public async Task<bool> StartGameAsync(Guid gameId)
+    public async Task<bool> StartGameAsync(Guid gameId)
     {
         if (_container == null)
         {
@@ -418,6 +418,51 @@ public class GameService
         {
             _logger.LogError(ex, "Failed to start game {GameId}.", gameId);
             return false;
+        }
+    }
+
+    public async Task<string?> BankTradeAsync(Guid gameId, TradeRequestDTO request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return null;
+        }
+
+        try
+        {
+            var dto = await GetGameDTO(gameId.ToString());
+            if (dto == null)
+                return $"Unable to retrieve game {gameId}";
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
+            var resultString = GamePlayHelpers.BankTradeFromUser(gs, request);
+
+            if (!String.IsNullOrEmpty(resultString))
+                return resultString;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var updatedDto = new DTOs.GameStateDTO(gs);
+
+            var json = JsonSerializer.Serialize(updatedDto, options);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed bank trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
+            return $"Bank trade completed for player {request.PlayerId} in game {gameId}.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Bank trade for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
+            return null;
         }
     }
 

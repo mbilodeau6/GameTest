@@ -168,7 +168,7 @@ public static class GamePlayHelpers
         int settlementCount = gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
         int cityCount = gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City);
 
-        int victoryPoints = settlementCount + (cityCount * 2); 
+        int victoryPoints = settlementCount + (cityCount * 2);
 
         return victoryPoints >= gs.Settings.VictoryPointsToWin;
     }
@@ -340,7 +340,7 @@ public static class GamePlayHelpers
             return $"Edge {edgeId} in game {gs.Id} already has a road.";
 
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildRoad(player))
-                return $"Player {player.Id} does not have the required resources to build a road.";
+            return $"Player {player.Id} does not have the required resources to build a road.";
 
         BuildRoad(gs, player, edge);
 
@@ -629,7 +629,7 @@ public static class GamePlayHelpers
 
         return false;
     }
-    
+
     public static bool IsVertexAdjacentToPlayerRoad(GameState gs, Vertex vertex, Player player)
     {
         foreach (var edge in vertex.Edges)
@@ -641,6 +641,27 @@ public static class GamePlayHelpers
         }
 
         return false;
+    }
+
+    public static string BankTrade(TradeRequest request)
+    {
+        Bank bank = new Bank();
+
+        if (bank.TradeWithBank(request.Player, request.Offer, request.Request))
+            return string.Empty;
+        else
+            return "Bank trade request rejected.";
+    }
+    
+    public static string BankTradeFromUser(GameState gs, TradeRequestDTO request)
+    {
+        if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
+            return $"Game is not in a state that allows trades. Current state: {gs.Phase.PhaseState}";
+
+        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
+            return $"It is not {request.PlayerId}'s turn.";
+
+        return BankTrade(new TradeRequest(gs, request));
     }
 
 }

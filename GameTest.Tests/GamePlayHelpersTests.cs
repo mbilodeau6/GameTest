@@ -230,7 +230,8 @@ public class GamePlayHelpersTests
         Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
     }
 
-    [Fact] void HasResourcesToBuildSettlment_SufficientResources()
+    [Fact]
+    void HasResourcesToBuildSettlment_SufficientResources()
     {
         // Arrange
         var player = CreatePlayerWithSufficientResources();
@@ -1661,4 +1662,96 @@ public class GamePlayHelpersTests
 
         Assert.True(GamePlayHelpers.IsVertexAdjacentToPlayerRoad(gs, testVertex, gs.Players[0]));
     }
+
+    [Fact]
+    public void BankTradeFromUser_Accepted()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        gs.Phase.PhaseState = GameStates.BuildOrTrade;
+        gs.Phase.CurrentPlayer = gs.Players[0];
+
+        gs.Players[0].AssignResources(ResourceType.Wood, 5);
+        var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
+                new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
+                new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
+
+        var result = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
+
+        Assert.Empty(result);
+        Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(1, gs.Players[0].Resources[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void BankTradeFromUser_Rejected_WrongState()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        gs.Phase.PhaseState = GameStates.RollOrUseDevCard;
+
+        gs.Players[0].AssignResources(ResourceType.Wood, 5);
+        var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
+                new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
+                new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
+
+        var result = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
+
+        Assert.StartsWith("Game is not in a state that allows trades. Current state:", result);
+        Assert.Equal(5, gs.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void BankTradeFromUser_Rejected_DoesNotHaveEnoughResources()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        gs.Phase.PhaseState = GameStates.BuildOrTrade;
+        gs.Phase.CurrentPlayer = gs.Players[0];
+
+
+        gs.Players[0].AssignResources(ResourceType.Wood, 2);
+        var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
+                new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
+                new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
+
+        var result = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
+
+        Assert.Equal("Bank trade request rejected.", result);
+        Assert.Equal(2, gs.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void BankTrade_Accepted()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+
+        gs.Players[0].AssignResources(ResourceType.Wood, 5);
+        var tradeRequest = new TradeRequest(gs.Players[0],
+                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
+                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
+
+        var result = GamePlayHelpers.BankTrade(tradeRequest);
+
+        Assert.Empty(result);
+        Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(1, gs.Players[0].Resources[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void BankTrade_Rejected()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+
+        gs.Players[0].AssignResources(ResourceType.Wood, 3);
+        var tradeRequest = new TradeRequest(gs.Players[0],
+                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 2 } },
+                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
+
+        var result = GamePlayHelpers.BankTrade(tradeRequest);
+
+        Assert.Equal("Bank trade request rejected.", result);
+        Assert.Equal(3, gs.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
+    }
+
 }
