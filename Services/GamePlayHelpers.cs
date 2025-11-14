@@ -499,7 +499,7 @@ public static class GamePlayHelpers
                     if (move.VertexMove.Building == BuildingType.Settlement.ToString())
                         BuildSettlement(gs, gs.Phase.CurrentPlayer, vertex);
                     else
-                        vertex.UpgradeToCity();
+                        UpgradeToCity(gs, gs.Phase.CurrentPlayer, vertex);
                 }
 
                 if (move.BankTrade != null)
