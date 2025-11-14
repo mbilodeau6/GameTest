@@ -414,9 +414,15 @@ public static class GamePlayHelpers
 
     public static string UpgradeToCityRequestFromUser(GameState gs, string playerId, string vertexId)
     {
+        if (gs.Phase.PhaseState == GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
+            return $"Game is not in a state that allows building cities. Current state: {gs.Phase.PhaseState}";
+
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
             return $"Player {playerId} not found in game {gs.Id}";
+
+        if (gs.Phase.CurrentPlayer.Id != playerId)
+            return $"It is not {playerId}'s turn.";
 
         var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
         if (vertex == null)
@@ -431,7 +437,7 @@ public static class GamePlayHelpers
         if (vertex.Owner.Id != playerId)
             return $"Vertex {vertexId} in game {gs.Id} is owned by another player.";
 
-        if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildCity(player))
+        if (!HasResourcesToBuildCity(player))
             return $"Player {player.Id} does not have the required resources to build a city.";
 
         UpgradeToCity(gs, player, vertex);
