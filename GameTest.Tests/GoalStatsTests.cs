@@ -77,7 +77,7 @@ public class GoalStatsTests
 
         Assert.Equal(0, goalStats.RoadsNeeded);
         Assert.Equal(0.0, goalStats.InterceptionRisk);
-        Assert.Equal(0.0, goalStats.OverallScore);
+        Assert.Equal((5.0/36.0) + (5.0/36) *0.9, goalStats.OverallScore);
     }
     
         [Fact]
@@ -119,6 +119,6 @@ public class GoalStatsTests
 
         Assert.Equal(0, goalStats.RoadsNeeded);
         Assert.Equal(0.0, goalStats.InterceptionRisk);
-        Assert.Equal(0.0, goalStats.OverallScore);
+        Assert.Equal((9.0/36.0) * .9 + (5.0/36.0) + (1.0/36.0) * 1.2, goalStats.OverallScore);
     }
 }

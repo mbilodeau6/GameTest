@@ -50,6 +50,13 @@ public class GoalStats
         
         RoadsNeeded = 0;
         InterceptionRisk = 0.0;
-        OverallScore = 0.0;
+
+        // TODO: Incorporate TradeRate, RoadsNeeded, and InterceptionRisk into OverallScore and
+        // make weightings configurable.
+        OverallScore = ResourceAcquisitionRates[ResourceType.Ore] * 1.2 
+            + ResourceAcquisitionRates[ResourceType.Grain] * 1.1 
+            + ResourceAcquisitionRates[ResourceType.Brick] 
+            + ResourceAcquisitionRates[ResourceType.Wood] * 0.9 
+            + ResourceAcquisitionRates[ResourceType.Wool] * 0.8;
     }
 }
