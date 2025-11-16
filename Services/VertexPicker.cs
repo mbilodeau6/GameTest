@@ -24,27 +24,8 @@ public class VertexPicker
         }
         else
         {
-            List<string> visitedEdgeIds = new List<string>();
-            List<string> visitedVertexIds = new List<string>();
-            Queue<Edge> EdgeQueue = new Queue<Edge>();
-
-            foreach (var vertex in gs.Vertices.FindAll(v => GamePlayHelpers.HasBuilding(v) && v.Owner != null && v.Owner.Id == gs.Phase.CurrentPlayer.Id))
-            {
-                foreach(var edge in vertex.Edges)
-                {
-                    if (!visitedEdgeIds.Contains(edge.Id))
-                    {
-                        visitedEdgeIds.Add(edge.Id);
-                        EdgeQueue.Enqueue(edge);
-                    }
-                }
-            }
-
-            while(EdgeQueue.Count > 0)
-            {
-                var edge = EdgeQueue.Dequeue();
-                // TODO: What's next?
-            }
+            // TODO: Call AllHelpers.GetRankedListOfVertexTargets() to get list of target vertices
+            // and pick the one with the highest ranking.
         }
     }
 
