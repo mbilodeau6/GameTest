@@ -13,6 +13,9 @@ public class GoalStats
     public int RoadsNeeded { get; set; }
     public double InterceptionRisk { get; set; }
     public double OverallScore { get; set; }
+    // TODO: When ports are supported, TradeRate needs to identify the type of port as well as the rate.
+    // Easiest may be to have a Dictionary of ResourceType where all values will be set to 3 for
+    // a 3:1 port.
     public int TradeRate { get; }
    
 

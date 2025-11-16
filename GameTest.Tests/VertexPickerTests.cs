@@ -1,11 +1,6 @@
 using Xunit;
 using GameTest.Models;
-using GameTest.DTOs;
 using GameTest.Services;
-using GameTest.Functions;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Serialization;
-using System.Runtime.Intrinsics;
 
 namespace GameTest.Tests;
 
