@@ -1,12 +1,6 @@
 using Xunit;
 using GameTest.Models;
-using GameTest.DTOs;
 using GameTest.Services;
-using GameTest.Functions;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
-using System.Net.NetworkInformation;
 
 namespace GameTest.Tests;
 
@@ -242,9 +236,7 @@ public class AIHelpersTests
         var g22 = rankedGoals.First(g => g.TargetVertex.Id == v22.Id);
         Assert.NotNull(g22);
         Assert.Equal(1, g22.RoadsNeeded);
-        // TODO: Need to verify my assumption and put the following back in once I have logic to
-        // reduce overall score based on roads needed and resource values.
-        // Assert.True(g22.OverallScore > g18.OverallScore); // g18 needs more roads and provides less valuable resources
+        Assert.True(g22.OverallScore > g18.OverallScore); // g18 needs more roads and provides less valuable resources
 
         var v2 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t18, t19, t17, null);
         var g2 = rankedGoals.First(g => g.TargetVertex.Id == v2.Id);

@@ -57,12 +57,18 @@ public class GoalStats
         RoadsNeeded = roadsNeeded;
         InterceptionRisk = 0.0;
 
-        // TODO: Incorporate TradeRate, RoadsNeeded, and InterceptionRisk into OverallScore and
+        // TODO: Incorporate TradeRate and InterceptionRisk into OverallScore and
         // make weightings configurable.
         OverallScore = ResourceAcquisitionRates[ResourceType.Ore] * 1.2 
             + ResourceAcquisitionRates[ResourceType.Grain] * 1.1 
             + ResourceAcquisitionRates[ResourceType.Brick] 
             + ResourceAcquisitionRates[ResourceType.Wood] * 0.9 
             + ResourceAcquisitionRates[ResourceType.Wool] * 0.8;
+
+        // TODO: Also need to incorporate information on how close an opponent is to the vertex
+        // to increase impact of RoadsNeededif the opponent is closers to taking the spot than
+        // the bot.
+        for(int i = 0; i < RoadsNeeded; i++)
+            OverallScore = OverallScore * 0.90;
     }
 }
