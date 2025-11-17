@@ -140,7 +140,11 @@ public static class AIHelpers
 
                 // If candidate vertex is open for building, add stats to candidate vertices
                 if (candidateVertex.Building == null)
-                    rankedGoals.Add(new GoalStats(candidateVertex, 4, baseRates));
+                {
+                    var newGoalCandidate = new GoalStats(candidateVertex, 4, baseRates);
+                    newGoalCandidate.RoadsNeeded = pathCandidate.NewBuildRequired;
+                    rankedGoals.Add(newGoalCandidate);
+                }
                 else if (GamePlayHelpers.HasBuilding(candidateVertex))
                     continue;
 
