@@ -65,7 +65,7 @@ public static class AIHelpers
                                                         && v.Building == BuildingType.Settlement
                                                         && v.Owner != null
                                                         && v.Owner.Id == gs.Phase.CurrentPlayer.Id)
-                                                        .OrderByDescending(g => (new GoalStats(g, 4, baseRates)).OverallScore).ToList();
+                                                        .OrderByDescending(g => (new GoalStats(g, 4, baseRates, 0)).OverallScore).ToList();
 
             if (ownedSettlements.Count > 0)
             {
@@ -87,7 +87,7 @@ public static class AIHelpers
             foreach (var edge in gs.Edges.Where(e => e.Owner != null && e.Owner.Id == gs.Phase.CurrentPlayer.Id))
                 foreach (var vertex in edge.Vertices)
                     if (vertex.Building == null)
-                        options.Add(new GoalStats(vertex, 4, baseRates));
+                        options.Add(new GoalStats(vertex, 4, baseRates, 0));
 
             if (options.Count == 0)
                 return null;    
@@ -141,11 +141,7 @@ public static class AIHelpers
 
                 // If candidate vertex is open for building, add stats to candidate vertices
                 if (candidateVertex.Building == null)
-                {
-                    var newGoalCandidate = new GoalStats(candidateVertex, 4, baseRates);
-                    newGoalCandidate.RoadsNeeded = pathCandidate.NewBuildRequired;
-                    rankedGoals.Add(newGoalCandidate);
-                }
+                    rankedGoals.Add(new GoalStats(candidateVertex, 4, baseRates, pathCandidate.NewBuildRequired));
                 else if (GamePlayHelpers.HasBuilding(candidateVertex))
                     continue;
 

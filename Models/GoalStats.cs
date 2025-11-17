@@ -10,9 +10,9 @@ public class GoalStats
     public Dictionary<ResourceType, double> ResourceAcquisitionRates { get; }
     // TODO: Consider changing to or adding EstRoundsToAchieve and EstRoundsToIntercept.
     // Something that identifies how likely achieving this goal is.
-    public int RoadsNeeded { get; set; }
+    public int RoadsNeeded { get; private set; }
     public double InterceptionRisk { get; set; }
-    public double OverallScore { get; set; }
+    public double OverallScore { get; private set; }
     // TODO: When ports are supported, TradeRate needs to identify the type of port as well as the rate.
     // Easiest may be to have a Dictionary of ResourceType where all values will be set to 3 for
     // a 3:1 port.
@@ -22,7 +22,7 @@ public class GoalStats
     // For RoadsNeeded, the OverallScore should decrease the further the user is from the target.
     // Especially if an opponent is closer to the target. The RoadsNeeded penalty should be decreased if
     // the user has resources to build roads and a settlement (or trade for those resources).
-    public GoalStats(Vertex targetVertex, int tradeRate, Dictionary<ResourceType, double>? baseStats = null)
+    public GoalStats(Vertex targetVertex, int tradeRate, Dictionary<ResourceType, double> baseStats, int roadsNeeded)
     {
         if (targetVertex == null)
             throw new ArgumentNullException("targetVertex");
@@ -54,7 +54,7 @@ public class GoalStats
                 if (rt != ResourceType.Desert)
                     ResourceAcquisitionRates[rt] += baseStats[rt];
         
-        RoadsNeeded = 0;
+        RoadsNeeded = roadsNeeded;
         InterceptionRisk = 0.0;
 
         // TODO: Incorporate TradeRate, RoadsNeeded, and InterceptionRisk into OverallScore and

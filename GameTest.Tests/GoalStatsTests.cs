@@ -17,9 +17,10 @@ public class GoalStatsTests
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
         int tradeRate = 1;
+        Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0));
     }
 
     [Fact]
@@ -30,9 +31,10 @@ public class GoalStatsTests
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
         int tradeRate = 5;
+        Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0));
     }
 
     [Fact]
@@ -41,9 +43,10 @@ public class GoalStatsTests
         // Arrange
         Vertex vertex = null;
         int tradeRate = 3;
+        Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, tradeRate));
+        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, tradeRate, baseStats, 0));
     }
 
     [Fact]
@@ -54,9 +57,10 @@ public class GoalStatsTests
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
         int tradeRate = 3;
+        Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate);
+        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
@@ -94,7 +98,7 @@ public class GoalStatsTests
         baseStats[ResourceType.Ore] = 1.0 / 36.0;
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate, baseStats);
+        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
