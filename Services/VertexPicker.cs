@@ -24,8 +24,7 @@ public class VertexPicker
         }
         else
         {
-            // TODO: Call AllHelpers.GetRankedListOfVertexTargets() to get list of target vertices
-            // and pick the one with the highest ranking.
+            TargetVertices = AIHelpers.GetRankedListOfVertexTargets(gs);
         }
     }
 

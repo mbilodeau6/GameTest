@@ -86,14 +86,75 @@ public class VertexPickerTests
     [Fact]
     public void PickVertex_BuildPhase()
     {
-        Assert.True(false);
-    }
-    [Fact]
+        // Arrange
+        var gs = CreateGameStateForSetUpPhase();
+        var woodWool2BrickVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, Wool2Tile, WoodTile, BrickTile, null);
+        woodWool2BrickVertex.BuildSettlement(HumanPlayer);
+        var desertWoodGrainVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, WoodTile, GrainTile, DesertTile, null);
+        desertWoodGrainVertex.BuildSettlement(BotPlayer);
+        var woodWool5Edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, WoodTile, Wool5Tile, null);
+        woodWool5Edge.BuildRoad(BotPlayer);
+        gs.Phase.PhaseState = GameStates.BuildOrTrade;
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        GamePlayHelpers.MarkBlockedVertices(gs);
+        
 
+        VertexPicker picker = new VertexPicker(gs);
+        var expectedVertex1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, WoodTile, Wool5Tile, OreTile, null);
+
+        // Act
+        var selectedVertex = picker.PickVertex();
+
+        // Assert - Test will accept the vertex with the highest probability of producing resources
+        // and the highest probability of producing ore and other resources.
+        Assert.NotNull(selectedVertex);
+        Assert.Equal(expectedVertex1.Id, selectedVertex.Id);
+    }
+
+    [Fact]
     public void PickVertex_NoVerticesAccessible()
     {
         // This can happen if the other players box a player in completely (no new place to build).
         // Assumes this class is only used to determine locations to build settlements (not upgrades to cities).
-        Assert.True(false);
+
+        // Arrange
+        var gs = CreateGameStateForSetUpPhase();
+
+        // Bot settlements are all in SE corner
+        var oreSEVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, OreTile, null, null, VertexDirection.SE);
+        oreSEVertex.BuildSettlement(BotPlayer);
+        var oreSEEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, OreTile, null, HexDirection.SE);
+        oreSEEdge.BuildRoad(BotPlayer);
+        var wool5SEVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, Wool5Tile, null, null, VertexDirection.SE);
+        wool5SEVertex.BuildSettlement(BotPlayer);
+        var wool5SEEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, Wool5Tile, null, HexDirection.SE);
+        wool5SEEdge.BuildRoad(BotPlayer);
+
+        // Set up opponent to block all vertices from bot
+        var woodOreBrickVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, OreTile, WoodTile, BrickTile, null);
+        woodOreBrickVertex.BuildSettlement(HumanPlayer);
+        var brickOreEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, BrickTile, OreTile, null);
+        brickOreEdge.BuildRoad(HumanPlayer);
+        var oreNEEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, OreTile, null, HexDirection.NE);
+        oreNEEdge.BuildRoad(HumanPlayer);
+        var woodGrainWool5Vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, WoodTile, Wool5Tile, GrainTile, null);
+        woodGrainWool5Vertex.BuildSettlement(HumanPlayer);
+        var grainWool5Edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, GrainTile, Wool5Tile, null);
+        grainWool5Edge.BuildRoad(HumanPlayer);
+        var wool5SWEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, Wool5Tile, null, HexDirection.SW);
+        wool5SWEdge.BuildRoad(HumanPlayer);
+
+        gs.Phase.PhaseState = GameStates.BuildOrTrade;
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        GamePlayHelpers.MarkBlockedVertices(gs);
+        
+
+        VertexPicker picker = new VertexPicker(gs);
+
+        // Act
+        var selectedVertex = picker.PickVertex();
+
+        // There are no vertices accessible to the Bot
+        Assert.Null(selectedVertex);
     }
 }
