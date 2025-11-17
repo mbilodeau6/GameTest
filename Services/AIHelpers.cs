@@ -108,7 +108,7 @@ public static class AIHelpers
 
             List<string> visitedEdgeIds = new List<string>();
             List<string> visitedVertexIds = new List<string>();
-            Queue<CandidatePath> pathQueue = new Queue<CandidatePath>();
+            PriorityQueue<CandidatePath, int> pathQueue = new PriorityQueue<CandidatePath, int>();
 
             foreach (var vertex in gs.Vertices.FindAll(v => GamePlayHelpers.HasBuilding(v) && v.Owner != null && v.Owner.Id == gs.Phase.CurrentPlayer.Id))
             {
@@ -118,7 +118,8 @@ public static class AIHelpers
                     if (!visitedEdgeIds.Contains(edge.Id))
                     {
                         visitedEdgeIds.Add(edge.Id);
-                        pathQueue.Enqueue(new CandidatePath(edge));
+                        var newCandidatePath = new CandidatePath(edge);
+                        pathQueue.Enqueue(newCandidatePath, newCandidatePath.NewBuildRequired);
                     }
                 }
             }
@@ -155,7 +156,8 @@ public static class AIHelpers
                     if (!visitedEdgeIds.Contains(edge.Id) && (edge.Owner == null || edge.Owner.Id == gs.Phase.CurrentPlayer.Id))
                     {
                         visitedEdgeIds.Add(edge.Id);
-                        pathQueue.Enqueue(pathCandidate.CreateBranchOfPath(edge));
+                        var newCandidatePath = pathCandidate.CreateBranchOfPath(edge);
+                        pathQueue.Enqueue(newCandidatePath, newCandidatePath.NewBuildRequired);
                     }
                 }
             }

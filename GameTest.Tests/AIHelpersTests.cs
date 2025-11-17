@@ -254,11 +254,7 @@ public class AIHelpersTests
         var v3 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t19, t17, t16, null);
         var g3 = rankedGoals.First(g => g.TargetVertex.Id == v3.Id);
         Assert.NotNull(g3);
-
-        // TODO: RoadsNeeded should be 1 here but current code isn't using route through E5/E4
-        // which already has roads provided. Need to figure out how to get GetRankedListOfVertexTargets()
-        // to pick the better route.
-        Assert.Equal(3, g3.RoadsNeeded);
+        Assert.Equal(1, g3.RoadsNeeded);
 
         var v4 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t19, t15, t16, null);
         var g4 = rankedGoals.First(g => g.TargetVertex.Id == v4.Id);
@@ -268,10 +264,7 @@ public class AIHelpersTests
         var v34 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t17, t16, t8, null);
         var g34 = rankedGoals.First(g => g.TargetVertex.Id == v34.Id);
         Assert.NotNull(g34);
-        // TODO: RoadsNeeded should be 2 here but current code isn't using route through E5/E4
-        // which already has roads provided. Need to figure out how to get GetRankedListOfVertexTargets()
-        // to pick the better route.
-        Assert.Equal(4, g34.RoadsNeeded);
+        Assert.Equal(2, g34.RoadsNeeded);
 
         var v28 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t5, null, null, VertexDirection.S);
         var g28 = rankedGoals.First(g => g.TargetVertex.Id == v28.Id);
