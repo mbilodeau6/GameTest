@@ -7,6 +7,7 @@ namespace GameTest.Models;
 public class GoalStats
 {
     public Vertex TargetVertex { get; }
+    public Edge? NextEdgeToTarget { get; }
     public Dictionary<ResourceType, double> ResourceAcquisitionRates { get; }
     // TODO: Consider changing to or adding EstRoundsToAchieve and EstRoundsToIntercept.
     // Something that identifies how likely achieving this goal is.
@@ -22,13 +23,16 @@ public class GoalStats
     // For RoadsNeeded, the OverallScore should decrease the further the user is from the target.
     // Especially if an opponent is closer to the target. The RoadsNeeded penalty should be decreased if
     // the user has resources to build roads and a settlement (or trade for those resources).
-    public GoalStats(Vertex targetVertex, int tradeRate, Dictionary<ResourceType, double> baseStats, int roadsNeeded)
+    public GoalStats(Vertex targetVertex, int tradeRate, Dictionary<ResourceType, double> baseStats, int roadsNeeded, Edge? nextEdgeToTarget)
     {
         if (targetVertex == null)
             throw new ArgumentNullException("targetVertex");
 
         if (tradeRate < 2 || tradeRate > 4)
             throw new ArgumentOutOfRangeException("tradeRate", "Trade rate must be between 2 and 4.");
+
+        if (roadsNeeded > 0 && nextEdgeToTarget == null)
+            throw new ArgumentNullException("nextEdgeToTarget");
 
         TargetVertex = targetVertex;
         TradeRate = tradeRate;
@@ -56,6 +60,7 @@ public class GoalStats
         
         RoadsNeeded = roadsNeeded;
         InterceptionRisk = 0.0;
+        NextEdgeToTarget = nextEdgeToTarget;
 
         // TODO: Incorporate TradeRate and InterceptionRisk into OverallScore and
         // make weightings configurable.

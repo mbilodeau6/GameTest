@@ -20,7 +20,7 @@ public class GoalStatsTests
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0, null));
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class GoalStatsTests
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0, null));
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class GoalStatsTests
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, tradeRate, baseStats, 0));
+        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, tradeRate, baseStats, 0, null));
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class GoalStatsTests
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0);
+        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0, null);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
@@ -92,10 +92,11 @@ public class GoalStatsTests
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
         int tradeRate = 3;
+        var neededEdge = new Edge(t1, t2);
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 1);
+        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 1, neededEdge);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
@@ -115,6 +116,8 @@ public class GoalStatsTests
         }
 
         Assert.Equal(1, goalStats.RoadsNeeded);
+        Assert.NotNull(goalStats.NextEdgeToTarget);
+        Assert.Equal(neededEdge.Id, goalStats.NextEdgeToTarget.Id);
         Assert.Equal(0.0, goalStats.InterceptionRisk);
         Assert.True((goalStats.OverallScore < (5.0/36.0) + (5.0/36) *0.9) && goalStats.OverallScore > 0.0);
     }
@@ -133,7 +136,7 @@ public class GoalStatsTests
         baseStats[ResourceType.Ore] = 1.0 / 36.0;
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0);
+        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0, null);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
@@ -159,5 +162,19 @@ public class GoalStatsTests
         Assert.Equal(0, goalStats.RoadsNeeded);
         Assert.Equal(0.0, goalStats.InterceptionRisk);
         Assert.Equal((9.0/36.0) * .9 + (5.0/36.0) + (1.0/36.0) * 1.2, goalStats.OverallScore);
+    }
+
+    [Fact]
+    public void Constructor_RoadsNeededButNextEdgeNull_Exception()
+    {
+        // Arrange
+        var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
+        var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
+        var vertex = new Vertex(t1, t2, null);
+        int tradeRate = 3;
+        Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, tradeRate, baseStats, 1, null));
     }
 }

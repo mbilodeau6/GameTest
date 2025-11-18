@@ -43,7 +43,7 @@ public class VertexPickerTests
 
     // TODO: Need to identify specific scenarios to test
     [Fact]
-    public void PickVertex_SetUpPhaseOpenBoard()
+    public void PickVertex_SetUpSettlementPhaseOpenBoard()
     {
         // Arrange
         var gs = CreateGameStateForSetUpPhase();
@@ -57,11 +57,12 @@ public class VertexPickerTests
 
         // Assert - Test will accept the vertex with the highest probability of producing resources
         // and the highest probability of producing ore and other resources.
+        Assert.NotNull(selectedVertex);
         Assert.True(selectedVertex.Id == expectedVertex1.Id || selectedVertex.Id == expectedVertex2.Id);
     }
 
     [Fact]
-    public void PickVertex_SetUpPhaseBestSpotsUnavailable()
+    public void PickVertex_SetUpSettlementPhaseBestSpotsUnavailable()
     {
         // Arrange
         var gs = CreateGameStateForSetUpPhase();
@@ -80,7 +81,36 @@ public class VertexPickerTests
 
         // Assert - Test will accept the vertex with the highest probability of producing resources
         // and the highest probability of producing ore and other resources.
+        Assert.NotNull(selectedVertex);
         Assert.True(selectedVertex.Id == expectedVertex1.Id || selectedVertex.Id == expectedVertex2.Id);
+    }
+
+    [Fact]
+    public void PickVertex_SetUpFirstRoad()
+    {
+        // Arrange
+        var gs = CreateGameStateForSetUpPhase();
+        var desertWoodWool2Vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, Wool2Tile, WoodTile, DesertTile, null);
+        desertWoodWool2Vertex.BuildSettlement(BotPlayer);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        GamePlayHelpers.MarkBlockedVertices(gs, desertWoodWool2Vertex);
+        
+
+        VertexPicker picker = new VertexPicker(gs);
+        var expectedEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, DesertTile, WoodTile, null);
+
+        // Act
+        var selectedEdge = picker.PickEdge();
+
+        // Assert
+        Assert.NotNull(selectedEdge);
+        Assert.Equal(expectedEdge.Id, selectedEdge.Id);
+    }
+
+    [Fact]
+    public void PickVertex_SetUpSecondRoad()
+    {
+        Assert.True(false);
     }
 
     [Fact]

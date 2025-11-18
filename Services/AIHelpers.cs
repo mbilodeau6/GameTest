@@ -65,7 +65,7 @@ public static class AIHelpers
                                                         && v.Building == BuildingType.Settlement
                                                         && v.Owner != null
                                                         && v.Owner.Id == gs.Phase.CurrentPlayer.Id)
-                                                        .OrderByDescending(g => (new GoalStats(g, 4, baseRates, 0)).OverallScore).ToList();
+                                                        .OrderByDescending(g => (new GoalStats(g, 4, baseRates, 0, null)).OverallScore).ToList();
 
             if (ownedSettlements.Count > 0)
             {
@@ -87,7 +87,7 @@ public static class AIHelpers
             foreach (var edge in gs.Edges.Where(e => e.Owner != null && e.Owner.Id == gs.Phase.CurrentPlayer.Id))
                 foreach (var vertex in edge.Vertices)
                     if (vertex.Building == null)
-                        options.Add(new GoalStats(vertex, 4, baseRates, 0));
+                        options.Add(new GoalStats(vertex, 4, baseRates, 0, null));
 
             if (options.Count == 0)
                 return null;    
@@ -141,7 +141,7 @@ public static class AIHelpers
 
                 // If candidate vertex is open for building, add stats to candidate vertices
                 if (candidateVertex.Building == null)
-                    rankedGoals.Add(new GoalStats(candidateVertex, 4, baseRates, pathCandidate.NewBuildRequired));
+                    rankedGoals.Add(new GoalStats(candidateVertex, 4, baseRates, pathCandidate.NewBuildRequired, pathCandidate.FirstEdge));
                 else if (GamePlayHelpers.HasBuilding(candidateVertex))
                     continue;
 
@@ -160,5 +160,21 @@ public static class AIHelpers
         }
 
         return rankedGoals.OrderByDescending(g => g.OverallScore).ToList();
+    }
+
+    public static Vertex FindVertexWithoutRoads(GameState gs, Player player)
+    {
+        List<Vertex> verticesWithoutRoads = new List<Vertex>();
+        foreach(var vertex in gs.Vertices.FindAll(v => v.Owner != null && v.Owner.Id == player.Id))
+            if (vertex.Edges.All(e => e.Owner == null))
+                verticesWithoutRoads.Add(vertex);
+
+        if (verticesWithoutRoads.Count > 1)
+            throw new InvalidOperationException("Invalid state. A valid game can not have two or more settlements without any roads.");
+
+        if (verticesWithoutRoads.Count == 1)
+            return verticesWithoutRoads.First();
+        else
+            return null;
     }
 }
