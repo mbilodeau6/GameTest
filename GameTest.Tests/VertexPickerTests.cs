@@ -60,7 +60,8 @@ public class VertexPickerTests
         desertWoodWool2Vertex.BuildSettlement(TH.BotPlayer);
         GamePlayHelpers.LinkEdgesAndVertices(gs);
         GamePlayHelpers.MarkBlockedVertices(gs, desertWoodWool2Vertex);
-        
+        gs.Phase.PhaseState = GameStates.PlaceFirstRoad;
+        gs.Phase.CurrentPlayer = TH.BotPlayer;        
 
         VertexPicker picker = new VertexPicker(gs);
         var expectedEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, TH.DesertTile, TH.WoodTile, null);
@@ -76,7 +77,31 @@ public class VertexPickerTests
     [Fact]
     public void PickVertex_SetUpSecondRoad()
     {
-        Assert.True(false);
+        // Arrange
+        var gs = TestHelpers.CreateGameStateForSetUpPhase();
+        var desertWoodWool2Vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.WoodTile, TH.DesertTile, null);
+        desertWoodWool2Vertex.BuildSettlement(TH.BotPlayer);
+        var desertWoodEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, TH.DesertTile, TH.WoodTile, null);
+        desertWoodEdge.BuildRoad(TH.BotPlayer);
+        var wool2BrickVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.BrickTile, null, null);
+        wool2BrickVertex.BuildSettlement(TH.HumanPlayer);
+        var brickOreVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.BrickTile, TH.OreTile, null, null);
+        brickOreVertex.BuildSettlement(TH.BotPlayer);
+
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        GamePlayHelpers.MarkBlockedVertices(gs, desertWoodWool2Vertex);
+        gs.Phase.PhaseState = GameStates.PlaceSecondRoad;
+        gs.Phase.CurrentPlayer = TH.BotPlayer;        
+
+        VertexPicker picker = new VertexPicker(gs);
+        var expectedEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, TH.BrickTile, TH.OreTile, null);
+
+        // Act
+        var selectedEdge = picker.PickEdge();
+
+        // Assert
+        Assert.NotNull(selectedEdge);
+        Assert.Equal(expectedEdge.Id, selectedEdge.Id);
     }
 
     [Fact]

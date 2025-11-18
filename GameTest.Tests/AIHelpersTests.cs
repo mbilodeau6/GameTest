@@ -143,6 +143,7 @@ public class AIHelpersTests
     private GameState CreateGameStateForOwnershipTesting()
     {
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
         var v1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.Wool2Tile, null, null);
         v1.BuildSettlement(TH.HumanPlayer);
         var v3 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.GrainTile, TH.WoodTile, null);
@@ -246,7 +247,7 @@ public class AIHelpersTests
         GamePlayHelpers.MarkBlockedVertices(gs);
         GamePlayHelpers.LinkEdgesAndVertices(gs);
 
-        var rankedGoals = AIHelpers.GetRankedListOfVertexTargets(gs);
+        var rankedGoals = AIHelpers.GetRankedListOfVertexTargets(gs, AIHelpers.GetAllOwnedBuildings(gs, gs.Phase.CurrentPlayer));
 
         Assert.Equal(12, rankedGoals.Count);
         foreach (var goal in rankedGoals)
@@ -318,6 +319,38 @@ public class AIHelpersTests
         Assert.NotNull(g38);
         Assert.Equal(4, g38.RoadsNeeded);
         Assert.True(g38.OverallScore < g28.OverallScore && g38.OverallScore < g33.OverallScore);
+    }
+
+    [Fact]
+    public void GetRankedListOfVertexTargets_StartingFromSingleVertex()
+    {
+        // Create board state where HumanPlayer has built settlements that divide the board in half and
+        // BotPlayer has a settlement in both halves.
+        var gs = CreateGameStateForOwnershipTesting();
+        var v35 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.GrainTile, TH.Wool5Tile, null, null);
+        v35.BuildSettlement(TH.BotPlayer);
+        var e44 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, TH.GrainTile, TH.Wool5Tile, null);
+        e44.BuildRoad(TH.BotPlayer);
+        var v42 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.WoodTile, TH.BrickTile, null);
+        v42.BuildSettlement(TH.BotPlayer);
+        GamePlayHelpers.MarkBlockedVertices(gs);
+        gs.Phase.CurrentPlayer = TH.BotPlayer;
+        gs.Phase.PhaseState = GameStates.PlaceSecondRoad;
+
+        var expectedEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, TH.Wool2Tile, TH.BrickTile, null);
+
+        // Make sure when we ask the AI to pick an edge from V42, it ranks the the vertices to show preference
+        // for the road going away (North) from HumanPlayer's effective blockaid that splits the board.
+        var rankedGoals = AIHelpers.GetRankedListOfVertexTargets(gs, new List<Vertex> { v42 });
+
+        Assert.Equal(2, rankedGoals.Count);
+        foreach (var goal in rankedGoals)
+        {
+            Assert.Null(goal.TargetVertex.Building);
+            Assert.NotNull(goal.NextEdgeToTarget);
+            Assert.Equal(expectedEdge.Id, goal.NextEdgeToTarget.Id);
+        }
+        
     }
 
     [Fact]

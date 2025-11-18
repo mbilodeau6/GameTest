@@ -10,8 +10,12 @@ public class VertexPicker
 
     public VertexPicker(GameState gs)
     {
+        if (gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("Invalid state. Can't be in the set up phase for roads without a current player.");
+
         if (gs.Phase.PhaseState == GameStates.PlaceFirstSettlement || gs.Phase.PhaseState == GameStates.PlaceSecondSettlement)
         {
+            // Search for any open vertex
             foreach (var vertex in gs.Vertices)
             {
                 if (vertex.Building == null)
@@ -24,15 +28,14 @@ public class VertexPicker
         }
         else if (gs.Phase.PhaseState == GameStates.PlaceFirstRoad || gs.Phase.PhaseState == GameStates.PlaceSecondRoad)
         {
-            if (gs.Phase.CurrentPlayer == null)
-                throw new InvalidOperationException("Invalid state. Can't be in the set up phase for roads without a current player.");
-
+            // Search for vertices that can be reached from new settlement
             var targetVertex = AIHelpers.FindVertexWithoutRoads(gs, gs.Phase.CurrentPlayer);
-            // TODO: Search for target vertice that start from vertex found above
+            TargetVertices = AIHelpers.GetRankedListOfVertexTargets(gs, new List<Vertex> { targetVertex });
         }
         else
         {
-            TargetVertices = AIHelpers.GetRankedListOfVertexTargets(gs);
+            // Search for vertices that can be reached from any owned settlement
+            TargetVertices = AIHelpers.GetRankedListOfVertexTargets(gs, AIHelpers.GetAllOwnedBuildings(gs, gs.Phase.CurrentPlayer));
         }
     }
 
