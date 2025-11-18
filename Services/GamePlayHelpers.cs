@@ -414,8 +414,8 @@ public static class GamePlayHelpers
 
     public static string UpgradeToCityRequestFromUser(GameState gs, string playerId, string vertexId)
     {
-        if (gs.Phase.PhaseState == GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
-            return $"Game is not in a state that allows building cities. Current state: {gs.Phase.PhaseState}";
+        if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
+            return $"Game is not in a state that allows building cities. Current state: {gs.Phase.PhaseState}; Current player: {gs.Phase.CurrentPlayer.Id}";
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)

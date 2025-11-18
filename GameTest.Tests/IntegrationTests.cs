@@ -52,7 +52,7 @@ public class IntegrationTests
         var result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[1].Id, v1.Id);
         Assert.Empty(result);
         // var e1 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, brickTile, null);
-        // result = GamePlayHelpers.BuildRoad(gs, gs.Players[1].Id, e1.Id);
+        // result = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, e1.Id);
         // Assert.Empty(result);
 
         // Build User's settlements and first road
@@ -89,5 +89,23 @@ public class IntegrationTests
             if (GamePlayHelpers.HasBuilding(vertex))
                 Assert.False(IsTooCloseToAnotherBuilding(gs, vertex));
         }
+    }
+
+        [Fact]
+    public async Task FullGameThroughInterfacesExposedToUser()
+    {
+        var gameService = new GameService();
+        var gs = gameService.CreateGame(GameType.Starter.ToString());
+
+        Assert.NotNull(gs);
+
+        var gameId = gs.Id;
+        var humanId = gs.Players.Find(p => p.IsBot == false);
+        var botId = gs.Players.Find(p => p.IsBot == true);
+
+        Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
+
+        // TODO: Continue to implement. Stopped because I was able to recreate the problem I encountered
+        // in the BotBuildAtEndOfSetupPhase_TriggeredByBuildRoadByUser integration test.
     }
 }

@@ -21,7 +21,6 @@ public class BotAI
         State = gs;
     }
 
-    // TODO: Need to make more intelligent choices. Current code just picks next available spot.
     public BotMove GetSetUpMove()
     {
         if (!GamePlayHelpers.IsPlayerSetupPhase(State))
@@ -33,34 +32,9 @@ public class BotAI
         var move = new BotMove();
 
         if (State.Phase.PhaseState == GameStates.PlaceFirstSettlement || State.Phase.PhaseState == GameStates.PlaceSecondSettlement)
-        {
-            int vIndex = 0;
-
-            while (State.Vertices[vIndex].Building != null)
-                vIndex++;
-
-            var target = State.Vertices[vIndex];
-            move.VertexMove = new VertexDTO(target.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
-        }
+            move.VertexMove = new VertexDTO(new VertexPicker(State).PickVertex().Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
         else if (State.Phase.PhaseState == GameStates.PlaceFirstRoad || State.Phase.PhaseState == GameStates.PlaceSecondRoad)
-        {
-            Edge? target = null;
-
-            // Find settlment w/o road (i.e. the one we just built)
-            foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer))
-            {
-                if (vertex.Edges[0].Owner == null && vertex.Edges[1].Owner == null)
-                {
-                    target = vertex.Edges[0];  // TODO: Add logic to pick which edge is better
-                    break;
-                }
-            }
-
-            if (target == null)
-                throw new InvalidOperationException("Unexpected State. There should be a settlement without an edge during set up.");
-
-            move.EdgeMove = new EdgeDTO(target.Id, State.Phase.CurrentPlayer.Id, null);
-        }
+            move.EdgeMove = new EdgeDTO(new VertexPicker(State).PickEdge().Id, State.Phase.CurrentPlayer.Id, null);
 
         return move;
     }
@@ -118,9 +92,6 @@ public class BotAI
         return (false, null);
     }
 
-    // TODO: Need to restrict bot to building things it has the resources to build and to make more intelligent choices. 
-    // Current code just picks next available spot for a settlement (if there is one). If there isn't, it picks the next
-    // spot for a road.
     public BotMove GetBuildMove()
     {
         if (State.Phase.PhaseState != GameStates.BuildOrTrade)
@@ -130,69 +101,45 @@ public class BotAI
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
         var move = new BotMove();
-        bool spotForSettlement = false;
-
 
         // First look to see if we can upgrade settlements to a city
-        foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer && v.Building == BuildingType.Settlement))
+        var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(State);
+        if (settlementToUpgrade != null)
         {
-            if (GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer))
+                move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
+                return move;
+        }
+
+        // Determine if there are settlements or roads the bot should work towards
+        var candidateVertices = AIHelpers.GetRankedListOfVertexTargets(State, AIHelpers.GetAllOwnedBuildings(State, State.Phase.CurrentPlayer)).OrderByDescending(g => g.OverallScore);
+        if (candidateVertices.Count() > 0)
+        {
+            // Next, see if you can build on the most valuable vertex identified
+            if (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer) && candidateVertices.First().RoadsNeeded == 0)
             {
-                move.VertexMove = new VertexDTO(vertex.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
+                move.VertexMove = new VertexDTO(candidateVertices.First().TargetVertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
                 return move;
             }
-        }
 
-        foreach (var edge in State.Edges.FindAll(e => e.Owner == State.Phase.CurrentPlayer))
-        {
-            // Otherwise, look for a place to build a settlement adjacent to an existing road
-            foreach (var vertex in edge.Vertices)
+            // If there isn't a vertex the Bot can build on (yet), build the next road needed to make that vertex available
+            if (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer) && candidateVertices.First().RoadsNeeded > 0)
             {
-                if (vertex.Building == null)
-                {
-                    if (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer))
-                    {
-                        move.VertexMove = new VertexDTO(vertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
-                        return move;
-                    }
-                    else
-                    {
-                        spotForSettlement = true;
-                    }
-                }
+                move.EdgeMove = new EdgeDTO(candidateVertices.First().NextEdgeToTarget.Id, State.Phase.CurrentPlayer.Id, null);
+                return move;
             }
 
-            // Otherwise, look for a place to build a road adjacent to an existing road
-            if (!spotForSettlement && GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer))
-                foreach (var vertex in edge.Vertices.FindAll(v => !GamePlayHelpers.HasBuilding(v)))
-                {
-                    foreach (var adjacentEdge in vertex.Edges.FindAll(e => e.Owner == null))
-                    {
-                        move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
-                        return move;
-                    }
-                }
+            // Notice: If the highest priority vertex is available and requires no roads but the Bot doesn't have the resources to 
+            // build a settlement, the Bot will NOT build another road. It will keep the resources it could use for a road in case
+            // it helps it get a settlement (needed to buy settlement or trade for resources needed).
+            // TODO: Need to revisit and set up rules for when the Bot should go ahead and build a road even though it isn't
+            // required for the highest value target.
         }
 
-        var tradeAnalsysis = AnalyzePossibleBankTrades(State);
-        if (tradeAnalsysis.CanTrade)
+        var tradeAnalysis = AnalyzePossibleBankTrades(State);
+        if (tradeAnalysis.CanTrade && tradeAnalysis.TradeRequest != null)
         {
-            move.BankTrade = new TradeRequestDTO(tradeAnalsysis.TradeRequest);
+            move.BankTrade = new TradeRequestDTO(tradeAnalysis.TradeRequest);
             return move;
-        }
-
-        // Finally, see if you can build a road off of a settlement or city
-        foreach (var vertex in State.Vertices.FindAll(v => v.Owner == State.Phase.CurrentPlayer && GamePlayHelpers.HasBuilding(v)))
-        {
-            if (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer))
-                foreach (var adjacentEdge in vertex.Edges)
-                {
-                    if (adjacentEdge.Owner == null)
-                    {
-                        move.EdgeMove = new EdgeDTO(adjacentEdge.Id, State.Phase.CurrentPlayer.Id, null);
-                        return move;
-                    }
-                }
         }
 
         move.EndTurn = true;
