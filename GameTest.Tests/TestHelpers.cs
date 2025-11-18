@@ -1,4 +1,5 @@
 using GameTest.Models;
+using GameTest.Services;
 
 namespace GameTest.Tests;
 
@@ -88,6 +89,43 @@ public static class TestHelpers
         gs.Edges.Add(e3);
         var e4 = new Edge(t2, t4);
         gs.Edges.Add(e4);
+
+        return gs;
+    }
+
+    public static class SetUpPhaseTestReferences
+    {
+        public static Tile WoodTile = new Tile(ResourceType.Wood, 9, 0, 0);
+        public static Tile Wool2Tile = new Tile(ResourceType.Wool, 2, -1, -1);
+        public static Tile BrickTile = new Tile(ResourceType.Brick, 3, 1, -1);
+        public static Tile OreTile = new Tile(ResourceType.Ore, 4, 2, 0);
+        public static Tile Wool5Tile = new Tile(ResourceType.Wool, 5, 1, 1);
+        public static Tile GrainTile = new Tile(ResourceType.Grain, 6, -1, 1);
+        public static Tile DesertTile = new Tile(ResourceType.Desert, 0, -2, 0);
+        public static Player HumanPlayer = new Player("Player1", PlayerColor.Red, isBot: false);
+        public static Player BotPlayer = new Player("Player2", PlayerColor.Blue, isBot: true);
+    }
+
+    public static GameState CreateGameStateForSetUpPhase()
+    {
+        var gs = new GameState(new Guid());
+        gs.Phase.PhaseState = GameStates.PlaceFirstSettlement;
+        gs.Phase.CurrentPlayer = SetUpPhaseTestReferences.BotPlayer;
+
+        gs.Tiles.AddRange(new List<Tile>() {
+            SetUpPhaseTestReferences.WoodTile,
+            SetUpPhaseTestReferences.Wool2Tile,
+            SetUpPhaseTestReferences.BrickTile,
+            SetUpPhaseTestReferences.OreTile,
+            SetUpPhaseTestReferences.Wool5Tile,
+            SetUpPhaseTestReferences. GrainTile,
+            SetUpPhaseTestReferences.DesertTile
+        });
+
+        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
+
+        gs.AddPlayer(SetUpPhaseTestReferences.HumanPlayer);
+        gs.AddPlayer(SetUpPhaseTestReferences.BotPlayer);
 
         return gs;
     }

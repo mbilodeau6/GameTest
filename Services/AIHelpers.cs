@@ -98,6 +98,11 @@ public static class AIHelpers
         return null;
     }
 
+    public static List<Vertex> GetAllOwnedBuildings(GameState gs, Player player)
+    {
+        return gs.Vertices.FindAll(v => GamePlayHelpers.HasBuilding(v) && v.Owner != null && v.Owner.Id == player.Id);
+    }
+
     public static List<GoalStats> GetRankedListOfVertexTargets(GameState gs)
     {
         var rankedGoals = new List<GoalStats>();
@@ -110,7 +115,7 @@ public static class AIHelpers
             List<string> visitedVertexIds = new List<string>();
             PriorityQueue<CandidatePath, int> pathQueue = new PriorityQueue<CandidatePath, int>();
 
-            foreach (var vertex in gs.Vertices.FindAll(v => GamePlayHelpers.HasBuilding(v) && v.Owner != null && v.Owner.Id == gs.Phase.CurrentPlayer.Id))
+            foreach (var vertex in GetAllOwnedBuildings(gs, gs.Phase.CurrentPlayer))
             {
                 visitedVertexIds.Add(vertex.Id);
                 foreach(var edge in vertex.Edges)

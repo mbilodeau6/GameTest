@@ -1,6 +1,8 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.Services;
+using TH = GameTest.Tests.TestHelpers.SetUpPhaseTestReferences;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace GameTest.Tests;
 
@@ -138,8 +140,51 @@ public class AIHelpersTests
         Assert.Equal(expectedVertex.Id, vertexForSettlement.Id);
     }
 
+    private GameState CreateGameStateForOwnershipTesting()
+    {
+        var gs = TestHelpers.CreateGameStateForSetUpPhase();
+        var v1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.Wool2Tile, null, null);
+        v1.BuildSettlement(TH.HumanPlayer);
+        var v3 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.GrainTile, TH.WoodTile, null);
+        v3.BuildSettlement(TH.HumanPlayer);
+        var v39 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.OreTile, TH.Wool5Tile, null);
+        v39.BuildSettlement(TH.HumanPlayer);
+        var v52 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.BrickTile, TH.OreTile, null, null);
+        v52.BuildSettlement(TH.HumanPlayer);
+
+        return gs;
+    }
+
     [Fact]
-    public void GetRankedListOfVertexTargets_ExcludeBlocked()
+    public void GetAllOwnedBuildings_NoneFound()
+    {
+        // Arrange
+        var gs = CreateGameStateForOwnershipTesting();
+        var expectedVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.Wool2Tile, null, null);
+
+        // Act
+        var vertices = AIHelpers.GetAllOwnedBuildings(gs, TH.HumanPlayer);
+
+        // Assert
+        Assert.Equal(4, vertices.Count);
+        Assert.Contains(vertices, v => v.Id == expectedVertex.Id);
+    }
+
+    [Fact]
+    public void GetAllOwnedBuildings_4Found()
+    {
+        // Arrange
+        var gs = CreateGameStateForOwnershipTesting();        
+
+        // Act
+        var vertices = AIHelpers.GetAllOwnedBuildings(gs, TH.BotPlayer);
+
+        // Assert
+        Assert.Empty(vertices);
+    }
+
+    [Fact]
+    public void GetRankedListOfVertexTargets_StartingFromAllOwned()
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         gs.Players.Add(new Player("Player3", PlayerColor.Green, isBot: false));
