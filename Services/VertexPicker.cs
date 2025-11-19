@@ -43,8 +43,8 @@ public class VertexPicker
     {
         if (TargetVertices.Count > 0)
         {
-            var bestGoal = TargetVertices.OrderByDescending(g => g.OverallScore).First();
-            return bestGoal.TargetVertex;
+            var targetsSorted = TargetVertices.OrderByDescending(g => g.OverallScore);
+            return targetsSorted.First().TargetVertex;
         }
 
         return null;
