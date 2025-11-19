@@ -283,9 +283,9 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Players[0].AssignResources(ResourceType.Wood, 3);
 
-        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+        var bot = new BotAI(gs);
 
-        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
         Assert.False(canTrade);
         Assert.Null(tradeRequest);
@@ -297,9 +297,9 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Players[0].AssignResources(ResourceType.Ore, 6);
 
-        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+        var bot = new BotAI(gs);
 
-        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
         Assert.False(canTrade);
         Assert.Null(tradeRequest);
@@ -313,9 +313,9 @@ public class BotAITests
         gs.Players[0].AssignResources(ResourceType.Grain, 1);
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
 
-        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+        var bot = new BotAI(gs);
 
-        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
         Assert.True(canTrade);
         Assert.NotNull(tradeRequest);
@@ -334,9 +334,9 @@ public class BotAITests
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
         gs.Players[0].AssignResources(ResourceType.Brick, 1);
 
-        var bot = new BotAI(CreateBoardForSetupTest(GameStates.BuildOrTrade));
+        var bot = new BotAI(gs);
 
-        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades(gs);
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
         Assert.True(canTrade);
         Assert.NotNull(tradeRequest);

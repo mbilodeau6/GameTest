@@ -15,7 +15,7 @@ public class BotAI
         if (gs == null)
             throw new ArgumentNullException("gs");
 
-        if (gs.Phase.CurrentPlayer == null || !gs.Phase.CurrentPlayer.IsBot)
+        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
         State = gs;
@@ -41,31 +41,31 @@ public class BotAI
 
     // TODO: Need to create a more robust implementation that considers the game board and bot's current and future
     // opportunities. Remember to change the tests as well.
-    public (bool CanTrade, TradeRequest? TradeRequest) AnalyzePossibleBankTrades(GameState gs)
+    public (bool CanTrade, TradeRequest? TradeRequest) AnalyzePossibleBankTrades()
     {
-        if (gs.Phase.CurrentPlayer == null || !gs.Phase.CurrentPlayer.IsBot)
+        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
         ResourceType resourceToTrade = ResourceType.Desert;
         ResourceType resourceToGet = ResourceType.Desert;
 
-        if (gs.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 5)
+        if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 5)
             resourceToTrade = ResourceType.Wool;
-        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
+        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
             resourceToTrade = ResourceType.Wood;
-        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
+        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
             resourceToTrade = ResourceType.Brick;
-        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 6)
+        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 6)
             resourceToTrade = ResourceType.Grain;
-        else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 7)
+        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 7)
             resourceToTrade = ResourceType.Ore;
 
 
         if (resourceToTrade != ResourceType.Desert)
         {
-            if (gs.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 3)
+            if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 3)
                 resourceToGet = ResourceType.Grain;
-            else if (gs.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 2)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 2)
                 resourceToGet = ResourceType.Ore;
             else
                 foreach (var resource in Enum.GetValues<ResourceType>())
@@ -73,7 +73,7 @@ public class BotAI
                     if (resource == ResourceType.Ore || resource == ResourceType.Desert)
                         continue;
 
-                    if (gs.Phase.CurrentPlayer.Resources[resource] == 0)
+                    if (State.Phase.CurrentPlayer.Resources[resource] == 0)
                     {
                         resourceToGet = resource;
                         break;
@@ -83,7 +83,7 @@ public class BotAI
             if (resourceToGet == ResourceType.Desert)
                 resourceToGet = ResourceType.Ore;
 
-            return (true, new TradeRequest(gs.Phase.CurrentPlayer,
+            return (true, new TradeRequest(State.Phase.CurrentPlayer,
                     new Dictionary<ResourceType, int>() { { resourceToTrade, 4 } },
                     new Dictionary<ResourceType, int>() { { resourceToGet, 1 } }));
 
@@ -135,7 +135,7 @@ public class BotAI
             // required for the highest value target.
         }
 
-        var tradeAnalysis = AnalyzePossibleBankTrades(State);
+        var tradeAnalysis = AnalyzePossibleBankTrades();
         if (tradeAnalysis.CanTrade && tradeAnalysis.TradeRequest != null)
         {
             move.BankTrade = new TradeRequestDTO(tradeAnalysis.TradeRequest);
