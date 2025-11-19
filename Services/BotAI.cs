@@ -15,7 +15,7 @@ public class BotAI
         if (gs == null)
             throw new ArgumentNullException("gs");
 
-        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
+        if (gs.Phase.CurrentPlayer == null || !gs.Phase.CurrentPlayer.IsBot)
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
         State = gs;
