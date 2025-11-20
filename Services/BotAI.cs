@@ -137,7 +137,7 @@ public class BotAI
 
         // First look to see if we can upgrade settlements to a city
         var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(State);
-        if (settlementToUpgrade != null && GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer))
+        if (settlementToUpgrade != null && GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer))
         {
                 move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
                 return move;
