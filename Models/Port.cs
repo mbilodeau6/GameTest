@@ -16,7 +16,7 @@ public class Port
 
     public Port(Vertex vertex1, Vertex vertex2, PortType type)
     {
-        Id = $"E{Interlocked.Increment(ref s_nextId)}";
+        Id = $"R{Interlocked.Increment(ref s_nextId)}";
 
         if (vertex1 == null)
             throw new ArgumentNullException("vertex1");

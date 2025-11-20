@@ -232,6 +232,170 @@ public class BoardCreationHelpersTests
                 Assert.True(vertex.Tiles.Count >= 1 && vertex.Tiles.Count <= 2);
             }
         }
-
     }
+
+    [Fact]
+    public void AddPorts_UnsupportedGameType()
+    {
+        GameState gs = new GameState(new Guid(), GameType.Test);
+        Assert.Throws<InvalidOperationException>(() => BoardCreationHelpers.AddPorts(gs));
+    }
+
+    [Fact]
+    public void AddPorts_Valid()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Default);
+        ValidatePortsForStandardBoard(gs);
+    }
+
+
+    [Fact]
+    public void AddPortsForStarter_UnsupportedGameType()
+    {
+        GameState gs = new GameState(new Guid(), GameType.Default);
+        Assert.Throws<InvalidOperationException>(() => BoardCreationHelpers.AddPortsForStarter(gs));
+    }
+
+    [Fact]
+    public void AddPortsForStarter_Valid()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        ValidatePortsForStandardBoard(gs);
+    }
+
+    [Fact]
+    public void CreateListOfPorts_Valid()
+    {
+        // Act
+        List<PortType> ports = BoardCreationHelpers.CreateListOfPorts();
+
+        // Assert
+        Assert.Equal(9, ports.Count);
+        Assert.Equal(4, ports.Count(p => p == PortType.ThreeToOne));
+        Assert.Single(ports, p => p == PortType.Wood);
+        Assert.Single(ports, p => p == PortType.Brick);
+        Assert.Single(ports, p => p == PortType.Grain);
+        Assert.Single(ports, p => p == PortType.Wool);
+        Assert.Single(ports, p => p == PortType.Ore);
+    }
+
+    private static GameState CreateBoardForPortTesting()
+    {
+        var gs = new GameState(Guid.NewGuid(), GameType.Starter);
+
+        foreach (var tile in BoardCreationHelpers.CreateTilesForStarterBoard())
+            gs.AddTile(tile);
+
+        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
+
+        return gs;
+    }
+
+    [Fact]
+    public void AddPortsWithStartIndex_StartAtZeroWithSubIndexZero()
+    {
+        // Arrange
+        GameState gs = CreateBoardForPortTesting();
+
+        // Act
+        BoardCreationHelpers.AddPortsWithStartIndex(gs, BoardCreationHelpers.CreateListOfPorts(), 0, 0);
+
+        // Assert
+        ValidatePortsForStandardBoard(gs);
+
+        // Check to make sure first few ports are where expected
+        var port = gs.Ports[0];
+        var tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        var vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.N);
+        var vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.NE);
+        Assert.Equal(PortType.ThreeToOne, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+
+        port = gs.Ports[1];
+        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.NE);
+        vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
+        Assert.Equal(PortType.Wood, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+
+        port = gs.Ports[2];
+        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.SE);
+        vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
+        Assert.Equal(PortType.Brick, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+
+        port = gs.Ports[3];
+        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 2);
+        vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.SE);
+        vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.S);
+        Assert.Equal(PortType.Ore, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+
+        port = gs.Ports[4];
+        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 2);
+        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 2);
+        vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.S);
+        vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
+        Assert.Equal(PortType.Grain, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+    }
+
+    [Fact]
+    public void AddPortsWithStartIndex_StartAtZevenWithSubIndexOne()
+    {
+        // Arrange
+        GameState gs = CreateBoardForPortTesting();
+
+        // Act
+        BoardCreationHelpers.AddPortsWithStartIndex(gs, BoardCreationHelpers.CreateListOfPorts(), 14, 1);
+
+        // Assert
+        ValidatePortsForStandardBoard(gs);
+        
+        // Check to make sure first few ports are where expected
+        var port = gs.Ports[0];
+        var tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
+        var tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, -2);
+        var vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
+        var vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.NW);
+        Assert.Equal(PortType.ThreeToOne, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+
+        port = gs.Ports[1];
+        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, -2);
+        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, -2);
+        vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
+        vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.N);
+        Assert.Equal(PortType.Wood, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+
+        port = gs.Ports[2];
+        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.N);
+        vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.NE);
+        Assert.Equal(PortType.Brick, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+
+        port = gs.Ports[3];
+        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
+        vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.NE);
+        Assert.Equal(PortType.Ore, port.Type);
+        Assert.Contains(port.Vertices, v => v.Id == vertex1.Id);
+        Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
+    }
+
 }

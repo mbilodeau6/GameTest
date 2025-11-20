@@ -12,7 +12,7 @@ public class BotAITests
     private static GameState CreateBoardForSetupTest(GameStates state)
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
 
         gs.Phase = new GamePhase(state, gs.Players.First(p => p.IsBot == true));
 
@@ -23,7 +23,7 @@ public class BotAITests
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
         GamePlayHelpers.MarkBlockedVertices(gs);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
 
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players.First(p => p.IsBot == true));
 
@@ -34,7 +34,7 @@ public class BotAITests
     {
         var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
         var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
-        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, woodTile, null);
+        var edge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, woodTile, null);
         edge.BuildRoad(player);
 
         return edge;
@@ -44,7 +44,7 @@ public class BotAITests
     {
         var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
         var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
-        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, wool2Tile, woodTile, null, null);
+        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wool2Tile, woodTile, null, null);
         vertex.BuildSettlement(player);
 
         return vertex;
@@ -55,9 +55,9 @@ public class BotAITests
         var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
         var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
         var wool11Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
-        var e1 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
+        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
         e1.BuildRoad(player);
-        var e2 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, wool11Tile, oreTile, null);
+        var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, wool11Tile, oreTile, null);
         e2.BuildRoad(player);
     }
 
@@ -65,7 +65,7 @@ public class BotAITests
     {
         var wool11Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
         var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, wool11Tile, oreTile, null, null);
+        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wool11Tile, oreTile, null, null);
         vertex.BuildSettlement(player);
 
         return vertex;
@@ -159,7 +159,7 @@ public class BotAITests
         var bai = new BotAI(gs);
 
         var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
+        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
         var botPlayer = GetBotPlayer(gs);
         vertex.BuildSettlement(botPlayer);
 
@@ -210,12 +210,12 @@ public class BotAITests
 
         var botPlayer = GetBotPlayer(gs);
         var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var v1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
         v1.BuildSettlement(botPlayer);
         v1.Edges[0].BuildRoad(botPlayer);
 
         var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
-        var v2 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, null, null, VertexDirection.NW);
+        var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, null, null, VertexDirection.NW);
         v2.BuildSettlement(botPlayer);
 
         var bai = new BotAI(gs);
@@ -313,11 +313,11 @@ public class BotAITests
         var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
         var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
         var sheepTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
-        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, desertTile, brickTile, sheepTile, null);
+        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, desertTile, brickTile, sheepTile, null);
         vertex.BuildSettlement(botPlayer);
         GamePlayHelpers.MarkBlockedVertices(gs, vertex);
 
-        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, desertTile, sheepTile, null);
+        var edge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, desertTile, sheepTile, null);
         edge.BuildRoad(botPlayer);
 
         botPlayer.Resources[ResourceType.Brick] = 1;

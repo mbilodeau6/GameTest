@@ -87,7 +87,7 @@ public class AIHelpersTests
 
         var tile1 = gs.Tiles.First(t => t.Resource == ResourceType.Brick);
         var tile2 = gs.Tiles.First(t => t.Resource == ResourceType.Desert);
-        var vertex2 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
+        var vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
         vertex2.BuildSettlement(gs.Phase.CurrentPlayer);
 
         var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(gs);
@@ -113,26 +113,26 @@ public class AIHelpersTests
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
         GamePlayHelpers.MarkBlockedVertices(gs);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
 
         Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
         gs.Phase.CurrentPlayer = gs.Players[0];
 
         var brickTile = gs.Tiles.First(t => t.Resource == ResourceType.Brick);
-        var e1 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, null, HexDirection.SW);
+        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, null, HexDirection.SW);
         e1.BuildRoad(gs.Phase.CurrentPlayer);
         var wool2Tile = gs.Tiles.First(t => t.Resource == ResourceType.Wool && t.DiceNumber == 2);
-        var e2 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, null, HexDirection.W);
+        var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, null, HexDirection.W);
         e2.BuildRoad(gs.Phase.CurrentPlayer);
         var grainTile = gs.Tiles.First(t => t.Resource == ResourceType.Grain);
-        var e3 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, brickTile, null);
+        var e3 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, brickTile, null);
         e3.BuildRoad(gs.Phase.CurrentPlayer);
         var dessertTile = gs.Tiles.First(t => t.Resource == ResourceType.Desert);
-        var e4 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, dessertTile, grainTile, null);
+        var e4 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, dessertTile, grainTile, null);
         e4.BuildRoad(gs.Phase.CurrentPlayer);
 
         var wool11Tile = gs.Tiles.First(t => t.Resource == ResourceType.Wool && t.DiceNumber == 11);
-        var expectedVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, wool11Tile, grainTile, dessertTile, null);
+        var expectedVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wool11Tile, grainTile, dessertTile, null);
 
         var vertexForSettlement = AIHelpers.GetVertexReadyForSettlement(gs);
 
@@ -143,14 +143,14 @@ public class AIHelpersTests
     private GameState CreateGameStateForOwnershipTesting()
     {
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
-        var v1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.Wool2Tile, null, null);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.Wool2Tile, null, null);
         v1.BuildSettlement(TH.HumanPlayer);
-        var v3 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.GrainTile, TH.WoodTile, null);
+        var v3 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.GrainTile, TH.WoodTile, null);
         v3.BuildSettlement(TH.HumanPlayer);
-        var v39 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.OreTile, TH.Wool5Tile, null);
+        var v39 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.OreTile, TH.Wool5Tile, null);
         v39.BuildSettlement(TH.HumanPlayer);
-        var v52 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.BrickTile, TH.OreTile, null, null);
+        var v52 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.BrickTile, TH.OreTile, null, null);
         v52.BuildSettlement(TH.HumanPlayer);
 
         return gs;
@@ -161,7 +161,7 @@ public class AIHelpersTests
     {
         // Arrange
         var gs = CreateGameStateForOwnershipTesting();
-        var expectedVertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.Wool2Tile, null, null);
+        var expectedVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.DesertTile, TH.Wool2Tile, null, null);
 
         // Act
         var vertices = AIHelpers.GetAllOwnedBuildings(gs, TH.HumanPlayer);
@@ -213,39 +213,39 @@ public class AIHelpersTests
         var t19 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
 
         // Place green opponent pieces (blocking)
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t3, null, null, VertexDirection.SW).BuildSettlement(gs.Players[2]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t3, null, HexDirection.W).BuildRoad(gs.Players[2]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t3, null, HexDirection.NW).BuildRoad(gs.Players[2]);
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t12, t13, t18, null).BuildSettlement(gs.Players[2]);
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t13, t2, null).BuildSettlement(gs.Players[2]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t2, null, HexDirection.NW).BuildRoad(gs.Players[2]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t2, t1, null).BuildRoad(gs.Players[2]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t1, t13, null).BuildRoad(gs.Players[2]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t12, t13, null).BuildRoad(gs.Players[2]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t3, null, null, VertexDirection.SW).BuildSettlement(gs.Players[2]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t3, null, HexDirection.W).BuildRoad(gs.Players[2]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t3, null, HexDirection.NW).BuildRoad(gs.Players[2]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t12, t13, t18, null).BuildSettlement(gs.Players[2]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t13, t2, null).BuildSettlement(gs.Players[2]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t2, null, HexDirection.NW).BuildRoad(gs.Players[2]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t2, t1, null).BuildRoad(gs.Players[2]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, t13, null).BuildRoad(gs.Players[2]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t12, t13, null).BuildRoad(gs.Players[2]);
 
         // Place red opponent pieces (blocking)
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t9, t10, t17, null).BuildSettlement(gs.Players[0]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t18, t10, null).BuildRoad(gs.Players[0]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t17, t10, null).BuildRoad(gs.Players[0]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t17, t9, null).BuildRoad(gs.Players[0]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t17, t8, null).BuildRoad(gs.Players[0]);
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t7, t8, null, null).BuildSettlement(gs.Players[0]);
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t16, t6, t7, null).BuildSettlement(gs.Players[0]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t7, t8, null).BuildRoad(gs.Players[0]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t7, t16, null).BuildRoad(gs.Players[0]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t6, t7, null).BuildRoad(gs.Players[0]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t9, t10, t17, null).BuildSettlement(gs.Players[0]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t18, t10, null).BuildRoad(gs.Players[0]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t17, t10, null).BuildRoad(gs.Players[0]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t17, t9, null).BuildRoad(gs.Players[0]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t17, t8, null).BuildRoad(gs.Players[0]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t7, t8, null, null).BuildSettlement(gs.Players[0]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t16, t6, t7, null).BuildSettlement(gs.Players[0]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t7, t8, null).BuildRoad(gs.Players[0]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t7, t16, null).BuildRoad(gs.Players[0]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t6, t7, null).BuildRoad(gs.Players[0]);
 
         // Place pre-existing blue (current-player) pieces
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t13, t14, t19, null).BuildSettlement(gs.Players[1]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t14, t19, null).BuildRoad(gs.Players[1]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t15, t19, null).BuildRoad(gs.Players[1]);
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t4, t5, null, null).BuildSettlement(gs.Players[1]);
-        GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t15, t6, t5, null).BuildSettlement(gs.Players[1]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t4, t5, null).BuildRoad(gs.Players[1]);
-        GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, t15, t5, null).BuildRoad(gs.Players[1]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t13, t14, t19, null).BuildSettlement(gs.Players[1]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t14, t19, null).BuildRoad(gs.Players[1]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t15, t19, null).BuildRoad(gs.Players[1]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t4, t5, null, null).BuildSettlement(gs.Players[1]);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t15, t6, t5, null).BuildSettlement(gs.Players[1]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t4, t5, null).BuildRoad(gs.Players[1]);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t15, t5, null).BuildRoad(gs.Players[1]);
 
         GamePlayHelpers.MarkBlockedVertices(gs);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
 
         var rankedGoals = AIHelpers.GetRankedListOfVertexTargets(gs, AIHelpers.GetAllOwnedBuildings(gs, gs.Phase.CurrentPlayer));
 
@@ -255,66 +255,66 @@ public class AIHelpersTests
             Assert.Null(goal.TargetVertex.Building);
         }
         
-        var v16 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t2, t3, null, null);
+        var v16 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t2, t3, null, null);
         var g16 = rankedGoals.First(g => g.TargetVertex.Id == v16.Id);
         Assert.NotNull(g16);
         Assert.Equal(3, g16.RoadsNeeded);
 
-        var v17 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t2, null, null, VertexDirection.NW);
+        var v17 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t2, null, null, VertexDirection.NW);
         var g17 = rankedGoals.First(g => g.TargetVertex.Id == v17.Id);
         Assert.NotNull(g17);
         Assert.Equal(4, g17.RoadsNeeded);
         Assert.True(g16.OverallScore > g17.OverallScore); // g17 needs more roads and provide less resources
 
-        var v15 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t2, t3, t14, null);
+        var v15 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t2, t3, t14, null);
         var g15 = rankedGoals.First(g => g.TargetVertex.Id == v15.Id);
         Assert.NotNull(g15);
         Assert.Equal(2, g15.RoadsNeeded);
         Assert.True(g15.OverallScore > g16.OverallScore); // g16 needs more roads and provides less resources
 
-        var v18 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t3, t14, t4, null);
+        var v18 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t3, t14, t4, null);
         var g18 = rankedGoals.First(g => g.TargetVertex.Id == v18.Id);
         Assert.NotNull(g18);
         Assert.Equal(2, g18.RoadsNeeded);
 
 
-        var v22 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t14, t4, t15, null);
+        var v22 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t14, t4, t15, null);
         var g22 = rankedGoals.First(g => g.TargetVertex.Id == v22.Id);
         Assert.NotNull(g22);
         Assert.Equal(1, g22.RoadsNeeded);
         Assert.True(g22.OverallScore > g18.OverallScore); // g18 needs more roads and provides less valuable resources
 
-        var v2 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t18, t19, t17, null);
+        var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t18, t19, t17, null);
         var g2 = rankedGoals.First(g => g.TargetVertex.Id == v2.Id);
         Assert.NotNull(g2);
         Assert.Equal(2, g2.RoadsNeeded);
 
-        var v3 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t19, t17, t16, null);
+        var v3 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t19, t17, t16, null);
         var g3 = rankedGoals.First(g => g.TargetVertex.Id == v3.Id);
         Assert.NotNull(g3);
         Assert.Equal(1, g3.RoadsNeeded);
 
-        var v4 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t19, t15, t16, null);
+        var v4 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t19, t15, t16, null);
         var g4 = rankedGoals.First(g => g.TargetVertex.Id == v4.Id);
         Assert.NotNull(g4);
         Assert.Equal(0, g4.RoadsNeeded);
 
-        var v34 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t17, t16, t8, null);
+        var v34 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t17, t16, t8, null);
         var g34 = rankedGoals.First(g => g.TargetVertex.Id == v34.Id);
         Assert.NotNull(g34);
         Assert.Equal(2, g34.RoadsNeeded);
 
-        var v28 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t5, null, null, VertexDirection.S);
+        var v28 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t5, null, null, VertexDirection.S);
         var g28 = rankedGoals.First(g => g.TargetVertex.Id == v28.Id);
         Assert.NotNull(g28);
         Assert.Equal(2, g28.RoadsNeeded);
 
-        var v33 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t6, null, null, VertexDirection.S);
+        var v33 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t6, null, null, VertexDirection.S);
         var g33 = rankedGoals.First(g => g.TargetVertex.Id == v33.Id);
         Assert.NotNull(g33);
         Assert.Equal(2, g33.RoadsNeeded);
 
-        var v38 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, t7, null, null, VertexDirection.S);
+        var v38 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t7, null, null, VertexDirection.S);
         var g38 = rankedGoals.First(g => g.TargetVertex.Id == v38.Id);
         Assert.NotNull(g38);
         Assert.Equal(4, g38.RoadsNeeded);
@@ -327,17 +327,17 @@ public class AIHelpersTests
         // Create board state where HumanPlayer has built settlements that divide the board in half and
         // BotPlayer has a settlement in both halves.
         var gs = CreateGameStateForOwnershipTesting();
-        var v35 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.GrainTile, TH.Wool5Tile, null, null);
+        var v35 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.GrainTile, TH.Wool5Tile, null, null);
         v35.BuildSettlement(TH.BotPlayer);
-        var e44 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, TH.GrainTile, TH.Wool5Tile, null);
+        var e44 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.GrainTile, TH.Wool5Tile, null);
         e44.BuildRoad(TH.BotPlayer);
-        var v42 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.WoodTile, TH.BrickTile, null);
+        var v42 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.WoodTile, TH.BrickTile, null);
         v42.BuildSettlement(TH.BotPlayer);
         GamePlayHelpers.MarkBlockedVertices(gs);
         gs.Phase.CurrentPlayer = TH.BotPlayer;
         gs.Phase.PhaseState = GameStates.PlaceSecondRoad;
 
-        var expectedEdge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, TH.Wool2Tile, TH.BrickTile, null);
+        var expectedEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.Wool2Tile, TH.BrickTile, null);
 
         // Make sure when we ask the AI to pick an edge from V42, it ranks the the vertices to show preference
         // for the road going away (North) from HumanPlayer's effective blockaid that splits the board.
@@ -360,7 +360,7 @@ public class AIHelpersTests
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         gs.Vertices[0].BuildSettlement(gs.Players[0]);
         GamePlayHelpers.MarkBlockedVertices(gs);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
 
         // Act
         var vertex = AIHelpers.FindVertexWithoutRoads(gs, gs.Players[0]);
@@ -377,7 +377,7 @@ public class AIHelpersTests
     {
         // Arrange
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
         gs.Vertices[0].BuildSettlement(gs.Players[0]);
         gs.Vertices[0].Edges[0].BuildRoad(gs.Players[0]);
         gs.Vertices[2].BuildSettlement(gs.Players[1]); // Opponents settlment
@@ -394,7 +394,7 @@ public class AIHelpersTests
     public void FindVertexWithoutRoads_TwoSettelments_OneWithoutRoad()
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
         gs.Vertices[0].BuildSettlement(gs.Players[0]);
         gs.Vertices[0].Edges[0].BuildRoad(gs.Players[0]);
         gs.Vertices[2].BuildSettlement(gs.Players[1]); // Opponents settlment
@@ -416,7 +416,7 @@ public class AIHelpersTests
     public void FindVertexWithoutRoads_TwoSettelments_BothHaveRoad()
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
         gs.Vertices[0].BuildSettlement(gs.Players[0]);
         gs.Vertices[0].Edges[0].BuildRoad(gs.Players[0]);
         gs.Vertices[2].BuildSettlement(gs.Players[1]); // Opponents settlment
@@ -435,7 +435,7 @@ public class AIHelpersTests
     public void FindVertexWithoutRoads_TwoSettelmentsWithoutRoad_Exception()
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        GamePlayHelpers.LinkEdgesAndVertices(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
         gs.Vertices[0].BuildSettlement(gs.Players[0]);
         gs.Vertices[2].BuildSettlement(gs.Players[1]); // Opponents settlment
         gs.Vertices[4].BuildSettlement(gs.Players[0]);
