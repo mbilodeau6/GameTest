@@ -19,6 +19,7 @@ public class GameStateDTO
     public List<TileDTO> Tiles { get; } = new();
     public List<EdgeDTO> Edges { get; } = new();
     public List<VertexDTO> Vertices { get; } = new();
+    public List<PortDTO> Ports {get; } = new();
 
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
@@ -27,7 +28,8 @@ public class GameStateDTO
         GameDice? dice = null, GamePhaseDTO? phase = null,
         string? hasLongestRoadPlayerId = null, string? hasLargestArmyPlayerId = null,
         List<PlayerDTO>? players = null, List<TileDTO>? tiles = null,
-        List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null)
+        List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null,
+        List<PortDTO>? ports = null)
     {
         Id = id ?? string.Empty;
         Settings = settings;
@@ -45,6 +47,9 @@ public class GameStateDTO
 
         foreach (var vertex in vertices ?? Enumerable.Empty<VertexDTO>())
             Vertices.Add(vertex);
+
+        foreach (var port in ports ?? Enumerable.Empty<PortDTO>())
+            Ports.Add(port);
 
         Phase = phase;
         HasLongestRoadPlayerId = hasLongestRoadPlayerId ?? string.Empty;
@@ -73,6 +78,9 @@ public class GameStateDTO
         foreach (var vertex in dto.Vertices)
             Vertices.Add(vertex);
 
+        foreach (var port in dto.Ports)
+            Ports.Add(port);
+
         Dice = dto.Dice;
     }
 
@@ -92,6 +100,9 @@ public class GameStateDTO
 
         foreach (var vertex in gameState.Vertices)
             Vertices.Add(new VertexDTO(vertex));
+
+        foreach (var port in gameState.Ports)
+            Ports.Add(new PortDTO(port));
 
         if (gameState.RobberTile != null)
             RobberTileId = gameState.RobberTile.Id;

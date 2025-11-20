@@ -1,6 +1,7 @@
 using Xunit;
 using GameTest.Services;
 using GameTest.Models;
+using Microsoft.Net.Http.Headers;
 
 namespace GameTest.Tests;
 
@@ -167,6 +168,30 @@ public class BoardCreationHelpersTests
     }
 
     [Fact]
+    public void CreateEdgesAndVerticesForDefaultBoard_AllCreated()
+    {
+        // Act
+        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Default);
+
+        gameState.Players.Add(new Player("Alice", PlayerColor.Red));
+        gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
+
+        // Assert
+        Assert.Equal(72, gameState.Edges.Count);
+        Assert.Equal(54, gameState.Vertices.Count);
+        Assert.True(TestHelpers.IsGameStateValid(gameState));
+
+        // Check that corner tile at (0, 2) has edges and vertices connected correctly
+        var t1 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 2);
+        Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t1)));
+        Assert.Equal(2, gameState.Edges.Count(e => e.Tiles.Contains(t1) && e.Direction != null));
+        Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t1)));
+        var v1 = gameState.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Direction != null);
+        Assert.NotNull(v1);
+        Assert.Equal(VertexDirection.S, v1.Direction);
+    }
+
+    [Fact]
     public void AddPlayers_AddTwoPlayers()
     {
         // Arrange
@@ -179,5 +204,34 @@ public class BoardCreationHelpersTests
         Assert.Equal(2, gameState.Players.Count);
         Assert.Contains(gameState.Players, p => p.Name == "Lisa" && p.Color == PlayerColor.Red);
         Assert.Contains(gameState.Players, p => p.Name == "Hal" && p.Color == PlayerColor.Blue);
+    }
+
+    private void ValidatePortsForStandardBoard(GameState gs)
+    {
+        // Make sure each port type is included
+        Assert.Equal(9, gs.Ports.Count);
+        Assert.Equal(4, gs.Ports.Count(p => p.Type == PortType.ThreeToOne));
+        Assert.Single(gs.Ports, p => p.Type == PortType.Wood);
+        Assert.Single(gs.Ports, p => p.Type == PortType.Brick);
+        Assert.Single(gs.Ports, p => p.Type == PortType.Grain);
+        Assert.Single(gs.Ports, p => p.Type == PortType.Wool);
+        Assert.Single(gs.Ports, p => p.Type == PortType.Ore);
+
+        var referencedVertexIds = new HashSet<string>();
+        
+        // Make sure each port has two vertices, that the vertices are on the water,
+        // and that no vertex is referenced more than once.
+        // TODO: Make sure the ports are evenly spaced.
+        foreach (var port in gs.Ports)
+        {
+            Assert.Equal(2, port.Vertices.Count);
+            foreach (var vertex in port.Vertices)
+            {
+                Assert.DoesNotContain(vertex.Id, referencedVertexIds);
+                referencedVertexIds.Add(vertex.Id);
+                Assert.True(vertex.Tiles.Count >= 1 && vertex.Tiles.Count <= 2);
+            }
+        }
+
     }
 }

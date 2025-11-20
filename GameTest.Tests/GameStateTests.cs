@@ -15,6 +15,9 @@ public class GameStateTests
         // Assert
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
+        Assert.Empty(game.Edges);
+        Assert.Empty(game.Vertices);
+        Assert.Empty(game.Ports);
         Assert.Null(game.RobberTile);
         Assert.Null(game.PlayerWithLongestRoad);
         Assert.Null(game.PlayerWithLargestArmy);
@@ -61,11 +64,11 @@ public class GameStateTests
         Assert.Equal(dto.Id, game.Id.ToString());
         Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
 
-        // TODO: Add tests to verify players, tiles, edges, vertices once those DTOs are implemented
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
         Assert.Empty(game.Edges);
         Assert.Empty(game.Vertices);
+        Assert.Empty(game.Ports);
     }
 
     [Fact]
@@ -103,10 +106,17 @@ public class GameStateTests
         gs.AddTile(tile2);
         gs.AddEdge(new Edge(tile1, HexDirection.NE));
         gs.Edges[0].BuildRoad(player2);
-        gs.AddVertex(new Vertex(tile1, tile2));
-        gs.Vertices[0].BuildSettlement(player1);
+
+        var vertex1 = new Vertex(tile1, tile2); 
+        vertex1.BuildSettlement(player1);
+        gs.AddVertex(vertex1);
+        var vertex2 = new Vertex(tile2, VertexDirection.N);
+        gs.AddVertex(vertex2);
+        
         gs.SetRobberTile(tile1);
         gs.Phase = new GamePhase(GameStates.SettingUpBoard, player1, player2);
+
+        gs.Ports.Add(new Port(vertex1, vertex2, PortType.ThreeToOne));
 
         var dto = new GameStateDTO(gs);
 
@@ -130,7 +140,7 @@ public class GameStateTests
         Assert.Single(game.Edges);
         Assert.NotNull(game.Edges[0].Owner);
         Assert.Equal(player2.Id, game.Edges[0].Owner.Id);
-        Assert.Single(game.Vertices);
+        Assert.Equal(2, game.Vertices.Count);
         Assert.Equal(BuildingType.Settlement, game.Vertices[0].Building);
         Assert.Equal(gs.Phase.PhaseState, game.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -141,6 +151,8 @@ public class GameStateTests
         Assert.Equal(gs.Phase.EndPlayer.Id, game.Phase.EndPlayer.Id);
         Assert.False(gs.Dice.Die1.Random);
         Assert.False(gs.Dice.Die2.Random);
+        Assert.Single(game.Ports);
+        Assert.Equal(PortType.ThreeToOne, game.Ports[0].Type);
     }
 
     [Fact]

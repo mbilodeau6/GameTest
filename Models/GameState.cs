@@ -30,7 +30,7 @@ public class GameState
 
     public GamePhase Phase { get; set; } = new GamePhase(GameStates.SettingUpBoard);
 
-    // Future: Add collections for Ports
+    public List<Port> Ports {get; } = new();
 
     private void InitializeDevelopmentCards()
     {
@@ -100,6 +100,9 @@ public class GameState
         foreach (var vertexDto in dto.Vertices)
             Vertices.Add(new Vertex(vertexDto, Players, Tiles));
 
+        foreach (var portDto in dto.Ports)
+            Ports.Add(new Port(portDto, Vertices));
+
         Dice = dto.Dice;
 
         if (dto.Phase != null)
@@ -124,6 +127,11 @@ public class GameState
     public void AddVertex(Vertex vertex)
     {
         Vertices.Add(vertex);
+    }
+
+    public void AddPort(Port port)
+    {
+        Ports.Add(port);
     }
 
     public void SetRobberTile(Tile tile)

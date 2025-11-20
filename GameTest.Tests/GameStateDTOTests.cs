@@ -28,6 +28,9 @@ public class GameStateDTOTests
         gameState.Vertices.Add(new Vertex(tile1, tile2));
         gameState.Vertices[0].BuildSettlement(player1);
         gameState.SetRobberTile(tile2);
+        gameState.Vertices.Add(new Vertex(tile1, VertexDirection.SW));
+
+        gameState.Ports.Add(new Port(gameState.Vertices[0], gameState.Vertices[1], PortType.Ore));
 
         gameState.Players[0].AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
         gameState.Players[0].AssignResources(ResourceType.Ore, 2);
@@ -56,7 +59,7 @@ public class GameStateDTOTests
         Assert.Equal(2, gameStateDTO.Tiles.Count);
         Assert.Equal("Brick", gameStateDTO.Tiles[0].Resource);
         Assert.Equal(3, gameStateDTO.Edges.Count);
-        Assert.Single(gameStateDTO.Vertices);
+        Assert.Equal(2, gameStateDTO.Vertices.Count);
         Assert.Equal("Settlement", gameStateDTO.Vertices[0].Building);
         Assert.Equal(gameState.Id.ToString(), gameStateDTO.Id);
         Assert.Equal("Default", gameStateDTO.Settings.Type.ToString());
@@ -67,6 +70,8 @@ public class GameStateDTOTests
             Assert.Equal(gameState.Phase.CurrentPlayer.Id, gameStateDTO.Phase.CurrentPlayerId);
         Assert.Equal(gameState.Phase.PhaseState.ToString(), gameStateDTO.Phase.PhaseState);
         Assert.True(gameStateDTO.Dice.Die1.Random);
+        Assert.Single(gameStateDTO.Ports);
+        Assert.Equal(PortType.Ore.ToString(), gameStateDTO.Ports[0].Type);
     }
 
     [Fact]
