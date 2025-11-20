@@ -32,4 +32,18 @@ public class Port
 
         Type = type;
     }
+
+    public Port(PortDTO portDto, List<Vertex> vertices)
+    {
+        Id = portDto.Id;
+        Type = Enum.Parse<PortType>(portDto.Type);
+        
+        Vertices = new List<Vertex>();
+        foreach (var vertexId in portDto.Vertices)
+        {
+            var vertex = vertices.FirstOrDefault(v => v.Id == vertexId);
+            if (vertex != null)
+                Vertices.Add(vertex);
+        }
+    }
 }

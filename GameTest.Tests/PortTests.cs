@@ -63,4 +63,30 @@ public class PortTests
         Assert.Equal(PortType.Wood, port.Type);
         Assert.NotEmpty(port.Id);
     }
+
+    [Fact]
+    public void Constructor_DTO_Valid()
+    {
+        // Arrange
+        var vertices = new List<Vertex>();
+        var tile1 = new Tile(ResourceType.Wood, 8, 0, 0);
+        var tile2 = new Tile(ResourceType.Brick, 9, 2, 0);
+        var vertex1 = new Vertex(tile1, tile2);
+        var vertex2 = new Vertex(tile2, VertexDirection.N);
+        vertices.Add(vertex1);
+        vertices.Add(vertex2);
+
+        var expectedPort = new Port(vertex1, vertex2, PortType.Wood);
+        var portDto = new PortDTO(expectedPort);
+
+        // Act
+        var port = new Port(portDto, vertices);
+
+        // Assert
+        Assert.Equal(expectedPort.Id, port.Id);
+        Assert.Equal(expectedPort.Vertices.Count, port.Vertices.Count);
+        Assert.Contains(vertex1, port.Vertices);
+        Assert.Contains(vertex2, port.Vertices);
+        Assert.Equal(expectedPort.Type, port.Type);
+    }
 }
