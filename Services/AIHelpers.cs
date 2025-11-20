@@ -58,7 +58,7 @@ public static class AIHelpers
 
     public static Vertex? GetSettlementToUpgrade(GameState gs)
     {
-        if (gs.Phase.CurrentPlayer != null && GamePlayHelpers.HasResourcesToBuildCity(gs.Phase.CurrentPlayer))
+        if (gs.Phase.CurrentPlayer != null)
         {
             var baseRates = GetBaseResourceAcquisitionRates(gs, gs.Phase.CurrentPlayer);
             var ownedSettlements = gs.Vertices.Where(v => GamePlayHelpers.HasBuilding(v)
@@ -84,10 +84,12 @@ public static class AIHelpers
             var baseRates = GetBaseResourceAcquisitionRates(gs, gs.Phase.CurrentPlayer);
             var options = new List<GoalStats>();
 
-            foreach (var edge in gs.Edges.Where(e => e.Owner != null && e.Owner.Id == gs.Phase.CurrentPlayer.Id))
-                foreach (var vertex in edge.Vertices)
-                    if (vertex.Building == null)
-                        options.Add(new GoalStats(vertex, 4, baseRates, 0, null));
+            foreach (var v1 in gs.Vertices.Where(v => v.Owner != null && v.Owner.Id == gs.Phase.CurrentPlayer.Id))
+                foreach (var e1 in v1.Edges.Where(e => e.Owner != null && e.Owner.Id == gs.Phase.CurrentPlayer.Id))
+                    foreach (var v2 in e1.Vertices.Where(v => v.Owner == null && v.Building == BuildingType.Blocked))
+                        foreach (var e2 in v2.Edges.Where(e => e.Owner != null && e.Owner.Id == gs.Phase.CurrentPlayer.Id))
+                            foreach (var v3 in e2.Vertices.Where(v => v.Owner == null && v.Building == null))
+                                options.Add(new GoalStats(v3, 4, baseRates, 0, null));
 
             if (options.Count == 0)
                 return null;    
@@ -182,4 +184,54 @@ public static class AIHelpers
         else
             return null;
     }
+
+    public static Dictionary<ResourceType, int> CalculateResourcesNeededForRoad(Dictionary<ResourceType, int> ownedResources)
+    {
+        var needed = new Dictionary<ResourceType, int>();
+
+        if (!ownedResources.ContainsKey(ResourceType.Wood) || ownedResources[ResourceType.Wood] == 0)
+            needed.Add(ResourceType.Wood, 1);
+
+        if (!ownedResources.ContainsKey(ResourceType.Brick) || ownedResources[ResourceType.Brick] == 0)
+            needed.Add(ResourceType.Brick, 1);
+
+        return needed;
+    }
+
+    public static Dictionary<ResourceType, int> CalculateResourcesNeededForSettlement(Dictionary<ResourceType, int> ownedResources)
+    {
+        var needed = new Dictionary<ResourceType, int>();
+
+        if (!ownedResources.ContainsKey(ResourceType.Wood) || ownedResources[ResourceType.Wood] == 0)
+            needed.Add(ResourceType.Wood, 1);
+
+        if (!ownedResources.ContainsKey(ResourceType.Brick) || ownedResources[ResourceType.Brick] == 0)
+            needed.Add(ResourceType.Brick, 1);
+
+        if (!ownedResources.ContainsKey(ResourceType.Wool) || ownedResources[ResourceType.Wool] == 0)
+            needed.Add(ResourceType.Wool, 1);
+
+        if (!ownedResources.ContainsKey(ResourceType.Grain) || ownedResources[ResourceType.Grain] == 0)
+            needed.Add(ResourceType.Grain, 1);
+
+        return needed;
+    }
+
+    public static Dictionary<ResourceType, int> CalculateResourcesNeededForCity(Dictionary<ResourceType, int> ownedResources)
+    {
+        var needed = new Dictionary<ResourceType, int>();
+
+        if (!ownedResources.ContainsKey(ResourceType.Ore))
+            needed.Add(ResourceType.Ore, 3);
+        else if (ownedResources[ResourceType.Ore] < 3)
+            needed.Add(ResourceType.Ore, 3 - ownedResources[ResourceType.Ore]);
+
+        if (!ownedResources.ContainsKey(ResourceType.Grain))
+            needed.Add(ResourceType.Grain, 2);
+        else if (ownedResources[ResourceType.Grain] < 2)
+            needed.Add(ResourceType.Grain, 2 - ownedResources[ResourceType.Grain]);
+
+        return needed;
+    }
+
 }

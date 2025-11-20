@@ -9,20 +9,76 @@ namespace GameTest.Tests;
 
 public class BotAITests
 {
-    private GameState CreateBoardForSetupTest(GameStates state)
+    private static GameState CreateBoardForSetupTest(GameStates state)
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         GamePlayHelpers.LinkEdgesAndVertices(gs);
-        gs.Players.Clear();
 
-        var player1 = new Player("Bot", PlayerColor.Blue, true);
-        gs.Players.Add(player1);
-        var player2 = new Player("Henry", PlayerColor.Red);
-        gs.Players.Add(player2);
-
-        gs.Phase = new GamePhase(state, player1);
+        gs.Phase = new GamePhase(state, gs.Players.First(p => p.IsBot == true));
 
         return gs;
+    }
+
+    private static GameState CreateBoardForBuildTest()
+    {
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        GamePlayHelpers.MarkBlockedVertices(gs);
+        GamePlayHelpers.LinkEdgesAndVertices(gs);
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players.First(p => p.IsBot == true));
+
+        return gs;
+    }
+
+    private static Edge BuildRoadOnWool2WoodEdge(GameState gs, Player player)
+    {
+        var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
+        var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, woodTile, null);
+        edge.BuildRoad(player);
+
+        return edge;
+    }
+
+    private static Vertex BuildSettlementOnWool2WoodVertex(GameState gs, Player player)
+    {
+        var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
+        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, wool2Tile, woodTile, null, null);
+        vertex.BuildSettlement(player);
+
+        return vertex;
+    }
+
+    private static void BuildRoadsOnOreEdges(GameState gs, Player player)
+    {
+        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var wool11Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var e1 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
+        e1.BuildRoad(player);
+        var e2 = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, wool11Tile, oreTile, null);
+        e2.BuildRoad(player);
+    }
+
+    private static Vertex BuildSettlementOnWool11OreVertex(GameState gs, Player player)
+    {
+        var wool11Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, wool11Tile, oreTile, null, null);
+        vertex.BuildSettlement(player);
+
+        return vertex;
+    }
+
+    private static Player GetBotPlayer(GameState gs)
+    {
+        return gs.Players.First(p => p.IsBot);
+    }
+
+    private static Player GetHumanPlayer(GameState gs)
+    {
+        return gs.Players.First(p => !p.IsBot);
     }
 
     [Fact]
@@ -68,7 +124,7 @@ public class BotAITests
     public void GetSetUpMove_WrongCurrentState()
     {
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, GetBotPlayer(gs), GetHumanPlayer(gs));
 
         var bai = new BotAI(gs);
 
@@ -85,7 +141,7 @@ public class BotAITests
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceFirstSettlement);
         var bai = new BotAI(gs);
 
-        Assert.Equal(0, GamePlayHelpers.CountSettlementsForPlayer(gs, gs.Players[0]));
+        Assert.Equal(0, GamePlayHelpers.CountSettlementsForPlayer(gs, GetBotPlayer(gs)));
 
         // Act
         var move = bai.GetSetUpMove();
@@ -104,16 +160,17 @@ public class BotAITests
 
         var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
         var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
-        vertex.BuildSettlement(gs.Players[0]);
+        var botPlayer = GetBotPlayer(gs);
+        vertex.BuildSettlement(botPlayer);
 
-        Assert.Equal(0, GamePlayHelpers.CountRoadsForPlayer(gs, gs.Players[0]));
+        Assert.Equal(0, GamePlayHelpers.CountRoadsForPlayer(gs, botPlayer));
 
         // Act
         var move = bai.GetSetUpMove();
 
         Assert.NotNull(move.EdgeMove);
         Assert.NotNull(move.EdgeMove.PlayerId);
-        Assert.Equal(gs.Players[0].Id, move.EdgeMove.PlayerId);
+        Assert.Equal(botPlayer.Id, move.EdgeMove.PlayerId);
         Assert.Null(move.VertexMove);
 
         var edge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
@@ -127,12 +184,12 @@ public class BotAITests
     {
         // Arrange
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceSecondSettlement);
-        gs.Vertices[0].BuildSettlement(gs.Players[0]);
-        gs.Vertices[1].BuildSettlement(gs.Players[1]);
+        gs.Vertices[0].BuildSettlement(GetBotPlayer(gs));
+        gs.Vertices[1].BuildSettlement(GetHumanPlayer(gs));
 
         var bai = new BotAI(gs);
 
-        Assert.Equal(1, GamePlayHelpers.CountSettlementsForPlayer(gs, gs.Players[0]));
+        Assert.Equal(1, GamePlayHelpers.CountSettlementsForPlayer(gs, GetBotPlayer(gs)));
 
         // Act
         var move = bai.GetSetUpMove();
@@ -149,27 +206,28 @@ public class BotAITests
     {
         // Arrange
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceSecondRoad);
-        gs.Edges[0].BuildRoad(gs.Players[1]);
+        gs.Edges[0].BuildRoad(GetHumanPlayer(gs));
 
+        var botPlayer = GetBotPlayer(gs);
         var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
         var v1 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.NE);
-        v1.BuildSettlement(gs.Players[0]);
-        v1.Edges[0].BuildRoad(gs.Players[0]);
+        v1.BuildSettlement(botPlayer);
+        v1.Edges[0].BuildRoad(botPlayer);
 
         var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
         var v2 = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, null, null, VertexDirection.NW);
-        v2.BuildSettlement(gs.Players[0]);
+        v2.BuildSettlement(botPlayer);
 
         var bai = new BotAI(gs);
 
-        Assert.Equal(1, GamePlayHelpers.CountRoadsForPlayer(gs, gs.Players[0]));
+        Assert.Equal(1, GamePlayHelpers.CountRoadsForPlayer(gs, botPlayer));
 
         // Act
         var move = bai.GetSetUpMove();
 
         Assert.NotNull(move.EdgeMove);
         Assert.NotNull(move.EdgeMove.PlayerId);
-        Assert.Equal(gs.Players[0].Id, move.EdgeMove.PlayerId);
+        Assert.Equal(botPlayer.Id, move.EdgeMove.PlayerId);
         Assert.True(move.EdgeMove.Id != gs.Edges[0].Id);
         Assert.Null(move.VertexMove);
 
@@ -184,7 +242,7 @@ public class BotAITests
     public void GetPreRollMove_WrongCurrentState()
     {
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, GetBotPlayer(gs), GetHumanPlayer(gs));
 
         var bai = new BotAI(gs);
 
@@ -201,7 +259,7 @@ public class BotAITests
     public void GetPreRollMove_RollDice()
     {
         var gs = CreateBoardForSetupTest(GameStates.RollOrUseDevCard);
-        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, GetBotPlayer(gs), GetHumanPlayer(gs));
 
         var bai = new BotAI(gs);
 
@@ -217,7 +275,7 @@ public class BotAITests
     public void GetBuildMove_WrongCurrentState()
     {
         var gs = CreateBoardForSetupTest(GameStates.RollOrUseDevCard);
-        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, GetBotPlayer(gs), GetHumanPlayer(gs));
 
         var bai = new BotAI(gs);
 
@@ -231,7 +289,7 @@ public class BotAITests
     public void GetBuildMove_EndTurnIfNoResources()
     {
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, GetBotPlayer(gs), GetHumanPlayer(gs));
 
         var bai = new BotAI(gs);
 
@@ -249,27 +307,28 @@ public class BotAITests
     public void GetBuildMove_BuildRoadAndSettlement()
     {
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+        var botPlayer = GetBotPlayer(gs);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, GetHumanPlayer(gs));
 
         var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
         var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
         var sheepTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
         var vertex = GamePlayHelpers.GetVertexFromTileInfo(gs.Vertices, desertTile, brickTile, sheepTile, null);
-        vertex.BuildSettlement(gs.Players[0]);
+        vertex.BuildSettlement(botPlayer);
         GamePlayHelpers.MarkBlockedVertices(gs, vertex);
 
         var edge = GamePlayHelpers.GetEdgeFromTileInfo(gs.Edges, desertTile, sheepTile, null);
-        edge.BuildRoad(gs.Players[0]);
+        edge.BuildRoad(botPlayer);
 
-        gs.Players[0].Resources[ResourceType.Brick] = 1;
-        gs.Players[0].Resources[ResourceType.Wood] = 1;
+        botPlayer.Resources[ResourceType.Brick] = 1;
+        botPlayer.Resources[ResourceType.Wood] = 1;
 
         var bai = new BotAI(gs);
 
         var move = bai.GetBuildMove();
 
         Assert.NotNull(move.EdgeMove);
-        Assert.Equal(gs.Players[0].Id, move.EdgeMove.PlayerId);
+        Assert.Equal(botPlayer.Id, move.EdgeMove.PlayerId);
         var selectedEdge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
         Assert.Null(selectedEdge.Owner);
 
@@ -280,8 +339,9 @@ public class BotAITests
     [Fact]
     public void AnalyzePossibleBankTrades_NotEnoughResources_NoTradePossible()
     {
-        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Players[0].AssignResources(ResourceType.Wood, 3);
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+        botPlayer.AssignResources(ResourceType.Wood, 3);
 
         var bot = new BotAI(gs);
 
@@ -292,10 +352,11 @@ public class BotAITests
     }
 
     [Fact]
-    public void AnalyzePossibleBankTrades_NotEnoughResources_NeedOreForCity()
+    public void AnalyzePossibleBankTrades_NotEnoughResources_KeepOreForCity()
     {
-        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Players[0].AssignResources(ResourceType.Ore, 6);
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+        botPlayer.AssignResources(ResourceType.Ore, 4);
 
         var bot = new BotAI(gs);
 
@@ -303,15 +364,65 @@ public class BotAITests
 
         Assert.False(canTrade);
         Assert.Null(tradeRequest);
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_NeedSheepForSettlement_TradeOre()
+    {
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+
+        // Create city with two roads leading to a spot where a settlement could be built
+        var v1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == botPlayer.Id);
+        v1.UpgradeToCity();
+        BuildRoadOnWool2WoodEdge(gs, botPlayer);
+
+        botPlayer.AssignResources(ResourceType.Ore, 4);
+        botPlayer.AssignResources(ResourceType.Brick, 2);
+        botPlayer.AssignResources(ResourceType.Wood, 1);
+        botPlayer.AssignResources(ResourceType.Grain, 1);
+
+        var bot = new BotAI(gs);
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
+
+        Assert.True(canTrade);
+        Assert.NotNull(tradeRequest);
+        Assert.Contains(ResourceType.Ore, tradeRequest.Offer);
+        Assert.Contains(ResourceType.Wool, tradeRequest.Request);
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_NeedBrickForRoad_TradeOre()
+    {
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+        var v1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == botPlayer.Id);
+        v1.UpgradeToCity();
+
+        botPlayer.AssignResources(ResourceType.Ore, 4);
+        botPlayer.AssignResources(ResourceType.Wood, 1);
+        botPlayer.AssignResources(ResourceType.Grain, 1);
+
+        var bot = new BotAI(gs);
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
+
+        Assert.True(canTrade);
+        Assert.NotNull(tradeRequest);
+        Assert.Contains(ResourceType.Ore, tradeRequest.Offer);
+        Assert.Contains(ResourceType.Brick, tradeRequest.Request);
     }
 
     [Fact]
     public void AnalyzePossibleBankTrades_TradeRecommended_TradeWoodNotOre()
     {
-        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Players[0].AssignResources(ResourceType.Ore, 5);
-        gs.Players[0].AssignResources(ResourceType.Grain, 1);
-        gs.Players[0].AssignResources(ResourceType.Wood, 5);
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+
+        botPlayer.AssignResources(ResourceType.Ore, 5);
+        botPlayer.AssignResources(ResourceType.Grain, 1);
+        botPlayer.AssignResources(ResourceType.Wood, 5);
 
         var bot = new BotAI(gs);
 
@@ -326,13 +437,67 @@ public class BotAITests
     }
 
     [Fact]
-    public void AnalyzePossibleBankTrades_TradeRecommended_TradeWoodForWool()
+    public void AnalyzePossibleBankTrades_BetterToBuildRoad_TradeWoolForBrick()
     {
-        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        gs.Players[0].AssignResources(ResourceType.Ore, 2);
-        gs.Players[0].AssignResources(ResourceType.Grain, 1);
-        gs.Players[0].AssignResources(ResourceType.Wood, 5);
-        gs.Players[0].AssignResources(ResourceType.Brick, 1);
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+
+        botPlayer.AssignResources(ResourceType.Ore, 1);
+        botPlayer.AssignResources(ResourceType.Grain, 1);
+        botPlayer.AssignResources(ResourceType.Wood, 2);
+        botPlayer.AssignResources(ResourceType.Wool, 4);
+
+        var bot = new BotAI(gs);
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
+
+        Assert.True(canTrade);
+        Assert.NotNull(tradeRequest);
+        Assert.Contains(ResourceType.Wool, tradeRequest.Offer);
+        Assert.Contains(ResourceType.Brick, tradeRequest.Request);
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_BuiltAllCities()
+    {
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+
+        var v1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == botPlayer.Id);
+        v1.UpgradeToCity();
+        BuildRoadOnWool2WoodEdge(gs, botPlayer);
+        var v2 = BuildSettlementOnWool2WoodVertex(gs, botPlayer);
+        v2.UpgradeToCity();
+
+        botPlayer.AssignResources(ResourceType.Ore, 4);
+        botPlayer.AssignResources(ResourceType.Brick, 2);
+        botPlayer.AssignResources(ResourceType.Grain, 1);
+
+        var bot = new BotAI(gs);
+
+        (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
+
+        Assert.True(canTrade);
+        Assert.NotNull(tradeRequest);
+        Assert.Contains(ResourceType.Ore, tradeRequest.Offer);
+        Assert.Contains(ResourceType.Wood, tradeRequest.Request);    
+    }
+
+    [Fact]
+    public void AnalyzePossibleBankTrades_BuiltAllSettlements()
+    {
+        var gs = CreateBoardForBuildTest();
+        var botPlayer = gs.Players.First(p => p.IsBot == true);
+
+        var v1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == botPlayer.Id);
+        BuildRoadOnWool2WoodEdge(gs, botPlayer);
+        BuildSettlementOnWool2WoodVertex(gs, botPlayer);
+        BuildRoadsOnOreEdges(gs, botPlayer);
+        BuildSettlementOnWool11OreVertex(gs, botPlayer);
+
+        botPlayer.AssignResources(ResourceType.Wood, 4);
+        botPlayer.AssignResources(ResourceType.Brick, 2);
+        botPlayer.AssignResources(ResourceType.Grain, 1);
 
         var bot = new BotAI(gs);
 
@@ -341,8 +506,6 @@ public class BotAITests
         Assert.True(canTrade);
         Assert.NotNull(tradeRequest);
         Assert.Contains(ResourceType.Wood, tradeRequest.Offer);
-        Assert.DoesNotContain(ResourceType.Ore, tradeRequest.Offer);
-        Assert.Equal(4, tradeRequest.Offer[ResourceType.Wood]);
-        Assert.Contains(ResourceType.Wool, tradeRequest.Request);
+        Assert.Contains(ResourceType.Ore, tradeRequest.Request);    
     }
 }

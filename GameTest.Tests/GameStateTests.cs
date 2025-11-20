@@ -117,10 +117,10 @@ public class GameStateTests
         Assert.Equal(dto.Id, game.Id.ToString());
         Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
         Assert.Equal(2, game.Settings.MaxPlayers);
-        Assert.Equal(10, game.Settings.VictoryPointsToWin);
-        Assert.Equal(15, game.Settings.RoadsPerPlayer);
-        Assert.Equal(5, game.Settings.SettlementsPerPlayer);
-        Assert.Equal(4, game.Settings.CitiesPerPlayer);
+        Assert.Equal(5, game.Settings.VictoryPointsToWin);
+        Assert.Equal(6, game.Settings.RoadsPerPlayer);
+        Assert.Equal(3, game.Settings.SettlementsPerPlayer);
+        Assert.Equal(2, game.Settings.CitiesPerPlayer);
         Assert.Equal(2, game.Players.Count);
         Assert.Equal(player2.Name, game.Players[1].Name);
         Assert.Equal(player1.Color, game.Players[0].Color);

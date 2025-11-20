@@ -7,7 +7,7 @@ namespace GameTest.Models;
 public class GameState
 {
     public Guid Id { get; init; }
-    public GameSettings Settings { get; private set; } = new GameSettings();
+    public GameSettings Settings { get; private set; }
     public List<Player> Players { get; } = new();
     public List<Tile> Tiles { get; } = new();
     public List<Edge> Edges { get; } = new();
@@ -57,7 +57,7 @@ public class GameState
     public GameState(Guid guid, GameType type = GameType.Default)
     {
         Id = guid;
-        Settings = new GameSettings(type);
+        Settings = type == GameType.Test ? new GameSettings(type, 2, 5, 6, 3, 2) : new GameSettings(type);
 
         if (type == GameType.Test)
             Dice = new GameDice(false);

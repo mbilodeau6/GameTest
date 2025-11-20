@@ -444,6 +444,192 @@ public class AIHelpersTests
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => AIHelpers.FindVertexWithoutRoads(gs, gs.Players[0]));
     }
+
+    [Fact]
+    public void CalculateResourcesNeededForRoad_NeedAll()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wool, 2},
+            {ResourceType.Ore, 1}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForRoad(owned);
+
+        Assert.Equal(2, needed.Count);
+        Assert.Contains(ResourceType.Wood, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Wood]);
+        Assert.Contains(ResourceType.Brick, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForRoad_NeedNone()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wood, 2},
+            {ResourceType.Brick, 1}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForRoad(owned);
+
+        Assert.Empty(needed);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForRoad_NeedOne()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wood, 2},
+            {ResourceType.Ore, 1}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForRoad(owned);
+
+        Assert.Single(needed);
+        Assert.Contains(ResourceType.Brick, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForSettlementNeedAll()
+    {
+        var owned = new Dictionary<ResourceType, int>();
+
+        var needed = AIHelpers.CalculateResourcesNeededForSettlement(owned);
+
+        Assert.Equal(4, needed.Count);
+        Assert.Contains(ResourceType.Wood, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Wood]);
+        Assert.Contains(ResourceType.Brick, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Brick]);
+        Assert.Contains(ResourceType.Wool, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Wool]);
+        Assert.Contains(ResourceType.Grain, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Grain]);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForSettlement_NeedNone()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wood, 2},
+            {ResourceType.Grain, 4},
+            {ResourceType.Wool, 1},
+            {ResourceType.Ore, 2},
+            {ResourceType.Brick, 1}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForSettlement(owned);
+
+        Assert.Empty(needed);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForSettlement_NeedOne()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wood, 2},
+            {ResourceType.Grain, 4},
+            {ResourceType.Ore, 2},
+            {ResourceType.Brick, 1}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForSettlement(owned);
+
+        Assert.Single(needed);
+        Assert.Contains(ResourceType.Wool, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Wool]);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForSettlement_NeedMultiple()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wood, 2},
+            {ResourceType.Grain, 0},
+            {ResourceType.Ore, 2},
+            {ResourceType.Brick, 1}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForSettlement(owned);
+
+        Assert.Equal(2, needed.Count);
+        Assert.Contains(ResourceType.Wool, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Wool]);
+        Assert.Contains(ResourceType.Grain, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Grain]);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForCityNeedAll()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wood, 2},
+            {ResourceType.Brick, 1}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForCity(owned);
+
+        Assert.Equal(2, needed.Count);
+        Assert.Contains(ResourceType.Ore, needed.Keys);
+        Assert.Equal(3, needed[ResourceType.Ore]);
+        Assert.Contains(ResourceType.Grain, needed.Keys);
+        Assert.Equal(2, needed[ResourceType.Grain]);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForCity_NeedNone()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Wood, 2},
+            {ResourceType.Ore, 5},
+            {ResourceType.Grain, 2}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForCity(owned);
+
+        Assert.Empty(needed);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForCity_NeedOne()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Ore, 2},
+            {ResourceType.Grain, 2}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForCity(owned);
+
+        Assert.Single(needed);
+        Assert.Contains(ResourceType.Ore, needed.Keys);
+        Assert.Equal(1, needed[ResourceType.Ore]);
+    }
+
+    [Fact]
+    public void CalculateResourcesNeededForCity_NeedMultiple()
+    {
+        var owned = new Dictionary<ResourceType, int>()
+        {
+            {ResourceType.Ore, 1},
+            {ResourceType.Grain, 2}
+        };
+
+        var needed = AIHelpers.CalculateResourcesNeededForCity(owned);
+
+        Assert.Single(needed);
+        Assert.Contains(ResourceType.Ore, needed.Keys);
+        Assert.Equal(2, needed[ResourceType.Ore]);
+    }
 }
 
 

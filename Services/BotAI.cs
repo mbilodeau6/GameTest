@@ -39,54 +39,87 @@ public class BotAI
         return move;
     }
 
-    // TODO: Need to create a more robust implementation that considers the game board and bot's current and future
-    // opportunities. Remember to change the tests as well.
+    // TODO: Will need to update when Ports are supported and may want to factor in probabily of
+    // getting each resource when determining which resources to offer and request.
     public (bool CanTrade, TradeRequest? TradeRequest) AnalyzePossibleBankTrades()
     {
         if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
+        bool couldBuildCity = (AIHelpers.GetSettlementToUpgrade(State) != null) 
+                && (GamePlayHelpers.CountCitiesForPlayer(State, State.Phase.CurrentPlayer) < State.Settings.CitiesPerPlayer);
+        bool couldBuildSettlement = (AIHelpers.GetVertexReadyForSettlement(State) != null) 
+                && (GamePlayHelpers.CountSettlementsForPlayer(State, State.Phase.CurrentPlayer) < State.Settings.SettlementsPerPlayer);
+        bool couldBuildRoad = GamePlayHelpers.CountRoadsForPlayer(State, State.Phase.CurrentPlayer) < State.Settings.RoadsPerPlayer;
+
         ResourceType resourceToTrade = ResourceType.Desert;
         ResourceType resourceToGet = ResourceType.Desert;
 
-        if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 5)
-            resourceToTrade = ResourceType.Wool;
-        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
-            resourceToTrade = ResourceType.Wood;
-        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
-            resourceToTrade = ResourceType.Brick;
-        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 6)
-            resourceToTrade = ResourceType.Grain;
-        else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 7)
-            resourceToTrade = ResourceType.Ore;
+        var neededForRoad = AIHelpers.CalculateResourcesNeededForRoad(State.Phase.CurrentPlayer.Resources); 
+        int shortForRoad = neededForRoad.Count();
+        var neededForSettlement = AIHelpers.CalculateResourcesNeededForSettlement(State.Phase.CurrentPlayer.Resources); 
+        int shortForSettlement = neededForSettlement.Count();
+        var neededForCity = AIHelpers.CalculateResourcesNeededForCity(State.Phase.CurrentPlayer.Resources);
+        int shortForCity = (neededForCity.ContainsKey(ResourceType.Ore) ? neededForCity[ResourceType.Ore] : 0)
+            + (neededForCity.ContainsKey(ResourceType.Grain) ? neededForCity[ResourceType.Grain] : 0);
 
+        if (shortForRoad == 0 && shortForSettlement == 0 && shortForCity == 0)
+            return (false, null);
 
-        if (resourceToTrade != ResourceType.Desert)
+        if (couldBuildCity && shortForCity > 0 && (!couldBuildRoad 
+            || GamePlayHelpers.CountSettlementsForPlayer(State, State.Phase.CurrentPlayer) >= State.Settings.SettlementsPerPlayer
+            || (shortForRoad > shortForCity && !couldBuildSettlement)
+            || shortForSettlement > shortForCity))
         {
-            if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 3)
-                resourceToGet = ResourceType.Grain;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 2)
-                resourceToGet = ResourceType.Ore;
-            else
-                foreach (var resource in Enum.GetValues<ResourceType>())
-                {
-                    if (resource == ResourceType.Ore || resource == ResourceType.Desert)
-                        continue;
+            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 4)
+                resourceToTrade = ResourceType.Wool;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 4)
+                resourceToTrade = ResourceType.Wood;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 4)
+                resourceToTrade = ResourceType.Brick;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 6)
+                resourceToTrade = ResourceType.Grain;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 7)
+                resourceToTrade = ResourceType.Ore;
 
-                    if (State.Phase.CurrentPlayer.Resources[resource] == 0)
-                    {
-                        resourceToGet = resource;
-                        break;
-                    }
-                }
+            resourceToGet = neededForCity.First().Key;
+        }
+        else if (couldBuildSettlement && shortForSettlement > 0)
+        {
+            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 5)
+                resourceToTrade = ResourceType.Wool;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
+                resourceToTrade = ResourceType.Wood;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
+                resourceToTrade = ResourceType.Brick;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 5)
+                resourceToTrade = ResourceType.Grain;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 4)
+                resourceToTrade = ResourceType.Ore;
 
-            if (resourceToGet == ResourceType.Desert)
-                resourceToGet = ResourceType.Ore;
+            resourceToGet = neededForSettlement.First().Key;
+        }
+        else if (couldBuildRoad && shortForRoad > 0)
+        {
+            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 4)
+                resourceToTrade = ResourceType.Wool;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
+                resourceToTrade = ResourceType.Wood;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
+                resourceToTrade = ResourceType.Brick;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 4)
+                resourceToTrade = ResourceType.Grain;
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 4)
+                resourceToTrade = ResourceType.Ore;
 
+            resourceToGet = neededForSettlement.First().Key;
+        }
+
+        if (resourceToTrade != ResourceType.Desert && resourceToGet != ResourceType.Desert)
+        {
             return (true, new TradeRequest(State.Phase.CurrentPlayer,
                     new Dictionary<ResourceType, int>() { { resourceToTrade, 4 } },
                     new Dictionary<ResourceType, int>() { { resourceToGet, 1 } }));
-
         }
 
         return (false, null);
@@ -104,7 +137,7 @@ public class BotAI
 
         // First look to see if we can upgrade settlements to a city
         var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(State);
-        if (settlementToUpgrade != null)
+        if (settlementToUpgrade != null && GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer))
         {
                 move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
                 return move;

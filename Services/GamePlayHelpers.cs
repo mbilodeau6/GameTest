@@ -158,6 +158,11 @@ public static class GamePlayHelpers
         return gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
     }
 
+    public static int CountCitiesForPlayer(GameState gs, Player player)
+    {
+        return gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City);
+    }
+
     public static int CountRoadsForPlayer(GameState gs, Player player)
     {
         return gs.Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
@@ -165,10 +170,7 @@ public static class GamePlayHelpers
 
     public static bool PlayerHasWon(GameState gs, Player player)
     {
-        int settlementCount = gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
-        int cityCount = gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City);
-
-        int victoryPoints = settlementCount + (cityCount * 2);
+        int victoryPoints = CountSettlementsForPlayer(gs, player) + (CountCitiesForPlayer(gs, player) * 2);
 
         return victoryPoints >= gs.Settings.VictoryPointsToWin;
     }
