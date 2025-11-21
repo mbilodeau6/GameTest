@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using GameTest.DTOs;
+using GameTest.Models;
 using GameTest.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -19,12 +20,36 @@ public class Games
         _gameService = gameService;
     }
 
+    // TODO: Remove once all entry-point returns are modified to use ResponseDTO
     private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode code, string msg)
     {
-        var response = req.CreateResponse(HttpStatusCode.NotFound);
+        var response = req.CreateResponse(code);
         await response.WriteStringAsync(msg);
         return response;
     }
+
+    private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode code, int errorCode, string errorMsg)
+    {
+        var response = req.CreateResponse(code);
+        var responseDto = new ResponseDTO(false, errorCode, errorMsg, null);
+        await response.WriteAsJsonAsync(responseDto);
+        return response;
+    }
+
+    private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode code, ResponseDTO responseDto)
+    {
+        var response = req.CreateResponse(code);
+        await response.WriteAsJsonAsync(responseDto);
+        return response;
+    }
+
+    private async Task<HttpResponseData> CreateSuccessResponse(HttpRequestData req, ResponseDTO responseDto)
+    {
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(responseDto);
+        return response;
+    }
+
 
     [Function("Games")]
     public async Task<HttpResponseData> CreateGame(
@@ -182,16 +207,14 @@ public class Games
         _logger.LogInformation("End-Turn called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, 1000, $"GameId: {id}");
 
-        var success = await _gameService.EndTurnAsync(guid);
+        var response = await _gameService.EndTurnAsync(guid);
 
-        if (!success)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Unable to end turn. See log for details.");
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync("Turn ended.");
-        return ok;
+        return await CreateSuccessResponse(req, response);
     }
 
     // TODO: Need to get player from authorization. In other entry points I've been talking player

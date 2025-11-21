@@ -328,12 +328,12 @@ public class GameService
         }
     }
 
-    public async Task<bool> EndTurnAsync(Guid gameId)
+    public async Task<ResponseDTO> EndTurnAsync(Guid gameId)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return false;
+            return new ResponseDTO(false, 1001, $"{gameId}", null);
         }
 
         try
@@ -342,7 +342,7 @@ public class GameService
             if (dto == null)
             {
                 _logger.LogError("Unable to retrieve game {GameId}.", gameId);
-                return false;
+                return new ResponseDTO(false, 1002, $"{gameId}", null);
             }
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
@@ -351,7 +351,7 @@ public class GameService
             if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.BuildOrTrade)
             {
                 _logger.LogError("Game isn't in a state where EndTurn is valid.");
-                return false;
+                return new ResponseDTO(false, 1003, $"Action: EndTurn; GameId: {gameId}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null);
             }
             var player = gs.Phase.CurrentPlayer;
             GamePlayHelpers.EndTurn(player, gs);
@@ -373,12 +373,12 @@ public class GameService
 
             _logger.LogInformation("Ended turn for Player {playerId}.", player);
 
-            return true;
+            return new ResponseDTO(true, 0, string.Empty, gs);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to end turn in {GameId}.", gameId);
-            return false;
+            return new ResponseDTO(false, 1003, $"Failed to end turn in {gameId}.", null);
         }
     }
 
