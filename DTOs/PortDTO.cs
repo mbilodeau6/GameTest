@@ -20,11 +20,11 @@ public class PortDTO
 
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
-    public PortDTO(string id, string type, List<string> vertexIds)
+    public PortDTO(string id, string type, List<string> vertices)
     {
         Id = id ?? string.Empty;
         Type = type;
-        foreach (var vertexId in vertexIds)
+        foreach (var vertexId in vertices)
             Vertices.Add(vertexId);
     }
 }
