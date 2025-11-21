@@ -20,18 +20,10 @@ public class Games
         _gameService = gameService;
     }
 
-    // TODO: Remove once all entry-point returns are modified to use ResponseDTO
-    private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode code, string msg)
-    {
-        var response = req.CreateResponse(code);
-        await response.WriteStringAsync(msg);
-        return response;
-    }
-
     private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode code, int errorCode, string errorMsg)
     {
         var response = req.CreateResponse(code);
-        var responseDto = new ResponseDTO(false, errorCode, errorMsg, null);
+        var responseDto = new ResponseDTO(false, errorCode, errorMsg, null as GameStateDTO);
         await response.WriteAsJsonAsync(responseDto);
         return response;
     }
@@ -50,6 +42,14 @@ public class Games
         return response;
     }
 
+    private async Task<HttpResponseData> CreateSuccessResponse(HttpRequestData req, GameState gs)
+    {
+        var responseDto = new ResponseDTO(true, 0, string.Empty, gs);
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(responseDto);
+        return response;
+    }
+
 
     [Function("Games")]
     public async Task<HttpResponseData> CreateGame(
@@ -60,14 +60,11 @@ public class Games
         var request = JsonSerializer.Deserialize<CreateGameRequest>(body, options);
 
         if (request == null || string.IsNullOrWhiteSpace(request.GameType))
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include non-empty 'gameType'.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1004, string.Empty);
 
         var gameState = _gameService.CreateGame(request.GameType);
-        var dto = new GameStateDTO(gameState);
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(dto);
-        return response;
+        return await CreateSuccessResponse(req, gameState);
     }
 
     [Function("BuildRoad")]
@@ -78,19 +75,17 @@ public class Games
         _logger.LogInformation("BuildRoad called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
         var request = await req.ReadFromJsonAsync<BuildRoadRequest>();
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.EdgeId))
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId' and 'edgeId'.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1005, $"GameId: {id}");
 
-        var updated = await _gameService.BuildRoadAsync(guid, request.EdgeId, request.PlayerId);
-        if (updated == null)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not build road (game/player/edge missing or edge occupied).");
+        var response = await _gameService.BuildRoadAsync(guid, request.EdgeId, request.PlayerId);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(updated);
-        return ok;
+        return await CreateSuccessResponse(req, response);
     }
 
     [Function("BuildSettlement")]
@@ -101,19 +96,17 @@ public class Games
         _logger.LogInformation("BuildSettlement called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
         var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId' and 'vertexId'.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1024, $"GameId: {id}");
 
-        var updated = await _gameService.BuildSettlementAsync(guid, request.VertexId, request.PlayerId);
-        if (updated == null)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not build settlement (game/player/vertex missing or vertex occupied).");
+        var response = await _gameService.BuildSettlementAsync(guid, request.VertexId, request.PlayerId);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(updated);
-        return ok;
+        return await CreateSuccessResponse(req, response);
     }
 
     [Function("BuildCity")]
@@ -124,19 +117,17 @@ public class Games
         _logger.LogInformation("BuildCity called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
         var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId' and 'vertexId'.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1025, $"GameId: {id}");
 
-        var updated = await _gameService.BuildCityAsync(guid, request.VertexId, request.PlayerId);
-        if (updated == null)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not build city (game/player missing or vertex not appropriate for city build).");
+        var response = await _gameService.BuildCityAsync(guid, request.VertexId, request.PlayerId);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(updated);
-        return ok;
+        return await CreateSuccessResponse(req, response);
     }
 
     [Function("GetGameById")]
@@ -147,15 +138,13 @@ public class Games
         _logger.LogInformation("GetGameById called for id {Id}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
         var dto = await _gameService.GetGameAsync(guid);
         if (dto == null)
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, $"Game not found (guid:{guid}).");
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, 1002, $"GameId: {id}");
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(dto);
-        return ok;
+        return await CreateSuccessResponse(req, dto);
     }
 
     [Function("GetGameSummaryById")]
@@ -166,14 +155,14 @@ public class Games
         _logger.LogInformation("GetGameSummaryById called for id {Id}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var dto = await _gameService.GetGameSummaryAsync(guid);
-        if (dto == null)
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, $"Game not found (guid:{guid}).");
+        var summary = await _gameService.GetGameSummaryAsync(guid);
+        if (summary == null)
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, 1002, $"GameId: {id}");
 
         var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(dto);
+        await ok.WriteAsJsonAsync(summary);
         return ok;
     }
 
@@ -185,15 +174,13 @@ public class Games
         _logger.LogInformation("RollDice called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var diceRolled = await _gameService.RollDiceAsync(guid);
-        if (diceRolled == null)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not roll dice.");
+        var response = await _gameService.RollDiceAsync(guid);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(diceRolled);
-        return ok;
+        return await CreateSuccessResponse(req, response);
     }
 
     // TODO: Need to get player from authorization. In other entry points I've been talking player
@@ -207,7 +194,7 @@ public class Games
         _logger.LogInformation("End-Turn called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, 1000, $"GameId: {id}");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
         var response = await _gameService.EndTurnAsync(guid);
 
@@ -228,16 +215,14 @@ public class Games
         _logger.LogInformation("Start called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var success = await _gameService.StartGameAsync(guid);
+        var response = await _gameService.StartGameAsync(guid);
 
-        if (!success)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Unable to start game. See log for details.");
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync("Game started.");
-        return ok;
+        return await CreateSuccessResponse(req, response);
     }
 
     [Function("BankTrade")]
@@ -248,19 +233,17 @@ public class Games
         _logger.LogInformation("BankTrade called for game {GameId}", id);
 
         if (!Guid.TryParse(id, out var guid))
-            return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Invalid game id.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
         var request = await req.ReadFromJsonAsync<TradeRequestDTO>();
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || request.Request.Count == 0 || request.Offer.Count == 0)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request must include 'playerId', 'request', and 'offer'.");
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1026, $"GameId: {id}");
 
-        var updated = await _gameService.BankTradeAsync(guid, request);
-        if (updated == null)
-            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Could not execute requested bank trade.");
+        var response = await _gameService.BankTradeAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(updated);
-        return ok;
+        return await CreateSuccessResponse(req, response);
     }
 
 }

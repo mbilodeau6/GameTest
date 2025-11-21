@@ -932,10 +932,10 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, "PP1", gs.Edges[0].Id);
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, "PP1", gs.Edges[0].Id);
 
-        Assert.NotNull(resultString);
-        Assert.StartsWith("Player PP1 not found in game ", resultString);
+        Assert.False(response.Success);
+        Assert.Equal(1012, response.ErrorCode);
     }
 
     [Fact]
@@ -944,11 +944,10 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
 
-        Assert.NotNull(resultString);
-        Assert.StartsWith("It is not ", resultString);
-        Assert.EndsWith(" turn.", resultString);
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
     }
 
     // TODO: Need to add additional BuildSRoad tests.
@@ -959,9 +958,10 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
 
-        Assert.Equal($"Game is not in a state that allows building roads. Current state: {gs.Phase.PhaseState}", resultString);
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
     }
 
     [Fact]
@@ -979,10 +979,10 @@ public class GamePlayHelpersTests
         gs.Players[0].Resources[ResourceType.Brick] = 1;
 
         // Act
-        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, gs.Edges[0].Id);
 
         // Assert
-        Assert.Equal(string.Empty, resultString);
+        Assert.True(response.Success);
         Assert.NotNull(gs.Edges[0].Owner);
         Assert.Equal(gs.Players[0].Id, gs.Edges[0].Owner.Id);
     }
@@ -999,10 +999,10 @@ public class GamePlayHelpersTests
         adjacentVertex.BuildSettlement(gs.Players[1]);
 
         // Act
-        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, gs.Edges[0].Id);
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, gs.Edges[0].Id);
 
         // Assert
-        Assert.Equal(string.Empty, resultString);
+        Assert.True(response.Success);
         Assert.NotNull(gs.Edges[0].Owner);
         Assert.Equal(gs.Players[1].Id, gs.Edges[0].Owner.Id);
         Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
@@ -1029,11 +1029,12 @@ public class GamePlayHelpersTests
         vertex.BuildSettlement(gs.Players[1]);
 
         // Act
-        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, edge.Id);
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, edge.Id);
 
         // Assert
+        Assert.False(response.Success);
+        Assert.Equal(1015, response.ErrorCode);
         Assert.Equal(BuildingType.Settlement, vertex.Building);
-        Assert.Contains(" not adjacent to a city/settlement for player", resultString);
     }
 
     [Fact]
@@ -1054,11 +1055,12 @@ public class GamePlayHelpersTests
         vertex.BuildSettlement(gs.Players[0]);
 
         // Act
-        var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, edge.Id);
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, edge.Id);
 
         // Assert
         Assert.Equal(BuildingType.Settlement, vertex.Building);
-        Assert.Contains(" not adjacent to a city/settlement for player", resultString);
+        Assert.False(response.Success);
+        Assert.Equal(1015, response.ErrorCode);
     }
 
     [Fact]
@@ -1067,10 +1069,10 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, "PP1", gs.Vertices[0].Id);
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, "PP1", gs.Vertices[0].Id);
 
-        Assert.NotNull(resultString);
-        Assert.StartsWith("Player PP1 not found in game ", resultString);
+        Assert.False(response.Success);
+        Assert.Equal(1012, response.ErrorCode);
     }
 
     [Fact]
@@ -1079,11 +1081,10 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[1], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
 
-        Assert.NotNull(resultString);
-        Assert.StartsWith("It is not ", resultString);
-        Assert.EndsWith(" turn.", resultString);
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
     }
 
     // TODO: Need to add additional BuildSettlement tests.
@@ -1094,9 +1095,10 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
 
-        Assert.Equal($"Game is not in a state that allows building settlements. Current state: {gs.Phase.PhaseState}", resultString);
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
     }
 
     [Fact]
@@ -1119,10 +1121,10 @@ public class GamePlayHelpersTests
         gs.Players[0].Resources[ResourceType.Grain] = 1;
 
         // Act
-        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, vertex.Id);
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, vertex.Id);
 
         // Assert
-        Assert.Equal(string.Empty, resultString);
+        Assert.True(response.Success);
         Assert.NotNull(vertex.Owner);
         Assert.NotNull(vertex.Building);
         Assert.Equal(gs.Players[0].Id, vertex.Owner.Id);
@@ -1135,9 +1137,9 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[0], gs.Players[1]);
 
-        var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, gs.Vertices[0].Id);
 
-        Assert.Equal(string.Empty, resultString);
+        Assert.True(response.Success);
         Assert.NotNull(gs.Vertices[0].Building);
         Assert.Equal(BuildingType.Settlement, gs.Vertices[0].Building);
         Assert.NotNull(gs.Vertices[0].Owner);
@@ -1667,9 +1669,9 @@ public class GamePlayHelpersTests
                 new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
                 new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
 
-        var result = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
+        var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
-        Assert.Empty(result);
+        Assert.True(response.Success);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Brick]);
     }
@@ -1685,9 +1687,10 @@ public class GamePlayHelpersTests
                 new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
                 new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
 
-        var result = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
+        var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
-        Assert.StartsWith("Game is not in a state that allows trades. Current state:", result);
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
         Assert.Equal(5, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
     }
@@ -1705,9 +1708,10 @@ public class GamePlayHelpersTests
                 new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
                 new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
 
-        var result = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
+        var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
-        Assert.Equal("Bank trade request rejected.", result);
+        Assert.False(response.Success);
+        Assert.Equal(1006, response.ErrorCode);
         Assert.Equal(2, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
     }
@@ -1722,9 +1726,9 @@ public class GamePlayHelpersTests
                 new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
                 new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
 
-        var result = GamePlayHelpers.BankTrade(tradeRequest);
+        var response = GamePlayHelpers.BankTrade(new GameState(new Guid()), tradeRequest);
 
-        Assert.Empty(result);
+        Assert.True(response.Success);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Brick]);
     }
@@ -1739,9 +1743,10 @@ public class GamePlayHelpersTests
                 new Dictionary<ResourceType, int>() { { ResourceType.Wood, 2 } },
                 new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
 
-        var result = GamePlayHelpers.BankTrade(tradeRequest);
+        var response = GamePlayHelpers.BankTrade(new GameState(new Guid()), tradeRequest);
 
-        Assert.Equal("Bank trade request rejected.", result);
+        Assert.False(response.Success);
+        Assert.Equal(1008, response.ErrorCode);
         Assert.Equal(3, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
     }

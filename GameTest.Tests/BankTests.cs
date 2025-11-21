@@ -23,10 +23,11 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1007, result.ErrorCode);
         Assert.Equal(0, player.Resources.GetValueOrDefault(ResourceType.Ore, 0));
     }
 
@@ -45,10 +46,11 @@ public class BankTests
         var request = new Dictionary<ResourceType, int>();
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1007, result.ErrorCode);
         Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -67,10 +69,11 @@ public class BankTests
         var request = new Dictionary<ResourceType, int>();
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1007, result.ErrorCode);
         Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -88,10 +91,11 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1007, result.ErrorCode);
         Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -109,10 +113,11 @@ public class BankTests
         var request = new Dictionary<ResourceType, int>();
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1006, result.ErrorCode);
         Assert.Equal(3, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -134,10 +139,11 @@ public class BankTests
 
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1008, result.ErrorCode);
         Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -158,10 +164,11 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1008, result.ErrorCode);
         Assert.Equal(5, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -183,10 +190,11 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1007, result.ErrorCode);
         Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -210,10 +218,11 @@ public class BankTests
 
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1007, result.ErrorCode);
         Assert.Equal(3, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
         Assert.Equal(3, player.Resources.GetValueOrDefault(ResourceType.Wood, -1));
     }
@@ -237,10 +246,11 @@ public class BankTests
 
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1007, result.ErrorCode);
         Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -261,10 +271,11 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(1009, result.ErrorCode);
         Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
 
@@ -290,10 +301,11 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.Success);
+        Assert.NotNull(result.GameState);
         Assert.Equal(0, player.Resources.GetValueOrDefault(ResourceType.Wood, 0));
         Assert.Equal(2, player.Resources.GetValueOrDefault(ResourceType.Grain, -1));
         Assert.Equal(3, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Azure;
 using GameTest.DTOs;
 using GameTest.Models;
 using Microsoft.Identity.Client.Extensibility;
@@ -319,36 +320,36 @@ public static class GamePlayHelpers
 
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
     // Right now, an empty string indicates success.
-    public static string BuildRoadRequestFromUser(GameState gs, string playerId, string edgeId)
+    public static ResponseDTO BuildRoadRequestFromUser(GameState gs, string playerId, string edgeId)
     {
         if (!BuildRoadPhase(gs) || gs.Phase.CurrentPlayer == null)
-            return $"Game is not in a state that allows building roads. Current state: {gs.Phase.PhaseState}";
+            return new ResponseDTO(false, 1003, $"Action: BuildRoad; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
-            return $"Player {playerId} not found in game {gs.Id}";
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         if (gs.Phase.CurrentPlayer.Id != playerId)
-            return $"It is not {playerId}'s turn.";
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var edge = gs.Edges.FirstOrDefault(e => e.Id == edgeId);
         if (edge == null)
-            return $"Edge {edgeId} not found in game {gs.Id}";
+            return new ResponseDTO(false, 1013, $"GameId: {gs.Id}; EdgeId: {edgeId}", null as GameStateDTO);
 
         if (!IsEdgeAdjacentToPlayerBuild(gs, edge, player))
-            return $"Edge {edgeId} not adjacent to a city/settlement for player {playerId}.";
+            return new ResponseDTO(false, 1015, $"GameId: {gs.Id}; EdgeId: {edgeId}; Player: {playerId}", null as GameStateDTO);
 
         if (edge.Owner != null)
-            return $"Edge {edgeId} in game {gs.Id} already has a road.";
+            return new ResponseDTO(false, 1016, $"GameId: {gs.Id}; EdgeId: {edgeId}", null as GameStateDTO);
 
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildRoad(player))
-            return $"Player {player.Id} does not have the required resources to build a road.";
+            return new ResponseDTO(false, 1017, $"Action: BuildRoad; GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         BuildRoad(gs, player, edge);
 
         GameLoop(gs);
 
-        return string.Empty;
+        return new ResponseDTO(true, 0, string.Empty, gs);
     }
 
     public static void BuildSettlement(GameState gs, Player player, Vertex vertex)
@@ -366,42 +367,42 @@ public static class GamePlayHelpers
 
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
     // Right now, an empty string indicates success.
-    public static string BuildSettlementRequestFromUser(GameState gs, string playerId, string vertexId)
+    public static ResponseDTO BuildSettlementRequestFromUser(GameState gs, string playerId, string vertexId)
     {
         if (!BuildSettlementPhase(gs) || gs.Phase.CurrentPlayer == null)
-            return $"Game is not in a state that allows building settlements. Current state: {gs.Phase.PhaseState}";
+            return new ResponseDTO(false, 1003, $"Action: BankSettlement; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
-            return $"Player {playerId} not found in game {gs.Id}";
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         if (gs.Phase.CurrentPlayer.Id != playerId)
-            return $"It is not {playerId}'s turn.";
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
         if (vertex == null)
-            return $"Vertex {vertexId} not found in game {gs.Id}";
+            return new ResponseDTO(false, 1014, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (vertex.Building == BuildingType.Settlement)
-            return $"Vertex {vertexId} in game {gs.Id} already has a settlement.";
+            return new ResponseDTO(false, 1018, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (vertex.Building == BuildingType.City)
-            return $"Vertex {vertexId} in game {gs.Id} already has a city.";
+            return new ResponseDTO(false, 1019, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (vertex.Building == BuildingType.Blocked)
-            return $"Vertex {vertexId} in game {gs.Id} is too close to another development.";
+            return new ResponseDTO(false, 1022, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !IsVertexAdjacentToPlayerRoad(gs, vertex, player))
-            return $"Vertex {vertexId} not adjacent to a road for player {playerId}.";
+            return new ResponseDTO(false, 1023, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade && !HasResourcesToBuildSettlement(player))
-            return $"Player {player.Id} does not have the required resources to build a settlement.";
+            return new ResponseDTO(false, 1017, $"Action: BuildSettlement; GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         BuildSettlement(gs, player, vertex);
 
         GameLoop(gs);
 
-        return string.Empty;
+        return new ResponseDTO(true, 0, string.Empty, gs);
     }
 
     public static void UpgradeToCity(GameState gs, Player player, Vertex vertex)
@@ -414,39 +415,39 @@ public static class GamePlayHelpers
     }
 
 
-    public static string UpgradeToCityRequestFromUser(GameState gs, string playerId, string vertexId)
+    public static ResponseDTO UpgradeToCityRequestFromUser(GameState gs, string playerId, string vertexId)
     {
         if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
-            return $"Game is not in a state that allows building cities. Current state: {gs.Phase.PhaseState}; Current player: {gs.Phase.CurrentPlayer.Id}";
+            return new ResponseDTO(false, 1003, $"Action: BuildCity; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
-            return $"Player {playerId} not found in game {gs.Id}";
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         if (gs.Phase.CurrentPlayer.Id != playerId)
-            return $"It is not {playerId}'s turn.";
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
         if (vertex == null)
-            return $"Vertex {vertexId} not found in game {gs.Id}";
+            return new ResponseDTO(false, 1014, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (vertex.Building == null || vertex.Owner == null)
-            return $"Vertex {vertexId} in game {gs.Id} does not have a settlement to upgrade.";
+            return new ResponseDTO(false, 1020, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (vertex.Building == BuildingType.City)
-            return $"Vertex {vertexId} in game {gs.Id} already has a city.";
+            return new ResponseDTO(false, 1019, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (vertex.Owner.Id != playerId)
-            return $"Vertex {vertexId} in game {gs.Id} is owned by another player.";
+            return new ResponseDTO(false, 1019, $"GameId: {gs.Id}; VertexId: {vertexId}; OwnerId: {vertex.Owner.Id}", null as GameStateDTO);
 
         if (!HasResourcesToBuildCity(player))
-            return $"Player {player.Id} does not have the required resources to build a city.";
+            return new ResponseDTO(false, 1017, $"Action: BuildCity; GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         UpgradeToCity(gs, player, vertex);
 
         GameLoop(gs);
 
-        return string.Empty;
+        return new ResponseDTO(true, 0, string.Empty, gs);
     }
 
     public static void GameLoop(GameState gs)
@@ -593,25 +594,23 @@ public static class GamePlayHelpers
         return false;
     }
 
-    public static string BankTrade(TradeRequest request)
+    public static ResponseDTO BankTrade(GameState gs, TradeRequest request)
     {
         Bank bank = new Bank();
 
-        if (bank.TradeWithBank(request.Player, request.Offer, request.Request))
-            return string.Empty;
-        else
-            return "Bank trade request rejected.";
+        return bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
     }
     
-    public static string BankTradeFromUser(GameState gs, TradeRequestDTO request)
+    public static ResponseDTO BankTradeFromUser(GameState gs, TradeRequestDTO request)
     {
         if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
-            return $"Game is not in a state that allows trades. Current state: {gs.Phase.PhaseState}";
+            return new ResponseDTO(false, 1003, $"Action: BankTrade; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
-            return $"It is not {request.PlayerId}'s turn.";
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
-        return BankTrade(new TradeRequest(gs, request));
+        
+        return BankTrade(gs, new TradeRequest(gs, request));
     }
 
 }

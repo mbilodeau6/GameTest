@@ -10,6 +10,8 @@ using GameTest.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using GameTest.DTOs;
+using Xunit.Sdk;
+using Microsoft.AspNetCore.Authentication;
 
 namespace GameTest.Services;
 
@@ -85,12 +87,13 @@ public class GameService
         return gs;
     }
 
-    private async Task<DTOs.GameStateDTO?> GetGameDTO(string id)
+    private async Task<ResponseDTO> GetGameDTO(string id)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", id);
-            return null;
+            return new ResponseDTO(false, 1001, $"GameId: {id}", null as GameStateDTO);
+
         }
 
         try
@@ -100,7 +103,7 @@ public class GameService
             if (!exists.Value)
             {
                 _logger.LogInformation("Game blob not found for {GameId}.", id);
-                return null;
+                return new ResponseDTO(false, 1002, $"GameId: {id}", null as GameStateDTO);
             }
 
             var download = await blob.DownloadContentAsync();
@@ -113,59 +116,59 @@ public class GameService
             };
 
             var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, options);
-            return dto;
+            return new ResponseDTO(true, 0, string.Empty, dto);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve GameState for GUID {GameId}.", id);
-            return null;
+            return new ResponseDTO(false, 9999, $"Action: GetGameDTO; GameId: {id}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 
-    public async Task<DTOs.GameStateDTO?> GetGameAsync(Guid id)
+    public async Task<ResponseDTO> GetGameAsync(Guid id)
     {
-        GameStateDTO? fullDTO = await GetGameDTO(id.ToString());
+        var response = await GetGameDTO(id.ToString());
 
-        return fullDTO;
+        return response;
     }
 
     public async Task<string?> GetGameSummaryAsync(Guid id)
     {
-        GameStateDTO? fullDTO = await GetGameDTO(id.ToString());
+        var response = await GetGameDTO(id.ToString());
 
-        if (fullDTO == null)
-            return null;
+        if (!response.Success)
+            return response.ErrorCode + " - " + response.ErrorMessage;
 
         var stringBuilder = new StringBuilder();
         
-        stringBuilder.Append($"Phase: {fullDTO.Phase.PhaseState} ## Current Player: {fullDTO.Phase.CurrentPlayerId} ## ");
-        stringBuilder.Append($"Dice: {fullDTO.Dice.Die1.Value}, {fullDTO.Dice.Die2.Value} ## ");
+        stringBuilder.Append($"Phase: {response.GameState.Phase.PhaseState} ## Current Player: {response.GameState.Phase.CurrentPlayerId} ## ");
+        stringBuilder.Append($"Dice: {response.GameState.Dice.Die1.Value}, {response.GameState.Dice.Die2.Value} ## ");
 
-        for (int i = 0; i < fullDTO.Players.Count; i++)
-            stringBuilder.Append($"P{i}: Wood={fullDTO.Players[i].Resources[ResourceType.Wood]}, Brick={fullDTO.Players[i].Resources[ResourceType.Brick]}, Wool={fullDTO.Players[i].Resources[ResourceType.Wool]}, Grain={fullDTO.Players[i].Resources[ResourceType.Grain]}, Ore={fullDTO.Players[i].Resources[ResourceType.Ore]} ## ");
+        for (int i = 0; i < response.GameState.Players.Count; i++)
+            stringBuilder.Append($"P{response.GameState.Players[i].Id}: Wood={response.GameState.Players[i].Resources[ResourceType.Wood]}, Brick={response.GameState.Players[i].Resources[ResourceType.Brick]}, Wool={response.GameState.Players[i].Resources[ResourceType.Wool]}, Grain={response.GameState.Players[i].Resources[ResourceType.Grain]}, Ore={response.GameState.Players[i].Resources[ResourceType.Ore]} ## ");
             
         return stringBuilder.ToString();
     }
 
-    public async Task<string?> BuildRoadAsync(Guid gameId, string edgeId, string playerId)
+    public async Task<ResponseDTO> BuildRoadAsync(Guid gameId, string edgeId, string playerId)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return null;
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
         }
 
         try
         {
-            var dto = await GetGameDTO(gameId.ToString());
-            if (dto == null)
-                return $"Unable to retrieve game {gameId}";
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            var resultString = GamePlayHelpers.BuildRoadRequestFromUser(gs, playerId, edgeId);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, playerId, edgeId);
 
-            if (!String.IsNullOrEmpty(resultString))
-                return resultString;
+            if (!buildResponse.Success)
+                return buildResponse;
 
             var options = new JsonSerializerOptions
             {
@@ -173,9 +176,7 @@ public class GameService
                 Converters = { new JsonStringEnumConverter() }
             };
 
-            var updatedDto = new DTOs.GameStateDTO(gs);
-
-            var json = JsonSerializer.Serialize(updatedDto, options);
+            var json = JsonSerializer.Serialize(buildResponse.GameState, options);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -183,34 +184,35 @@ public class GameService
             blob.Upload(ms, overwrite: true);
 
             _logger.LogInformation("Built road on edge {EdgeId} for player {PlayerId} in game {GameId}.", edgeId, playerId, gameId);
-            return $"Built road on edge {edgeId} for player {playerId} in game {gameId}.";
+            return buildResponse;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to build road on edge {EdgeId} for game {GameId}.", edgeId, gameId);
-            return null;
+            return new ResponseDTO(false, 9999, $"Action: BuildRoad; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 
-    public async Task<string?> BuildSettlementAsync(Guid gameId, string vertexId, string playerId)
+    public async Task<ResponseDTO> BuildSettlementAsync(Guid gameId, string vertexId, string playerId)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return null;
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
         }
 
         try
         {
-            var dto = await GetGameDTO(gameId.ToString());
-            if (dto == null)
-                return $"Unable to retrieve game {gameId}";
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            var resultString = GamePlayHelpers.BuildSettlementRequestFromUser(gs, playerId, vertexId);
 
-            if (!String.IsNullOrEmpty(resultString))
-                return resultString;
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var buildResponse = GamePlayHelpers.BuildSettlementRequestFromUser(gs, playerId, vertexId);
+
+            if (!buildResponse.Success)
+                return buildResponse;
 
             var options = new JsonSerializerOptions
             {
@@ -218,9 +220,7 @@ public class GameService
                 Converters = { new JsonStringEnumConverter() }
             };
 
-            var updatedDto = new DTOs.GameStateDTO(gs);
-
-            var json = JsonSerializer.Serialize(updatedDto, options);
+            var json = JsonSerializer.Serialize(buildResponse.GameState, options);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -228,34 +228,34 @@ public class GameService
             blob.Upload(ms, overwrite: true);
 
             _logger.LogInformation("Built settlement on vertex {VertexId} for player {PlayerId} in game {GameId}.", vertexId, playerId, gameId);
-            return $"Built settlement on vertex {vertexId} for player {playerId} in game {gameId}.";
+            return buildResponse;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to build settlement on vertex {VertexId} for game {GameId}.", vertexId, gameId);
-            return null;
+            return new ResponseDTO(false, 9999, $"Action: BuildSettlement; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 
-    public async Task<string?> BuildCityAsync(Guid gameId, string vertexId, string playerId)
+    public async Task<ResponseDTO> BuildCityAsync(Guid gameId, string vertexId, string playerId)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return null;
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
         }
 
         try
         {
-            var dto = await GetGameDTO(gameId.ToString());
-            if (dto == null)
-                return $"Unable to retrieve game {gameId}";
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            var resultString = GamePlayHelpers.UpgradeToCityRequestFromUser(gs, playerId, vertexId);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var buildResponse = GamePlayHelpers.UpgradeToCityRequestFromUser(gs, playerId, vertexId);
 
-            if (!String.IsNullOrEmpty(resultString))
-                return resultString;
+            if (!buildResponse.Success)
+                return buildResponse;
 
             var options = new JsonSerializerOptions
             {
@@ -263,9 +263,7 @@ public class GameService
                 Converters = { new JsonStringEnumConverter() }
             };
 
-            var updatedDto = new DTOs.GameStateDTO(gs);
-
-            var json = JsonSerializer.Serialize(updatedDto, options);
+            var json = JsonSerializer.Serialize(buildResponse.GameState, options);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -273,33 +271,33 @@ public class GameService
             blob.Upload(ms, overwrite: true);
 
             _logger.LogInformation("Built city on vertex {VertexId} for player {PlayerId} in game {GameId}.", vertexId, playerId, gameId);
-            return $"Built city on vertex {vertexId} for player {playerId} in game {gameId}.";
+            return buildResponse;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to build city on vertex {VertexId} for game {GameId}.", vertexId, gameId);
-            return null;
+            return new ResponseDTO(false, 9999, $"Action: BuildCity; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 
-    public async Task<GameDice?> RollDiceAsync(Guid gameId)
+    public async Task<ResponseDTO> RollDiceAsync(Guid gameId)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return null;
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
         }
 
         try
         {
-            var dto = await GetGameDTO(gameId.ToString());
-            if (dto == null)
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
             {
                 _logger.LogError("Unable to retrieve game {GameId}.", gameId);
-                return null;
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
             }
 
-            var gs = new GameState(dto);
+            var gs = new GameState(response.GameState);
             GamePlayHelpers.RollDice(gs);
 
             var options = new JsonSerializerOptions
@@ -319,12 +317,12 @@ public class GameService
 
             _logger.LogInformation("Rolled: {die1}, {die2}.", gs.Dice.Die1.Value, gs.Dice.Die2.Value);
 
-            return gs.Dice;
+            return new ResponseDTO(true, 0, string.Empty, updatedDto);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to rolle dice for game {GameId}.", gameId);
-            return null;
+            return new ResponseDTO(false, 9999, $"Action: RollDice; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 
@@ -333,25 +331,25 @@ public class GameService
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return new ResponseDTO(false, 1001, $"{gameId}", null);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
         }
 
         try
         {
-            var dto = await GetGameDTO(gameId.ToString());
-            if (dto == null)
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
             {
                 _logger.LogError("Unable to retrieve game {GameId}.", gameId);
-                return new ResponseDTO(false, 1002, $"{gameId}", null);
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
             }
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
 
             // TODO: Need to get player from authorization. Using CurrentPlayer for now.
             if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.BuildOrTrade)
             {
                 _logger.LogError("Game isn't in a state where EndTurn is valid.");
-                return new ResponseDTO(false, 1003, $"Action: EndTurn; GameId: {gameId}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null);
+                return new ResponseDTO(false, 1003, $"Action: EndTurn; GameId: {gameId}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
             }
             var player = gs.Phase.CurrentPlayer;
             GamePlayHelpers.EndTurn(player, gs);
@@ -378,33 +376,33 @@ public class GameService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to end turn in {GameId}.", gameId);
-            return new ResponseDTO(false, 1003, $"Failed to end turn in {gameId}.", null);
+            return new ResponseDTO(false, 1003, $"Failed to end turn in {gameId}.", null as GameStateDTO);
         }
     }
 
-    public async Task<bool> StartGameAsync(Guid gameId)
+    public async Task<ResponseDTO> StartGameAsync(Guid gameId)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return false;
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
         }
 
         try
         {
-            var dto = await GetGameDTO(gameId.ToString());
-            if (dto == null)
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
             {
                 _logger.LogError("Unable to retrieve game {GameId}.", gameId);
-                return false;
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
             }
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
 
             if (gs.Phase.PhaseState != GameStates.SettingUpBoard)
             {
                 _logger.LogError("Game isn't in a state where StartGame is valid.");
-                return false;
+                return new ResponseDTO(false, 1003, $"Action: StartGame; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
             }
 
             // TODO: In the future, will need every human player to hit start before a game starts.
@@ -430,34 +428,34 @@ public class GameService
 
             _logger.LogInformation("Started game.");
 
-            return true;
+            return new ResponseDTO(true, 0, string.Empty, updatedDto);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to start game {GameId}.", gameId);
-            return false;
+            return new ResponseDTO(false, 9999, $"Action: StartGame; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 
-    public async Task<string?> BankTradeAsync(Guid gameId, TradeRequestDTO request)
+    public async Task<ResponseDTO> BankTradeAsync(Guid gameId, TradeRequestDTO request)
     {
         if (_container == null)
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
-            return null;
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
         }
 
         try
         {
-            var dto = await GetGameDTO(gameId.ToString());
-            if (dto == null)
-                return $"Unable to retrieve game {gameId}";
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            var resultString = GamePlayHelpers.BankTradeFromUser(gs, request);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var tradeResponse = GamePlayHelpers.BankTradeFromUser(gs, request);
 
-            if (!String.IsNullOrEmpty(resultString))
-                return resultString;
+            if (!tradeResponse.Success)
+                return tradeResponse;
 
             var options = new JsonSerializerOptions
             {
@@ -465,9 +463,7 @@ public class GameService
                 Converters = { new JsonStringEnumConverter() }
             };
 
-            var updatedDto = new DTOs.GameStateDTO(gs);
-
-            var json = JsonSerializer.Serialize(updatedDto, options);
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, options);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -475,12 +471,12 @@ public class GameService
             blob.Upload(ms, overwrite: true);
 
             _logger.LogInformation("Completed bank trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
-            return $"Bank trade completed for player {request.PlayerId} in game {gameId}.";
+            return tradeResponse;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Bank trade for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
-            return null;
+            return new ResponseDTO(false, 9999, $"Action: BankTrade; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 

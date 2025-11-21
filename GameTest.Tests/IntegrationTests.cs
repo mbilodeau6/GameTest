@@ -52,29 +52,29 @@ public class IntegrationTests
 
         // Build Bot's first settlement and road
         var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, brickTile, woolTile, null);
-        var result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[1].Id, v1.Id);
-        Assert.Empty(result);
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[1].Id, v1.Id);
+        Assert.True(response.Success);
         // var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, brickTile, null);
         // result = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, e1.Id);
         // Assert.Empty(result);
 
         // Build User's settlements and first road
         var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, oreTile, grainTile, null);
-        result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v2.Id);
-        Assert.Empty(result);
+        response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v2.Id);
+        Assert.True(response.Success);
         var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
-        result = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e2.Id);
-        Assert.Empty(result);
+        response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e2.Id);
+        Assert.True(response.Success);
 
         var v3 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, null, null, VertexDirection.SE);
-        result = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v3.Id);
-        Assert.Empty(result);
+        response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v3.Id);
+        Assert.True(response.Success);
 
         // Act
         // Build user's second road - this should trigger the bot to build its second settlement and road
         var e3 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, null, HexDirection.SE);
-        result = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e3.Id);
-        Assert.Empty(result);
+        response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e3.Id);
+        Assert.True(response.Success);
 
 
         // Assert

@@ -6,26 +6,27 @@ namespace GameTest.Services;
 
 public class Bank
 {
-    public bool TradeWithBank(Player player, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    public ResponseDTO TradeWithBank(GameState gs, Player player, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
     {
         // Check if player has the offered resources
         foreach (var resource in offer)
             if (!player.Resources.ContainsKey(resource.Key) || player.Resources[resource.Key] < resource.Value)
-                return false; // Player does not have enough resources to offer
+                return new ResponseDTO(false, 1006, $"PlayerId: {player.Id}; ResourceOffered: {resource.Key}; OfferedQty: {resource.Value}", null as GameStateDTO);
 
         // Check if the trade is valid according to bank rules
         if (offer.Count != 1 || request.Count != 1)
-            return false; // Bank only accepts trades with one type of resource offered
+            return new ResponseDTO(false, 1007, $"PlayerId: {player.Id}; ResourceTypesInOffer: {offer.Count}; ResourceTypesInRequest: {request.Count}", null as GameStateDTO);
 
         // TODO: Implement different trade ratios based on ports or game settings
+        var required = 4;
         if (offer.First().Value != 4)
-            return false; // Bank requires at least 4 of the offered resource
+            return new ResponseDTO(false, 1008, $"PlayerId: {player.Id}; ResourceOffered: {offer.First().Key}; Offered: {offer.First().Value}; Required: {required}", null as GameStateDTO);
 
         if (offer.First().Key == request.First().Key)
-            return false; // Cannot trade the same resource type
+            return new ResponseDTO(false, 1009, $"PlayerId: {player.Id}; ResourceOffered: {offer.First().Key}", null as GameStateDTO);
 
         if (request.First().Value != 1)
-            return false; // Bank only gives 1 of the requested resource
+            return new ResponseDTO(false, 1009, $"PlayerId: {player.Id}; ResourceRequested: {request.First().Key}; RequestedQty: {request.First().Value}", null as GameStateDTO);
 
         // TODO: Check if bank has the requested resources
 
@@ -36,6 +37,6 @@ public class Bank
         foreach (var resource in request)
             player.AssignResources(resource.Key, resource.Value);
 
-        return true;
+        return new ResponseDTO(true, 0, string.Empty, gs);
     }
 }
