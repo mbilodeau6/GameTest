@@ -625,23 +625,17 @@ public static class GamePlayHelpers
 
     public static bool UnusedRoadAvailable(GameState gs, Player player)
     {
-        int roadCount = gs.Edges.Where(e => e.Owner != null && e.Owner.Id == player.Id).Count();
-
-        return roadCount < gs.Settings.RoadsPerPlayer;
+        return CountRoadsForPlayer(gs, player) < gs.Settings.RoadsPerPlayer;
     }
 
     public static bool UnusedSettlementAvailable(GameState gs, Player player)
     {
-        int settlementCount = gs.Vertices.Where(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement).Count();
-
-        return settlementCount < gs.Settings.SettlementsPerPlayer;
+        return CountSettlementsForPlayer(gs, player) < gs.Settings.SettlementsPerPlayer;
     }
 
     public static bool UnusedCityAvailable(GameState gs, Player player)
     {
-        int cityCount = gs.Vertices.Where(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City).Count();
-
-        return cityCount < gs.Settings.CitiesPerPlayer;
+        return CountCitiesForPlayer(gs, player) < gs.Settings.CitiesPerPlayer;
     }
 
 }

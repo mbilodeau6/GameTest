@@ -46,11 +46,10 @@ public class BotAI
         if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
-        bool couldBuildCity = (AIHelpers.GetSettlementToUpgrade(State) != null) 
-                && (GamePlayHelpers.CountCitiesForPlayer(State, State.Phase.CurrentPlayer) < State.Settings.CitiesPerPlayer);
-        bool couldBuildSettlement = (AIHelpers.GetVertexReadyForSettlement(State) != null) 
-                && (GamePlayHelpers.CountSettlementsForPlayer(State, State.Phase.CurrentPlayer) < State.Settings.SettlementsPerPlayer);
-        bool couldBuildRoad = GamePlayHelpers.CountRoadsForPlayer(State, State.Phase.CurrentPlayer) < State.Settings.RoadsPerPlayer;
+        bool couldBuildCity = AIHelpers.GetSettlementToUpgrade(State) != null && GamePlayHelpers.UnusedCityAvailable(State, State.Phase.CurrentPlayer);
+        bool couldBuildSettlement = AIHelpers.GetVertexReadyForSettlement(State) != null
+                && GamePlayHelpers.UnusedSettlementAvailable(State, State.Phase.CurrentPlayer);
+        bool couldBuildRoad = GamePlayHelpers.UnusedRoadAvailable(State, State.Phase.CurrentPlayer);
 
         ResourceType resourceToTrade = ResourceType.Desert;
         ResourceType resourceToGet = ResourceType.Desert;
@@ -137,7 +136,9 @@ public class BotAI
 
         // First look to see if we can upgrade settlements to a city
         var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(State);
-        if (settlementToUpgrade != null && GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer))
+        if (settlementToUpgrade != null 
+            && GamePlayHelpers.UnusedCityAvailable(State, State.Phase.CurrentPlayer) 
+            && GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer))
         {
                 move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
                 return move;
@@ -148,14 +149,19 @@ public class BotAI
         if (candidateVertices.Count() > 0)
         {
             // Next, see if you can build on the most valuable vertex identified
-            if (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer) && candidateVertices.First().RoadsNeeded == 0)
+            if (GamePlayHelpers.UnusedSettlementAvailable(State, State.Phase.CurrentPlayer)
+                && GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer) 
+                && candidateVertices.First().RoadsNeeded == 0)
             {
                 move.VertexMove = new VertexDTO(candidateVertices.First().TargetVertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
                 return move;
             }
 
             // If there isn't a vertex the Bot can build on (yet), build the next road needed to make that vertex available
-            if (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer) && candidateVertices.First().RoadsNeeded > 0)
+            if (GamePlayHelpers.UnusedRoadAvailable(State, State.Phase.CurrentPlayer)
+                && GamePlayHelpers.UnusedSettlementAvailable(State, State.Phase.CurrentPlayer)
+                && GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer) 
+                && candidateVertices.First().RoadsNeeded > 0)
             {
                 move.EdgeMove = new EdgeDTO(candidateVertices.First().NextEdgeToTarget.Id, State.Phase.CurrentPlayer.Id, null);
                 return move;
