@@ -1751,4 +1751,116 @@ public class GamePlayHelpersTests
         Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
     }
 
+    private static GameState CreateBoardWithOnlyOneOfEachBuildAvailable()
+    {
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
+        var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
+        var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
+        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+
+        // build all but one road
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, null, HexDirection.SW).BuildRoad(player);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, grainTile, null).BuildRoad(player);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, desertTile, null).BuildRoad(player);
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, desertTile, null).BuildRoad(player);
+
+        // build all but one city
+        gs.Vertices.Where(v => v.Building == BuildingType.Settlement && v.Owner != null && v.Owner.Id == player.Id).First().UpgradeToCity();
+
+        // build all but one settlement
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.SW).BuildSettlement(player);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, desertTile, null, null).BuildSettlement(player);
+
+        return gs;
+    }
+
+    private static GameState CreateBoardWithAllBuildingsInUse()
+    {
+        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        // Build remaining buildings to hit max
+        var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
+        var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
+        var wool11Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, desertTile, grainTile, wool11Tile, null);
+        v1.BuildSettlement(player);
+        v1.UpgradeToCity();
+
+        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, null, HexDirection.W).BuildRoad(player);
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wool2Tile, null, null, VertexDirection.SW).BuildSettlement(player);
+
+        return gs;
+    }
+
+    [Fact]
+    public void UnusedRoadAvailable_Yes()
+    {
+        // Arrange
+        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        // Act & Assert
+        Assert.True(GamePlayHelpers.UnusedRoadAvailable(gs, player)); 
+    }
+
+    [Fact]
+    public void UnusedRoadAvailable_No()
+    {
+        // Arrange
+        var gs = CreateBoardWithAllBuildingsInUse();
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        // Act & Assert
+        Assert.False(GamePlayHelpers.UnusedRoadAvailable(gs, player)); 
+    }
+
+    [Fact]
+    public void UnusedSettlementAvailable_Yes()
+    {
+        // Arrange
+        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        // Act & Assert
+        Assert.True(GamePlayHelpers.UnusedSettlementAvailable(gs, player)); 
+    }
+
+    [Fact]
+    public void UnusedSettlementAvailable_No()
+    {
+        // Arrange
+        var gs = CreateBoardWithAllBuildingsInUse();
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        // Act & Assert
+        Assert.False(GamePlayHelpers.UnusedSettlementAvailable(gs, player)); 
+    }
+
+    [Fact]
+    public void UnusedCityAvailable_Yes()
+    {
+        // Arrange
+        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        // Act & Assert
+        Assert.True(GamePlayHelpers.UnusedCityAvailable(gs, player)); 
+    }
+
+    [Fact]
+    public void UnusedCityAvailable_No()
+    {
+        // Arrange
+        var gs = CreateBoardWithAllBuildingsInUse();
+        var player = gs.Players.Where(p => !p.IsBot).First();
+
+        // Act & Assert
+        Assert.False(GamePlayHelpers.UnusedCityAvailable(gs, player)); 
+    }
 }

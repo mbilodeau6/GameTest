@@ -82,6 +82,9 @@ public class ResponseDTO
         { 1024, "Request to build a settlement must specify player id and vertex id'."},
         { 1026, "Request for a bank trade must specify player id, request, and offer'."},
         { 1027, "Could not build road (game/player/edge missing or edge occupied)."},
+        { 1028, "Player has used all of their cities."},
+        { 1029, "Player has used all of their settlements."},
+        { 1030, "Player has used all of their roads."},
         { 9999, "Unexpected error."},
 
     };
