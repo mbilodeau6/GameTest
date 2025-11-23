@@ -1895,4 +1895,16 @@ public class GamePlayHelpersTests
         Assert.Single(bot.Ports);
         Assert.Contains(PortType.ThreeToOne, bot.Ports);
     }
+
+    [Fact]
+    public void RollDice_InvalidState_Exception()
+    {
+        // Arrange
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        gs.Phase.PhaseState = GameStates.BuildOrTrade;
+        gs.Phase.CurrentPlayer = gs.Players[0];
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RollDice(gs));
+    }
 }

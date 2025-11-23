@@ -108,8 +108,36 @@ public class IntegrationTests
 
         Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
 
-        // TODO: Continue to implement. Stopped because I was able to recreate the problem I encountered
-        // in the BotBuildAtEndOfSetupPhase_TriggeredByBuildRoadByUser integration test.
+        // TODO: Need to figure out how to set up (or bypass) connection to blob container.
+        // var response = await gameService.StartGameAsync(gameId);
+        // Assert.True(response.Success);
+
+        // var vp = new VertexPicker(gs);
+        // Assert.NotNull(vp);
+
+        // Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
+        // response =  await gameService.BuildSettlementAsync(gameId, vp.PickVertex().Id, gs.Phase.CurrentPlayer.Id);
+        // Assert.True(response.Success);
+
+        // Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        // response = await gameService.BuildRoadAsync(gameId, vp.PickEdge().Id, gs.Phase.CurrentPlayer.Id);
+        // Assert.True(response.Success);
+
+        // Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
+        // response =  await gameService.BuildSettlementAsync(gameId, vp.PickVertex().Id, gs.Phase.CurrentPlayer.Id);
+        // Assert.True(response.Success);
+
+        // Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
+        // response = await gameService.BuildRoadAsync(gameId, vp.PickEdge().Id, gs.Phase.CurrentPlayer.Id);
+        // Assert.True(response.Success);
+
+        // Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
+        // response = await gameService.RollDiceAsync(gameId);
+        // Assert.True(response.Success);
+
+
+        // TODO: Continue to implement. Stopped because I couldn't figure out an easy way to deal with
+        // blob container.
     }
 
     // [Fact]

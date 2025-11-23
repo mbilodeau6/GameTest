@@ -298,6 +298,13 @@ public class GameService
             }
 
             var gs = new GameState(response.GameState);
+
+            // if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.BuildOrTrade)
+            // {
+            //     _logger.LogError("Game isn't in a state where EndTurn is valid.");
+            //     return new ResponseDTO(false, 1003, $"Action: RollDice; GameId: {gameId}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+            // }
+
             GamePlayHelpers.RollDice(gs);
 
             var options = new JsonSerializerOptions

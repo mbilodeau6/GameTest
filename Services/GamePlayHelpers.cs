@@ -534,6 +534,9 @@ public static class GamePlayHelpers
 
     public static void RollDice(GameState gs, bool skipGameLoop = false)
     {
+        if (gs.Phase.PhaseState != GameStates.RollOrUseDevCard || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException($"Unexpected Exception. Roll called when game in {gs.Phase.PhaseState}. Player: {gs.Phase.CurrentPlayer}.");
+
         gs.Dice.Roll();
         GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
 
