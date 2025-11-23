@@ -367,6 +367,7 @@ public static class GamePlayHelpers
 
         vertex.BuildSettlement(player);
         MarkBlockedVertices(gs, vertex);
+        PopulatePlayerPorts(gs);
     }
 
     // TODO: Return a GameResult type that can indicate success/failure and include messages.

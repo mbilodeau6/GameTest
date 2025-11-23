@@ -6,6 +6,23 @@ namespace GameTest.Services;
 
 public class Bank
 {
+    public int GetTradeRate(Player player, ResourceType resource)
+    {
+        var tradeRate = GameSettings.DefaultBankTradeRate;
+
+        if (player.Ports.Contains(PortType.ThreeToOne))
+            tradeRate = 3;
+        
+        if ((resource == ResourceType.Brick && player.Ports.Contains(PortType.Brick))
+                || (resource == ResourceType.Wood && player.Ports.Contains(PortType.Wood))
+                || (resource == ResourceType.Wool && player.Ports.Contains(PortType.Wool))
+                || (resource == ResourceType.Ore && player.Ports.Contains(PortType.Ore))
+                || (resource == ResourceType.Grain && player.Ports.Contains(PortType.Grain)))
+            tradeRate = 2;
+
+        return tradeRate;    
+    }
+
     public ResponseDTO TradeWithBank(GameState gs, Player player, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
     {
         // Check if player has the offered resources
@@ -17,9 +34,8 @@ public class Bank
         if (offer.Count != 1 || request.Count != 1)
             return new ResponseDTO(false, 1007, $"PlayerId: {player.Id}; ResourceTypesInOffer: {offer.Count}; ResourceTypesInRequest: {request.Count}", null as GameStateDTO);
 
-        // TODO: Implement different trade ratios based on ports or game settings
-        var required = 4;
-        if (offer.First().Value != 4)
+        var required = GetTradeRate(player, offer.First().Key);
+        if (offer.First().Value != required)
             return new ResponseDTO(false, 1008, $"PlayerId: {player.Id}; ResourceOffered: {offer.First().Key}; Offered: {offer.First().Value}; Required: {required}", null as GameStateDTO);
 
         if (offer.First().Key == request.First().Key)

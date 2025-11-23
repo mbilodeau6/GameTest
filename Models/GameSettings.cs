@@ -3,6 +3,7 @@ using Microsoft.Identity.Client;
 
 public class GameSettings
 {
+    public const int DefaultBankTradeRate = 4;
     public GameType Type { get; }
     public int MaxPlayers { get; }
     public int VictoryPointsToWin { get; }

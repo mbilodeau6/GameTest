@@ -310,4 +310,48 @@ public class BankTests
         Assert.Equal(2, player.Resources.GetValueOrDefault(ResourceType.Grain, -1));
         Assert.Equal(3, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
     }
+
+    [Fact]
+    public void GetTradeRate_OrePort()
+    {
+        var player = new Player("Tim", PlayerColor.Red, false);
+        player.AddPort(PortType.Ore);
+        var bank = new Bank();
+
+        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Brick));
+        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Wood));
+        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Wool));
+        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Grain));
+        Assert.Equal(2, bank.GetTradeRate(player, ResourceType.Ore));
+    }
+
+    [Fact]
+    public void GetTradeRate_ThreeToOneWorksForAll()
+    {
+        var player = new Player("Tim", PlayerColor.Red, false);
+        player.AddPort(PortType.ThreeToOne);
+        var bank = new Bank();
+
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Brick));
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Wood));
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Wool));
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Grain));
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Ore));
+    }
+
+    [Fact]
+    public void GetTradeRate_ResourcePortTrumpsThreeToOne()
+    {
+         var player = new Player("Tim", PlayerColor.Red, false);
+        player.AddPort(PortType.ThreeToOne);
+        player.AddPort(PortType.Brick);
+        player.AddPort(PortType.Wool);
+        var bank = new Bank();
+
+        Assert.Equal(2, bank.GetTradeRate(player, ResourceType.Brick));
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Wood));
+        Assert.Equal(2, bank.GetTradeRate(player, ResourceType.Wool));
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Grain));
+        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Ore));
+    }
 }
