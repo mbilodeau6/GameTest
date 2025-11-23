@@ -1863,4 +1863,36 @@ public class GamePlayHelpersTests
         // Act & Assert
         Assert.False(GamePlayHelpers.UnusedCityAvailable(gs, player)); 
     }
+
+    [Fact]
+    public void PopulatePlayerPorts_Valid()
+    {
+        // Arrange
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var bot = gs.Players.Where(p => p.IsBot).First();
+        var human = gs.Players.Where(p => !p.IsBot).First();
+
+        var grain12Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
+        var grain9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -4, 0);
+        var brick8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, 1);
+        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+
+
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grain12Tile, grain9Tile, null, null).BuildSettlement(human);
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grain9Tile, brick8Tile, null, null);
+        v1.BuildSettlement(human);
+        v1.UpgradeToCity();
+
+        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, ore8Tile, null, null, VertexDirection.NE).BuildSettlement(bot);
+
+        // Act
+        GamePlayHelpers.PopulatePlayerPorts(gs);
+
+        // Assert
+        Assert.Equal(2, human.Ports.Count);
+        Assert.Contains(PortType.Wood, human.Ports);
+        Assert.Contains(PortType.Brick, human.Ports);
+        Assert.Single(bot.Ports);
+        Assert.Contains(PortType.ThreeToOne, bot.Ports);
+    }
 }

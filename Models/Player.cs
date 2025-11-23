@@ -46,6 +46,8 @@ public class Player
 
     public int DevelopmentCardCount { get; set; } = 0;
 
+    public HashSet<PortType> Ports {get ; private set; } = new HashSet<PortType>();
+
     // Parameterless ctor for serializers
     public Player()
     {
@@ -111,6 +113,11 @@ public class Player
     {
         DevelopmentCards[type]++;
         DevelopmentCardCount++;
+    }
+
+    public void AddPort(PortType port)
+    {
+        Ports.Add(port);
     }
 
     public override string ToString() => $"{Name} ({Id}) - {Color}";

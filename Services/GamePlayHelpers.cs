@@ -564,6 +564,7 @@ public static class GamePlayHelpers
         var gs = new GameState(dto);
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
         MarkBlockedVertices(gs);
+        PopulatePlayerPorts(gs);
 
         return gs;
     }
@@ -638,4 +639,11 @@ public static class GamePlayHelpers
         return CountCitiesForPlayer(gs, player) < gs.Settings.CitiesPerPlayer;
     }
 
+    public static void PopulatePlayerPorts(GameState gs)
+    {
+        foreach(var port in gs.Ports)
+            foreach(var vertex in port.Vertices)
+                if (vertex.Owner != null)
+                    vertex.Owner.AddPort(port.Type);
+    }
 }
