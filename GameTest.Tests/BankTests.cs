@@ -318,11 +318,11 @@ public class BankTests
         player.AddPort(PortType.Ore);
         var bank = new Bank();
 
-        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Brick));
-        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Wood));
-        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Wool));
-        Assert.Equal(GameSettings.DefaultBankTradeRate, bank.GetTradeRate(player, ResourceType.Grain));
-        Assert.Equal(2, bank.GetTradeRate(player, ResourceType.Ore));
+        Assert.Equal(GameSettings.DefaultBankTradeRate, Bank.GetTradeRate(player, ResourceType.Brick));
+        Assert.Equal(GameSettings.DefaultBankTradeRate, Bank.GetTradeRate(player, ResourceType.Wood));
+        Assert.Equal(GameSettings.DefaultBankTradeRate, Bank.GetTradeRate(player, ResourceType.Wool));
+        Assert.Equal(GameSettings.DefaultBankTradeRate, Bank.GetTradeRate(player, ResourceType.Grain));
+        Assert.Equal(2, Bank.GetTradeRate(player, ResourceType.Ore));
     }
 
     [Fact]
@@ -332,11 +332,11 @@ public class BankTests
         player.AddPort(PortType.ThreeToOne);
         var bank = new Bank();
 
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Brick));
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Wood));
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Wool));
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Grain));
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Ore));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Brick));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Wood));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Wool));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Grain));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Ore));
     }
 
     [Fact]
@@ -348,10 +348,10 @@ public class BankTests
         player.AddPort(PortType.Wool);
         var bank = new Bank();
 
-        Assert.Equal(2, bank.GetTradeRate(player, ResourceType.Brick));
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Wood));
-        Assert.Equal(2, bank.GetTradeRate(player, ResourceType.Wool));
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Grain));
-        Assert.Equal(3, bank.GetTradeRate(player, ResourceType.Ore));
+        Assert.Equal(2, Bank.GetTradeRate(player, ResourceType.Brick));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Wood));
+        Assert.Equal(2, Bank.GetTradeRate(player, ResourceType.Wool));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Grain));
+        Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Ore));
     }
 }

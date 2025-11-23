@@ -1,5 +1,6 @@
 using GameTest.DTOs;
 using GameTest.Models;
+using Microsoft.ApplicationInsights.Extensibility.Implementation.ApplicationId;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace GameTest.Services;
@@ -39,8 +40,24 @@ public class BotAI
         return move;
     }
 
-    // TODO: Will need to update when Ports are supported and may want to factor in probabily of
-    // getting each resource when determining which resources to offer and request.
+    private static Dictionary<ResourceType, int> CalculateTradeRates(Player player)
+    {
+        var tradeRates = new Dictionary<ResourceType, int>();
+
+        foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
+        {
+            if (rt == ResourceType.Desert)
+                continue;
+
+            tradeRates.Add(rt, Bank.GetTradeRate(player, rt));
+        }
+
+        return tradeRates;
+    }
+
+    // TODO: Add code to factor in probabily of getting each resource when determining which 
+    // resources to offer and request (i.e. if you need wool and grain to build a settlement,
+    // trade for the resource you are less likely to roll first).
     public (bool CanTrade, TradeRequest? TradeRequest) AnalyzePossibleBankTrades()
     {
         if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
@@ -65,50 +82,52 @@ public class BotAI
         if (shortForRoad == 0 && shortForSettlement == 0 && shortForCity == 0)
             return (false, null);
 
+        var tradeRates = CalculateTradeRates(State.Phase.CurrentPlayer);
+
         if (couldBuildCity && shortForCity > 0 && (!couldBuildRoad 
             || GamePlayHelpers.CountSettlementsForPlayer(State, State.Phase.CurrentPlayer) >= State.Settings.SettlementsPerPlayer
             || (shortForRoad > shortForCity && !couldBuildSettlement)
             || shortForSettlement > shortForCity))
         {
-            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 4)
+            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= tradeRates[ResourceType.Wool])
                 resourceToTrade = ResourceType.Wool;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 4)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= tradeRates[ResourceType.Wood])
                 resourceToTrade = ResourceType.Wood;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 4)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= tradeRates[ResourceType.Brick])
                 resourceToTrade = ResourceType.Brick;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 6)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= (tradeRates[ResourceType.Grain] + 2))
                 resourceToTrade = ResourceType.Grain;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 7)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= (tradeRates[ResourceType.Ore] + 3))
                 resourceToTrade = ResourceType.Ore;
 
             resourceToGet = neededForCity.First().Key;
         }
         else if (couldBuildSettlement && shortForSettlement > 0)
         {
-            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 5)
+            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= (tradeRates[ResourceType.Wool] + 1))
                 resourceToTrade = ResourceType.Wool;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= (tradeRates[ResourceType.Wood] + 1))
                 resourceToTrade = ResourceType.Wood;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= (tradeRates[ResourceType.Brick] + 1))
                 resourceToTrade = ResourceType.Brick;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 5)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= (tradeRates[ResourceType.Grain] + 1))
                 resourceToTrade = ResourceType.Grain;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 4)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= tradeRates[ResourceType.Ore])
                 resourceToTrade = ResourceType.Ore;
 
             resourceToGet = neededForSettlement.First().Key;
         }
         else if (couldBuildRoad && shortForRoad > 0)
         {
-            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= 4)
+            if (State.Phase.CurrentPlayer.Resources[ResourceType.Wool] >= tradeRates[ResourceType.Wool])
                 resourceToTrade = ResourceType.Wool;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= 5)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Wood] >= (tradeRates[ResourceType.Wood] + 1))
                 resourceToTrade = ResourceType.Wood;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= 5)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Brick] >= (tradeRates[ResourceType.Brick] + 1))
                 resourceToTrade = ResourceType.Brick;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= 4)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Grain] >= tradeRates[ResourceType.Grain])
                 resourceToTrade = ResourceType.Grain;
-            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= 4)
+            else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= tradeRates[ResourceType.Ore])
                 resourceToTrade = ResourceType.Ore;
 
             resourceToGet = neededForSettlement.First().Key;
@@ -117,7 +136,7 @@ public class BotAI
         if (resourceToTrade != ResourceType.Desert && resourceToGet != ResourceType.Desert)
         {
             return (true, new TradeRequest(State.Phase.CurrentPlayer,
-                    new Dictionary<ResourceType, int>() { { resourceToTrade, 4 } },
+                    new Dictionary<ResourceType, int>() { { resourceToTrade, tradeRates[resourceToTrade] } },
                     new Dictionary<ResourceType, int>() { { resourceToGet, 1 } }));
         }
 

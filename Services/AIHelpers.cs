@@ -65,7 +65,7 @@ public static class AIHelpers
                                                         && v.Building == BuildingType.Settlement
                                                         && v.Owner != null
                                                         && v.Owner.Id == gs.Phase.CurrentPlayer.Id)
-                                                        .OrderByDescending(g => (new GoalStats(g, 4, baseRates, 0, null)).OverallScore).ToList();
+                                                        .OrderByDescending(g => (new GoalStats(g, gs.Phase.CurrentPlayer, baseRates, 0, null)).OverallScore).ToList();
 
             if (ownedSettlements.Count > 0)
             {
@@ -89,7 +89,7 @@ public static class AIHelpers
                     foreach (var v2 in e1.Vertices.Where(v => v.Owner == null && v.Building == BuildingType.Blocked))
                         foreach (var e2 in v2.Edges.Where(e => e.Owner != null && e.Owner.Id == gs.Phase.CurrentPlayer.Id))
                             foreach (var v3 in e2.Vertices.Where(v => v.Owner == null && v.Building == null))
-                                options.Add(new GoalStats(v3, 4, baseRates, 0, null));
+                                options.Add(new GoalStats(v3, gs.Phase.CurrentPlayer, baseRates, 0, null));
 
             if (options.Count == 0)
                 return null;    
@@ -115,6 +115,9 @@ public static class AIHelpers
 
             List<string> visitedEdgeIds = new List<string>();
             List<string> visitedVertexIds = new List<string>();
+
+            // Note: The pathQueue is be defined as a priority queue so that we analyze targerts that require
+            // fewer new roads first.
             PriorityQueue<CandidatePath, int> pathQueue = new PriorityQueue<CandidatePath, int>();
 
             foreach (var vertex in startingVertices)
@@ -135,9 +138,7 @@ public static class AIHelpers
             {
                 var pathCandidate = pathQueue.Dequeue();
 
-                // Skip vertices that have already been considered
-                // TODO: Is it possible that existing candidates in the list have longer roads than the new candidate?
-                // If yes, need to replace the existing with the new.
+                // Skip vertices that have already been considered.
                 Vertex candidateVertex;
                 if (!visitedVertexIds.Contains(pathCandidate.NextEdge.Vertices[0].Id))
                     candidateVertex = pathCandidate.NextEdge.Vertices[0];
@@ -148,7 +149,7 @@ public static class AIHelpers
 
                 // If candidate vertex is open for building, add stats to candidate vertices
                 if (candidateVertex.Building == null)
-                    rankedGoals.Add(new GoalStats(candidateVertex, 4, baseRates, pathCandidate.NewBuildRequired, pathCandidate.FirstEdge));
+                    rankedGoals.Add(new GoalStats(candidateVertex, gs.Phase.CurrentPlayer, baseRates, pathCandidate.NewBuildRequired, pathCandidate.FirstEdge));
                 else if (GamePlayHelpers.HasBuilding(candidateVertex))
                     continue;
 
@@ -234,4 +235,72 @@ public static class AIHelpers
         return needed;
     }
 
+    public static double GetAIResourceAcquisitionScore(double acquisitionRate, ResourceType type, bool hasPort)
+    {
+        double rate = acquisitionRate;
+
+        // If the acquisition rate for the specified resource doesn't meet some minimum threshold,
+        // there is no bonus for having a port for that resource.
+        if (acquisitionRate >= GetAIWeight(AIWeights.MinimumThresholdForResourceSpecificPortBonus) && hasPort)
+            rate *= GetAIWeight(AIWeights.VertexValueMultiplierForResourceSpecificPort);
+
+        // Some resources may be more valuable than others.
+        switch(type)
+        {
+           case ResourceType.Ore:
+                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForOreTiles);
+                break;
+           case ResourceType.Grain:
+                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForGrainTiles);
+                break;
+           case ResourceType.Brick:
+                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForBrickTiles);
+                break;
+           case ResourceType.Wood:
+                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForWoodTiles);
+                break;
+           case ResourceType.Wool:
+                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForWoolTiles);
+                break;
+        }
+
+        return rate;
+    }
+
+    public static double GetAIWeight(AIWeights name)
+    {
+        if (!AIWeightValues.ContainsKey(name))
+            throw new InvalidOperationException($"Unexpected Exception: Requested AIWeight {name} doesn't exist.");
+            
+        return AIWeightValues[name];
+    }
+
+    // Weights/parameters an AI may track/adjust as we gather game data. Try to stick with numbers
+    // that are added to a weight (use "ValueAdd" in the name and number between 0 and 1) and 
+    // numbers multiplied to a weight (use "ValueMultiplier" in the name and number greater than 0).
+    private static Dictionary<AIWeights, double> AIWeightValues = new Dictionary<AIWeights, double>()
+    {
+        {AIWeights.VertexValueAddForThreeToOnePort, 2.0/36.0 },
+        {AIWeights.VertexValueMultiplierForResourceSpecificPort, 1.0 + 2.0/36.0},
+        {AIWeights.MinimumThresholdForResourceSpecificPortBonus, 2.0/36.0 },
+        {AIWeights.PreferenceValueMultiplierForOreTiles, 1.2 },
+        {AIWeights.PreferenceValueMultiplierForGrainTiles, 1.1 },
+        {AIWeights.PreferenceValueMultiplierForBrickTiles, 1.0 },
+        {AIWeights.PreferenceValueMultiplierForWoodTiles, 0.9 },
+        {AIWeights.PreferenceValueMultiplierForWoolTiles, 0.8 },
+        {AIWeights.VertexValuePenaltyForDistanceToClosestBuild, 0.9 },
+    };
+
+    public enum AIWeights
+    {
+        VertexValueAddForThreeToOnePort,
+        VertexValueMultiplierForResourceSpecificPort,
+        MinimumThresholdForResourceSpecificPortBonus,
+        PreferenceValueMultiplierForOreTiles,
+        PreferenceValueMultiplierForGrainTiles,
+        PreferenceValueMultiplierForBrickTiles,
+        PreferenceValueMultiplierForWoodTiles,
+        PreferenceValueMultiplierForWoolTiles,
+        VertexValuePenaltyForDistanceToClosestBuild,
+    }
 }

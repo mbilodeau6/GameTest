@@ -10,43 +10,15 @@ namespace GameTest.Tests;
 public class GoalStatsTests
 {
     [Fact]
-    public void Constructor_InvalidTradeRate_TooLow()
-    {
-        // Arrange
-        var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
-        var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
-        var vertex = new Vertex(t1, t2, null);
-        int tradeRate = 1;
-        Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0, null));
-    }
-
-    [Fact]
-    public void Constructor_InvalidTradeRate_TooHigh()
-    {
-        // Arrange
-        var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
-        var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
-        var vertex = new Vertex(t1, t2, null);
-        int tradeRate = 5;
-        Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => new GoalStats(vertex, tradeRate, baseStats, 0, null));
-    }
-
-    [Fact]
     public void Constructor_NullVertex()
     {
         // Arrange
         Vertex vertex = null;
-        int tradeRate = 3;
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
+        var player = new Player("Tim", PlayerColor.Red, false);
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, tradeRate, baseStats, 0, null));
+        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, player, baseStats, 0, null));
     }
 
     [Fact]
@@ -56,15 +28,14 @@ public class GoalStatsTests
         var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
-        int tradeRate = 3;
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
+        var player = new Player("Tim", PlayerColor.Red, false);
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0, null);
+        var goalStats = new GoalStats(vertex, player, baseStats, 0, null);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
-        Assert.Equal(tradeRate, goalStats.TradeRate);
         Assert.NotNull(goalStats.ResourceAcquisitionRates);
         foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
         {
@@ -85,22 +56,22 @@ public class GoalStatsTests
     }
 
     [Fact]
-    public void Constructor_RoadRequired_ReducesOveralScore()
+    public void Constructor_RoadRequired_ReducesOverallScore()
     {
         // Arrange
         var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
-        int tradeRate = 3;
         var neededEdge = new Edge(t1, t2);
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
+        var player = new Player("Tim", PlayerColor.Red, false);
+
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 1, neededEdge);
+        var goalStats = new GoalStats(vertex, player, baseStats, 1, neededEdge);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
-        Assert.Equal(tradeRate, goalStats.TradeRate);
         Assert.NotNull(goalStats.ResourceAcquisitionRates);
         foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
         {
@@ -129,18 +100,17 @@ public class GoalStatsTests
         var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
-        int tradeRate = 3;
+        var player = new Player("Tim", PlayerColor.Red, false);
 
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
         baseStats[ResourceType.Wood] = 4.0 / 36.0;
         baseStats[ResourceType.Ore] = 1.0 / 36.0;
 
         // Act
-        var goalStats = new GoalStats(vertex, tradeRate, baseStats, 0, null);
+        var goalStats = new GoalStats(vertex, player, baseStats, 0, null);
 
         // Assert
         Assert.Equal(vertex.Id, goalStats.TargetVertex.Id);
-        Assert.Equal(tradeRate, goalStats.TradeRate);
         Assert.NotNull(goalStats.ResourceAcquisitionRates);
         foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
         {
@@ -171,10 +141,10 @@ public class GoalStatsTests
         var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
-        int tradeRate = 3;
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
+        var player = new Player("Tim", PlayerColor.Red, false);
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, tradeRate, baseStats, 1, null));
+        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, player, baseStats, 1, null));
     }
 }

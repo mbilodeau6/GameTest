@@ -3,6 +3,7 @@ using GameTest.Models;
 using GameTest.Services;
 using TH = GameTest.Tests.TestHelpers.SetUpPhaseTestReferences;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.VisualBasic;
 
 namespace GameTest.Tests;
 
@@ -630,6 +631,42 @@ public class AIHelpersTests
         Assert.Contains(ResourceType.Ore, needed.Keys);
         Assert.Equal(2, needed[ResourceType.Ore]);
     }
+
+    [Fact]
+    public void GetAIResourceAcquisitionScore_NoPortBonusIfBelowThreshold()
+    {
+        var belowMinimumRate = 1/72;
+        var scoreWithPort = AIHelpers.GetAIResourceAcquisitionScore(belowMinimumRate, ResourceType.Ore, true);
+        var scoreWithoutPort = AIHelpers.GetAIResourceAcquisitionScore(belowMinimumRate, ResourceType.Ore, false);
+
+        Assert.Equal(scoreWithPort, scoreWithoutPort);
+    }
+
+    [Fact]
+    public void GetAIResourceAcquisitionScore_PortBonusIfAboveThreshold()
+    {
+        var minimumRate = 2.0/36.0;
+        var scoreWithPort = AIHelpers.GetAIResourceAcquisitionScore(minimumRate, ResourceType.Ore, true);
+        var scoreWithoutPort = AIHelpers.GetAIResourceAcquisitionScore(minimumRate, ResourceType.Ore, false);
+
+        Assert.True(scoreWithPort > scoreWithoutPort);
+    }
+
+    [Fact]
+    public void GetAIResourceAcquisitionScore_OreGrainGreaterThanWoodWool()
+    {
+        var sameRateForAll = 4.0/36.0;
+        var oreScore = AIHelpers.GetAIResourceAcquisitionScore(sameRateForAll, ResourceType.Ore, false);
+        var grainScore = AIHelpers.GetAIResourceAcquisitionScore(sameRateForAll, ResourceType.Grain, false);
+        var woodScore = AIHelpers.GetAIResourceAcquisitionScore(sameRateForAll, ResourceType.Wood, false);
+        var woolScore = AIHelpers.GetAIResourceAcquisitionScore(sameRateForAll, ResourceType.Wool, false);
+        
+        Assert.True(oreScore > woodScore);
+        Assert.True(oreScore > woolScore);
+        Assert.True(grainScore > woodScore);
+        Assert.True(grainScore > woolScore);
+    }
+
 }
 
 

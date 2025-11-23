@@ -20,8 +20,7 @@ public class VertexPicker
             {
                 if (vertex.Building == null)
                 {
-                    // TODO: Update to set trade rate based on port info when ports supported
-                    var stats = new GoalStats(vertex, 4, new Dictionary<ResourceType, double>(), 0, null);
+                    var stats = new GoalStats(vertex, gs.Phase.CurrentPlayer, new Dictionary<ResourceType, double>(), 0, null);
                     TargetVertices.Add(stats);
                 }
             }

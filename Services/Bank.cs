@@ -6,7 +6,7 @@ namespace GameTest.Services;
 
 public class Bank
 {
-    public int GetTradeRate(Player player, ResourceType resource)
+    public static int GetTradeRate(Player player, ResourceType resource)
     {
         var tradeRate = GameSettings.DefaultBankTradeRate;
 

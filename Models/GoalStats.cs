@@ -14,28 +14,16 @@ public class GoalStats
     public int RoadsNeeded { get; private set; }
     public double InterceptionRisk { get; set; }
     public double OverallScore { get; private set; }
-    // TODO: When ports are supported, TradeRate needs to identify the type of port as well as the rate.
-    // Easiest may be to have a Dictionary of ResourceType where all values will be set to 3 for
-    // a 3:1 port.
-    public int TradeRate { get; }
    
-    // TODO: Need to pass in all values (like RoadsNeeded) so that they can be included in OverallScore.
-    // For RoadsNeeded, the OverallScore should decrease the further the user is from the target.
-    // Especially if an opponent is closer to the target. The RoadsNeeded penalty should be decreased if
-    // the user has resources to build roads and a settlement (or trade for those resources).
-    public GoalStats(Vertex targetVertex, int tradeRate, Dictionary<ResourceType, double> baseStats, int roadsNeeded, Edge? nextEdgeToTarget)
+    public GoalStats(Vertex targetVertex, Player player, Dictionary<ResourceType, double> baseStats, int roadsNeeded, Edge? nextEdgeToTarget)
     {
         if (targetVertex == null)
             throw new ArgumentNullException("targetVertex");
-
-        if (tradeRate < 2 || tradeRate > 4)
-            throw new ArgumentOutOfRangeException("tradeRate", "Trade rate must be between 2 and 4.");
 
         if (roadsNeeded > 0 && nextEdgeToTarget == null)
             throw new ArgumentNullException("nextEdgeToTarget");
 
         TargetVertex = targetVertex;
-        TradeRate = tradeRate;
         ResourceAcquisitionRates = new Dictionary<ResourceType, double>();
         foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
         {
@@ -62,18 +50,23 @@ public class GoalStats
         InterceptionRisk = 0.0;
         NextEdgeToTarget = nextEdgeToTarget;
 
-        // TODO: Incorporate TradeRate and InterceptionRisk into OverallScore and
-        // make weightings configurable.
-        OverallScore = ResourceAcquisitionRates[ResourceType.Ore] * 1.2 
-            + ResourceAcquisitionRates[ResourceType.Grain] * 1.1 
-            + ResourceAcquisitionRates[ResourceType.Brick] 
-            + ResourceAcquisitionRates[ResourceType.Wood] * 0.9 
-            + ResourceAcquisitionRates[ResourceType.Wool] * 0.8;
+        OverallScore = 0.0;
+
+        foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
+        {
+            if (rt == ResourceType.Desert)
+                continue;
+
+            OverallScore += AIHelpers.GetAIResourceAcquisitionScore(ResourceAcquisitionRates[rt], rt, Bank.GetTradeRate(player, rt) == 2);
+        }
+
+        if (player.Ports.Contains(PortType.ThreeToOne))
+            OverallScore += AIHelpers.GetAIWeight(AIHelpers.AIWeights.VertexValueAddForThreeToOnePort);
 
         // TODO: Also need to incorporate information on how close an opponent is to the vertex
         // to increase impact of RoadsNeededif the opponent is closers to taking the spot than
         // the bot.
         for(int i = 0; i < RoadsNeeded; i++)
-            OverallScore = OverallScore * 0.90;
+            OverallScore *= AIHelpers.GetAIWeight(AIHelpers.AIWeights.VertexValuePenaltyForDistanceToClosestBuild);
     }
 }
