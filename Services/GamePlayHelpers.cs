@@ -316,6 +316,7 @@ public static class GamePlayHelpers
             WithdrawResourcesToBuildRoad(player);
 
         edge.BuildRoad(player);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
     }
 
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
@@ -366,6 +367,7 @@ public static class GamePlayHelpers
                     player.AssignResources(tile.Resource, 1);
 
         vertex.BuildSettlement(player);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
         MarkBlockedVertices(gs, vertex);
         PopulatePlayerPorts(gs);
     }
@@ -419,6 +421,7 @@ public static class GamePlayHelpers
         {
             WithdrawResourcesToBuildCity(player);
             vertex.UpgradeToCity();
+            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
         }
     }
 
@@ -539,6 +542,7 @@ public static class GamePlayHelpers
 
         gs.Dice.Roll();
         GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
+        gs.EventRecord.Add(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.RollDice, gs.Dice));
 
         if (!skipGameLoop)
             GameLoop(gs);
@@ -612,8 +616,12 @@ public static class GamePlayHelpers
     public static ResponseDTO BankTrade(GameState gs, TradeRequest request)
     {
         Bank bank = new Bank();
+        var response = bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
 
-        return bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
+        if (response.Success)
+            response.GameState.EventRecord.Add(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
+
+        return response;
     }
     
     public static ResponseDTO BankTradeFromUser(GameState gs, TradeRequestDTO request)

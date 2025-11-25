@@ -1,17 +1,11 @@
-using System;
-using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Nodes;
-using Azure;
 using Azure.Storage.Blobs;
 using GameTest.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using GameTest.DTOs;
-using Xunit.Sdk;
-using Microsoft.AspNetCore.Authentication;
 
 namespace GameTest.Services;
 
@@ -51,6 +45,16 @@ public class GameService
         }
     }
 
+    private JsonSerializerOptions GetSerializerOptions()
+    {
+        return new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+//                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                Converters = { new JsonStringEnumConverter() }
+            };
+    }
+
     public GameState CreateGame(string gameTypeString)
     {
         GameType gameType = Enum.Parse<GameType>(gameTypeString, ignoreCase: true);
@@ -63,13 +67,7 @@ public class GameService
             {
                 var dto = new DTOs.GameStateDTO(gs);
 
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    Converters = { new JsonStringEnumConverter() }
-                };
-
-                var json = JsonSerializer.Serialize(dto, options);
+                var json = JsonSerializer.Serialize(dto, GetSerializerOptions());
                 var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
                 using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -109,13 +107,7 @@ public class GameService
             var download = await blob.DownloadContentAsync();
             string json = download.Value.Content.ToString();
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
-            var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, options);
+            var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, GetSerializerOptions());
             return new ResponseDTO(true, 0, string.Empty, dto);
         }
         catch (Exception ex)
@@ -144,8 +136,49 @@ public class GameService
         stringBuilder.Append($"Phase: {response.GameState.Phase.PhaseState} ## Current Player: {response.GameState.Phase.CurrentPlayerId} ## ");
         stringBuilder.Append($"Dice: {response.GameState.Dice.Die1.Value}, {response.GameState.Dice.Die2.Value} ## ");
 
+        // Display current resources each player has
         for (int i = 0; i < response.GameState.Players.Count; i++)
-            stringBuilder.Append($"P{response.GameState.Players[i].Id}: Wood={response.GameState.Players[i].Resources[ResourceType.Wood]}, Brick={response.GameState.Players[i].Resources[ResourceType.Brick]}, Wool={response.GameState.Players[i].Resources[ResourceType.Wool]}, Grain={response.GameState.Players[i].Resources[ResourceType.Grain]}, Ore={response.GameState.Players[i].Resources[ResourceType.Ore]} ## ");
+            stringBuilder.Append($"{response.GameState.Players[i].Id}: Wood={response.GameState.Players[i].Resources[ResourceType.Wood]}, Brick={response.GameState.Players[i].Resources[ResourceType.Brick]}, Wool={response.GameState.Players[i].Resources[ResourceType.Wool]}, Grain={response.GameState.Players[i].Resources[ResourceType.Grain]}, Ore={response.GameState.Players[i].Resources[ResourceType.Ore]} ## ");
+
+        if (response.GameState.EventRecord != null && response.GameState.EventRecord.Count > 0)
+        {
+            int i = response.GameState.EventRecord.Count - 1;
+            var er = response.GameState.EventRecord[i];
+            
+            // Find actions performed by other players
+            while (response.GameState.Phase.CurrentPlayerId != null && er.PlayerId != response.GameState.Phase.CurrentPlayerId)
+            {
+                if (i == 0)
+                    break;
+
+                er = response.GameState.EventRecord[--i];
+            }
+
+            // Disply actions by other players
+            for (; i < response.GameState.EventRecord.Count; i++)
+            {
+                er = response.GameState.EventRecord[i];
+
+                stringBuilder.Append($"{er.PlayerId} {er.Action} {er.VertexId ?? ""}{er.EdgeId ?? ""}{er.DevelopmentCard ?? ""}{er.TileId ?? ""}{er.TargetPlayerId ?? ""}{er.DiceRoll.ToString() ?? "" }");
+                if (er.ResourcesUsed != null && er.ResourcesUsed.Count > 0)
+                {
+                    stringBuilder.Append("{");
+                    foreach (var resource in er.ResourcesUsed)
+                        stringBuilder.Append($"{resource.Key}:{resource.Value},");
+                    stringBuilder.Append("} ");
+                }
+
+                if (er.ResourcesReceived != null && er.ResourcesReceived.Count > 0)
+                {
+                    stringBuilder.Append("{");
+                    foreach (var resource in er.ResourcesReceived)
+                        stringBuilder.Append($"{resource.Key}:{resource.Value},");
+                    stringBuilder.Append("} ");
+                }
+
+                stringBuilder.Append("; ");
+            }
+        }
             
         return stringBuilder.ToString();
     }
@@ -170,13 +203,7 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
-            var json = JsonSerializer.Serialize(buildResponse.GameState, options);
+            var json = JsonSerializer.Serialize(buildResponse.GameState, GetSerializerOptions());
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -214,13 +241,7 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
-            var json = JsonSerializer.Serialize(buildResponse.GameState, options);
+            var json = JsonSerializer.Serialize(buildResponse.GameState, GetSerializerOptions());
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -257,13 +278,7 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
-            var json = JsonSerializer.Serialize(buildResponse.GameState, options);
+            var json = JsonSerializer.Serialize(buildResponse.GameState, GetSerializerOptions());
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -307,15 +322,9 @@ public class GameService
 
             GamePlayHelpers.RollDice(gs);
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
             var updatedDto = new DTOs.GameStateDTO(gs);
 
-            var json = JsonSerializer.Serialize(updatedDto, options);
+            var json = JsonSerializer.Serialize(updatedDto, GetSerializerOptions());
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -361,15 +370,9 @@ public class GameService
             var player = gs.Phase.CurrentPlayer;
             GamePlayHelpers.EndTurn(player, gs);
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
             var updatedDto = new DTOs.GameStateDTO(gs);
 
-            var json = JsonSerializer.Serialize(updatedDto, options);
+            var json = JsonSerializer.Serialize(updatedDto, GetSerializerOptions());
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -415,18 +418,11 @@ public class GameService
             // TODO: In the future, will need every human player to hit start before a game starts.
             // Current version only needs one start call and it starts the game for everyone.
             GamePlayHelpers.StartGame(gs);
-
             GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            };
 
             var updatedDto = new DTOs.GameStateDTO(gs);
 
-            var json = JsonSerializer.Serialize(updatedDto, options);
+            var json = JsonSerializer.Serialize(updatedDto, GetSerializerOptions());
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -464,13 +460,7 @@ public class GameService
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, options);
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, GetSerializerOptions());
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));

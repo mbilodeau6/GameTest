@@ -6,6 +6,15 @@ public enum GameStates
     PlaceSecondSettlement,
     PlaceSecondRoad,
     RollOrUseDevCard,
+    SelectMonopolyResource,
+    FirstDevCardRoad,
+    SecondDevCardRoad,
+    SelectYearOfPlenty,
+    PlaceRobber,
+    SelectRobberTarget,
+    SevenDiscardResources,
+    TradeResponse,
+    TradeReview,
     BuildOrTrade,
     GameOver
 }

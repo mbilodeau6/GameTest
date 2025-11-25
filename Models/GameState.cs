@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics.Eventing.Reader;
 using GameTest.DTOs;
 
 namespace GameTest.Models;
@@ -16,6 +17,7 @@ public class GameState
     public Player PlayerWithLongestRoad { get; private set; } = null!;
     public Player PlayerWithLargestArmy { get; private set; } = null!;
     public GameDice Dice { get; private set; } = new GameDice(true);
+    public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
 
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
@@ -102,6 +104,9 @@ public class GameState
 
         foreach (var portDto in dto.Ports)
             Ports.Add(new Port(portDto, Vertices));
+
+        foreach (var er in dto.EventRecord)
+            EventRecord.Add(er);
 
         Dice = dto.Dice;
 
