@@ -11,8 +11,8 @@ public class GameStateDTO
     public GameSettingsDTO Settings { get; }
 
     public GamePhaseDTO? Phase { get;  }
-    public string HasLongestRoadPlayerId { get; } = string.Empty;
-    public string HasLargestArmyPlayerId { get; } = string.Empty;
+    public string? HasLongestRoadPlayerId { get; } = null;
+    public string? HasLargestArmyPlayerId { get; } = null;
     public string RobberTileId { get; } = string.Empty;
     public GameDice Dice { get; } = new GameDice(true);
     public List<PlayerDTO> Players { get; } = new();
@@ -55,8 +55,8 @@ public class GameStateDTO
             EventRecord.Add(er);
 
         Phase = phase;
-        HasLongestRoadPlayerId = hasLongestRoadPlayerId ?? string.Empty;
-        HasLargestArmyPlayerId = hasLargestArmyPlayerId ?? string.Empty;
+        HasLongestRoadPlayerId = hasLongestRoadPlayerId;
+        HasLargestArmyPlayerId = hasLargestArmyPlayerId;
     }
 
     private GameStateDTO(GameStateDTO dto)

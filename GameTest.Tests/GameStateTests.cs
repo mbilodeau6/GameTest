@@ -153,6 +153,8 @@ public class GameStateTests
         Assert.False(gs.Dice.Die2.Random);
         Assert.Single(game.Ports);
         Assert.Equal(PortType.ThreeToOne, game.Ports[0].Type);
+        Assert.Null(game.PlayerWithLargestArmy);
+        Assert.Null(game.PlayerWithLongestRoad);
     }
 
     [Fact]
@@ -325,5 +327,41 @@ public class GameStateTests
         // Assert
         Assert.Equal(1, game.Dice.Die1.Value); 
         Assert.Equal(1, game.Dice.Die2.Value); 
+    }
+
+    [Fact]
+    public void AssignLongestRoadToPlayer()
+    {
+        // Arrage
+        var game = new GameState(Guid.NewGuid());
+        var p1 = new Player("Ann", PlayerColor.Red);
+        game.AddPlayer(p1);
+        var p2 = new Player("Tim", PlayerColor.Blue);
+        game.AddPlayer(p2);
+
+        // Act
+        game.AssignLongestRoadToPlayer(p2);
+
+        // Assert
+        Assert.NotNull(game.PlayerWithLongestRoad);
+        Assert.Equal(p2.Id, game.PlayerWithLongestRoad.Id);
+    }
+
+    [Fact]
+    public void AssignLargestArmyToPlayer()
+    {
+        // Arrage
+        var game = new GameState(Guid.NewGuid());
+        var p1 = new Player("Ann", PlayerColor.Red);
+        game.AddPlayer(p1);
+        var p2 = new Player("Tim", PlayerColor.Blue);
+        game.AddPlayer(p2);
+
+        // Act
+        game.AssignLargestArmyToPlayer(p1);
+
+        // Assert
+        Assert.NotNull(game.PlayerWithLargestArmy);
+        Assert.Equal(p1.Id, game.PlayerWithLargestArmy.Id);
     }
 }

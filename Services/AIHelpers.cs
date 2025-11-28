@@ -1,4 +1,5 @@
 using GameTest.Models;
+using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 
 namespace GameTest.Services;
 
@@ -28,6 +29,19 @@ public static class AIHelpers
             default:
                 throw new ArgumentOutOfRangeException("diceRoll", "Dice roll must be between 2 and 12.");
         }
+    }
+
+    public static double GetResourcePayoutValueForTile(GameState gs, Tile tile, Player player)
+    {
+        var ownedVertices = gs.Vertices.Where(v => v.Owner != null && v.Owner.Id == player.Id);
+        var victoryPoints = 0;
+        foreach(var vertex in ownedVertices)
+        {
+            if (vertex.Tiles.Any(t => t.Id == tile.Id))
+                victoryPoints += GamePlayHelpers.GetVictoryPointsForBuild(vertex.Building);
+        }
+
+        return victoryPoints * GetProbabilityForDiceRoll(tile.DiceNumber) * GetResourceWeight(tile.Resource);
     }
 
     public static Dictionary<ResourceType, double> GetBaseResourceAcquisitionRates(GameState gs, Player player)
@@ -235,6 +249,25 @@ public static class AIHelpers
         return needed;
     }
 
+    public static double GetResourceWeight(ResourceType type)
+    {
+        switch(type)
+        {
+           case ResourceType.Ore:
+                return GetAIWeight(AIWeights.PreferenceValueMultiplierForOreTiles);
+           case ResourceType.Grain:
+                return GetAIWeight(AIWeights.PreferenceValueMultiplierForGrainTiles);
+           case ResourceType.Brick:
+                return GetAIWeight(AIWeights.PreferenceValueMultiplierForBrickTiles);
+           case ResourceType.Wood:
+                return GetAIWeight(AIWeights.PreferenceValueMultiplierForWoodTiles);
+           case ResourceType.Wool:
+                return GetAIWeight(AIWeights.PreferenceValueMultiplierForWoolTiles);
+        }
+
+        return 0.0;
+    }
+
     public static double GetAIResourceAcquisitionScore(double acquisitionRate, ResourceType type, bool hasPort)
     {
         double rate = acquisitionRate;
@@ -245,26 +278,45 @@ public static class AIHelpers
             rate *= GetAIWeight(AIWeights.VertexValueMultiplierForResourceSpecificPort);
 
         // Some resources may be more valuable than others.
-        switch(type)
-        {
-           case ResourceType.Ore:
-                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForOreTiles);
-                break;
-           case ResourceType.Grain:
-                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForGrainTiles);
-                break;
-           case ResourceType.Brick:
-                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForBrickTiles);
-                break;
-           case ResourceType.Wood:
-                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForWoodTiles);
-                break;
-           case ResourceType.Wool:
-                rate *= GetAIWeight(AIWeights.PreferenceValueMultiplierForWoolTiles);
-                break;
-        }
+        rate *= GetResourceWeight(type);
 
         return rate;
+    }
+
+    // TODO: Enhance routine to consider which player may have a card the Bot wants
+    // or to stop a player that may be trying to intercept the Bot's objectives.
+    // Currently the routine is just looking for the most valuable tile for the Bot's
+    // opponents that won't also impact the Bot.
+    public static Tile PickTargetForRobber(GameState gs, Player opponent)
+    {
+        double highestValue = -1.0;
+        Tile tileWithHighestValue = null;
+
+        List<Vertex> currentPlayerVertices = gs.Vertices.Where(v => v.Owner != null && v.Owner.Id == gs.Phase.CurrentPlayer.Id).ToList();
+
+        foreach(var tile in gs.Tiles)
+        {
+            // Skip tile that already has robber
+            if (tile.Id == gs.RobberTile.Id)
+                continue;
+
+            // Skip tiles the current player is on
+            if (currentPlayerVertices.Any(v => v.Tiles.Contains(tile)))
+                continue;
+
+            // Check if value to opponent is higher than current selected tile
+            var tileValue = GetResourcePayoutValueForTile(gs, tile, opponent);
+            if (tileValue > highestValue)
+            {
+                highestValue = tileValue;
+                tileWithHighestValue = tile;
+            }
+        }
+
+        if (tileWithHighestValue == null)
+            throw new InvalidOperationException("Unexpected Error. Routine claims there is no tile that the current player isn't on. I didn't think this was possible.");
+
+        return tileWithHighestValue;
     }
 
     public static double GetAIWeight(AIWeights name)

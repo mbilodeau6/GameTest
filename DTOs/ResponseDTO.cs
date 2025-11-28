@@ -85,7 +85,9 @@ public class ResponseDTO
         { 1028, "Player has used all of their cities."},
         { 1029, "Player has used all of their settlements."},
         { 1030, "Player has used all of their roads."},
+        { 1031, "PlaceRobber request must specify player and tile id."},
+        { 1032, "Invalid tile id."},
+        { 1033, "Robber can not remain in it's current position. It must be moved to a new spot."},
         { 9999, "Unexpected error."},
-
     };
 }

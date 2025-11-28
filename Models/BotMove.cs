@@ -14,5 +14,6 @@ public class BotMove
     public bool EndTurn { get; set; }
 
     public TradeRequestDTO? BankTrade { get; set; }
+    public TileDTO? TileMove { get; set; }
 }
 

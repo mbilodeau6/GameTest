@@ -236,11 +236,25 @@ public static class GamePlayHelpers
             }
             else if (gameState.Phase.PhaseState == GameStates.RollOrUseDevCard && !gameState.Dice.WaitingForRoll)
             {
-                nextPhase.PhaseState = GameStates.BuildOrTrade;
+                if (gameState.Dice.Die1.Value + gameState.Dice.Die2.Value == 7)
+                {
+                    gameState.Settings.SetPreRobberState(GameStates.BuildOrTrade, gameState.RobberTile);
+                    nextPhase.PhaseState = GameStates.PlaceRobber;
+                }
+                else
+                    nextPhase.PhaseState = GameStates.BuildOrTrade;
             }
             else if (gameState.Phase.PhaseState == GameStates.BuildOrTrade && PlayerHasWon(gameState, gameState.Phase.CurrentPlayer))
             {
+                // TODO: Add code to move to PlaceRobber if Knight Dev Card played.
                 nextPhase.PhaseState = GameStates.GameOver;
+            }
+            else if (gameState.Phase.PhaseState == GameStates.PlaceRobber 
+                && gameState.Settings.PreRobberState != null 
+                && gameState.Settings.OriginalRobberTile != null && gameState.RobberTile.Id != gameState.Settings.OriginalRobberTile.Id)
+            {
+                nextPhase.PhaseState = (GameStates)gameState.Settings.PreRobberState;
+                gameState.Settings.ClearRobberState();
             }
         }
 
@@ -276,6 +290,11 @@ public static class GamePlayHelpers
     private static Vertex GetVertexFromVertexId(GameState gs, string vertexId)
     {
         return gs.Vertices.First(e => e.Id == vertexId);
+    }
+
+    private static Tile GetTileFromTileId(GameState gs, string tileId)
+    {
+        return gs.Tiles.First(t => t.Id == tileId);
     }
 
     public static bool IsPlayerSetupPhase(GameState gs)
@@ -497,6 +516,10 @@ public static class GamePlayHelpers
                 {
                     move = bot.GetBuildMove();
                 }
+                else if (gs.Phase.PhaseState == GameStates.PlaceRobber)
+                {
+                    move = bot.GetRobberMove();
+                }
                 else
                 {
                     // TODO: Other states not implemented yet.
@@ -529,6 +552,12 @@ public static class GamePlayHelpers
 
                 if (move.EndTurn)
                     GamePlayHelpers.EndTurn(gs.Phase.CurrentPlayer, gs, true);
+
+                if (move.TileMove != null && gs.Phase.PhaseState == GameStates.PlaceRobber)
+                {
+                    var tile = GetTileFromTileId(gs, move.TileMove.Id);
+                    GamePlayHelpers.PlaceRobber(gs, gs.Phase.CurrentPlayer, tile);
+                }
 
                 gs.Phase = GetNextPhase(gs);
             }
@@ -657,5 +686,38 @@ public static class GamePlayHelpers
             foreach(var vertex in port.Vertices)
                 if (vertex.Owner != null)
                     vertex.Owner.AddPort(port.Type);
+    }
+
+    public static void PlaceRobber(GameState gs, Player player, Tile tile)
+    {
+        gs.SetRobberTile(tile);
+
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
+
+        GameLoop(gs);
+    }
+
+    public static ResponseDTO PlaceRobberForUser(GameState gs, string playerId, string tileId)
+    {
+        if ((gs.Phase.PhaseState != GameStates.PlaceRobber) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: PlaceRobber; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != playerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var tile = gs.Tiles.FirstOrDefault(t => t.Id == tileId);
+        if (tile == null)
+            return new ResponseDTO(false, 1032, $"GameId: {gs.Id}; TileId: {tileId}", null as GameStateDTO);
+        
+        if (gs.Settings.OriginalRobberTile == null || gs.Settings.OriginalRobberTile.Id == tile.Id)
+            return new ResponseDTO(false, 1033, $"GameId: {gs.Id}; Player: {player.Id}; OriginalTile: {gs.Settings.OriginalRobberTile.Id}; NewTile: {tile.Id}", null as GameStateDTO);
+
+        PlaceRobber(gs, player, tile);
+
+        return new ResponseDTO(true, 0, null, gs);
     }
 }

@@ -4,6 +4,9 @@ using GameTest.Services;
 using TH = GameTest.Tests.TestHelpers.SetUpPhaseTestReferences;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.VisualBasic;
+using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.SignalR;
+using System.Runtime.CompilerServices;
 
 namespace GameTest.Tests;
 
@@ -667,6 +670,180 @@ public class AIHelpersTests
         Assert.True(grainScore > woolScore);
     }
 
+    private static GameState CreateGameForPickRobberTargetTests()
+    {
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+
+        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var wool4Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var wood3Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+
+        var human = gs.Players.Where(p => !p.IsBot).First();
+        var bot = gs.Players.Where(p => p.IsBot).First();
+        gs.Phase.CurrentPlayer = bot;
+        gs.Phase.PhaseState = GameStates.RollOrUseDevCard;
+
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wood9Tile, brick10Tile, wool4Tile, null);
+        v1.BuildSettlement(human);
+        var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brick10Tile, wood3Tile, ore8Tile, null);
+        v2.BuildSettlement(human);
+
+        return gs;
+    }
+
+    [Fact]
+    public void PickTargetForRobber_OreBest()
+    {
+        var gs = CreateGameForPickRobberTargetTests();
+        var human = gs.Players.Where(p => !p.IsBot).First();
+
+        var target = AIHelpers.PickTargetForRobber(gs, human);
+
+        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+
+        Assert.NotNull(target);
+        Assert.Equal(ore8Tile.Id, target.Id);
+    }
+
+    [Fact]
+    public void PickTargetForRobber_CityMakesBrickBest()
+    {
+        var gs = CreateGameForPickRobberTargetTests();
+        var human = gs.Players.Where(p => !p.IsBot).First();
+
+        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+
+        var v1 = gs.Vertices.Where(v => v.Owner != null && v.Owner.Id == human.Id && v.Tiles.Contains(wood9Tile)).First();
+        v1.UpgradeToCity();
+
+        var target = AIHelpers.PickTargetForRobber(gs, human);
+
+        Assert.NotNull(target);
+        Assert.Equal(brick10Tile.Id, target.Id);
+    }
+
+    [Fact]
+    public void PickTargetForRobber_OreBestButBlocked()
+    {
+        var gs = CreateGameForPickRobberTargetTests();
+
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+
+        var human = gs.Players.Where(p => !p.IsBot).First();
+        var bot = gs.Players.Where(p => p.IsBot).First();
+
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, ore8Tile, null, null, VertexDirection.NE);
+        v1.BuildSettlement(bot);
+
+        var target = AIHelpers.PickTargetForRobber(gs, human);
+
+        Assert.NotNull(target);
+        Assert.Equal(brick10Tile.Id, target.Id);
+    }
+
+    [Fact]
+    public void PickTargetForRobber_BrickBlockedAndRobberOnOre()
+    {
+        var gs = CreateGameForPickRobberTargetTests();
+
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var human = gs.Players.Where(p => !p.IsBot).First();
+        var bot = gs.Players.Where(p => p.IsBot).First();
+
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brick10Tile, null, null, VertexDirection.NE);
+        v1.BuildSettlement(bot);
+
+        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        gs.SetRobberTile(ore8Tile);
+
+        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+
+        var target = AIHelpers.PickTargetForRobber(gs, human);
+
+        Assert.NotNull(target);
+        Assert.Equal(wood9Tile.Id, target.Id);
+    }
+
+    [Fact]
+    public void PickTargetForRobber_PickRandomIfNoOtherOption()
+    {
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var originalRobberTile = gs.RobberTile;
+
+        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var wool4Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
+        var wood3Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+
+        var human = gs.Players.Where(p => !p.IsBot).First();
+        var bot = gs.Players.Where(p => p.IsBot).First();
+
+        gs.Phase.CurrentPlayer = bot;
+        gs.Phase.PhaseState = GameStates.RollOrUseDevCard;
+
+
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wood9Tile, brick10Tile, wool4Tile, null);
+        v1.BuildSettlement(bot);
+        var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brick10Tile, wood3Tile, ore8Tile, null);
+        v2.BuildSettlement(bot);
+
+        var v3 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brick10Tile, null, null, VertexDirection.NE);
+        v3.BuildSettlement(human);
+        var v4 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, ore8Tile, null, null, VertexDirection.NE);
+        v4.BuildSettlement(human);
+
+        var target = AIHelpers.PickTargetForRobber(gs, human);
+
+        Assert.NotNull(target);
+        Assert.True(target.Id != brick10Tile.Id && target.Id != ore8Tile.Id && target.Id != originalRobberTile.Id);
+    }
+
+    [Fact]
+    public void GetResourceProbabilityForTile_PlayerNotOnTile()
+    {
+        var gs = CreateGameForPickRobberTargetTests();
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var bot = gs.Players.Where(p => p.IsBot).First();
+
+        var value = AIHelpers.GetResourcePayoutValueForTile(gs, brick10Tile, bot);
+
+        Assert.Equal(0.0, value);
+    }
+
+    [Fact]
+    public void GetResourceProbabilityForTile_SingleSettlement()
+    {
+        var gs = CreateGameForPickRobberTargetTests();
+        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, ore8Tile, brick10Tile, null, null);
+        var bot = gs.Players.Where(p => p.IsBot).First();
+        v1.BuildSettlement(bot);
+
+        var value = AIHelpers.GetResourcePayoutValueForTile(gs, ore8Tile, bot);
+
+        Assert.Equal(1.2 * 5.0/36.0, value);
+    }
+
+    [Fact]
+    public void GetResourceProbabilityForTile_SettlementAndCity()
+    {
+        var gs = CreateGameForPickRobberTargetTests();
+        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var human = gs.Players.Where(p => !p.IsBot).First();
+        var v1 = gs.Vertices.Where(v => v.Tiles.Contains(brick10Tile) && v.Owner != null && v.Owner.Id == human.Id).First();
+        v1.UpgradeToCity();
+
+        var value = AIHelpers.GetResourcePayoutValueForTile(gs, brick10Tile, human);
+
+        Assert.Equal(3.0/36.0 * 3, value);
+    }
 }
 
 

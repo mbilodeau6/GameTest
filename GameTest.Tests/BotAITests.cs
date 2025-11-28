@@ -487,7 +487,7 @@ public class BotAITests
     public void AnalyzePossibleBankTrades_BuiltAllSettlements()
     {
         var gs = CreateBoardForBuildTest();
-        var botPlayer = gs.Players.First(p => p.IsBot == true);
+        var botPlayer = gs.Players.First(p => p.IsBot);
 
         var v1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == botPlayer.Id);
         BuildRoadOnWool2WoodEdge(gs, botPlayer);
@@ -507,5 +507,31 @@ public class BotAITests
         Assert.NotNull(tradeRequest);
         Assert.Contains(ResourceType.Wood, tradeRequest.Offer);
         Assert.Contains(ResourceType.Ore, tradeRequest.Request);    
+    }
+
+    [Fact]
+    public void GetRobberMove_SelectTile()
+    {
+        // Arrange
+        var gs = CreateBoardForBuildTest();
+        var human = gs.Players.First(p => !p.IsBot);
+        var botPlayer = gs.Players.First(p => p.IsBot);
+
+        gs.Phase.CurrentPlayer = botPlayer;
+        gs.Phase.PhaseState = GameStates.PlaceRobber;
+
+        var brick5Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
+
+        var bot = new BotAI(gs);
+
+        // Act
+        var move = bot.GetRobberMove();
+
+        // Assert
+        Assert.NotNull(move.TileMove);
+        Assert.Equal(brick5Tile.Id, move.TileMove.Id);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.False(move.RollDice);
     }
 }

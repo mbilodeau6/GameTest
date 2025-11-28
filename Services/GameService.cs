@@ -6,6 +6,7 @@ using GameTest.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using GameTest.DTOs;
+using Azure;
 
 namespace GameTest.Services;
 
@@ -474,6 +475,43 @@ public class GameService
         {
             _logger.LogError(ex, "Bank trade for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
             return new ResponseDTO(false, 9999, $"Action: BankTrade; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
+    public async Task<ResponseDTO> PlaceRobberAsync(Guid gameId, PlaceOnTileRequest request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var tradeResponse = GamePlayHelpers.PlaceRobberForUser(gs, request.PlayerId, request.TileId);
+
+            if (!tradeResponse.Success)
+                return tradeResponse;
+
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, GetSerializerOptions());
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed place robber for player {PlayerId} to tile {TileId} in game {GameId}.", request.PlayerId, request.TileId, gameId);
+            return tradeResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Place robber for player {playerId} to tile {tileId} for game {GameId} failed.", request.PlayerId, request.TileId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: PlaceRobber; GameId: {gameId}; TileId: {request.TileId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 

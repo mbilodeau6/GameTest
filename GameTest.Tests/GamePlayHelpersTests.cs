@@ -570,6 +570,7 @@ public class GamePlayHelpersTests
     {
         var gs = new GameState(new Guid());
         gs.Tiles.AddRange(BoardCreationHelpers.CreateTilesForTestBoard());
+        gs.SetRobberTile(BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1));
         BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
         gs.AddPlayer(new Player("George", PlayerColor.White));
@@ -820,7 +821,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_RollOrUserDevCard_NoRollStayPut()
+    public void GetNextPhase_RollOrUseDevCard_NoRollStayPut()
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
@@ -835,14 +836,16 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void GetNextPhase_RollOrUserDevCard_MoveToBuildOrTrade()
+    public void GetNextPhase_RollOrUseDevCard_MoveToBuildOrTrade()
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
         gs.Dice.SetWaiting();
         Assert.True(gs.Dice.WaitingForRoll);
 
-        gs.Dice.Roll();
+        do
+            gs.Dice.Roll();
+        while (gs.Dice.Die1.Value + gs.Dice.Die2.Value == 7);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
@@ -851,10 +854,101 @@ public class GamePlayHelpersTests
         Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
 
-    // TODO: Seems like moving from BuildOrTrade to NextPlayer will be an explicit
-    // call by the user to end turn. Not currently seeing a case where the state
-    // of the game would cause play to move to the next player. Maybe if we have
-    // time limits.
+    [Fact]
+    public void GetNextPhase_RollOrUseDevCard_MoveToPlaceRobber()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, gs.Players[0], gs.Players[1]);
+        gs.Dice.SetWaiting();
+        Assert.True(gs.Dice.WaitingForRoll);
+
+        do
+            gs.Dice.Roll();
+        while (gs.Dice.Die1.Value + gs.Dice.Die2.Value != 7);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceRobber, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Settings.PreRobberState);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceRobber_RobberNotMovedStayPut()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceRobber, gs.Players[0], gs.Players[1]);
+
+        gs.Settings.SetPreRobberState(GameStates.RollOrUseDevCard, gs.RobberTile);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.PlaceRobber, phase.PhaseState);
+        Assert.Equal(GameStates.RollOrUseDevCard, gs.Settings.PreRobberState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceRobber_MoveToRollOrUseDevCard()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceRobber, gs.Players[0], gs.Players[1]);
+        gs.Settings.SetPreRobberState(GameStates.RollOrUseDevCard, gs.RobberTile);
+
+        var newRobberTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
+        gs.SetRobberTile(newRobberTile);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+        gs.Settings.ClearRobberState();
+
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
+        Assert.Null(gs.Settings.PreRobberState);
+        Assert.Null(gs.Settings.OriginalRobberTile);
+        Assert.Equal(newRobberTile.Id, gs.RobberTile.Id);
+    }
+
+    // TODO: Can't implement this phase transition until support for playing Knights
+    // [Fact]
+    // public void GetNextPhase_BuildOrTrade_MoveToPlaceRobber()
+    // {
+    //     var gs = CreateGameStateForPhaseTesting();
+    //     gs.Phase = new GamePhase(GameStates.BuildOrTrade, gs.Players[0], gs.Players[1]);
+
+    //     // TODO: Add code to set up state to match what will happen if Players[0]
+    //     // plays a Knight Dev Card.
+
+    //     var phase = GamePlayHelpers.GetNextPhase(gs);
+
+    //     Assert.Equal(GameStates.PlaceRobber, phase.PhaseState);
+    //     Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+    //     Assert.Equal(gs.Players[1], phase.EndPlayer);
+    //     Assert.Equal(GameStates.BuildOrTrade, gs.Settings.PreRobberState);
+    // }
+
+    [Fact]
+    public void GetNextPhase_PlaceRobber_MoveToBuildOrTrade()
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(GameStates.PlaceRobber, gs.Players[0], gs.Players[1]);
+        gs.Settings.SetPreRobberState(GameStates.BuildOrTrade, gs.RobberTile);
+        var newRobberTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
+        gs.SetRobberTile(newRobberTile);
+
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        gs.Settings.ClearRobberState();
+
+        Assert.Equal(GameStates.BuildOrTrade, phase.PhaseState);
+        Assert.Equal(gs.Players[0], phase.CurrentPlayer);
+        Assert.Equal(gs.Players[1], phase.EndPlayer);
+        Assert.Null(gs.Settings.PreRobberState);
+        Assert.Null(gs.Settings.OriginalRobberTile);
+        Assert.Equal(newRobberTile.Id, gs.RobberTile.Id);
+    }
 
     [Fact]
     public void GetNextPhase_BuildOrTrade_MoveToGameOverWin()
@@ -1906,5 +2000,96 @@ public class GamePlayHelpersTests
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RollDice(gs));
+    }
+
+    private static GameState CreateGameForRobberTesting(GameStates previousState)
+    {
+        var gs = new GameState(new Guid());
+        var player1 = new Player("Time", PlayerColor.Red);
+        gs.Players.Add(player1);
+        var player2 = new Player("Mary", PlayerColor.Blue);
+        gs.Players.Add(player2);
+
+        var tile1 = new Tile(ResourceType.Wood, 3, 0, 0);
+        gs.Tiles.Add(tile1);
+        var tile2 = new Tile(ResourceType.Brick, 9, 2, 0);
+        gs.Tiles.Add(tile2);
+
+        gs.Phase.CurrentPlayer = player1;
+        gs.Phase.PhaseState = GameStates.PlaceRobber;
+        gs.Settings.SetPreRobberState(previousState, tile1);
+
+        return gs;        
+    }
+
+    [Fact]
+    public void PlaceRobberForUser_InvalidState()
+    {
+        var gs = CreateGameForRobberTesting(GameStates.RollOrUseDevCard);
+        gs.Phase.PhaseState = GameStates.RollOrUseDevCard;
+
+        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, gs.Tiles[0].Id);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+    }
+
+    [Fact]
+    public void PlaceRobberForUser_NotPlayersTurn()
+    {
+        var gs = CreateGameForRobberTesting(GameStates.RollOrUseDevCard);
+
+        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[1].Id, gs.Tiles[0].Id);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+    }
+
+    [Fact]
+    public void PlaceRobberForUser_UnknownTile()
+    {
+        var gs = CreateGameForRobberTesting(GameStates.RollOrUseDevCard);
+        var tile = new Tile(ResourceType.Ore, 5, -2, 0);
+
+        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, tile.Id);
+
+        Assert.False(response.Success);
+        Assert.Equal(1032, response.ErrorCode);
+    }
+
+    [Fact]
+    public void PlaceRobberForUser_RobberNotMoved()
+    {
+        var gs = CreateGameForRobberTesting(GameStates.RollOrUseDevCard);
+
+        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, gs.Settings.OriginalRobberTile.Id);
+
+        Assert.False(response.Success);
+        Assert.Equal(1033, response.ErrorCode);
+    }
+
+    [Fact]
+    public void PlaceRobberForUser_ValidMove()
+    {
+        var gs = CreateGameForRobberTesting(GameStates.BuildOrTrade);
+
+        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, gs.Tiles[1].Id);
+
+        Assert.True(response.Success);
+        Assert.Equal(gs.Tiles[1].Id, gs.RobberTile.Id);
+        Assert.Null(gs.Settings.PreRobberState);
+    }
+
+    [Fact]
+    public void PlaceRobber_ValidMove()
+    {
+        var gs = CreateGameForRobberTesting(GameStates.RollOrUseDevCard);
+
+        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, gs.Tiles[1].Id);
+
+        Assert.True(response.Success);
+        Assert.Equal(gs.Tiles[1].Id, gs.RobberTile.Id);
+        Assert.Null(gs.Settings.PreRobberState);
+        Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
     }
 }

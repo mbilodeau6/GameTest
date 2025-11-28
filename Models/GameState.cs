@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics.Eventing.Reader;
 using GameTest.DTOs;
@@ -14,8 +15,8 @@ public class GameState
     public List<Edge> Edges { get; } = new();
     public List<Vertex> Vertices { get; } = new();
     public Tile RobberTile { get; private set; } = null!;
-    public Player PlayerWithLongestRoad { get; private set; } = null!;
-    public Player PlayerWithLargestArmy { get; private set; } = null!;
+    public Player? PlayerWithLongestRoad { get; private set; } = null!;
+    public Player? PlayerWithLargestArmy { get; private set; } = null!;
     public GameDice Dice { get; private set; } = new GameDice(true);
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
 
@@ -71,8 +72,6 @@ public class GameState
     {
         Id = Guid.Parse(dto.Id);
 
-        Settings = new GameSettings(dto.Settings);
-
         Player? currentPlayer = null;
         Player? endPlayer = null;
 
@@ -95,6 +94,8 @@ public class GameState
             if (tile.Id == dto.RobberTileId)
                 RobberTile = tile;
         }
+
+        Settings = new GameSettings(Tiles, dto.Settings);
 
         foreach (var edgeDto in dto.Edges)
             Edges.Add(new Edge(edgeDto, Players, Tiles));
@@ -163,4 +164,15 @@ public class GameState
     {
        Dice = dice;
     }
+
+    public void AssignLongestRoadToPlayer(Player player)
+    {
+        PlayerWithLongestRoad = player;
+    }
+
+    public void AssignLargestArmyToPlayer(Player player)
+    {
+        PlayerWithLargestArmy = player;
+    }
+
 }

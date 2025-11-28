@@ -246,4 +246,24 @@ public class Games
         return await CreateSuccessResponse(req, response);
     }
 
+    [Function("PlaceRobber")]
+    public async Task<HttpResponseData> PlaceRobber(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/place-robber")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("Place-Robber called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await req.ReadFromJsonAsync<PlaceOnTileRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.TileId))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1031, $"GameId: {id}");
+
+        var response = await _gameService.PlaceRobberAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
 }

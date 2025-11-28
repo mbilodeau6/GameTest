@@ -72,6 +72,8 @@ public class GameStateDTOTests
         Assert.True(gameStateDTO.Dice.Die1.Random);
         Assert.Single(gameStateDTO.Ports);
         Assert.Equal(PortType.Ore.ToString(), gameStateDTO.Ports[0].Type);
+        Assert.Null(gameStateDTO.HasLargestArmyPlayerId);
+        Assert.Null(gameStateDTO.HasLongestRoadPlayerId);
     }
 
     [Fact]

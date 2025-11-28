@@ -19,6 +19,7 @@ public class IntegrationTests
         gs.Tiles.AddRange(BoardCreationHelpers.CreateTilesForTestBoard());
         BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
+        gs.SetRobberTile(BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1));
         gs.AddPlayer(new Player("Lisa", PlayerColor.White));
         gs.AddPlayer(new Player("Hal", PlayerColor.Green, true));
 
