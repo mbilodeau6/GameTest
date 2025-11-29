@@ -35,16 +35,6 @@ public class Player
 
     public int ResourceCount { get; set; } = 0;
 
-    // TODO: Remove this after new DevCard objects working
-    public Dictionary<DevelopmentCardType, int> DevelopmentCards { get; } = new()
-    {
-        { DevelopmentCardType.RoadBuilding, 0 },
-        { DevelopmentCardType.VictoryPoint, 0 },
-        { DevelopmentCardType.Monopoly, 0 },
-        { DevelopmentCardType.YearOfPlenty, 0 },
-        { DevelopmentCardType.Knight, 0 }
-    };
-
     public int DevelopmentCardCount { get; set; } = 0;
     public List<DevelopmentCardType> DevCardsPurchasedThisRound { get; private set; } = new List<DevelopmentCardType>();
     public List<DevelopmentCardType> DevCardsPlayed { get; private set; } = new List<DevelopmentCardType>();
@@ -84,8 +74,18 @@ public class Player
         Color = Enum.Parse<PlayerColor>(dto.Color);
 
         DevelopmentCardCount = dto.DevelopmentCardCount;
-        foreach (var kvp in dto.DevelopmentCards)
-            DevelopmentCards[kvp.Key] = kvp.Value;
+
+        if (dto.DevCardsPlayed != null)
+            foreach(var dc in dto.DevCardsPlayed)
+                DevCardsPlayed.Add(Enum.Parse<DevelopmentCardType>(dc));
+
+        if (dto.DevCardsPurchasedThisRound != null)
+            foreach(var dc in dto.DevCardsPurchasedThisRound)
+                DevCardsPurchasedThisRound.Add(Enum.Parse<DevelopmentCardType>(dc));
+
+        if (dto.DevCardsReadyToPlay != null)
+            foreach(var dc in dto.DevCardsReadyToPlay)
+                DevCardsReadyToPlay.Add(Enum.Parse<DevelopmentCardType>(dc));
 
         ResourceCount = dto.ResourceCount;
         foreach (var kvp in dto.Resources)
@@ -115,9 +115,6 @@ public class Player
 
     public void AssignDevelopmentCard(DevelopmentCardType type)
     {
-        // TODO: Need to remove when switch to new dev card implementation
-        DevelopmentCards[type]++;
-
         DevCardsPurchasedThisRound.Add(type);
         DevelopmentCardCount++;
     }
@@ -140,6 +137,7 @@ public class Player
             DevCardsPlayed.Add(DevelopmentCardType.Knight);
 
         DevCardsReadyToPlay.Remove(type);
+        DevelopmentCardCount--;
     }
 
     public void AddPort(PortType port)

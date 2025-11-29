@@ -33,8 +33,11 @@ public class GameStateDTOTests
         gameState.Ports.Add(new Port(gameState.Vertices[0], gameState.Vertices[1], PortType.Ore));
 
         gameState.Players[0].AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        gameState.Players[0].MakeNewDevelopmentCardsPlayable();
+        gameState.Players[0].AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
         gameState.Players[0].AssignResources(ResourceType.Ore, 2);
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
+        gameState.Players[1].MakeNewDevelopmentCardsPlayable();
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
         gameState.Players[1].AssignResources(ResourceType.Brick, 1);
 
@@ -110,12 +113,18 @@ public class GameStateDTOTests
         Assert.False(gsTransformed.Players[0].IsBot);
         Assert.True(gsTransformed.Players[1].IsBot);
         Assert.Equal(2, gsTransformed.Players[0].Resources[ResourceType.Ore]);
-        Assert.Equal(1, gsTransformed.Players[0].DevelopmentCards[DevelopmentCardType.RoadBuilding]);
-        Assert.Equal(1, gsTransformed.Players[0].DevelopmentCardCount);
+        Assert.Empty(gsTransformed.Players[0].DevCardsPlayed);
+        Assert.Single(gsTransformed.Players[0].DevCardsPurchasedThisRound);
+        Assert.Contains(DevelopmentCardType.YearOfPlenty.ToString(), gsTransformed.Players[0].DevCardsPurchasedThisRound);
+        Assert.Single(gsTransformed.Players[0].DevCardsReadyToPlay);
+        Assert.Contains(DevelopmentCardType.RoadBuilding.ToString(), gsTransformed.Players[0].DevCardsReadyToPlay);
+        Assert.Equal(2, gsTransformed.Players[0].DevelopmentCardCount);
         Assert.Equal(2, gsTransformed.Players[0].ResourceCount);
         Assert.Equal(2, gsTransformed.Players[1].DevelopmentCardCount);
+        Assert.Null(gsTransformed.Players[1].DevCardsPlayed);
+        Assert.Null(gsTransformed.Players[1].DevCardsPurchasedThisRound);
+        Assert.Null(gsTransformed.Players[1].DevCardsReadyToPlay);
         Assert.Equal(1, gsTransformed.Players[1].ResourceCount);
-        Assert.True(gsTransformed.Players[1].DevelopmentCards.Values.All(v => v == 0));
         Assert.True(gsTransformed.Players[1].Resources.Values.All(v => v == 0));
     }
 }

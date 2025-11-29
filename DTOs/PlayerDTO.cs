@@ -21,23 +21,19 @@ public class PlayerDTO
 
     public int ResourceCount { get; } = 0;
 
-    public Dictionary<DevelopmentCardType, int> DevelopmentCards { get; } = new()
-    {
-        { DevelopmentCardType.RoadBuilding, 0 },
-        { DevelopmentCardType.VictoryPoint, 0 },
-        { DevelopmentCardType.Monopoly, 0 },
-        { DevelopmentCardType.YearOfPlenty, 0 },
-        { DevelopmentCardType.Knight, 0 }
-    };
+    public List<string>? DevCardsPurchasedThisRound { get; private set; } = null;
+    public List<string>? DevCardsPlayed { get; private set; } = null;
+    public List<string>? DevCardsReadyToPlay { get; private set; } = null;
+
 
     public int DevelopmentCardCount { get; } = 0;
-
 
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
     public PlayerDTO(string id, string name, string color, bool isBot = false,
         Dictionary<ResourceType, int>? resources = null, int resourceCount = 0,
-        Dictionary<DevelopmentCardType, int>? developmentCards = null, int developmentCardCount = 0)
+        int developmentCardCount = 0, List<string>? devCardsPurchasedThisRound = null,
+        List<String>? devCardsPlayed = null, List<string>? devCardsReadyToPlay = null)
     {
         Id = id ?? string.Empty;
         Name = name ?? string.Empty;
@@ -49,12 +45,10 @@ public class PlayerDTO
                 Resources[kvp.Key] = kvp.Value;
 
         ResourceCount = resourceCount;
-
-        if (developmentCards != null && developmentCards.Count > 0)
-            foreach (var kvp in developmentCards)
-                DevelopmentCards[kvp.Key] = kvp.Value;
-
         DevelopmentCardCount = developmentCardCount;
+        DevCardsPurchasedThisRound = devCardsPurchasedThisRound;
+        DevCardsPlayed = devCardsPlayed;
+        DevCardsReadyToPlay = devCardsReadyToPlay;
     }
 
     public PlayerDTO(Player player, bool countsOnly = true)
@@ -64,8 +58,26 @@ public class PlayerDTO
         Color = player.Color.ToString();
         IsBot = player.IsBot;
 
-        if (!countsOnly && player.DevelopmentCards != null)
-            DevelopmentCards = new Dictionary<DevelopmentCardType, int>(player.DevelopmentCards);
+        if (!countsOnly && player.DevCardsPurchasedThisRound != null)
+        {
+            DevCardsPurchasedThisRound = new List<string>();
+            foreach (var dc in player.DevCardsPurchasedThisRound)
+                DevCardsPurchasedThisRound.Add(dc.ToString());
+        }
+
+        if (!countsOnly && player.DevCardsReadyToPlay != null)
+        {
+            DevCardsReadyToPlay = new List<string>();
+            foreach (var dc in player.DevCardsReadyToPlay)
+                DevCardsReadyToPlay.Add(dc.ToString());
+        }
+
+        if (!countsOnly && player.DevCardsPlayed != null)
+        {
+            DevCardsPlayed = new List<string>();
+            foreach (var dc in player.DevCardsPlayed)
+                DevCardsPlayed.Add(dc.ToString());
+        }
 
         DevelopmentCardCount = player.DevelopmentCardCount;
 

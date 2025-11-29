@@ -17,7 +17,6 @@ public class PlayerTests
         Assert.Equal(string.Empty, player.Name);
         Assert.Equal(PlayerColor.Red, player.Color);
         Assert.All(player.Resources.Values, v => Assert.Equal(0, v));
-        Assert.All(player.DevelopmentCards.Values, v => Assert.Equal(0, v));
         Assert.Equal(0, player.DevelopmentCardCount);
         Assert.Equal(0, player.ResourceCount);
         Assert.False(player.IsBot);
@@ -64,6 +63,10 @@ public class PlayerTests
         var orig_player = new Player("Mary", PlayerColor.White, true);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        orig_player.MakeNewDevelopmentCardsPlayable();
+        orig_player.AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        orig_player.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        orig_player.PlayDevelopmentCard(DevelopmentCardType.Knight);
         orig_player.AssignResources(ResourceType.Brick, 2);
         orig_player.AssignResources(ResourceType.Ore, 1);
 
@@ -76,10 +79,14 @@ public class PlayerTests
         Assert.Equal(orig_player.Id, new_player.Id);
         Assert.Equal(orig_player.Name, new_player.Name);
         Assert.Equal(orig_player.Color, new_player.Color);
-        Assert.Equal(2, new_player.DevelopmentCardCount);
-        Assert.Equal(1, new_player.DevelopmentCards[DevelopmentCardType.RoadBuilding]);
-        Assert.Equal(1, new_player.DevelopmentCards[DevelopmentCardType.Knight]);
-        Assert.Equal(0, new_player.DevelopmentCards[DevelopmentCardType.VictoryPoint]);
+        Assert.Equal(3, new_player.DevelopmentCardCount);
+        Assert.Single(new_player.DevCardsPlayed);
+        Assert.Contains(DevelopmentCardType.Knight, new_player.DevCardsPlayed);
+        Assert.Single(new_player.DevCardsReadyToPlay);
+        Assert.Contains(DevelopmentCardType.RoadBuilding, new_player.DevCardsReadyToPlay);
+        Assert.Equal(2, new_player.DevCardsPurchasedThisRound.Count);
+        Assert.Contains(DevelopmentCardType.Knight, new_player.DevCardsPurchasedThisRound);
+        Assert.Contains(DevelopmentCardType.YearOfPlenty, new_player.DevCardsPurchasedThisRound);
         Assert.Equal(3, new_player.ResourceCount);
         Assert.Equal(2, new_player.Resources[ResourceType.Brick]);
         Assert.Equal(1, new_player.Resources[ResourceType.Ore]);
@@ -162,37 +169,6 @@ public class PlayerTests
         Assert.Equal("Desert is not a resource that can be earned/owned.", exception.Message);
     }
 
-    [Fact]
-    public void AssignDevelopmentCard_FirstCard()
-    {
-        // Arrange
-        var player = new Player("Mary", PlayerColor.Red);
-
-        // Act
-        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
-
-        // Assert
-        Assert.Equal(1, player.DevelopmentCards[DevelopmentCardType.Knight]);
-        Assert.Equal(1, player.DevelopmentCardCount);
-    }
-
-    [Fact]
-    public void AssignDevelopmentCard_AdditionalCard()
-    {
-        // Arrange
-        var player = new Player("Mary", PlayerColor.Red);
-        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
-        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
-        player.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
-
-        // Act
-        player.AssignDevelopmentCard(DevelopmentCardType.Knight);
-
-        // Assert
-        Assert.Equal(3, player.DevelopmentCards[DevelopmentCardType.Knight]);
-        Assert.Equal(4, player.DevelopmentCardCount);
-    }
-
     private Player CreatePlayerWithResources()
     {
         var player = new Player("Mary", PlayerColor.Red);
@@ -259,6 +235,7 @@ public class PlayerTests
         p1.AssignDevelopmentCard(dc1);
 
         // Assert
+        Assert.Equal(1, p1.DevelopmentCardCount);
         Assert.Single(p1.DevCardsPurchasedThisRound);
         Assert.Contains(dc1, p1.DevCardsPurchasedThisRound);
         Assert.Empty(p1.DevCardsReadyToPlay);
@@ -287,7 +264,37 @@ public class PlayerTests
         Assert.Contains(dc1, p1.DevCardsReadyToPlay);
         Assert.Contains(dc2, p1.DevCardsReadyToPlay);
         Assert.Empty(p1.DevCardsPlayed);
+        Assert.Equal(3, p1.DevelopmentCardCount);
     }
+
+    [Fact]
+    public void AssignDevelopmentCard_PlayedNotInCount()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+        var dc2 = DevelopmentCardType.Monopoly;
+
+        p1.AssignDevelopmentCard(dc1);
+        p1.AssignDevelopmentCard(dc2);
+        p1.AssignDevelopmentCard(dc1);
+        p1.MakeNewDevelopmentCardsPlayable();
+        p1.PlayDevelopmentCard(dc1);
+        p1.PlayDevelopmentCard(dc1);
+
+        // Act
+        p1.AssignDevelopmentCard(dc2);
+
+        // Assert
+        Assert.Single(p1.DevCardsPurchasedThisRound);
+        Assert.Contains(dc2, p1.DevCardsPurchasedThisRound);
+        Assert.Single(p1.DevCardsReadyToPlay);
+        Assert.Contains(dc2, p1.DevCardsReadyToPlay);
+        Assert.Equal(2, p1.DevCardsPlayed.Count);
+        Assert.Contains(dc1, p1.DevCardsPlayed);
+        Assert.Equal(2, p1.DevelopmentCardCount);
+    }
+
 
     [Fact]
     public void PlayDevelopmentCard_PlayerDoesntHave()
@@ -321,6 +328,7 @@ public class PlayerTests
         var dc1 = DevelopmentCardType.Knight;
         p1.AssignDevelopmentCard(dc1);
         p1.MakeNewDevelopmentCardsPlayable();
+        Assert.Equal(1, p1.DevelopmentCardCount);
 
         // Act
         p1.PlayDevelopmentCard(DevelopmentCardType.Knight);
@@ -330,6 +338,7 @@ public class PlayerTests
         Assert.Empty(p1.DevCardsReadyToPlay);
         Assert.Single(p1.DevCardsPlayed);
         Assert.Contains(dc1, p1.DevCardsPlayed);
+        Assert.Equal(0, p1.DevelopmentCardCount);
     }
 
     [Fact]
@@ -351,6 +360,7 @@ public class PlayerTests
         Assert.Single(p1.DevCardsReadyToPlay);
         Assert.Contains(dc1, p1.DevCardsReadyToPlay);
         Assert.Empty(p1.DevCardsPlayed);
+        Assert.Equal(1, p1.DevelopmentCardCount);
     }
 
     [Fact]
@@ -369,6 +379,7 @@ public class PlayerTests
         Assert.Empty(p1.DevCardsPurchasedThisRound);
         Assert.Empty(p1.DevCardsReadyToPlay);
         Assert.Empty(p1.DevCardsPlayed);
+        Assert.Equal(0, p1.DevelopmentCardCount);
     }
 
     [Fact]
@@ -387,6 +398,7 @@ public class PlayerTests
         Assert.Empty(p1.DevCardsPurchasedThisRound);
         Assert.Empty(p1.DevCardsReadyToPlay);
         Assert.Empty(p1.DevCardsPlayed);
+        Assert.Equal(0, p1.DevelopmentCardCount);
     }
 
     [Fact]
