@@ -37,7 +37,9 @@ public class GameStateDTOTests
         gameState.Players[0].AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
         gameState.Players[0].AssignResources(ResourceType.Ore, 2);
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
+        gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
         gameState.Players[1].MakeNewDevelopmentCardsPlayable();
+        gameState.Players[1].PlayDevelopmentCard(DevelopmentCardType.Knight);
         gameState.Players[1].AssignDevelopmentCard(DevelopmentCardType.Knight);
         gameState.Players[1].AssignResources(ResourceType.Brick, 1);
 
@@ -121,9 +123,11 @@ public class GameStateDTOTests
         Assert.Equal(2, gsTransformed.Players[0].DevelopmentCardCount);
         Assert.Equal(2, gsTransformed.Players[0].ResourceCount);
         Assert.Equal(2, gsTransformed.Players[1].DevelopmentCardCount);
-        Assert.Null(gsTransformed.Players[1].DevCardsPlayed);
-        Assert.Null(gsTransformed.Players[1].DevCardsPurchasedThisRound);
-        Assert.Null(gsTransformed.Players[1].DevCardsReadyToPlay);
+        Assert.NotNull(gsTransformed.Players[1].DevCardsPlayed);
+        Assert.NotEmpty(gsTransformed.Players[1].DevCardsPlayed);  // All played cards are visible
+        Assert.Contains(DevelopmentCardType.Knight.ToString(), gsTransformed.Players[1].DevCardsPlayed);
+        Assert.Empty(gsTransformed.Players[1].DevCardsPurchasedThisRound);
+        Assert.Empty(gsTransformed.Players[1].DevCardsReadyToPlay);
         Assert.Equal(1, gsTransformed.Players[1].ResourceCount);
         Assert.True(gsTransformed.Players[1].Resources.Values.All(v => v == 0));
     }

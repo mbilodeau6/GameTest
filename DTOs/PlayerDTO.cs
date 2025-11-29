@@ -21,9 +21,9 @@ public class PlayerDTO
 
     public int ResourceCount { get; } = 0;
 
-    public List<string>? DevCardsPurchasedThisRound { get; private set; } = null;
-    public List<string>? DevCardsPlayed { get; private set; } = null;
-    public List<string>? DevCardsReadyToPlay { get; private set; } = null;
+    public List<string> DevCardsPurchasedThisRound { get; } = new List<string>();
+    public List<string> DevCardsPlayed { get; } = new List<string>();
+    public List<string> DevCardsReadyToPlay { get; } = new List<string>();
 
 
     public int DevelopmentCardCount { get; } = 0;
@@ -59,25 +59,16 @@ public class PlayerDTO
         IsBot = player.IsBot;
 
         if (!countsOnly && player.DevCardsPurchasedThisRound != null)
-        {
-            DevCardsPurchasedThisRound = new List<string>();
             foreach (var dc in player.DevCardsPurchasedThisRound)
                 DevCardsPurchasedThisRound.Add(dc.ToString());
-        }
 
         if (!countsOnly && player.DevCardsReadyToPlay != null)
-        {
-            DevCardsReadyToPlay = new List<string>();
             foreach (var dc in player.DevCardsReadyToPlay)
                 DevCardsReadyToPlay.Add(dc.ToString());
-        }
 
-        if (!countsOnly && player.DevCardsPlayed != null)
-        {
-            DevCardsPlayed = new List<string>();
+        if (player.DevCardsPlayed != null)
             foreach (var dc in player.DevCardsPlayed)
                 DevCardsPlayed.Add(dc.ToString());
-        }
 
         DevelopmentCardCount = player.DevelopmentCardCount;
 

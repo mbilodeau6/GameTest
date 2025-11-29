@@ -55,8 +55,10 @@ public class PlayerDTOTests
         Assert.Equal(player.ResourceCount, playerDto.ResourceCount);
         Assert.Equal(0, playerDto.Resources[ResourceType.Wool]);
         Assert.Equal(player.DevelopmentCardCount, playerDto.DevelopmentCardCount);
-        Assert.Null(playerDto.DevCardsPurchasedThisRound);
-        Assert.Null(playerDto.DevCardsReadyToPlay);
-        Assert.Null(playerDto.DevCardsPlayed);
+        Assert.Empty(playerDto.DevCardsPurchasedThisRound);
+        Assert.Empty(playerDto.DevCardsReadyToPlay);
+        Assert.NotNull(playerDto.DevCardsPlayed);
+        Assert.NotEmpty(playerDto.DevCardsPlayed);  // Played cards are always visible
+        Assert.Contains(DevelopmentCardType.Knight.ToString(), playerDto.DevCardsPlayed);
     }
 }
