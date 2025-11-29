@@ -183,7 +183,7 @@ public static class GamePlayHelpers
         if (gameState.Phase.PhaseState == GameStates.SettingUpBoard)
         {
             nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
-            nextPhase.CurrentPlayer = gameState.Players[_random.Next(1, gameState.Players.Count)];
+            nextPhase.CurrentPlayer = gameState.Players[_random.Next(gameState.Players.Count)];
             nextPhase.EndPlayer = GamePlayHelpers.GetPreviousPlayer(nextPhase.CurrentPlayer, gameState.Players);
         }
         else

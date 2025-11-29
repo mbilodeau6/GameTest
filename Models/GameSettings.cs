@@ -37,7 +37,7 @@ public class GameSettings
             PreRobberState = Enum.Parse<GameStates>(dto.PreRobberState);
 
         if (dto.OriginalRobberTileId != null)
-            OriginalRobberTile = tiles.Where(t => t.Id == dto.OriginalRobberTileId).First();
+            OriginalRobberTile = tiles.First(t => t.Id == dto.OriginalRobberTileId);
     }
 
     public void SetPreRobberState(GameStates state, Tile originalTile)

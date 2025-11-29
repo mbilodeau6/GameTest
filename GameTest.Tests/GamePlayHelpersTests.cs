@@ -1848,7 +1848,7 @@ public class GamePlayHelpersTests
     private static GameState CreateBoardWithOnlyOneOfEachBuildAvailable()
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
         var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
@@ -1862,7 +1862,7 @@ public class GamePlayHelpersTests
         BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, desertTile, null).BuildRoad(player);
 
         // build all but one city
-        gs.Vertices.Where(v => v.Building == BuildingType.Settlement && v.Owner != null && v.Owner.Id == player.Id).First().UpgradeToCity();
+        gs.Vertices.First(v => v.Building == BuildingType.Settlement && v.Owner != null && v.Owner.Id == player.Id).UpgradeToCity();
 
         // build all but one settlement
         BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.SW).BuildSettlement(player);
@@ -1874,7 +1874,7 @@ public class GamePlayHelpersTests
     private static GameState CreateBoardWithAllBuildingsInUse()
     {
         var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         // Build remaining buildings to hit max
         var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
@@ -1897,7 +1897,7 @@ public class GamePlayHelpersTests
     {
         // Arrange
         var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         // Act & Assert
         Assert.True(GamePlayHelpers.UnusedRoadAvailable(gs, player)); 
@@ -1908,7 +1908,7 @@ public class GamePlayHelpersTests
     {
         // Arrange
         var gs = CreateBoardWithAllBuildingsInUse();
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         // Act & Assert
         Assert.False(GamePlayHelpers.UnusedRoadAvailable(gs, player)); 
@@ -1919,7 +1919,7 @@ public class GamePlayHelpersTests
     {
         // Arrange
         var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         // Act & Assert
         Assert.True(GamePlayHelpers.UnusedSettlementAvailable(gs, player)); 
@@ -1930,7 +1930,7 @@ public class GamePlayHelpersTests
     {
         // Arrange
         var gs = CreateBoardWithAllBuildingsInUse();
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         // Act & Assert
         Assert.False(GamePlayHelpers.UnusedSettlementAvailable(gs, player)); 
@@ -1941,7 +1941,7 @@ public class GamePlayHelpersTests
     {
         // Arrange
         var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         // Act & Assert
         Assert.True(GamePlayHelpers.UnusedCityAvailable(gs, player)); 
@@ -1952,7 +1952,7 @@ public class GamePlayHelpersTests
     {
         // Arrange
         var gs = CreateBoardWithAllBuildingsInUse();
-        var player = gs.Players.Where(p => !p.IsBot).First();
+        var player = gs.Players.First(p => !p.IsBot);
 
         // Act & Assert
         Assert.False(GamePlayHelpers.UnusedCityAvailable(gs, player)); 
@@ -1963,8 +1963,8 @@ public class GamePlayHelpersTests
     {
         // Arrange
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        var bot = gs.Players.Where(p => p.IsBot).First();
-        var human = gs.Players.Where(p => !p.IsBot).First();
+        var bot = gs.Players.First(p => p.IsBot);
+        var human = gs.Players.First(p => !p.IsBot);
 
         var grain12Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
         var grain9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -4, 0);
