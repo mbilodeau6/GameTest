@@ -10,14 +10,20 @@ public class GamePhaseDTO
     public string? CurrentPlayerId { get; }
     public string PhaseState { get; } = GameStates.SettingUpBoard.ToString();
     public string? EndPlayerId { get; }
+    public string? PreviousState { get; } = null;
+    public string? OriginalRobberTileId { get; } = null;
+
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public GamePhaseDTO(string currentPlayerId, string phaseState, string? endPlayerId = null)
+    public GamePhaseDTO(string phaseState, string? currentPlayerId = null, string? endPlayerId = null, 
+        string? previousState = null, string? originalRobberTileId = null)
     {
         CurrentPlayerId = currentPlayerId;
         PhaseState = phaseState;
         EndPlayerId = endPlayerId;
+        PreviousState = previousState;
+        OriginalRobberTileId = originalRobberTileId;
     }
 
     public GamePhaseDTO(GamePhase gamePhase)
@@ -28,7 +34,10 @@ public class GamePhaseDTO
             CurrentPlayerId = gamePhase.CurrentPlayer.Id;
         if (gamePhase.EndPlayer != null)
             EndPlayerId = gamePhase.EndPlayer.Id;
+        if (gamePhase.PreviousState != null)
+            PreviousState = gamePhase.PreviousState.ToString();
+        if (gamePhase.OriginalRobberTile != null)
+            OriginalRobberTileId = gamePhase.OriginalRobberTile.Id.ToString();
     }
-
 }
 

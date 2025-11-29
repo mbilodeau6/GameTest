@@ -12,15 +12,11 @@ public class GameSettingsDTO
     public int RoadsPerPlayer { get; }
     public int SettlementsPerPlayer { get; }
     public int CitiesPerPlayer { get; }
-    public string? PreRobberState { get; } = null;
-    public string? OriginalRobberTileId { get; } = null;
-
 
     [JsonConstructor]
     public GameSettingsDTO(string type,
         int maxPlayers = 0, int victoryPointsToWin = 0, int roadsPerPlayer = 0,
-        int settlementsPerPlayer = 0, int citiesPerPlayer = 0, string? preRobberState = null,
-        string? originalRobberTileId = null) 
+        int settlementsPerPlayer = 0, int citiesPerPlayer = 0) 
     {
         Type = type ?? string.Empty;
         MaxPlayers = maxPlayers;
@@ -28,8 +24,6 @@ public class GameSettingsDTO
         RoadsPerPlayer = roadsPerPlayer;
         SettlementsPerPlayer = settlementsPerPlayer;
         CitiesPerPlayer = citiesPerPlayer;
-        PreRobberState = preRobberState;
-        OriginalRobberTileId = originalRobberTileId;
     }
 
     public GameSettingsDTO(GameSettings settings)
@@ -40,10 +34,6 @@ public class GameSettingsDTO
         RoadsPerPlayer = settings.RoadsPerPlayer;
         SettlementsPerPlayer = settings.SettlementsPerPlayer;
         CitiesPerPlayer = settings.CitiesPerPlayer;
-        if (settings.PreRobberState != null)
-            PreRobberState = settings.PreRobberState.ToString();
-        if (settings.OriginalRobberTile != null)
-            OriginalRobberTileId = settings.OriginalRobberTile.Id.ToString();
     }
 
     public GameSettingsDTO(GameSettingsDTO dto)
@@ -54,7 +44,5 @@ public class GameSettingsDTO
         RoadsPerPlayer = dto.RoadsPerPlayer;
         SettlementsPerPlayer = dto.SettlementsPerPlayer;
         CitiesPerPlayer = dto.CitiesPerPlayer;
-        PreRobberState = dto.PreRobberState;
-        OriginalRobberTileId = dto.OriginalRobberTileId;
     }
 }

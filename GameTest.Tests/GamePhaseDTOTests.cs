@@ -54,4 +54,23 @@ public class GamePhaseDTOTests
         Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
     }
 
+    [Fact]
+    public void Constructor_FromDTO()
+    {
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var p2 = new Player("Mary", PlayerColor.Blue);
+        GamePhase gamePhase = new GamePhase(GameStates.RollOrUseDevCard, p1, p2);
+        var tile = new Tile(ResourceType.Brick, 10, 0, 0);
+        gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile);
+
+        GamePhaseDTO gamePhaseDTO = new GamePhaseDTO(gamePhase);
+
+        Assert.Equal(gamePhase.PhaseState.ToString(), gamePhaseDTO.PhaseState);
+        Assert.Equal(gamePhase.CurrentPlayer.Id, gamePhaseDTO.CurrentPlayerId);
+        Assert.Equal(gamePhase.EndPlayer.Id, gamePhaseDTO.EndPlayerId);
+        Assert.Equal(gamePhase.PreviousState.ToString(), gamePhaseDTO.PreviousState);
+        Assert.Equal(gamePhase.OriginalRobberTile.Id, gamePhaseDTO.OriginalRobberTileId);
+        Assert.Equal(gamePhase.OriginalRobberTile.Id.ToString(), gamePhaseDTO.OriginalRobberTileId);
+    }
+
 }

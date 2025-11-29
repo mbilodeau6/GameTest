@@ -95,7 +95,7 @@ public class GameState
                 RobberTile = tile;
         }
 
-        Settings = new GameSettings(Tiles, dto.Settings);
+        Settings = new GameSettings(dto.Settings);
 
         foreach (var edgeDto in dto.Edges)
             Edges.Add(new Edge(edgeDto, Players, Tiles));
@@ -112,7 +112,7 @@ public class GameState
         Dice = dto.Dice;
 
         if (dto.Phase != null)
-            Phase = new GamePhase(Enum.Parse<GameStates>(dto.Phase.PhaseState), currentPlayer, endPlayer);
+            Phase = new GamePhase(this, dto.Phase);
     }
 
     public void AddPlayer(Player player)

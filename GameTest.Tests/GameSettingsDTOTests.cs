@@ -11,8 +11,6 @@ public class GameSettingsDTOTests
     {
         // Arrange
         var settings = new GameSettings();
-        var tile = new Tile(ResourceType.Brick, 10, 0, 0);
-        settings.SetPreRobberState(GameStates.RollOrUseDevCard, tile);
 
         // Act
         var settingsDTO = new GameSettingsDTO(settings);
@@ -24,9 +22,6 @@ public class GameSettingsDTOTests
         Assert.Equal(settings.RoadsPerPlayer, settingsDTO.RoadsPerPlayer);
         Assert.Equal(settings.SettlementsPerPlayer, settingsDTO.SettlementsPerPlayer);
         Assert.Equal(settings.VictoryPointsToWin, settingsDTO.VictoryPointsToWin);
-        Assert.Equal(settings.PreRobberState.ToString(), settingsDTO.PreRobberState);
-        Assert.Equal(settings.OriginalRobberTile.Id, settingsDTO.OriginalRobberTileId);
-        Assert.Equal(settings.OriginalRobberTile.Id.ToString(), settingsDTO.OriginalRobberTileId);
     }
 
     [Fact]
@@ -34,9 +29,6 @@ public class GameSettingsDTOTests
     {
         // Arrange
         var settings = new GameSettings();
-        var tile = new Tile(ResourceType.Brick, 10, 0, 0);
-
-        settings.SetPreRobberState(GameStates.BuildOrTrade, tile);
         var settingsDTO = new GameSettingsDTO(settings);
 
         // Act
@@ -49,7 +41,5 @@ public class GameSettingsDTOTests
         Assert.Equal(settings.RoadsPerPlayer, copiedDTO.RoadsPerPlayer);
         Assert.Equal(settings.SettlementsPerPlayer, copiedDTO.SettlementsPerPlayer);
         Assert.Equal(settings.VictoryPointsToWin, copiedDTO.VictoryPointsToWin);
-        Assert.Equal(settings.PreRobberState.ToString(), copiedDTO.PreRobberState);
-        Assert.Equal(settings.OriginalRobberTile.Id.ToString(), copiedDTO.OriginalRobberTileId);
     }
 }

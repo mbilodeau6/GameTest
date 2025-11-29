@@ -871,7 +871,7 @@ public class GamePlayHelpersTests
         Assert.Equal(GameStates.PlaceRobber, phase.PhaseState);
         Assert.Equal(gs.Players[0], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
-        Assert.Equal(GameStates.BuildOrTrade, gs.Settings.PreRobberState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PreviousState);
     }
 
     [Fact]
@@ -880,12 +880,12 @@ public class GamePlayHelpersTests
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceRobber, gs.Players[0], gs.Players[1]);
 
-        gs.Settings.SetPreRobberState(GameStates.RollOrUseDevCard, gs.RobberTile);
+        gs.Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, gs.RobberTile);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
         Assert.Equal(GameStates.PlaceRobber, phase.PhaseState);
-        Assert.Equal(GameStates.RollOrUseDevCard, gs.Settings.PreRobberState);
+        Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PreviousState);
         Assert.Equal(gs.Players[0], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
     }
@@ -895,19 +895,19 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceRobber, gs.Players[0], gs.Players[1]);
-        gs.Settings.SetPreRobberState(GameStates.RollOrUseDevCard, gs.RobberTile);
+        gs.Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, gs.RobberTile);
 
         var newRobberTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
         gs.SetRobberTile(newRobberTile);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
-        gs.Settings.ClearRobberState();
+        gs.Phase.ClearRobberState();
 
         Assert.Equal(GameStates.RollOrUseDevCard, phase.PhaseState);
         Assert.Equal(gs.Players[0], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
-        Assert.Null(gs.Settings.PreRobberState);
-        Assert.Null(gs.Settings.OriginalRobberTile);
+        Assert.Null(gs.Phase.PreviousState);
+        Assert.Null(gs.Phase.OriginalRobberTile);
         Assert.Equal(newRobberTile.Id, gs.RobberTile.Id);
     }
 
@@ -934,19 +934,19 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameStateForPhaseTesting();
         gs.Phase = new GamePhase(GameStates.PlaceRobber, gs.Players[0], gs.Players[1]);
-        gs.Settings.SetPreRobberState(GameStates.BuildOrTrade, gs.RobberTile);
+        gs.Phase.SetStateToReturnTo(GameStates.BuildOrTrade, gs.RobberTile);
         var newRobberTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
         gs.SetRobberTile(newRobberTile);
 
         var phase = GamePlayHelpers.GetNextPhase(gs);
 
-        gs.Settings.ClearRobberState();
+        gs.Phase.ClearRobberState();
 
         Assert.Equal(GameStates.BuildOrTrade, phase.PhaseState);
         Assert.Equal(gs.Players[0], phase.CurrentPlayer);
         Assert.Equal(gs.Players[1], phase.EndPlayer);
-        Assert.Null(gs.Settings.PreRobberState);
-        Assert.Null(gs.Settings.OriginalRobberTile);
+        Assert.Null(gs.Phase.PreviousState);
+        Assert.Null(gs.Phase.OriginalRobberTile);
         Assert.Equal(newRobberTile.Id, gs.RobberTile.Id);
     }
 
@@ -2017,7 +2017,7 @@ public class GamePlayHelpersTests
 
         gs.Phase.CurrentPlayer = player1;
         gs.Phase.PhaseState = GameStates.PlaceRobber;
-        gs.Settings.SetPreRobberState(previousState, tile1);
+        gs.Phase.SetStateToReturnTo(previousState, tile1);
 
         return gs;        
     }
@@ -2062,7 +2062,7 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameForRobberTesting(GameStates.RollOrUseDevCard);
 
-        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, gs.Settings.OriginalRobberTile.Id);
+        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, gs.Phase.OriginalRobberTile.Id);
 
         Assert.False(response.Success);
         Assert.Equal(1033, response.ErrorCode);
@@ -2077,7 +2077,7 @@ public class GamePlayHelpersTests
 
         Assert.True(response.Success);
         Assert.Equal(gs.Tiles[1].Id, gs.RobberTile.Id);
-        Assert.Null(gs.Settings.PreRobberState);
+        Assert.Null(gs.Phase.PreviousState);
     }
 
     [Fact]
@@ -2092,7 +2092,7 @@ public class GamePlayHelpersTests
 
         gs.Phase.CurrentPlayer = human;
         gs.Phase.PhaseState = GameStates.PlaceRobber;
-        gs.Settings.SetPreRobberState(GameStates.BuildOrTrade, gs.RobberTile);
+        gs.Phase.SetStateToReturnTo(GameStates.BuildOrTrade, gs.RobberTile);
 
         Assert.Contains(ResourceType.Ore, human.Resources);
         Assert.Equal(0, human.Resources[ResourceType.Ore]);
@@ -2104,7 +2104,7 @@ public class GamePlayHelpersTests
 
         // Assert
         Assert.Equal(botTile.Id, gs.RobberTile.Id);
-        Assert.Null(gs.Settings.PreRobberState);
+        Assert.Null(gs.Phase.PreviousState);
         Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
         Assert.Contains(ResourceType.Ore, human.Resources);
         Assert.Equal(1, human.Resources[ResourceType.Ore]);
