@@ -22,8 +22,8 @@ public class Player
     public string Id { get; init; }
     public string Name { get; set;  }
     public PlayerColor Color { get; set; }
-    public bool IsBot { get;  }
-
+    public bool IsBot { get; }
+    
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
         { ResourceType.Brick, 0 },
@@ -35,6 +35,7 @@ public class Player
 
     public int ResourceCount { get; set; } = 0;
 
+    // TODO: Remove this after new DevCard objects working
     public Dictionary<DevelopmentCardType, int> DevelopmentCards { get; } = new()
     {
         { DevelopmentCardType.RoadBuilding, 0 },
@@ -45,6 +46,9 @@ public class Player
     };
 
     public int DevelopmentCardCount { get; set; } = 0;
+    public List<DevelopmentCardType> DevCardsPurchasedThisRound { get; private set; } = new List<DevelopmentCardType>();
+    public List<DevelopmentCardType> DevCardsPlayed { get; private set; } = new List<DevelopmentCardType>();
+    public List<DevelopmentCardType> DevCardsReadyToPlay { get; private set; } = new List<DevelopmentCardType>();
 
     public HashSet<PortType> Ports {get ; private set; } = new HashSet<PortType>();
 
@@ -111,8 +115,31 @@ public class Player
 
     public void AssignDevelopmentCard(DevelopmentCardType type)
     {
+        // TODO: Need to remove when switch to new dev card implementation
         DevelopmentCards[type]++;
+
+        DevCardsPurchasedThisRound.Add(type);
         DevelopmentCardCount++;
+    }
+
+    public void MakeNewDevelopmentCardsPlayable()
+    {
+        foreach(var dc in DevCardsPurchasedThisRound)
+            DevCardsReadyToPlay.Add(dc);
+        
+        DevCardsPurchasedThisRound.Clear();
+    }
+
+    public void PlayDevelopmentCard(DevelopmentCardType type)
+    {
+        if (!DevCardsReadyToPlay.Contains(type))
+            throw new InvalidOperationException($"Unexpected Exception. Development Card type {type} not in DevCardsReadyToPlay.");
+        else if (type == DevelopmentCardType.VictoryPoint)
+            throw new InvalidOperationException("Unexpected Exception. You don't play Victory Points.");
+        else if (type == DevelopmentCardType.Knight)
+            DevCardsPlayed.Add(DevelopmentCardType.Knight);
+
+        DevCardsReadyToPlay.Remove(type);
     }
 
     public void AddPort(PortType port)

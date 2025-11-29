@@ -21,6 +21,9 @@ public class PlayerTests
         Assert.Equal(0, player.DevelopmentCardCount);
         Assert.Equal(0, player.ResourceCount);
         Assert.False(player.IsBot);
+        Assert.Empty(player.DevCardsPlayed);
+        Assert.Empty(player.DevCardsPurchasedThisRound);
+        Assert.Empty(player.DevCardsReadyToPlay);
     }
 
     [Fact]
@@ -243,5 +246,161 @@ public class PlayerTests
 
         // Assert
         Assert.Equal(2, player.Resources[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void AssignDevelopmentCard_First()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+
+        // Act
+        p1.AssignDevelopmentCard(dc1);
+
+        // Assert
+        Assert.Single(p1.DevCardsPurchasedThisRound);
+        Assert.Contains(dc1, p1.DevCardsPurchasedThisRound);
+        Assert.Empty(p1.DevCardsReadyToPlay);
+        Assert.Empty(p1.DevCardsPlayed);
+    }
+
+    [Fact]
+    public void AssignDevelopmentCard_Multiple()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+        var dc2 = DevelopmentCardType.Monopoly;
+
+        p1.AssignDevelopmentCard(dc1);
+        p1.AssignDevelopmentCard(dc2);
+        p1.MakeNewDevelopmentCardsPlayable();
+
+        // Act
+        p1.AssignDevelopmentCard(dc1);
+
+        // Assert
+        Assert.Single(p1.DevCardsPurchasedThisRound);
+        Assert.Contains(dc1, p1.DevCardsPurchasedThisRound);
+        Assert.Equal(2, p1.DevCardsReadyToPlay.Count);
+        Assert.Contains(dc1, p1.DevCardsReadyToPlay);
+        Assert.Contains(dc2, p1.DevCardsReadyToPlay);
+        Assert.Empty(p1.DevCardsPlayed);
+    }
+
+    [Fact]
+    public void PlayDevelopmentCard_PlayerDoesntHave()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+        p1.AssignDevelopmentCard(dc1);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => p1.PlayDevelopmentCard(DevelopmentCardType.Monopoly));
+    }
+
+    [Fact]
+    public void PlayDevelopmentCard_NotPlayableYet()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+        p1.AssignDevelopmentCard(dc1);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => p1.PlayDevelopmentCard(DevelopmentCardType.Knight));
+    }
+
+    [Fact]
+    public void PlayDevelopmentCard_Knight()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+        p1.AssignDevelopmentCard(dc1);
+        p1.MakeNewDevelopmentCardsPlayable();
+
+        // Act
+        p1.PlayDevelopmentCard(DevelopmentCardType.Knight);
+
+        // Assert
+        Assert.Empty(p1.DevCardsPurchasedThisRound);
+        Assert.Empty(p1.DevCardsReadyToPlay);
+        Assert.Single(p1.DevCardsPlayed);
+        Assert.Contains(dc1, p1.DevCardsPlayed);
+    }
+
+    [Fact]
+    public void PlayDevelopmentCard_Monopoly()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+        p1.AssignDevelopmentCard(dc1);
+        var dc2 = DevelopmentCardType.Monopoly;
+        p1.AssignDevelopmentCard(dc2);
+        p1.MakeNewDevelopmentCardsPlayable();
+
+        // Act
+        p1.PlayDevelopmentCard(DevelopmentCardType.Monopoly);
+
+        // Assert
+        Assert.Empty(p1.DevCardsPurchasedThisRound);
+        Assert.Single(p1.DevCardsReadyToPlay);
+        Assert.Contains(dc1, p1.DevCardsReadyToPlay);
+        Assert.Empty(p1.DevCardsPlayed);
+    }
+
+    [Fact]
+    public void PlayDevelopmentCard_RoadBuilding()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.RoadBuilding;
+        p1.AssignDevelopmentCard(dc1);
+        p1.MakeNewDevelopmentCardsPlayable();
+
+        // Act
+        p1.PlayDevelopmentCard(DevelopmentCardType.RoadBuilding);
+
+        // Assert
+        Assert.Empty(p1.DevCardsPurchasedThisRound);
+        Assert.Empty(p1.DevCardsReadyToPlay);
+        Assert.Empty(p1.DevCardsPlayed);
+    }
+
+    [Fact]
+    public void PlayDevelopmentCard_YearOfPlenty()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.YearOfPlenty;
+        p1.AssignDevelopmentCard(dc1);
+        p1.MakeNewDevelopmentCardsPlayable();
+
+        // Act
+        p1.PlayDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+
+        // Assert
+        Assert.Empty(p1.DevCardsPurchasedThisRound);
+        Assert.Empty(p1.DevCardsReadyToPlay);
+        Assert.Empty(p1.DevCardsPlayed);
+    }
+
+    [Fact]
+    public void PlayDevelopmentCard_VictoryPoint()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var dc1 = DevelopmentCardType.Knight;
+        p1.AssignDevelopmentCard(dc1);
+        var dc2 = DevelopmentCardType.VictoryPoint;
+        p1.AssignDevelopmentCard(dc2);
+        p1.MakeNewDevelopmentCardsPlayable();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => p1.PlayDevelopmentCard(DevelopmentCardType.VictoryPoint));
     }
 }
