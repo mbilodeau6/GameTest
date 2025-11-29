@@ -21,18 +21,18 @@ public static class GamePlayHelpers
         return 0;
     }
 
-    public static Dictionary<Player, Dictionary<ResourceType, int>> GetResourcesEarnedOnLastRoll(GameState gameState)
+    public static Dictionary<Player, Dictionary<ResourceType, int>> GetResourcesEarnedOnLastRoll(GameState gs)
     {
         var resourcesEarned = new Dictionary<Player, Dictionary<ResourceType, int>>();
 
-        if (gameState.Dice.GetCombinedValue() == 7)
+        if (gs.Dice.GetCombinedValue() == 7)
             return resourcesEarned;
 
-        var matchingTiles = gameState.Tiles.FindAll(t => t.DiceNumber == gameState.Dice.GetCombinedValue());
+        var matchingTiles = gs.Tiles.FindAll(t => t.DiceNumber == gs.Dice.GetCombinedValue() && t.Id != gs.RobberTile.Id);
 
         foreach (var tile in matchingTiles)
         {
-            foreach (var vertex in gameState.Vertices)
+            foreach (var vertex in gs.Vertices)
             {
                 if (vertex.Tiles.Contains(tile) && vertex.Building != null && vertex.Owner != null)
                 {
@@ -690,9 +690,33 @@ public static class GamePlayHelpers
 
     public static void PlaceRobber(GameState gs, Player player, Tile tile)
     {
+        // Move Robber
         gs.SetRobberTile(tile);
-
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
+
+        // Steal resource from player with building on the target tile
+        // TODO: If there are multiple players on the tile, need to ask the user which player to steal from
+        // if more than one player has resources
+        foreach(var vertex in gs.Vertices)
+        {
+            if (vertex.Tiles.Any(t => t.Id == tile.Id) && vertex.Owner != null && vertex.Owner.Id != player.Id)
+            {
+                List<ResourceType> targetResources = new List<ResourceType>();
+                foreach (var pair in vertex.Owner.Resources)
+                    for (int i = 0; i < pair.Value; i++ )
+                        targetResources.Add(pair.Key);
+
+                if (targetResources.Count > 0)
+                {
+                    var resourceToSteal = targetResources[_random.Next(targetResources.Count)];
+                    vertex.Owner.RemoveResources(resourceToSteal, 1);
+                    player.AssignResources(resourceToSteal, 1);
+
+                    gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.StealResource, vertex.Owner, resourceToSteal));
+                    break;
+                }
+            }
+        }
 
         GameLoop(gs);
     }

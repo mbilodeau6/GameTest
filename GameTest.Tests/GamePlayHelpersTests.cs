@@ -2083,13 +2083,32 @@ public class GamePlayHelpersTests
     [Fact]
     public void PlaceRobber_ValidMove()
     {
-        var gs = CreateGameForRobberTesting(GameStates.RollOrUseDevCard);
+        // Arrange
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        bot.AssignResources(ResourceType.Ore, 2);
+        var botTile = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == bot.Id).Tiles.First(t => t.Resource != ResourceType.Desert);
 
-        var response = GamePlayHelpers.PlaceRobberForUser(gs, gs.Players[0].Id, gs.Tiles[1].Id);
+        gs.Phase.CurrentPlayer = human;
+        gs.Phase.PhaseState = GameStates.PlaceRobber;
+        gs.Settings.SetPreRobberState(GameStates.BuildOrTrade, gs.RobberTile);
 
-        Assert.True(response.Success);
-        Assert.Equal(gs.Tiles[1].Id, gs.RobberTile.Id);
+        Assert.Contains(ResourceType.Ore, human.Resources);
+        Assert.Equal(0, human.Resources[ResourceType.Ore]);
+        Assert.Contains(ResourceType.Ore, bot.Resources);
+        Assert.Equal(2, bot.Resources[ResourceType.Ore]);
+
+        // Act
+        GamePlayHelpers.PlaceRobber(gs, human, botTile);
+
+        // Assert
+        Assert.Equal(botTile.Id, gs.RobberTile.Id);
         Assert.Null(gs.Settings.PreRobberState);
-        Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.Contains(ResourceType.Ore, human.Resources);
+        Assert.Equal(1, human.Resources[ResourceType.Ore]);
+        Assert.Contains(ResourceType.Ore, bot.Resources);
+        Assert.Equal(1, bot.Resources[ResourceType.Ore]);
     }
 }

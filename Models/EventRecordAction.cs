@@ -7,6 +7,7 @@ public enum EventRecordAction
     UpgradeSettlement,
     PlaceRoad,
     PlaceRobber,
+    StealResource,
     SelectRobberTarget,
     SevenDiscard,
     PlayMonoploy,
