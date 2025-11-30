@@ -2111,4 +2111,30 @@ public class GamePlayHelpersTests
         Assert.Contains(ResourceType.Ore, bot.Resources);
         Assert.Equal(1, bot.Resources[ResourceType.Ore]);
     }
+
+    [Fact]
+    public void BuyDevCard_NotCurrentPlayer()
+    {
+        Assert.False(true);
+    }
+
+    [Fact]
+    public void BuyDevCard_WrongState()
+    {
+        Assert.False(true);
+    }
+
+    [Fact]
+    public void BuyDevCard_Valid()
+    {
+        Assert.False(true);
+    }
+
+    // TODO: Add all the PlayDevCard tests
+    [Fact]
+    public void PlayDevCard_ALLTYPES()
+    {
+        Assert.False(true);
+    }
+
 }

@@ -88,6 +88,9 @@ public class ResponseDTO
         { 1031, "PlaceRobber request must specify player and tile id."},
         { 1032, "Invalid tile id."},
         { 1033, "Robber can not remain in it's current position. It must be moved to a new spot."},
+        { 1034, "BuyDevCard request must specify player."},
+        { 1035, "PlayDevCard request must specify player and devCardType."},
+        { 1036, "PlayDevCard received a request with an unsupported DevCardType."},
         { 9999, "Unexpected error."},
     };
 }

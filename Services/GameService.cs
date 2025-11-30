@@ -515,4 +515,102 @@ public class GameService
         }
     }
 
+    public async Task<ResponseDTO> BuyDevCardAsync(Guid gameId, string playerId)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var tradeResponse = GamePlayHelpers.BuyDevCard(gs, playerId);
+
+            if (!tradeResponse.Success)
+                return tradeResponse;
+
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, GetSerializerOptions());
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed Buy Development Card for player {PlayerId} in game {GameId}.", playerId, gameId);
+            return tradeResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Buy Development Card for player {playerId} for game {GameId} failed.", playerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: BuyDevCard; GameId: {gameId}; PlayerId: {playerId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
+    public async Task<ResponseDTO> PlayDevCardAsync(Guid gameId, PlayDevCardRequest request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+
+            // TODO: Need to create/call individual GamePlayHelpers
+            response = null; //  = GamePlayHelpers.BuyDevCard(gs, playerId);
+            switch(request.DevCardType)
+            {
+                case "Monopoly":
+                    response = GamePlayHelpers.PlayMonopolyDevCard(gs, request);
+                    break;
+                case "YearOfPlenty":
+                    response = GamePlayHelpers.PlayYearOfPlentyDevCard(gs, request);
+                    break;
+                case "Knight":
+                    response = GamePlayHelpers.PlayKnightDevCard(gs, request);
+                    break;
+                case "RoadBuilding":
+                    response = GamePlayHelpers.PlayRoadBuildingDevCard(gs, request);
+                    break;
+                default: 
+                    return new ResponseDTO(false, 1036, $"GameId: {gameId}; PlayerId: {request.PlayerId}; DevCardType: {request.DevCardType}", null as GameStateDTO);
+            }
+
+            if (response == null)
+            {
+                return new ResponseDTO(false, 9999, $"Action: PlayDevCard; GameId: {gameId}; PlayerId: {request.PlayerId}; DevCardType: {request.DevCardType}", null as GameStateDTO);
+            }
+
+            if (!response.Success)
+                return response;
+
+            var json = JsonSerializer.Serialize(response.GameState, GetSerializerOptions());
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed Play Development Card {DevCardType} for player {PlayerId} in game {GameId}.", request.DevCardType, request.PlayerId, gameId);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Play Development Card {DevCardType} for player {playerId} for game {GameId} failed.", request.DevCardType, request.PlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: PlayDevCard; GameId: {gameId}; PlayerId: {request.PlayerId}; DevCardType: {request.DevCardType}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
 }

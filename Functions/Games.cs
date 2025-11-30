@@ -266,4 +266,47 @@ public class Games
 
         return await CreateSuccessResponse(req, response);
     }
+
+    [Function("BuyDevCard")]
+    public async Task<HttpResponseData> BuyDevCard(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/dev-card/buy")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("Dev-Card/Buy called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await req.ReadFromJsonAsync<BaseRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1034, $"GameId: {id}");
+
+        var response = await _gameService.BuyDevCardAsync(guid, request.PlayerId);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
+    [Function("PlayDevCard")]
+    public async Task<HttpResponseData> PlayDevCard(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/dev-card/play")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("Dev-Card/Play called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await req.ReadFromJsonAsync<PlayDevCardRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.DevCardType))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1035, $"GameId: {id}");
+
+        var response = await _gameService.PlayDevCardAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
 }

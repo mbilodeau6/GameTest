@@ -728,7 +728,7 @@ public static class GamePlayHelpers
 
     public static ResponseDTO PlaceRobberForUser(GameState gs, string playerId, string tileId)
     {
-        if ((gs.Phase.PhaseState != GameStates.PlaceRobber) || gs.Phase.CurrentPlayer == null)
+        if (gs.Phase.PhaseState != GameStates.PlaceRobber || gs.Phase.CurrentPlayer == null)
             return new ResponseDTO(false, 1003, $"Action: PlaceRobber; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
@@ -748,5 +748,40 @@ public static class GamePlayHelpers
         PlaceRobber(gs, player, tile);
 
         return new ResponseDTO(true, 0, null, gs);
+    }
+
+    public static ResponseDTO BuyDevCard(GameState gs, string playerId)
+    {
+        if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: BuyDevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != playerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        // TODO: Logic to actually buy/assign dev card
+
+        return new ResponseDTO(true, 0, null, gs);
+    }
+
+    public static ResponseDTO PlayMonopolyDevCard(GameState gs, PlayDevCardRequest request)
+    {
+        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
+    }
+    public static ResponseDTO PlayYearOfPlentyDevCard(GameState gs, PlayDevCardRequest request)
+    {
+        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
+    }
+    public static ResponseDTO PlayKnightDevCard(GameState gs, PlayDevCardRequest request)
+    {
+        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
+    }
+
+    public static ResponseDTO PlayRoadBuildingDevCard(GameState gs, PlayDevCardRequest request)
+    {
+        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
     }
 }
