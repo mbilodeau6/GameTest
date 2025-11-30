@@ -91,6 +91,9 @@ public class ResponseDTO
         { 1034, "BuyDevCard request must specify player."},
         { 1035, "PlayDevCard request must specify player and devCardType."},
         { 1036, "PlayDevCard received a request with an unsupported DevCardType."},
+        { 1037, "Monopoly requires the selection of one, and only one, resource"},
+        { 1038, "Invalid resource type requested."},
+        { 1039, "Player does not have the development card required for this action."},
         { 9999, "Unexpected error."},
     };
 }

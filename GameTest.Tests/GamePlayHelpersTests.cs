@@ -2113,7 +2113,7 @@ public class GamePlayHelpersTests
         Assert.Equal(1, bot.Resources[ResourceType.Ore]);
     }
 
-    private static GameState CreateGameForDevCardTesting(GameStates currentState)
+    private static GameState CreateGameForBuyDevCardTesting(GameStates currentState)
     {
         var gs = new GameState(new Guid());
         var player1 = new Player("Tim", PlayerColor.Red);
@@ -2136,7 +2136,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuyDevCardFromUser_NotCurrentPlayer()
     {
-        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
         var bot = gs.Players.First(p => p.IsBot);
         var human = gs.Players.First(p => !p.IsBot);
         Assert.Equal(human.Id, gs.Phase.CurrentPlayer.Id);
@@ -2153,7 +2153,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuyDevCardFromUser_WrongState()
     {
-        var gs = CreateGameForDevCardTesting(GameStates.RollOrUseDevCard);
+        var gs = CreateGameForBuyDevCardTesting(GameStates.RollOrUseDevCard);
         var human = gs.Players.First(p => !p.IsBot);
         Assert.Empty(human.DevCardsPurchasedThisRound);
         Assert.Equal(0, human.DevelopmentCardCount);
@@ -2170,7 +2170,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuyDevCardFromUserValid()
     {
-        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
         var human = gs.Players.First(p => !p.IsBot);
         Assert.Empty(human.DevCardsPurchasedThisRound);
         Assert.Equal(0, human.DevelopmentCardCount);
@@ -2189,7 +2189,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuyDevCard_InvalidState()
     {
-        var gs = CreateGameForDevCardTesting(GameStates.RollOrUseDevCard);
+        var gs = CreateGameForBuyDevCardTesting(GameStates.RollOrUseDevCard);
         var human = gs.Players.First(p => !p.IsBot);
 
         Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.BuyDevCard(gs, human));
@@ -2198,7 +2198,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuyDevCard_NotCurrentUser()
     {
-        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
         var bot = gs.Players.First(p => p.IsBot);
 
         Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.BuyDevCard(gs, bot));
@@ -2207,7 +2207,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void BuyDevCard_Valid()
     {
-        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
         var human = gs.Players.First(p => !p.IsBot);
 
         GamePlayHelpers.BuyDevCard(gs, human);
@@ -2222,7 +2222,7 @@ public class GamePlayHelpersTests
     public void EndTurn_MovesDevCardsToReadyToPlayState()
     {
         // Arrange
-        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
         var human = gs.Players.First(p => !p.IsBot);
 
         GamePlayHelpers.BuyDevCard(gs, human);
@@ -2236,6 +2236,241 @@ public class GamePlayHelpersTests
         Assert.Empty(human.DevCardsPurchasedThisRound);
         Assert.Single(human.DevCardsReadyToPlay);
         Assert.Equal(1, human.DevelopmentCardCount);
+    }
+
+    private static GameState CreateGameForPlayDevCardTesting(GameStates currentState, DevelopmentCardType desiredType)
+    {
+        var gs = new GameState(new Guid());
+        var player1 = new Player("Tim", PlayerColor.Red);
+        player1.AssignResources(ResourceType.Wood, 1);
+        player1.AssignResources(ResourceType.Brick, 2);
+        gs.Players.Add(player1);
+
+        var player2 = new Player("Mary", PlayerColor.Blue, true);
+        player2.AssignResources(ResourceType.Wood, 2);
+        player2.AssignResources(ResourceType.Ore, 1);
+        gs.Players.Add(player2);
+
+        var tile1 = new Tile(ResourceType.Wood, 3, 0, 0);
+        gs.Tiles.Add(tile1);
+        var tile2 = new Tile(ResourceType.Brick, 9, 2, 0);
+        gs.Tiles.Add(tile2);
+
+        gs.Phase.CurrentPlayer = player1;
+        player1.AssignDevelopmentCard(desiredType);
+        player1.MakeNewDevelopmentCardsPlayable();
+
+        gs.Phase.PhaseState = currentState;
+
+        return gs;        
+    }
+
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_InvalidState()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.PlaceRobber, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), new List<string>() { ResourceType.Wood.ToString()}, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_NotPlayersTurn()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var bot = gs.Players.First(p => p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.Monopoly.ToString(), new List<string>() { ResourceType.Wood.ToString()}, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_NoResourceRequested()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), new List<string>(), null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1037, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_NullResourceRequested()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1037, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_MultipleResourcesRequested()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString()}, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1037, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_RequestDesert()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
+            new List<string>()  { ResourceType.Desert.ToString()}, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1038, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_RequestInvalidResource()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
+            new List<string>()  { "Apple"}, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1038, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_NoMonopolyCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1039, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCardFromUser_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        var monopolyCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Monopoly);
+        var woodCount = human.Resources[ResourceType.Wood];
+        Assert.True(woodCount > 0);
+        var botWoodCount = bot.Resources[ResourceType.Wood];
+        Assert.True(botWoodCount > 0);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(monopolyCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Monopoly));
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Empty(human.DevCardsPlayed);
+        Assert.Equal(woodCount + botWoodCount, human.Resources[ResourceType.Wood]);
+        Assert.Equal(0, bot.Resources[ResourceType.Wood]);
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCard_InvalidState()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.SettingUpBoard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayMonopolyDevCard(gs, human, ResourceType.Wood));
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCard_NotPlayersTurn()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var bot = gs.Players.First(p => p.IsBot);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayMonopolyDevCard(gs, bot, ResourceType.Wood));
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCard_PlayerDoesntHaveDevCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.RoadBuilding);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayMonopolyDevCard(gs, human, ResourceType.Wood));
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCard_RequestDesert()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayMonopolyDevCard(gs, human, ResourceType.Desert));
+    }
+
+    [Fact]
+    public void PlayMonopolyDevCard_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        var monopolyCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Monopoly);
+        var woodCount = human.Resources[ResourceType.Wood];
+        Assert.True(woodCount > 0);
+        var botWoodCount = bot.Resources[ResourceType.Wood];
+        Assert.True(botWoodCount > 0);
+
+        GamePlayHelpers.PlayMonopolyDevCard(gs, human, ResourceType.Wood);
+
+        Assert.Equal(monopolyCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Monopoly));
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Empty(human.DevCardsPlayed);
+        Assert.Equal(woodCount + botWoodCount, human.Resources[ResourceType.Wood]);
+        Assert.Equal(0, bot.Resources[ResourceType.Wood]);
     }
 
     // TODO: Add all the PlayDevCard tests

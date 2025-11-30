@@ -783,9 +783,79 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, null, gs);
     }
 
+    private static void StandardPlayDevCardValidation(GameState gs, Player player, DevelopmentCardType devCard)
+    {
+        if ((gs.Phase.PhaseState != GameStates.RollOrUseDevCard && gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException($"Unexpected Error. PlayDevCard not valid in {gs.Phase.PhaseState} state.");
+
+        if (player == null)
+            throw new ArgumentNullException("player");
+
+        if (gs.Phase.CurrentPlayer.Id != player.Id)
+            throw new InvalidOperationException($"Unexpected Error. It is not player {player.Id}'s turn.");
+
+        if (!player.DevCardsReadyToPlay.Contains(devCard))
+            throw new InvalidOperationException($"Unexpected Error. Player does not have a {devCard} to play.");
+    }
+
+    public static void PlayMonopolyDevCard(GameState gs, Player player, ResourceType requestedResource)
+    {
+        StandardPlayDevCardValidation(gs, player, DevelopmentCardType.Monopoly);
+
+        if (requestedResource == ResourceType.Desert)
+            throw new InvalidOperationException($"Unexpected Error. Desert is not a valid resource to request in PlayMonopolyDevCard.");
+
+        foreach(var opponent in gs.Players)
+        {
+            if (opponent.Id == player.Id || !opponent.Resources.ContainsKey(requestedResource))
+                continue;
+
+            var opponentCount = opponent.Resources[requestedResource];
+            opponent.RemoveResources(requestedResource, opponentCount);
+            player.AssignResources(requestedResource, opponentCount);
+        }
+
+        player.PlayDevelopmentCard(DevelopmentCardType.Monopoly);
+    }
+
     public static ResponseDTO PlayMonopolyDevCardFromUser(GameState gs, PlayDevCardRequest request)
     {
-        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
+        if ((gs.Phase.PhaseState != GameStates.RollOrUseDevCard && gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: PlayMonopolyDevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        if (request.DevCardType != DevelopmentCardType.Monopoly.ToString())
+            return new ResponseDTO(false, 9999, $"Requested: {request.DevCardType}; Called: Monopoly; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        if (request.SelectedResources == null || request.SelectedResources.Count != 1)
+            return new ResponseDTO(false, 1037, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        var requestedResource = ResourceType.Desert;
+
+        try {
+            requestedResource = Enum.Parse<ResourceType>(request.SelectedResources[0]);
+        }
+        catch (ArgumentException)
+        {
+            // convert exception into failure  resources
+            return new ResponseDTO(false, 1038, $"Action: PlayMonopolyDevCard; RequestedResource: {request.SelectedResources[0]}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+        }
+
+        if (requestedResource == ResourceType.Desert)
+            return new ResponseDTO(false, 1038, $"Action: PlayMonoployDevCard; RequestedResource: {request.SelectedResources[0]}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (!player.DevCardsReadyToPlay.Contains(DevelopmentCardType.Monopoly))
+            return new ResponseDTO(false, 1039, $"Action: PlayMonopolyDevCard; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        PlayMonopolyDevCard(gs, player, requestedResource);
+
+        return new ResponseDTO(true, 0, null, gs);
     }
     public static ResponseDTO PlayYearOfPlentyDevCardFromUser(GameState gs, PlayDevCardRequest request)
     {
