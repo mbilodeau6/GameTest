@@ -23,6 +23,7 @@ public class PlayerTests
         Assert.Empty(player.DevCardsPlayed);
         Assert.Empty(player.DevCardsPurchasedThisRound);
         Assert.Empty(player.DevCardsReadyToPlay);
+        Assert.Equal(0, player.VictoryPoints);
     }
 
     [Fact]
@@ -69,6 +70,7 @@ public class PlayerTests
         orig_player.PlayDevelopmentCard(DevelopmentCardType.Knight);
         orig_player.AssignResources(ResourceType.Brick, 2);
         orig_player.AssignResources(ResourceType.Ore, 1);
+        orig_player.SetVictoryPoints(3);
 
         var dto = new DTOs.PlayerDTO(orig_player, false);
 
@@ -92,6 +94,7 @@ public class PlayerTests
         Assert.Equal(1, new_player.Resources[ResourceType.Ore]);
         Assert.Equal(0, new_player.Resources[ResourceType.Grain]);
         Assert.True(new_player.IsBot);
+        Assert.Equal(3, new_player.VictoryPoints);
     }
 
     [Fact]
@@ -414,5 +417,13 @@ public class PlayerTests
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => p1.PlayDevelopmentCard(DevelopmentCardType.VictoryPoint));
+    }
+
+    [Fact]
+    public void SetVictoryPoints()
+    {
+        var player = new Player("Tim", PlayerColor.Red);
+        player.SetVictoryPoints(5);
+        Assert.Equal(5, player.VictoryPoints);
     }
 }

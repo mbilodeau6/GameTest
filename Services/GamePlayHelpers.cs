@@ -169,11 +169,24 @@ public static class GamePlayHelpers
         return gs.Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
     }
 
+    public static int CountVictoryPointDevCardsForPlayer(Player player)
+    {
+        return player.DevCardsPurchasedThisRound.Count(d => d == DevelopmentCardType.VictoryPoint) 
+            + player.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.VictoryPoint);
+    }
+
+    public static void UpdatePlayerVictoryPoints(GameState gs, Player player)
+    {
+        int victoryPoints = CountSettlementsForPlayer(gs, player) + (CountCitiesForPlayer(gs, player) * 2)
+            + CountVictoryPointDevCardsForPlayer(player);
+
+        player.SetVictoryPoints(victoryPoints);
+    }
+
     public static bool PlayerHasWon(GameState gs, Player player)
     {
-        int victoryPoints = CountSettlementsForPlayer(gs, player) + (CountCitiesForPlayer(gs, player) * 2);
-
-        return victoryPoints >= gs.Settings.VictoryPointsToWin;
+        UpdatePlayerVictoryPoints(gs, player);
+        return player.VictoryPoints >= gs.Settings.VictoryPointsToWin;
     }
 
     public static GamePhase GetNextPhase(GameState gameState)
@@ -396,6 +409,7 @@ public static class GamePlayHelpers
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
         MarkBlockedVertices(gs, vertex);
         PopulatePlayerPorts(gs);
+        UpdatePlayerVictoryPoints(gs, player);
     }
 
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
@@ -448,6 +462,7 @@ public static class GamePlayHelpers
             WithdrawResourcesToBuildCity(player);
             vertex.UpgradeToCity();
             gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
+            UpdatePlayerVictoryPoints(gs, player);
         }
     }
 
@@ -609,6 +624,8 @@ public static class GamePlayHelpers
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
         MarkBlockedVertices(gs);
         PopulatePlayerPorts(gs);
+        foreach(var player in gs.Players)
+            UpdatePlayerVictoryPoints(gs, player);
 
         return gs;
     }
@@ -765,6 +782,7 @@ public static class GamePlayHelpers
 
         player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
         gs.DevelopmentCards.RemoveAt(0);
+        UpdatePlayerVictoryPoints(gs, player);
     }
     public static ResponseDTO BuyDevCardFromUser(GameState gs, string playerId)
     {

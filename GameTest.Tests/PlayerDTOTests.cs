@@ -15,6 +15,7 @@ public class PlayerDTOTests
         player.PlayDevelopmentCard(DevelopmentCardType.Knight);
         player.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
         player.AssignResources(ResourceType.Wool, 2);
+        player.SetVictoryPoints(6);
 
         return player;
     }
@@ -41,6 +42,7 @@ public class PlayerDTOTests
         Assert.NotNull(playerDto.DevCardsReadyToPlay);
         Assert.Single(playerDto.DevCardsReadyToPlay);
         Assert.Contains(DevelopmentCardType.Monopoly.ToString(), playerDto.DevCardsReadyToPlay);
+        Assert.Equal(6, playerDto.VictoryPoints);
     }
 
     [Fact]

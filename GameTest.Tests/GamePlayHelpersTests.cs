@@ -567,6 +567,41 @@ public class GamePlayHelpersTests
         Assert.Equal(2, count);
     }
 
+    [Fact]
+    public void CountVictoryPointsForPlayer_IncludeAllDevCardBuckets()
+    {
+        // Arrage
+        var player = new Player("Allen", PlayerColor.Red);
+        player.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        player.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        player.MakeNewDevelopmentCardsPlayable();
+        player.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+
+        // Act
+        var count = GamePlayHelpers.CountVictoryPointDevCardsForPlayer(player);
+
+        // Assert
+        Assert.Equal(2, count);
+    }
+
+    [Fact]
+    public void UpdatePlayerVictoryPoints_BluePlayer()
+    {
+        var gs = CreateTestGameWithManyRoads();
+        var bluePlayer = gs.Players.First(p => p.Color == PlayerColor.Blue);
+        GamePlayHelpers.UpdatePlayerVictoryPoints(gs, bluePlayer);
+        Assert.Equal(5, bluePlayer.VictoryPoints);
+
+        bluePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        GamePlayHelpers.UpdatePlayerVictoryPoints(gs, bluePlayer);
+        Assert.Equal(6, bluePlayer.VictoryPoints);
+
+        bluePlayer.MakeNewDevelopmentCardsPlayable();
+        bluePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        GamePlayHelpers.UpdatePlayerVictoryPoints(gs, bluePlayer);
+        Assert.Equal(7, bluePlayer.VictoryPoints);
+    }
+
     private GameState CreateGameStateForPhaseTesting()
     {
         var gs = new GameState(new Guid());
@@ -579,7 +614,6 @@ public class GamePlayHelpersTests
 
         return gs;
     }
-
 
     private void BuildTestCities(GameState gs, Player player, int count)
     {

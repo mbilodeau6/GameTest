@@ -41,6 +41,7 @@ public class Player
     public List<DevelopmentCardType> DevCardsReadyToPlay { get; private set; } = new List<DevelopmentCardType>();
 
     public HashSet<PortType> Ports {get ; private set; } = new HashSet<PortType>();
+    public int VictoryPoints { get; private set; } = 0;
 
     // Parameterless ctor for serializers
     public Player()
@@ -92,6 +93,7 @@ public class Player
             Resources[kvp.Key] = kvp.Value;
 
         IsBot = dto.IsBot;
+        VictoryPoints = dto.VictoryPoints;
     }
 
     public void AssignResources(ResourceType type, int count)
@@ -143,6 +145,11 @@ public class Player
     public void AddPort(PortType port)
     {
         Ports.Add(port);
+    }
+
+    public void SetVictoryPoints(int victoryPoints)
+    {
+        VictoryPoints = victoryPoints;
     }
 
     public override string ToString() => $"{Name} ({Id}) - {Color}";
