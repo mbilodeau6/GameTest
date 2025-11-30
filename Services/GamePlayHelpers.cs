@@ -274,6 +274,8 @@ public static class GamePlayHelpers
         if (player.Id != gameState.Phase.CurrentPlayer.Id)
             throw new InvalidOperationException("Can not end the turn for another player.");
 
+        player.MakeNewDevelopmentCardsPlayable();
+
         gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
         gameState.Phase.PhaseState = GameStates.RollOrUseDevCard;
         gameState.Dice.SetWaiting();
@@ -750,6 +752,20 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, null, gs);
     }
 
+    public static void BuyDevCard(GameState gs, Player player)
+    {
+        if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException($"Unexpected Error. BuyDevCard not valid in {gs.Phase.PhaseState} state.");
+
+        if (gs.Phase.CurrentPlayer.Id != player.Id)
+            throw new InvalidOperationException($"Unexpected Error. It is not player {player.Id}'s turn.");
+
+        if (gs.DevelopmentCards.Count == 0)
+            throw new InvalidOperationException("Unexpected Error. All development cards have been used.");
+
+        player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
+        gs.DevelopmentCards.RemoveAt(0);
+    }
     public static ResponseDTO BuyDevCardFromUser(GameState gs, string playerId)
     {
         if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
@@ -762,7 +778,7 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer.Id != playerId)
             return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
-        // TODO: Logic to actually buy/assign dev card
+        BuyDevCard(gs, player);
 
         return new ResponseDTO(true, 0, null, gs);
     }

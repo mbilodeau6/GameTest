@@ -2182,6 +2182,60 @@ public class GamePlayHelpersTests
         Assert.NotNull(response.GameState);
         Assert.Single(human.DevCardsPurchasedThisRound);
         Assert.Equal(1, human.DevelopmentCardCount);
+        Assert.Empty(human.DevCardsPlayed);
+        Assert.Empty(human.DevCardsReadyToPlay);
+    }
+
+    [Fact]
+    public void BuyDevCard_InvalidState()
+    {
+        var gs = CreateGameForDevCardTesting(GameStates.RollOrUseDevCard);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.BuyDevCard(gs, human));
+    }
+
+    [Fact]
+    public void BuyDevCard_NotCurrentUser()
+    {
+        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var bot = gs.Players.First(p => p.IsBot);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.BuyDevCard(gs, bot));
+    }
+
+    [Fact]
+    public void BuyDevCard_Valid()
+    {
+        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        GamePlayHelpers.BuyDevCard(gs, human);
+
+        Assert.Single(human.DevCardsPurchasedThisRound);
+        Assert.Equal(1, human.DevelopmentCardCount);
+        Assert.Empty(human.DevCardsPlayed);
+        Assert.Empty(human.DevCardsReadyToPlay);
+    }
+
+    [Fact]
+    public void EndTurn_MovesDevCardsToReadyToPlayState()
+    {
+        // Arrange
+        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        GamePlayHelpers.BuyDevCard(gs, human);
+        Assert.Single(human.DevCardsPurchasedThisRound);
+        Assert.Equal(1, human.DevelopmentCardCount);
+
+        // Act
+        GamePlayHelpers.EndTurn(human, gs, true);
+
+        // Assert
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Single(human.DevCardsReadyToPlay);
+        Assert.Equal(1, human.DevelopmentCardCount);
     }
 
     // TODO: Add all the PlayDevCard tests
