@@ -123,19 +123,21 @@ public static class GamePlayHelpers
             throw new InvalidOperationException("Player does not have required resources to build city.");
     }
 
-    public static bool WithdrawResourcesToBuyDevCard(Player player)
+    public static bool HasResourcesToBuyDevCard(Player player)
     {
-        if (player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 1 &&
+        return (player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 1 &&
             player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1 &&
-            player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1)
+            player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1);
+    }
+
+    public static void WithdrawResourcesToBuyDevCard(Player player)
+    {
+        if (HasResourcesToBuyDevCard(player))
         {
             player.RemoveResources(ResourceType.Ore, 1);
             player.RemoveResources(ResourceType.Wool, 1);
             player.RemoveResources(ResourceType.Grain, 1);
-            return true;
         }
-
-        return false;
     }
 
     public static Player GetNextPlayer(Player currentPlayer, List<Player> players)
@@ -780,8 +782,12 @@ public static class GamePlayHelpers
         if (gs.DevelopmentCards.Count == 0)
             throw new InvalidOperationException("Unexpected Error. All development cards have been used.");
 
+        if (!HasResourcesToBuyDevCard(player))
+            throw new InvalidOperationException("Unexpected Error. Player doesn't have resources to buy dev card.");
+
         player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
         gs.DevelopmentCards.RemoveAt(0);
+        WithdrawResourcesToBuyDevCard(player);
         UpdatePlayerVictoryPoints(gs, player);
     }
     public static ResponseDTO BuyDevCardFromUser(GameState gs, string playerId)
@@ -795,6 +801,9 @@ public static class GamePlayHelpers
 
         if (gs.Phase.CurrentPlayer.Id != playerId)
             return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        if (!HasResourcesToBuyDevCard(player))
+            return new ResponseDTO(false, 1017, $"Action: BuyDevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}", null as GameStateDTO);
 
         BuyDevCard(gs, player);
 

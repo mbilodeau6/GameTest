@@ -360,6 +360,20 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void HasResourcesToBuyDevCard_SufficientResources()
+    {
+        var player = CreatePlayerWithSufficientResources();
+        Assert.True(GamePlayHelpers.HasResourcesToBuyDevCard(player));        
+    }
+
+    [Fact]
+    public void HasResourcesToBuyDevCard_InsufficientResources()
+    {
+        var player = CreatePlayerWithInsufficientResources();
+        Assert.False(GamePlayHelpers.HasResourcesToBuyDevCard(player));        
+    }
+
+    [Fact]
     public void WithdrawResourcesToBuyDevCard_SufficientResources()
     {
         // Arrange
@@ -369,10 +383,9 @@ public class GamePlayHelpersTests
         var grainCount = player.Resources[ResourceType.Grain];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuyDevCard(player);
+        GamePlayHelpers.WithdrawResourcesToBuyDevCard(player);
 
         // Assert
-        Assert.True(result);
         Assert.Equal(oreCount - 1, player.Resources[ResourceType.Ore]);
         Assert.Equal(woolCount - 1, player.Resources[ResourceType.Wool]);
         Assert.Equal(grainCount - 1, player.Resources[ResourceType.Grain]);
@@ -388,10 +401,9 @@ public class GamePlayHelpersTests
         var grainCount = player.Resources[ResourceType.Grain];
 
         // Act
-        var result = GamePlayHelpers.WithdrawResourcesToBuyDevCard(player);
+        GamePlayHelpers.WithdrawResourcesToBuyDevCard(player);
 
         // Assert
-        Assert.False(result);
         Assert.Equal(oreCount, player.Resources[ResourceType.Ore]);
         Assert.Equal(woolCount, player.Resources[ResourceType.Wool]);
         Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
@@ -2152,6 +2164,9 @@ public class GamePlayHelpersTests
         var gs = new GameState(new Guid());
         var player1 = new Player("Tim", PlayerColor.Red);
         gs.Players.Add(player1);
+        player1.AssignResources(ResourceType.Ore, 1);
+        player1.AssignResources(ResourceType.Grain, 2);
+        player1.AssignResources(ResourceType.Wool, 1);
         var player2 = new Player("Mary", PlayerColor.Blue, true);
         gs.Players.Add(player2);
 
@@ -2202,12 +2217,33 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void BuyDevCardFromUserValid()
+    public void BuyDevCardFromUser_InsufficientResources()
+    {
+        var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
+        var human = gs.Players.First(p => !p.IsBot);
+        human.RemoveResources(ResourceType.Wool, 1); // Take away all wool.
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Equal(0, human.DevelopmentCardCount);
+
+        var response = GamePlayHelpers.BuyDevCardFromUser(gs, human.Id);
+
+        Assert.False(response.Success);
+        Assert.Equal(1017, response.ErrorCode);
+        Assert.Null(response.GameState);
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Equal(0, human.DevelopmentCardCount);
+    }
+
+    [Fact]
+    public void BuyDevCardFromUser_Valid()
     {
         var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
         var human = gs.Players.First(p => !p.IsBot);
         Assert.Empty(human.DevCardsPurchasedThisRound);
         Assert.Equal(0, human.DevelopmentCardCount);
+        var grainCount = human.Resources[ResourceType.Grain];
+        var woolCount = human.Resources[ResourceType.Wool];
+        var oreCount = human.Resources[ResourceType.Ore];
 
         var response = GamePlayHelpers.BuyDevCardFromUser(gs, human.Id);
 
@@ -2218,6 +2254,9 @@ public class GamePlayHelpersTests
         Assert.Equal(1, human.DevelopmentCardCount);
         Assert.Empty(human.DevCardsPlayed);
         Assert.Empty(human.DevCardsReadyToPlay);
+        Assert.Equal(grainCount - 1, human.Resources[ResourceType.Grain]);
+        Assert.Equal(woolCount - 1, human.Resources[ResourceType.Wool]);
+        Assert.Equal(oreCount - 1, human.Resources[ResourceType.Ore]);
     }
 
     [Fact]
@@ -2239,10 +2278,23 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void BuyDevCard_InsufficientResources()
+    {
+        var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
+        var human = gs.Players.First(p => !p.IsBot);
+        human.RemoveResources(ResourceType.Grain, 2); // remove all grain
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.BuyDevCard(gs, human));
+    }
+
+    [Fact]
     public void BuyDevCard_Valid()
     {
         var gs = CreateGameForBuyDevCardTesting(GameStates.BuildOrTrade);
         var human = gs.Players.First(p => !p.IsBot);
+        var grainCount = human.Resources[ResourceType.Grain];
+        var woolCount = human.Resources[ResourceType.Wool];
+        var oreCount = human.Resources[ResourceType.Ore];
 
         GamePlayHelpers.BuyDevCard(gs, human);
 
@@ -2250,6 +2302,9 @@ public class GamePlayHelpersTests
         Assert.Equal(1, human.DevelopmentCardCount);
         Assert.Empty(human.DevCardsPlayed);
         Assert.Empty(human.DevCardsReadyToPlay);
+        Assert.Equal(grainCount - 1, human.Resources[ResourceType.Grain]);
+        Assert.Equal(woolCount - 1, human.Resources[ResourceType.Wool]);
+        Assert.Equal(oreCount - 1, human.Resources[ResourceType.Ore]);
     }
 
     [Fact]
