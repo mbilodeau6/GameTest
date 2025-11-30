@@ -22,6 +22,8 @@ public class GameStateDTO
     public List<PortDTO> Ports {get; } = new();
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
 
+    public List<string> DevelopmentCards { get; } = new();
+
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public GameStateDTO(string id, GameSettingsDTO settings, string? robberTileId = null,
@@ -29,7 +31,8 @@ public class GameStateDTO
         string? hasLongestRoadPlayerId = null, string? hasLargestArmyPlayerId = null,
         List<PlayerDTO>? players = null, List<TileDTO>? tiles = null,
         List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null,
-        List<PortDTO>? ports = null, List<EventRecordDTO>? eventRecord = null)
+        List<PortDTO>? ports = null, List<EventRecordDTO>? eventRecord = null,
+        List<string>? developmentCards = null)
     {
         Id = id ?? string.Empty;
         Settings = settings;
@@ -53,6 +56,10 @@ public class GameStateDTO
 
         foreach (var er in eventRecord ?? Enumerable.Empty<EventRecordDTO>())
             EventRecord.Add(er);
+
+        foreach (var dc in developmentCards ?? Enumerable.Empty<string>())
+            DevelopmentCards.Add(dc);
+
 
         Phase = phase;
         HasLongestRoadPlayerId = hasLongestRoadPlayerId;
@@ -87,6 +94,9 @@ public class GameStateDTO
         foreach (var er in dto.EventRecord)
             EventRecord.Add(er);
 
+        foreach (var dc in dto.DevelopmentCards)
+            DevelopmentCards.Add(dc);
+
         Dice = dto.Dice;
     }
 
@@ -112,6 +122,9 @@ public class GameStateDTO
 
         foreach (var er in gameState.EventRecord)
             EventRecord.Add(er);
+
+        foreach (var dc in gameState.DevelopmentCards)
+            DevelopmentCards.Add(dc.ToString());
 
         if (gameState.RobberTile != null)
             RobberTileId = gameState.RobberTile.Id;

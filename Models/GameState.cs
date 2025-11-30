@@ -109,6 +109,9 @@ public class GameState
         foreach (var er in dto.EventRecord)
             EventRecord.Add(er);
 
+        foreach (var dc in dto.DevelopmentCards)
+            DevelopmentCards.Add(Enum.Parse<DevelopmentCardType>(dc));
+
         Dice = dto.Dice;
 
         if (dto.Phase != null)
