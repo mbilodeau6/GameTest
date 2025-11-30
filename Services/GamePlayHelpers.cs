@@ -750,7 +750,7 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, null, gs);
     }
 
-    public static ResponseDTO BuyDevCard(GameState gs, string playerId)
+    public static ResponseDTO BuyDevCardFromUser(GameState gs, string playerId)
     {
         if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
             return new ResponseDTO(false, 1003, $"Action: BuyDevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
@@ -767,11 +767,11 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, null, gs);
     }
 
-    public static ResponseDTO PlayMonopolyDevCard(GameState gs, PlayDevCardRequest request)
+    public static ResponseDTO PlayMonopolyDevCardFromUser(GameState gs, PlayDevCardRequest request)
     {
         return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
     }
-    public static ResponseDTO PlayYearOfPlentyDevCard(GameState gs, PlayDevCardRequest request)
+    public static ResponseDTO PlayYearOfPlentyDevCardFromUser(GameState gs, PlayDevCardRequest request)
     {
         return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
     }
@@ -780,7 +780,7 @@ public static class GamePlayHelpers
         return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
     }
 
-    public static ResponseDTO PlayRoadBuildingDevCard(GameState gs, PlayDevCardRequest request)
+    public static ResponseDTO PlayRoadBuildingDevCardFromUser(GameState gs, PlayDevCardRequest request)
     {
         return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
     }

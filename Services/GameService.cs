@@ -530,7 +530,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
-            var tradeResponse = GamePlayHelpers.BuyDevCard(gs, playerId);
+            var tradeResponse = GamePlayHelpers.BuyDevCardFromUser(gs, playerId);
 
             if (!tradeResponse.Success)
                 return tradeResponse;
@@ -573,16 +573,16 @@ public class GameService
             switch(request.DevCardType)
             {
                 case "Monopoly":
-                    response = GamePlayHelpers.PlayMonopolyDevCard(gs, request);
+                    response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
                     break;
                 case "YearOfPlenty":
-                    response = GamePlayHelpers.PlayYearOfPlentyDevCard(gs, request);
+                    response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
                     break;
                 case "Knight":
                     response = GamePlayHelpers.PlayKnightDevCard(gs, request);
                     break;
                 case "RoadBuilding":
-                    response = GamePlayHelpers.PlayRoadBuildingDevCard(gs, request);
+                    response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
                     break;
                 default: 
                     return new ResponseDTO(false, 1036, $"GameId: {gameId}; PlayerId: {request.PlayerId}; DevCardType: {request.DevCardType}", null as GameStateDTO);

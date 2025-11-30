@@ -6,6 +6,7 @@ using GameTest.Functions;
 using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.SignalR;
 
 namespace GameTest.Tests;
 
@@ -2112,27 +2113,80 @@ public class GamePlayHelpersTests
         Assert.Equal(1, bot.Resources[ResourceType.Ore]);
     }
 
-    [Fact]
-    public void BuyDevCard_NotCurrentPlayer()
+    private static GameState CreateGameForDevCardTesting(GameStates currentState)
     {
-        Assert.False(true);
+        var gs = new GameState(new Guid());
+        var player1 = new Player("Tim", PlayerColor.Red);
+        gs.Players.Add(player1);
+        var player2 = new Player("Mary", PlayerColor.Blue, true);
+        gs.Players.Add(player2);
+
+        var tile1 = new Tile(ResourceType.Wood, 3, 0, 0);
+        gs.Tiles.Add(tile1);
+        var tile2 = new Tile(ResourceType.Brick, 9, 2, 0);
+        gs.Tiles.Add(tile2);
+
+        gs.Phase.CurrentPlayer = player1;
+        gs.Phase.PhaseState = currentState;
+
+        return gs;        
+    }
+
+
+    [Fact]
+    public void BuyDevCardFromUser_NotCurrentPlayer()
+    {
+        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var bot = gs.Players.First(p => p.IsBot);
+        var human = gs.Players.First(p => !p.IsBot);
+        Assert.Equal(human.Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Empty(bot.DevCardsPurchasedThisRound);
+        Assert.Equal(0, bot.DevelopmentCardCount);
+
+        var response = GamePlayHelpers.BuyDevCardFromUser(gs, bot.Id);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
-    public void BuyDevCard_WrongState()
+    public void BuyDevCardFromUser_WrongState()
     {
-        Assert.False(true);
+        var gs = CreateGameForDevCardTesting(GameStates.RollOrUseDevCard);
+        var human = gs.Players.First(p => !p.IsBot);
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Equal(0, human.DevelopmentCardCount);
+
+        var response = GamePlayHelpers.BuyDevCardFromUser(gs, human.Id);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Equal(0, human.DevelopmentCardCount);
     }
 
     [Fact]
-    public void BuyDevCard_Valid()
+    public void BuyDevCardFromUserValid()
     {
-        Assert.False(true);
+        var gs = CreateGameForDevCardTesting(GameStates.BuildOrTrade);
+        var human = gs.Players.First(p => !p.IsBot);
+        Assert.Empty(human.DevCardsPurchasedThisRound);
+        Assert.Equal(0, human.DevelopmentCardCount);
+
+        var response = GamePlayHelpers.BuyDevCardFromUser(gs, human.Id);
+
+        Assert.True(response.Success);
+        Assert.Equal(0, response.ErrorCode);
+        Assert.NotNull(response.GameState);
+        Assert.Single(human.DevCardsPurchasedThisRound);
+        Assert.Equal(1, human.DevelopmentCardCount);
     }
 
     // TODO: Add all the PlayDevCard tests
     [Fact]
-    public void PlayDevCard_ALLTYPES()
+    public void PlayDevCardFromUser_ALLTYPES()
     {
         Assert.False(true);
     }
