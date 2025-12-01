@@ -94,6 +94,7 @@ public class ResponseDTO
         { 1037, "Monopoly requires the selection of one, and only one, resource"},
         { 1038, "Invalid resource type requested."},
         { 1039, "Player does not have the development card required for this action."},
+        { 1040, "YearOfPlenty requires the selection of exactly two resources."},
         { 9999, "Unexpected error."},
     };
 }

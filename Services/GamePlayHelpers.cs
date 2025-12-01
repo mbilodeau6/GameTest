@@ -825,6 +825,47 @@ public static class GamePlayHelpers
             throw new InvalidOperationException($"Unexpected Error. Player does not have a {devCard} to play.");
     }
 
+    private static ResponseDTO StandardPlayDevCardValidationForUserRequest(GameState gs, PlayDevCardRequest request, DevelopmentCardType targetType)
+    {
+        if ((gs.Phase.PhaseState != GameStates.RollOrUseDevCard && gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: Play{targetType}DevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        if (request.DevCardType != targetType.ToString())
+            return new ResponseDTO(false, 9999, $"Requested: {request.DevCardType}; Called: {targetType}; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        if (request.SelectedResources != null)
+        {
+            var requestedResource = ResourceType.Desert;
+
+            foreach (var resource in request.SelectedResources)
+            {
+                try {
+                    requestedResource = Enum.Parse<ResourceType>(resource);
+                }
+                catch (ArgumentException)
+                {
+                    // convert exception into failure  resources
+                    return new ResponseDTO(false, 1038, $"Action: Play{targetType}DevCard; RequestedResource: {resource}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+                }
+
+                if (requestedResource == ResourceType.Desert)
+                    return new ResponseDTO(false, 1038, $"Action: Play{targetType}DevCard; RequestedResource: {resource}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+            }
+        }
+
+        if (!player.DevCardsReadyToPlay.Contains(targetType))
+            return new ResponseDTO(false, 1039, $"Action: Play{targetType}DevCard; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        return new ResponseDTO(true, 0, null, gs);
+    }
+
     public static void PlayMonopolyDevCard(GameState gs, Player player, ResourceType requestedResource)
     {
         StandardPlayDevCardValidation(gs, player, DevelopmentCardType.Monopoly);
@@ -847,47 +888,59 @@ public static class GamePlayHelpers
 
     public static ResponseDTO PlayMonopolyDevCardFromUser(GameState gs, PlayDevCardRequest request)
     {
-        if ((gs.Phase.PhaseState != GameStates.RollOrUseDevCard && gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
-            return new ResponseDTO(false, 1003, $"Action: PlayMonopolyDevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
-
-        if (request.DevCardType != DevelopmentCardType.Monopoly.ToString())
-            return new ResponseDTO(false, 9999, $"Requested: {request.DevCardType}; Called: Monopoly; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}", null as GameStateDTO);
-
-        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
-        if (player == null)
-            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
-
-        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
-            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
-
         if (request.SelectedResources == null || request.SelectedResources.Count != 1)
             return new ResponseDTO(false, 1037, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
 
-        var requestedResource = ResourceType.Desert;
+        var response = StandardPlayDevCardValidationForUserRequest(gs, request, DevelopmentCardType.Monopoly);
 
-        try {
-            requestedResource = Enum.Parse<ResourceType>(request.SelectedResources[0]);
-        }
-        catch (ArgumentException)
-        {
-            // convert exception into failure  resources
-            return new ResponseDTO(false, 1038, $"Action: PlayMonopolyDevCard; RequestedResource: {request.SelectedResources[0]}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
-        }
+        if (!response.Success)
+            return response;
 
-        if (requestedResource == ResourceType.Desert)
-            return new ResponseDTO(false, 1038, $"Action: PlayMonoployDevCard; RequestedResource: {request.SelectedResources[0]}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
-
-        if (!player.DevCardsReadyToPlay.Contains(DevelopmentCardType.Monopoly))
-            return new ResponseDTO(false, 1039, $"Action: PlayMonopolyDevCard; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        var requestedResource = Enum.Parse<ResourceType>(request.SelectedResources[0]);
 
         PlayMonopolyDevCard(gs, player, requestedResource);
 
         return new ResponseDTO(true, 0, null, gs);
     }
+
+    public static void PlayYearOfPlentyDevCard(GameState gs, Player player, List<ResourceType> requestedResources)
+    {
+        StandardPlayDevCardValidation(gs, player, DevelopmentCardType.YearOfPlenty);
+
+        if (requestedResources.Count != 2)
+            throw new InvalidOperationException($"Unexpected Error. Caller didn't request two resources.");
+
+        foreach(var resource in requestedResources)
+            if (resource == ResourceType.Desert)
+                throw new InvalidOperationException($"Unexpected Error. Desert is not a valid resource to request in PlayYearOfPlentyDevCard.");
+
+        foreach(var resource in requestedResources)
+            player.AssignResources(resource, 1);
+
+        player.PlayDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+    }
+
     public static ResponseDTO PlayYearOfPlentyDevCardFromUser(GameState gs, PlayDevCardRequest request)
     {
-        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
+        if (request.SelectedResources == null || request.SelectedResources.Count != 2)
+            return new ResponseDTO(false, 1040, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        var response = StandardPlayDevCardValidationForUserRequest(gs, request, DevelopmentCardType.YearOfPlenty);
+
+        if (!response.Success)
+            return response;
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        var requestedResources = new List<ResourceType>();
+        foreach (var resourceString in request.SelectedResources)
+            requestedResources.Add(Enum.Parse<ResourceType>(resourceString));
+
+        PlayYearOfPlentyDevCard(gs, player, requestedResources);
+
+        return new ResponseDTO(true, 0, null, gs);
     }
+
     public static ResponseDTO PlayKnightDevCard(GameState gs, PlayDevCardRequest request)
     {
         return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);

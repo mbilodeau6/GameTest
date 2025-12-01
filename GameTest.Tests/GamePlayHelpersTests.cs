@@ -2562,11 +2562,250 @@ public class GamePlayHelpersTests
         Assert.Equal(0, bot.Resources[ResourceType.Wood]);
     }
 
-    // TODO: Add all the PlayDevCard tests
     [Fact]
-    public void PlayDevCardFromUser_ALLTYPES()
+    public void PlayYearOfPlentyDevCardFromUser_InvalidState()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.PlaceSecondSettlement, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_NotPlayersTurn()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var bot = gs.Players.First(p => p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_TooFewResourcesSelected()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1040, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_NoResourcesSelected()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>(), null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1040, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_ResourcesSelectedNull()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            null, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1040, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_TooManyResourcesSelected()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString(), ResourceType.Brick.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1040, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_InvalidFirstResourcesSelected()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Desert.ToString(), ResourceType.Wood.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1038, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_InvalidSecondResourcesSelected()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), "Pear" }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1038, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_WrongDevCardPlayed()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(9999, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_PlayerDoesntHaveDevCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1039, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+        var countWood = human.Resources[ResourceType.Wood];
+        var countBrick = human.Resources[ResourceType.Brick];
+        var countYearOfPlenty = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.Equal(0, response.ErrorCode);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(countWood + 1, human.Resources[ResourceType.Wood]);
+        Assert.Equal(countBrick + 1, human.Resources[ResourceType.Brick]);
+        Assert.Equal(countYearOfPlenty - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty));
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCard_TooFewResourcesSelected()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        var request = new List<ResourceType>() { ResourceType.Wood };
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayYearOfPlentyDevCard(gs, human, request));
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCard_TooManyResourcesSelected()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        var request = new List<ResourceType>() { ResourceType.Wood, ResourceType.Wood, ResourceType.Ore };
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayYearOfPlentyDevCard(gs, human, request));
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCard_NotPlayersTurn()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var bot = gs.Players.First(p => p.IsBot);
+
+        var request = new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick };
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayYearOfPlentyDevCard(gs, bot, request));
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCard_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+        var countWood = human.Resources[ResourceType.Wood];
+        var countBrick = human.Resources[ResourceType.Brick];
+        var countYearOfPlenty = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty);
+
+        var request = new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick };
+
+        GamePlayHelpers.PlayYearOfPlentyDevCard(gs, human, request);
+
+        Assert.Equal(countWood + 1, human.Resources[ResourceType.Wood]);
+        Assert.Equal(countBrick + 1, human.Resources[ResourceType.Brick]);
+        Assert.Equal(countYearOfPlenty - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty));
+    }
+
+    // TODO: Add remaining tests
+    [Fact]
+    public void PlayDevCardFromUser_Knight_ALLSCENARIOS()
     {
         Assert.False(true);
     }
 
+    // TODO: Add remaining tests
+    [Fact]
+    public void PlayDevCardFromUser_Knight_Build2Roads()
+    {
+        Assert.False(true);
+    }
 }
