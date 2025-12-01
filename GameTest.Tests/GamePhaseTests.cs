@@ -20,7 +20,8 @@ public class GamePhaseTests
         gs.Tiles.Add(t1);
 
         GamePhase gamePhase = new GamePhase(GameStates.PlaceSecondSettlement, p1, p2);
-        gamePhase.SetStateToReturnTo(GameStates.FirstDevCardRoad, t1);
+        gamePhase.SetStateToReturnTo(GameStates.BuildOrTrade, t1);
+        gamePhase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 3);
 
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
 
@@ -33,6 +34,7 @@ public class GamePhaseTests
         Assert.Equal(gamePhase.EndPlayer.Id, newGamePhase.EndPlayer.Id);
         Assert.Equal(gamePhase.OriginalRobberTile.Id, newGamePhase.OriginalRobberTile.Id);
         Assert.Equal(gamePhase.PreviousState, newGamePhase.PreviousState);
+        Assert.Equal(3, newGamePhase.RoadsPreRoadBuilding);
     }
     
     [Fact]
@@ -79,4 +81,18 @@ public class GamePhaseTests
         Assert.Null(phaseState.PreviousState);
         Assert.Null(phaseState.OriginalRobberTile);
     }
+
+    [Fact]
+    public void ClearRoadBuildingState()
+    {
+        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null);
+        phaseState.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 6);
+
+        // Act
+        phaseState.ClearRoadBuildingState();
+
+        // Assert
+        Assert.Null(phaseState.RoadsPreRoadBuilding);
+    }
+
 }

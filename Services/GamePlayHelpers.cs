@@ -271,6 +271,16 @@ public static class GamePlayHelpers
                 nextPhase.PhaseState = (GameStates)gameState.Phase.PreviousState;
                 gameState.Phase.ClearRobberState();
             }
+            else if (gameState.Phase.PhaseState == GameStates.FirstDevCardRoad
+                && CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > gameState.Phase.RoadsPreRoadBuilding)
+                nextPhase.PhaseState = GameStates.SecondDevCardRoad;
+            else if (gameState.Phase.PhaseState == GameStates.SecondDevCardRoad
+                && CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > gameState.Phase.RoadsPreRoadBuilding + 1
+                && gameState.Phase.PreviousState != null)
+            {
+                nextPhase.PhaseState = (GameStates)gameState.Phase.PreviousState;
+                gameState.Phase.ClearRoadBuildingState();
+            }
         }
 
         return nextPhase;
@@ -336,7 +346,9 @@ public static class GamePlayHelpers
     {
         return gs.Phase.PhaseState == GameStates.PlaceFirstRoad ||
             gs.Phase.PhaseState == GameStates.PlaceSecondRoad ||
-            gs.Phase.PhaseState == GameStates.BuildOrTrade;
+            gs.Phase.PhaseState == GameStates.BuildOrTrade ||
+            gs.Phase.PhaseState == GameStates.FirstDevCardRoad ||
+            gs.Phase.PhaseState == GameStates.SecondDevCardRoad;
     }
 
     private static bool BuildSettlementPhase(GameState gs)
@@ -459,7 +471,7 @@ public static class GamePlayHelpers
 
     public static void UpgradeToCity(GameState gs, Player player, Vertex vertex)
     {
-        if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
+        if (BuildCityPhase(gs))
         {
             WithdrawResourcesToBuildCity(player);
             vertex.UpgradeToCity();
@@ -471,7 +483,7 @@ public static class GamePlayHelpers
 
     public static ResponseDTO UpgradeToCityRequestFromUser(GameState gs, string playerId, string vertexId)
     {
-        if (gs.Phase.PhaseState != GameStates.BuildOrTrade || gs.Phase.CurrentPlayer == null)
+        if (!BuildCityPhase(gs) || gs.Phase.CurrentPlayer == null)
             return new ResponseDTO(false, 1003, $"Action: BuildCity; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
@@ -941,13 +953,33 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, null, gs);
     }
 
+    public static void PlayRoadBuildingDevCard(GameState gs, Player player)
+    {
+        StandardPlayDevCardValidation(gs, player, DevelopmentCardType.RoadBuilding);
+
+        gs.Phase.StoreStateDevCardRoadBuilding(gs.Phase.PhaseState, gs.Edges.Count(e => e.Owner != null && e.Owner.Id == player.Id));
+        gs.Phase.PhaseState = GameStates.FirstDevCardRoad;
+        player.PlayDevelopmentCard(DevelopmentCardType.RoadBuilding);
+    }
+
+    public static ResponseDTO PlayRoadBuildingDevCardFromUser(GameState gs, PlayDevCardRequest request)
+    {
+        var response = StandardPlayDevCardValidationForUserRequest(gs, request, DevelopmentCardType.RoadBuilding);
+
+        if (!response.Success)
+            return response;
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+
+        PlayRoadBuildingDevCard(gs, player);
+
+        return new ResponseDTO(true, 0, null, gs);
+
+    }
+
     public static ResponseDTO PlayKnightDevCard(GameState gs, PlayDevCardRequest request)
     {
         return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
     }
 
-    public static ResponseDTO PlayRoadBuildingDevCardFromUser(GameState gs, PlayDevCardRequest request)
-    {
-        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
-    }
 }

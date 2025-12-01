@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Cryptography.Xml;
 
 namespace GameTest.Tests;
 
@@ -995,6 +996,137 @@ public class GamePlayHelpersTests
         Assert.Null(gs.Phase.PreviousState);
         Assert.Null(gs.Phase.OriginalRobberTile);
         Assert.Equal(newRobberTile.Id, gs.RobberTile.Id);
+    }
+
+    private GameState CreateGameStateForRoadBuildingPhaseTesting(GameStates startingState)
+    {
+        var gs = CreateGameStateForPhaseTesting();
+        gs.Phase = new GamePhase(startingState, gs.Players[0], gs.Players[1]);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var t2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, t2, null);
+        e1.BuildRoad(gs.Players[0]);
+        var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t2, null, HexDirection.E);
+        e2.BuildRoad(gs.Players[0]);
+        gs.Players[0].AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        gs.Players[0].MakeNewDevelopmentCardsPlayable();
+        GamePlayHelpers.PlayRoadBuildingDevCard(gs, gs.Players[0]);
+
+        return gs;
+    }
+
+    // TODO: This is really testing that GetNextPhase() stays as the phase transition
+    // is being done by the call to GamePlayHelpers.PlayRoadBuildingDevCard().
+    // Need to review and make sure this makes sense. If yes, should change to 
+    // a PlayRoadBuildingDevCard test or integration test.
+    [Fact]
+    public void GetNextPhase_BuildOrTrade_MoveToFirstDevCardRoad()
+    {
+        // Arrange
+        var gs = CreateGameStateForRoadBuildingPhaseTesting(GameStates.BuildOrTrade);
+
+        // Act
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        // Assert
+        Assert.Equal(GameStates.FirstDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    // TODO: This is really testing that GetNextPhase() stays as the phase transition
+    // is being done by the call to GamePlayHelpers.PlayRoadBuildingDevCard().
+    // Need to review and make sure this makes sense. If yes, should change to 
+    // a PlayRoadBuildingDevCard test or integration test.
+    [Fact]
+    public void GetNextPhase_RollOrUseDevCard_MoveToFirstDevCardRoad()
+    {
+        // Arrange
+        var gs = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+
+        // Act
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        // Assert
+        Assert.Equal(GameStates.FirstDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_FirstDevCardRoad_MoveToSecondDevCardRoad()
+    {
+        // Arrange
+        var gs = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.NE);
+        GamePlayHelpers.BuildRoad(gs, gs.Players[0], e1);
+
+        // Act
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.SecondDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_SecondDevCardRoad_StayBecauseConditionsNotSatisfied()
+    {
+        // Arrange
+        var gs = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.NE);
+        GamePlayHelpers.BuildRoad(gs, gs.Players[0], e1);
+        GamePlayHelpers.GameLoop(gs);
+        Assert.Equal(GameStates.SecondDevCardRoad, gs.Phase.PhaseState);
+
+        // Act
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.SecondDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_SecondDevCardRoad_MoveToBuildOrTrade()
+    {
+        var gs = CreateGameStateForRoadBuildingPhaseTesting(GameStates.BuildOrTrade);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.NE);
+        GamePlayHelpers.BuildRoad(gs, gs.Players[0], e1);
+        GamePlayHelpers.GameLoop(gs);
+        Assert.Equal(GameStates.SecondDevCardRoad, gs.Phase.PhaseState);
+        var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.SE);
+        GamePlayHelpers.BuildRoad(gs, gs.Players[0], e2);
+
+        // Act
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.BuildOrTrade, phase.PhaseState);
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_SecondDevCardRoad_MoveToRollOrUseDevCard()
+    {
+        var gs = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.NE);
+        GamePlayHelpers.BuildRoad(gs, gs.Players[0], e1);
+        GamePlayHelpers.GameLoop(gs);
+        Assert.Equal(GameStates.SecondDevCardRoad, gs.Phase.PhaseState);
+        var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.SE);
+        GamePlayHelpers.BuildRoad(gs, gs.Players[0], e2);
+
+        // Act
+        var phase = GamePlayHelpers.GetNextPhase(gs);
+
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PhaseState);
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.RoadsPreRoadBuilding);
     }
 
     [Fact]
@@ -2795,6 +2927,104 @@ public class GamePlayHelpersTests
         Assert.Equal(countYearOfPlenty - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty));
     }
 
+    [Fact]
+    public void PlayRoadBuildingDevCardFromUser_InvalidState()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.SettingUpBoard, DevelopmentCardType.RoadBuilding);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayRoadBuildingDevCardFromUser_NotPlayersTurn()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.RoadBuilding);
+        var bot = gs.Players.First(p => p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayRoadBuildingDevCardFromUser_WrongDevCardPlayed()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.RoadBuilding);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(9999, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayRoadBuildingDevCardFromUser_PlayDoesntHaveDevCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1039, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayRoadBuildingDevCardFromUser_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.RoadBuilding);
+        var human = gs.Players.First(p => !p.IsBot);
+        var roadBuildingCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.Equal(roadBuildingCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
+        Assert.Equal(GameStates.FirstDevCardRoad ,gs.Phase.PhaseState);
+    }
+
+    [Fact]
+    public void PlayRoadBuildingDevCard_InvalidState()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.SettingUpBoard, DevelopmentCardType.RoadBuilding);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        Assert.Throws<InvalidOperationException>( () => GamePlayHelpers.PlayRoadBuildingDevCard(gs, human));
+    }
+
+    [Fact]
+    public void PlayRoadBuildingDevCard_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.RoadBuilding);
+        var human = gs.Players.First(p => !p.IsBot);
+        var roadBuildingCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding);
+
+        GamePlayHelpers.PlayRoadBuildingDevCard(gs, human);
+
+        Assert.Equal(roadBuildingCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
+        Assert.Equal(GameStates.FirstDevCardRoad ,gs.Phase.PhaseState);
+    }
+
     // TODO: Add remaining tests
     [Fact]
     public void PlayDevCardFromUser_Knight_ALLSCENARIOS()
@@ -2802,10 +3032,4 @@ public class GamePlayHelpersTests
         Assert.False(true);
     }
 
-    // TODO: Add remaining tests
-    [Fact]
-    public void PlayDevCardFromUser_Knight_Build2Roads()
-    {
-        Assert.False(true);
-    }
 }

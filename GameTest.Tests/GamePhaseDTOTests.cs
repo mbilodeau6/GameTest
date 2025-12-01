@@ -62,6 +62,7 @@ public class GamePhaseDTOTests
         GamePhase gamePhase = new GamePhase(GameStates.RollOrUseDevCard, p1, p2);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
         gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile);
+        gamePhase.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 7);
 
         GamePhaseDTO gamePhaseDTO = new GamePhaseDTO(gamePhase);
 
@@ -71,6 +72,7 @@ public class GamePhaseDTOTests
         Assert.Equal(gamePhase.PreviousState.ToString(), gamePhaseDTO.PreviousState);
         Assert.Equal(gamePhase.OriginalRobberTile.Id, gamePhaseDTO.OriginalRobberTileId);
         Assert.Equal(gamePhase.OriginalRobberTile.Id.ToString(), gamePhaseDTO.OriginalRobberTileId);
+        Assert.Equal(7, gamePhaseDTO.RoadsPreRoadBuilding);
     }
 
 }

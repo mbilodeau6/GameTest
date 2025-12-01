@@ -10,6 +10,7 @@ public class GamePhase
     public Player? EndPlayer { get; set; }
     public GameStates? PreviousState {get; private set; } = null;
     public Tile OriginalRobberTile { get; private set; } = null;
+    public int? RoadsPreRoadBuilding { get; private set; } = null;
 
 
     // TODO: Can all callers to this version be changed to use the DTO version?
@@ -35,6 +36,8 @@ public class GamePhase
 
         if (dto.OriginalRobberTileId != null)
             OriginalRobberTile = gs.Tiles.First(t => t.Id == dto.OriginalRobberTileId);
+
+        RoadsPreRoadBuilding = dto.RoadsPreRoadBuilding;
     }
     
     public void SetStateToReturnTo(GameStates state, Tile originalTile)
@@ -50,5 +53,17 @@ public class GamePhase
     {
         PreviousState = null;
         OriginalRobberTile = null;
+    }
+
+    public void ClearRoadBuildingState()
+    {
+        PreviousState = null;
+        RoadsPreRoadBuilding = null;
+    }
+
+    public void StoreStateDevCardRoadBuilding(GameStates currentState, int roadCount)
+    {
+        RoadsPreRoadBuilding = roadCount;
+        PreviousState = currentState;
     }
 }
