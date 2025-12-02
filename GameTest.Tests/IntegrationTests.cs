@@ -13,86 +13,71 @@ namespace GameTest.Tests;
 
 public class IntegrationTests
 {
-    private GameState CreateGameStateForGameLoopTesting()
-    {
-        var gs = new GameState(new Guid());
-        gs.Tiles.AddRange(BoardCreationHelpers.CreateTilesForTestBoard());
-        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
-        BoardCreationHelpers.LinkEdgesAndVertices(gs);
-        gs.SetRobberTile(BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1));
-        gs.AddPlayer(new Player("Lisa", PlayerColor.White));
-        gs.AddPlayer(new Player("Hal", PlayerColor.Green, true));
-
-        return gs;
-    }
-
-    private bool IsTooCloseToAnotherBuilding(GameState gs, Vertex vertex)
+    private bool IsTooCloseToAnotherBuilding(Vertex vertex)
     {
         foreach (var edge in vertex.Edges)
-        {
             foreach (var linkedVertex in edge.Vertices)
-            {
                 if (linkedVertex.Id != vertex.Id && GamePlayHelpers.HasBuilding(linkedVertex))
                     return true; 
-            }
-        }
+
         return false;
     }
 
     [Fact]
     public void BotBuildAtEndOfSetupPhase_TriggeredByBuildRoadByUser()
     {
-        var gs = CreateGameStateForGameLoopTesting();
-        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, gs.Players[1], gs.Players[0]);
-
-        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
-        var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetRedPlayer());
 
         // Build Bot's first settlement and road
-        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grainTile, brickTile, woolTile, null);
-        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[1].Id, v1.Id);
-        Assert.True(response.Success);
-        // var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, brickTile, null);
-        // result = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[1].Id, e1.Id);
-        // Assert.Empty(result);
+        Assert.True(
+            GamePlayHelpers.BuildSettlementRequestFromUser(
+                board.GetGameState(), 
+                board.GetBluePlayer().Id, 
+                board.GetVertex(TestVertex.V5).Id
+            ).Success);
 
         // Build User's settlements and first road
-        var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, oreTile, grainTile, null);
-        response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v2.Id);
-        Assert.True(response.Success);
-        var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, oreTile, null);
-        response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e2.Id);
-        Assert.True(response.Success);
+        Assert.True(
+            GamePlayHelpers.BuildSettlementRequestFromUser(
+                board.GetGameState(), 
+                board.GetRedPlayer().Id, 
+                board.GetVertex(TestVertex.V3).Id
+            ).Success);
 
-        var v3 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, null, null, VertexDirection.SE);
-        response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, gs.Players[0].Id, v3.Id);
-        Assert.True(response.Success);
+        Assert.True(
+            GamePlayHelpers.BuildRoadRequestFromUser(
+                board.GetGameState(), 
+                board.GetRedPlayer().Id, 
+                board.GetEdge(TestEdge.E2).Id
+            ).Success);
 
-        // Act
-        // Build user's second road - this should trigger the bot to build its second settlement and road
-        var e3 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, null, HexDirection.SE);
-        response = GamePlayHelpers.BuildRoadRequestFromUser(gs, gs.Players[0].Id, e3.Id);
-        Assert.True(response.Success);
+        Assert.True(
+            GamePlayHelpers.BuildSettlementRequestFromUser(
+                board.GetGameState(), 
+                board.GetRedPlayer().Id, 
+                board.GetVertex(TestVertex.V14).Id
+            ).Success);
 
+        // Act - Build user's second road - this should trigger the bot to build its second settlement and road
+        Assert.True(
+            GamePlayHelpers.BuildRoadRequestFromUser(
+                board.GetGameState(), 
+                board.GetRedPlayer().Id, 
+                board.GetEdge(TestEdge.E20).Id
+            ).Success);
 
         // Assert
-        Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
-        Assert.NotNull(gs.Phase.CurrentPlayer);
-        Assert.Equal(gs.Players[0].Id, gs.Phase.CurrentPlayer.Id);
+        Assert.True(board.InExpectedState(GameStates.RollOrUseDevCard, board.GetRedPlayer()));
 
         // TODO: Figure out a way to know the type/count of vertices/edges. Will likely need
         // mock dice implemented.
-        Assert.True(gs.Vertices.Count(v => v.Building == BuildingType.Settlement && v.Owner != null && v.Owner.Id == gs.Players[1].Id) >= 2);
-        Assert.True(gs.Edges.Count(e => e.Owner != null && e.Owner.Id == gs.Players[1].Id) >= 2);
+        Assert.True(GamePlayHelpers.CountSettlementsForPlayer(board.GetGameState(), board.GetBluePlayer()) >= 2);
+        Assert.True(GamePlayHelpers.CountRoadsForPlayer(board.GetGameState(), board.GetBluePlayer()) >= 2);
 
-        foreach(var vertex in gs.Vertices)
-        {
+        foreach(var vertex in board.GetGameState().Vertices)
             if (GamePlayHelpers.HasBuilding(vertex))
-                Assert.False(IsTooCloseToAnotherBuilding(gs, vertex));
-        }
+                Assert.False(IsTooCloseToAnotherBuilding(vertex));
     }
 
     [Fact]

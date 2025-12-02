@@ -91,13 +91,13 @@ public class TestGameBoard
 
     private void PopulateTiles()
     {
-        Tiles.Add(TestTile.T6, BoardCreationHelpers.GetTileAt(GS.Tiles, -1, -1));
-        Tiles.Add(TestTile.T1, BoardCreationHelpers.GetTileAt(GS.Tiles, 1, -1));
-        Tiles.Add(TestTile.T5, BoardCreationHelpers.GetTileAt(GS.Tiles, -2, 0));
         Tiles.Add(TestTile.T0, BoardCreationHelpers.GetTileAt(GS.Tiles, 0, 0));
+        Tiles.Add(TestTile.T1, BoardCreationHelpers.GetTileAt(GS.Tiles, 1, -1));
         Tiles.Add(TestTile.T2, BoardCreationHelpers.GetTileAt(GS.Tiles, 2, 0));
-        Tiles.Add(TestTile.T4, BoardCreationHelpers.GetTileAt(GS.Tiles, -1, 1));
         Tiles.Add(TestTile.T3, BoardCreationHelpers.GetTileAt(GS.Tiles, 1, 1));
+        Tiles.Add(TestTile.T4, BoardCreationHelpers.GetTileAt(GS.Tiles, -1, 1));
+        Tiles.Add(TestTile.T5, BoardCreationHelpers.GetTileAt(GS.Tiles, -2, 0));
+        Tiles.Add(TestTile.T6, BoardCreationHelpers.GetTileAt(GS.Tiles, -1, -1));
     }
 
     private void PopulateVertices()
@@ -108,10 +108,7 @@ public class TestGameBoard
         Vertices.Add(TestVertex.V4, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T3], Tiles[TestTile.T4], Tiles[TestTile.T0], null));
         Vertices.Add(TestVertex.V5, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T4], Tiles[TestTile.T5], Tiles[TestTile.T0], null));
         Vertices.Add(TestVertex.V6, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T5], Tiles[TestTile.T6], Tiles[TestTile.T0], null));
-        Vertices.Add(TestVertex.V24, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T6], null, null, VertexDirection.N));
         Vertices.Add(TestVertex.V7, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T6], Tiles[TestTile.T1], null, null));
-        Vertices.Add(TestVertex.V22, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T6], Tiles[TestTile.T5], null, null));
-        Vertices.Add(TestVertex.V23, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T6], null, null, VertexDirection.NW));
         Vertices.Add(TestVertex.V8, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T1], null, null, VertexDirection.N));
         Vertices.Add(TestVertex.V9, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T1], null, null, VertexDirection.NE));
         Vertices.Add(TestVertex.V10, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T1], Tiles[TestTile.T2], null, null));
@@ -126,40 +123,43 @@ public class TestGameBoard
         Vertices.Add(TestVertex.V19, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T4], Tiles[TestTile.T5], null, null));
         Vertices.Add(TestVertex.V20, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T5], null, null, VertexDirection.SW));
         Vertices.Add(TestVertex.V21, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T5], null, null, VertexDirection.NW));
+        Vertices.Add(TestVertex.V22, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T6], Tiles[TestTile.T5], null, null));
+        Vertices.Add(TestVertex.V23, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T6], null, null, VertexDirection.NW));
+        Vertices.Add(TestVertex.V24, BoardCreationHelpers.GetVertexFromTileInfo(GS.Vertices, Tiles[TestTile.T6], null, null, VertexDirection.N));
     }
 
     private void PopulateEdges()
     {
         Edges.Add(TestEdge.E1, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T1], null));
-        Edges.Add(TestEdge.E2, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T1], null));
-        Edges.Add(TestEdge.E3, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T1], null));
-        Edges.Add(TestEdge.E4, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T1], null));
-        Edges.Add(TestEdge.E5, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T1], null));
-        Edges.Add(TestEdge.E6, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T1], null));
-        Edges.Add(TestEdge.E30, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], null, HexDirection.NE));
+        Edges.Add(TestEdge.E2, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T2], null));
+        Edges.Add(TestEdge.E3, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T3], null));
+        Edges.Add(TestEdge.E4, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T4], null));
+        Edges.Add(TestEdge.E5, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T5], null));
+        Edges.Add(TestEdge.E6, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T0], Tiles[TestTile.T6], null));
         Edges.Add(TestEdge.E7, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], Tiles[TestTile.T1], null));
+        Edges.Add(TestEdge.E8, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T1], Tiles[TestTile.T2], null));
+        Edges.Add(TestEdge.E9, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T2], Tiles[TestTile.T3], null));
+        Edges.Add(TestEdge.E10, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T3], Tiles[TestTile.T4], null));
+        Edges.Add(TestEdge.E11, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T4], Tiles[TestTile.T5], null));
         Edges.Add(TestEdge.E12, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], Tiles[TestTile.T5], null));
-        Edges.Add(TestEdge.E28, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], null, HexDirection.W));
-        Edges.Add(TestEdge.E29, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], null, HexDirection.NW));
         Edges.Add(TestEdge.E13, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T1], null, HexDirection.NW));
         Edges.Add(TestEdge.E14, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T1], null, HexDirection.NE));
         Edges.Add(TestEdge.E15, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T1], null, HexDirection.E));
-        Edges.Add(TestEdge.E8, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T1], Tiles[TestTile.T2], null));
         Edges.Add(TestEdge.E16, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T2], null, HexDirection.NE));
         Edges.Add(TestEdge.E17, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T2], null, HexDirection.E));
         Edges.Add(TestEdge.E18, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T2], null, HexDirection.SE));
-        Edges.Add(TestEdge.E9, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T2], Tiles[TestTile.T3], null));
         Edges.Add(TestEdge.E19, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T3], null, HexDirection.E));
         Edges.Add(TestEdge.E20, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T3], null, HexDirection.SE));
         Edges.Add(TestEdge.E21, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T3], null, HexDirection.SE));
-        Edges.Add(TestEdge.E10, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T3], Tiles[TestTile.T4], null));
         Edges.Add(TestEdge.E22, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T4], null, HexDirection.SE));
         Edges.Add(TestEdge.E23, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T4], null, HexDirection.SW));
         Edges.Add(TestEdge.E24, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T4], null, HexDirection.W));
-        Edges.Add(TestEdge.E11, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T4], Tiles[TestTile.T5], null));
         Edges.Add(TestEdge.E25, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T5], null, HexDirection.SW));
         Edges.Add(TestEdge.E26, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T5], null, HexDirection.W));
         Edges.Add(TestEdge.E27, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T5], null, HexDirection.NW));
+        Edges.Add(TestEdge.E28, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], null, HexDirection.W));
+        Edges.Add(TestEdge.E29, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], null, HexDirection.NW));
+        Edges.Add(TestEdge.E30, BoardCreationHelpers.GetEdgeFromTileInfo(GS.Edges, Tiles[TestTile.T6], null, HexDirection.NE));
     }
 
     private void PoppulatePorts()
@@ -168,9 +168,6 @@ public class TestGameBoard
         Ports.Add(TestPort.ThreeToOne, GS.Ports.First(r => r.Type == PortType.ThreeToOne));
     }
 
-    // TODO: Keeping so that I can put in caller to create original test board
-    // TestResources: ResourceType.Desert, ResourceType.Wool, ResourceType.Brick, ResourceType.Grain, ResourceType.Ore, ResourceType.Wool, ResourceType.Wood
-    // TestDiceValues: 0, 11, 5, 9, 3, 2, 6
     private void CreateBoardInGameState(List<ResourceType> resources, List<int> diceValues)
     {
         if (resources == null || resources.Count != 7 || diceValues == null || diceValues.Count != 7)
@@ -208,10 +205,51 @@ public class TestGameBoard
     {
          GS = new GameState(new Guid());
          CreateBoardInGameState(resources, diceValues);
+
+         GS.Players.Add(new Player("Human", PlayerColor.Red));
+         GS.Players.Add(new Player("Bot", PlayerColor.Blue, true));
     }
 
     public GameState GetGameState()
     {
         return GS;
+    }
+
+    public Player GetRedPlayer()
+    {
+        return GS.Players.First(p => p.Color == PlayerColor.Red);
+    }
+
+    public Player GetBluePlayer()
+    {
+        return GS.Players.First(p => p.Color == PlayerColor.Blue);
+    }
+
+    public void SetRobberTile(Tile tile)
+    {
+        GS.SetRobberTile(tile);
+    }
+
+    public Tile GetTile(TestTile tileRef)
+    {
+        return Tiles[tileRef];
+    }
+
+    public Vertex GetVertex(TestVertex vertexRef)
+    {
+        return Vertices[vertexRef];
+    }
+
+    public Edge GetEdge(TestEdge edgeRef)
+    {
+        return Edges[edgeRef];
+    }
+
+    public bool InExpectedState(GameStates state, Player currentPlayer)
+    {
+        return GS.Phase != null &&
+            GS.Phase.PhaseState == state && 
+            GS.Phase.CurrentPlayer != null &&
+            GS.Phase.CurrentPlayer.Id == currentPlayer.Id;
     }
 }
