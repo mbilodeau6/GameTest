@@ -2280,6 +2280,7 @@ public class GamePlayHelpersTests
 
         // Act
         GamePlayHelpers.PlaceRobber(gs, human, botTile);
+        GamePlayHelpers.GameLoop(gs);
 
         // Assert
         Assert.Equal(botTile.Id, gs.RobberTile.Id);

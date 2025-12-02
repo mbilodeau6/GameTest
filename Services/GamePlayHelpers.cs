@@ -206,7 +206,11 @@ public static class GamePlayHelpers
             if (gameState.Phase.CurrentPlayer == null)
                 throw new InvalidOperationException("CurrentPlayer expected to be set to a valid value.");
 
-            if (gameState.Phase.PhaseState == GameStates.PlaceFirstSettlement)
+            if (PlayerHasWon(gameState, gameState.Phase.CurrentPlayer))
+            {
+                nextPhase.PhaseState = GameStates.GameOver;
+            }
+            else if (gameState.Phase.PhaseState == GameStates.PlaceFirstSettlement)
             {
                 if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
                     nextPhase.PhaseState = GameStates.PlaceFirstRoad;
@@ -258,11 +262,6 @@ public static class GamePlayHelpers
                 }
                 else
                     nextPhase.PhaseState = GameStates.BuildOrTrade;
-            }
-            else if (gameState.Phase.PhaseState == GameStates.BuildOrTrade && PlayerHasWon(gameState, gameState.Phase.CurrentPlayer))
-            {
-                // TODO: Add code to move to PlaceRobber if Knight Dev Card played.
-                nextPhase.PhaseState = GameStates.GameOver;
             }
             else if (gameState.Phase.PhaseState == GameStates.PlaceRobber 
                 && gameState.Phase.PreviousState != null 
@@ -755,8 +754,6 @@ public static class GamePlayHelpers
                 }
             }
         }
-
-        GameLoop(gs);
     }
 
     public static ResponseDTO PlaceRobberForUser(GameState gs, string playerId, string tileId)
@@ -779,6 +776,7 @@ public static class GamePlayHelpers
             return new ResponseDTO(false, 1033, $"GameId: {gs.Id}; Player: {player.Id}; OriginalTile: {gs.Phase.OriginalRobberTile.Id}; NewTile: {tile.Id}", null as GameStateDTO);
 
         PlaceRobber(gs, player, tile);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null, gs);
     }
@@ -818,6 +816,7 @@ public static class GamePlayHelpers
             return new ResponseDTO(false, 1017, $"Action: BuyDevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}", null as GameStateDTO);
 
         BuyDevCard(gs, player);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null, gs);
     }
@@ -912,6 +911,7 @@ public static class GamePlayHelpers
         var requestedResource = Enum.Parse<ResourceType>(request.SelectedResources[0]);
 
         PlayMonopolyDevCard(gs, player, requestedResource);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null, gs);
     }
@@ -949,6 +949,7 @@ public static class GamePlayHelpers
             requestedResources.Add(Enum.Parse<ResourceType>(resourceString));
 
         PlayYearOfPlentyDevCard(gs, player, requestedResources);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null, gs);
     }
@@ -972,6 +973,7 @@ public static class GamePlayHelpers
         var player = gs.Players.First(p => p.Id == request.PlayerId);
 
         PlayRoadBuildingDevCard(gs, player);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null, gs);
     }
@@ -1007,6 +1009,7 @@ public static class GamePlayHelpers
         var tile = gs.Tiles.First(t => t.Id == request.TileId);
 
         PlayKnightDevCard(gs, player, tile);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null, gs);
     }
