@@ -95,6 +95,7 @@ public class ResponseDTO
         { 1038, "Invalid resource type requested."},
         { 1039, "Player does not have the development card required for this action."},
         { 1040, "YearOfPlenty requires the selection of exactly two resources."},
+        { 1041, "A play Knight request must specify a tile id."},
         { 9999, "Unexpected error."},
     };
 }

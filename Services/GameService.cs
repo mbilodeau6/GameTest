@@ -579,7 +579,7 @@ public class GameService
                     response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
                     break;
                 case "Knight":
-                    response = GamePlayHelpers.PlayKnightDevCard(gs, request);
+                    response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
                     break;
                 case "RoadBuilding":
                     response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);

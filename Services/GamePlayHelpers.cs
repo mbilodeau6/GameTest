@@ -969,17 +969,45 @@ public static class GamePlayHelpers
         if (!response.Success)
             return response;
 
-        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        var player = gs.Players.First(p => p.Id == request.PlayerId);
 
         PlayRoadBuildingDevCard(gs, player);
 
         return new ResponseDTO(true, 0, null, gs);
-
     }
 
-    public static ResponseDTO PlayKnightDevCard(GameState gs, PlayDevCardRequest request)
+    public static void PlayKnightDevCard(GameState gs, Player player, Tile targetTile)
     {
-        return new ResponseDTO(false, 9999, $"PLACEHOLDER", null as GameStateDTO);
+        StandardPlayDevCardValidation(gs, player, DevelopmentCardType.Knight);
+
+        if (targetTile.Id == gs.RobberTile.Id)
+            throw new InvalidOperationException("Unexpected Error. The robber can not be moved to the tile it is already on.");
+
+        PlaceRobber(gs, player, targetTile);
+        player.PlayDevelopmentCard(DevelopmentCardType.Knight);
     }
 
+    public static ResponseDTO PlayKnightDevCardFromUser(GameState gs, PlayDevCardRequest request)
+    {
+        if (request.TileId == null)
+            return new ResponseDTO(false, 1041, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (!gs.Tiles.Any(t => t.Id == request.TileId))
+            return new ResponseDTO(false, 1032, $"GameId: {gs.Id}; Player: {request.PlayerId}; TileId: {request.TileId}", null as GameStateDTO);
+
+        var response = StandardPlayDevCardValidationForUserRequest(gs, request, DevelopmentCardType.Knight);
+
+        if (!response.Success)
+            return response;
+
+        if (request.TileId == gs.RobberTile.Id)
+            return new ResponseDTO(false, 1033, $"GameId: {gs.Id}; Player: {request.PlayerId}; TileId: {request.TileId}", null as GameStateDTO);
+
+        var player = gs.Players.First(p => p.Id == request.PlayerId);
+        var tile = gs.Tiles.First(t => t.Id == request.TileId);
+
+        PlayKnightDevCard(gs, player, tile);
+
+        return new ResponseDTO(true, 0, null, gs);
+    }
 }

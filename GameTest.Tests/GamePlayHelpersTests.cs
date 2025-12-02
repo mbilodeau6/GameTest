@@ -2463,29 +2463,38 @@ public class GamePlayHelpersTests
     {
         var gs = new GameState(new Guid());
         var player1 = new Player("Tim", PlayerColor.Red);
-        player1.AssignResources(ResourceType.Wood, 1);
-        player1.AssignResources(ResourceType.Brick, 2);
         gs.Players.Add(player1);
-
         var player2 = new Player("Mary", PlayerColor.Blue, true);
-        player2.AssignResources(ResourceType.Wood, 2);
-        player2.AssignResources(ResourceType.Ore, 1);
         gs.Players.Add(player2);
-
         var tile1 = new Tile(ResourceType.Wood, 3, 0, 0);
         gs.Tiles.Add(tile1);
         var tile2 = new Tile(ResourceType.Brick, 9, 2, 0);
         gs.Tiles.Add(tile2);
-
+        gs.SetRobberTile(tile1);
         gs.Phase.CurrentPlayer = player1;
+
+        // Assign some resources so that we can test monopoly
+        player1.AssignResources(ResourceType.Wood, 1);
+        player1.AssignResources(ResourceType.Brick, 2);
+        player2.AssignResources(ResourceType.Wood, 2);
+        player2.AssignResources(ResourceType.Ore, 1);
+
+        // Build one settlement for each player so that resources and be stolen when knight placed
+        BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
+        BoardCreationHelpers.LinkEdgesAndVertices(gs);
+        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.SW);
+        v1.BuildSettlement(player1);
+        var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.NE);
+        v2.BuildSettlement(player2);
+        GamePlayHelpers.MarkBlockedVertices(gs);
+
+        // Customize test board for the test being done
         player1.AssignDevelopmentCard(desiredType);
         player1.MakeNewDevelopmentCardsPlayable();
-
         gs.Phase.PhaseState = currentState;
 
         return gs;        
     }
-
 
     [Fact]
     public void PlayMonopolyDevCardFromUser_InvalidState()
@@ -3025,11 +3034,172 @@ public class GamePlayHelpersTests
         Assert.Equal(GameStates.FirstDevCardRoad ,gs.Phase.PhaseState);
     }
 
-    // TODO: Add remaining tests
     [Fact]
-    public void PlayDevCardFromUser_Knight_ALLSCENARIOS()
+    public void PlayKnightDevCardFromUser_InvalidState()
     {
-        Assert.False(true);
+        var gs = CreateGameForPlayDevCardTesting(GameStates.PlaceRobber, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
+    [Fact]
+    public void PlayKnightDevCardFromUser_NotPlayersTurn()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var bot = gs.Players.First(p => p.IsBot);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCardFromUser_TileIdMissing()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1041, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCardFromUser_TileIdInvalid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, "TT1");
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1032, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCardFromUser_RobberAlreadyOnTile()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, gs.RobberTile.Id);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1033, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCardFromUser_PlayerDoesNotHaveKnight()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Monopoly);
+        var human = gs.Players.First(p => !p.IsBot);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1039, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCardFromUser_WrongDevCardPlayed()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), null, t1.Id);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(9999, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCardFromUser_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+        var readyKnightCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Knight);
+        var playedKnightCount = human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.Equal(readyKnightCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
+        Assert.Equal(playedKnightCount + 1, human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight));
+        Assert.Equal(GameStates.BuildOrTrade ,gs.Phase.PhaseState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCard_NotPlayersTurn()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var bot = gs.Players.First(p => p.IsBot);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayKnightDevCard(gs, bot, t1));
+    }
+
+    [Fact]
+    public void PlayKnightDevCard_RobberAlreadyOnTile()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayKnightDevCard(gs, human, gs.RobberTile));
+    }
+
+    [Fact]
+    public void PlayKnightDevCard_Valid()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        var readyKnightCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Knight);
+        var playedKnightCount = human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight);
+        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var humanResourceCount = human.ResourceCount;
+        var botResourceCount = human.ResourceCount;
+
+        GamePlayHelpers.PlayKnightDevCard(gs, human, t1);
+
+        Assert.Equal(readyKnightCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
+        Assert.Equal(playedKnightCount + 1, human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight));
+        Assert.Equal(GameStates.BuildOrTrade ,gs.Phase.PhaseState);
+        Assert.Equal(humanResourceCount + 1, human.ResourceCount);
+        Assert.Equal(botResourceCount - 1, bot.ResourceCount);
+    }
 }
