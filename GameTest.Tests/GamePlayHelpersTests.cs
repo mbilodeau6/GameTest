@@ -2,12 +2,6 @@ using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
-using GameTest.Functions;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
-using Microsoft.AspNetCore.SignalR;
-using System.Security.Cryptography.Xml;
 
 namespace GameTest.Tests;
 
