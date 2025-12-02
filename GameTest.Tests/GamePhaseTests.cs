@@ -36,6 +36,37 @@ public class GamePhaseTests
         Assert.Equal(gamePhase.PreviousState, newGamePhase.PreviousState);
         Assert.Equal(3, newGamePhase.RoadsPreRoadBuilding);
     }
+
+    [Fact]
+    public void Constructor_Copy()
+    {
+        // Arrange
+        var p1 = new Player("Tim", PlayerColor.Red);
+        var p2 = new Player("Mary", PlayerColor.Blue);
+        GamePhase originalGamePhase = new GamePhase(GameStates.PlaceSecondSettlement, p1, p2);
+
+        // Act
+        var newGamePhase = new GamePhase(originalGamePhase);
+
+        // Assert
+        Assert.NotNull(newGamePhase.CurrentPlayer);
+        Assert.Equal(p1.Id, newGamePhase.CurrentPlayer.Id);
+        Assert.NotNull(newGamePhase.EndPlayer);
+        Assert.Equal(p2.Id, newGamePhase.EndPlayer.Id);
+        Assert.Equal(GameStates.PlaceSecondSettlement, newGamePhase.PhaseState);
+        Assert.Equal(originalGamePhase.OriginalRobberTile, newGamePhase.OriginalRobberTile);
+        Assert.Equal(originalGamePhase.PreviousState, newGamePhase.PreviousState);
+        Assert.Equal(originalGamePhase.RoadsPreRoadBuilding, newGamePhase.RoadsPreRoadBuilding);
+
+        // Change original and make sure new not changed
+        originalGamePhase.PhaseState = GameStates.PlaceSecondRoad;
+        originalGamePhase.CurrentPlayer = p2;
+        originalGamePhase.EndPlayer = p1;
+
+        Assert.Equal(p1.Id, newGamePhase.CurrentPlayer.Id);
+        Assert.Equal(p2.Id, newGamePhase.EndPlayer.Id);
+        Assert.Equal(GameStates.PlaceSecondSettlement, newGamePhase.PhaseState);
+    }
     
     [Fact]
     public void SetStateToReturnTo_StateNullBefore()

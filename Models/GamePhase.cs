@@ -39,6 +39,17 @@ public class GamePhase
 
         RoadsPreRoadBuilding = dto.RoadsPreRoadBuilding;
     }
+
+    // Copy Constructor
+    public GamePhase(GamePhase gamePhase)
+    {
+        PhaseState = gamePhase.PhaseState;
+        CurrentPlayer = gamePhase.CurrentPlayer;
+        EndPlayer = gamePhase.EndPlayer;
+        PreviousState = gamePhase.PreviousState;
+        OriginalRobberTile = gamePhase.OriginalRobberTile;
+        RoadsPreRoadBuilding = gamePhase.RoadsPreRoadBuilding;
+    }
     
     public void SetStateToReturnTo(GameStates state, Tile originalTile)
     {
