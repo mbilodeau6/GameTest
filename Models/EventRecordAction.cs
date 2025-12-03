@@ -13,6 +13,7 @@ public enum EventRecordAction
     PlayMonoploy,
     PlayKnight,
     PlayYearOfPlenty,
+    PlayRoadBuilding,
     BuyDevelopmentCard,
     TradeWithBank,
     TradeWithPlayer, 

@@ -34,7 +34,7 @@ public class EventRecordDTO
 
     }
 
-    private EventRecordDTO(Player player, EventRecordAction action)
+    public EventRecordDTO(Player player, EventRecordAction action)
     {
         PlayerId = player.Id;
         Action = action.ToString();
@@ -73,7 +73,6 @@ public class EventRecordDTO
     }
 
 
-    // TODO: Might also be used for PlayMonopoly, PlayYearOfPlenty
     public EventRecordDTO(Player player, EventRecordAction action, List<ResourceType> resourcesUsed) : this(player,action)
     {
         if (action != EventRecordAction.SevenDiscard)
@@ -96,6 +95,17 @@ public class EventRecordDTO
         TargetPlayerId = targetPlayer.Id;
 
         ResourcesReceived = new Dictionary<string, int>() { {resourceGained.ToString(), 1 } };
+    }
+
+    public EventRecordDTO(Player player, EventRecordAction action, Dictionary<ResourceType, int> resourcesGained) : this(player,action)
+    {
+        if (action != EventRecordAction.PlayMonoploy && action != EventRecordAction.PlayYearOfPlenty)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for PlayMonopoly or PlayYearOfPlenty.");
+
+        ResourcesReceived = new Dictionary<string, int>();
+
+        foreach (var resource in resourcesGained)
+            ResourcesReceived.Add(resource.Key.ToString(), resource.Value);
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, DevelopmentCardType devCard) : this(player,action)

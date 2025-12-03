@@ -1,3 +1,4 @@
+using System.Diagnostics.Eventing.Reader;
 using System.Linq.Expressions;
 using Azure;
 using GameTest.DTOs;
@@ -797,6 +798,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException("Unexpected Error. Player doesn't have resources to buy dev card.");
 
         player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.BuyDevelopmentCard, gs.DevelopmentCards[0]));
         gs.DevelopmentCards.RemoveAt(0);
         WithdrawResourcesToBuyDevCard(player);
         UpdatePlayerVictoryPoints(gs, player);
@@ -885,6 +887,8 @@ public static class GamePlayHelpers
         if (requestedResource == ResourceType.Desert)
             throw new InvalidOperationException($"Unexpected Error. Desert is not a valid resource to request in PlayMonopolyDevCard.");
 
+        var resourcesReceived = 0;
+
         foreach(var opponent in gs.Players)
         {
             if (opponent.Id == player.Id || !opponent.Resources.ContainsKey(requestedResource))
@@ -893,9 +897,11 @@ public static class GamePlayHelpers
             var opponentCount = opponent.Resources[requestedResource];
             opponent.RemoveResources(requestedResource, opponentCount);
             player.AssignResources(requestedResource, opponentCount);
+            resourcesReceived += opponentCount;
         }
 
         player.PlayDevelopmentCard(DevelopmentCardType.Monopoly);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayMonoploy, new Dictionary<ResourceType, int>() { {requestedResource, resourcesReceived} }));
     }
 
     public static ResponseDTO PlayMonopolyDevCardFromUser(GameState gs, PlayDevCardRequest request)
@@ -932,6 +938,7 @@ public static class GamePlayHelpers
             player.AssignResources(resource, 1);
 
         player.PlayDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
     }
 
     public static ResponseDTO PlayYearOfPlentyDevCardFromUser(GameState gs, PlayDevCardRequest request)
@@ -962,6 +969,8 @@ public static class GamePlayHelpers
         gs.Phase.StoreStateDevCardRoadBuilding(gs.Phase.PhaseState, gs.Edges.Count(e => e.Owner != null && e.Owner.Id == player.Id));
         gs.Phase.PhaseState = GameStates.FirstDevCardRoad;
         player.PlayDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayRoadBuilding));
+
     }
 
     public static ResponseDTO PlayRoadBuildingDevCardFromUser(GameState gs, PlayDevCardRequest request)
@@ -986,8 +995,9 @@ public static class GamePlayHelpers
         if (targetTile.Id == gs.RobberTile.Id)
             throw new InvalidOperationException("Unexpected Error. The robber can not be moved to the tile it is already on.");
 
-        PlaceRobber(gs, player, targetTile);
         player.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
+        PlaceRobber(gs, player, targetTile);
     }
 
     public static ResponseDTO PlayKnightDevCardFromUser(GameState gs, PlayDevCardRequest request)
