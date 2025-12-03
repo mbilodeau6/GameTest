@@ -130,11 +130,12 @@ public static class TestHelpers
         return gs;
     }
 
-    public static TestGameBoard CreateOriginalTestBoard()
+    public static TestGameBoard CreateOriginalTestBoard(bool bluePlayerBot = false)
     {
         var board = new TestGameBoard(
             new List<ResourceType>() {ResourceType.Desert, ResourceType.Wool, ResourceType.Brick, ResourceType.Grain, ResourceType.Ore, ResourceType.Wool, ResourceType.Wood}, 
-            new List<int>() {0, 11, 5, 9, 3, 2, 6}
+            new List<int>() {0, 11, 5, 9, 3, 2, 6},
+            bluePlayerBot
         );
 
         board.SetRobberTile(board.GetTile(TestTile.T6));

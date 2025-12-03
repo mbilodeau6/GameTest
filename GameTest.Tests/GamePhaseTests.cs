@@ -22,6 +22,7 @@ public class GamePhaseTests
         GamePhase gamePhase = new GamePhase(GameStates.PlaceSecondSettlement, p1, p2);
         gamePhase.SetStateToReturnTo(GameStates.BuildOrTrade, t1);
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 3);
+        gamePhase.SetWaitingForRoll();
 
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
 
@@ -35,6 +36,7 @@ public class GamePhaseTests
         Assert.Equal(gamePhase.OriginalRobberTile.Id, newGamePhase.OriginalRobberTile.Id);
         Assert.Equal(gamePhase.PreviousState, newGamePhase.PreviousState);
         Assert.Equal(3, newGamePhase.RoadsPreRoadBuilding);
+        Assert.True(newGamePhase.WaitingForRoll);
     }
 
     [Fact]
@@ -57,15 +59,18 @@ public class GamePhaseTests
         Assert.Equal(originalGamePhase.OriginalRobberTile, newGamePhase.OriginalRobberTile);
         Assert.Equal(originalGamePhase.PreviousState, newGamePhase.PreviousState);
         Assert.Equal(originalGamePhase.RoadsPreRoadBuilding, newGamePhase.RoadsPreRoadBuilding);
+        Assert.Equal(originalGamePhase.WaitingForRoll, newGamePhase.WaitingForRoll);
 
         // Change original and make sure new not changed
         originalGamePhase.PhaseState = GameStates.PlaceSecondRoad;
         originalGamePhase.CurrentPlayer = p2;
         originalGamePhase.EndPlayer = p1;
+        originalGamePhase.SetWaitingForRoll();
 
         Assert.Equal(p1.Id, newGamePhase.CurrentPlayer.Id);
         Assert.Equal(p2.Id, newGamePhase.EndPlayer.Id);
         Assert.Equal(GameStates.PlaceSecondSettlement, newGamePhase.PhaseState);
+        Assert.False(newGamePhase.WaitingForRoll);
     }
     
     [Fact]
@@ -126,4 +131,24 @@ public class GamePhaseTests
         Assert.Null(phaseState.RoadsPreRoadBuilding);
     }
 
+    [Fact]
+    public void SetWaitingForRoll()
+    {
+        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null);
+        Assert.False(phaseState.WaitingForRoll);
+
+        phaseState.SetWaitingForRoll();
+        Assert.True(phaseState.WaitingForRoll);
+    }
+
+    [Fact]
+    public void ClearWaitingForRoll()
+    {
+        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null);
+        phaseState.SetWaitingForRoll();
+        Assert.True(phaseState.WaitingForRoll);
+
+        phaseState.ClearWaitingForRoll();
+        Assert.False(phaseState.WaitingForRoll);
+    }
 }

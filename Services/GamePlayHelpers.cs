@@ -193,7 +193,7 @@ public static class GamePlayHelpers
 
     public static GamePhase GetNextPhase(GameState gameState)
     {
-        var nextPhase = gameState.Phase;
+        var nextPhase = new GamePhase(gameState.Phase);
 
         if (gameState.Phase.PhaseState == GameStates.SettingUpBoard)
         {
@@ -222,12 +222,12 @@ public static class GamePlayHelpers
                     if (gameState.Phase.CurrentPlayer == gameState.Phase.EndPlayer)
                     {
                         nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
-                        gameState.Phase.EndPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                        nextPhase.EndPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
                     }
                     else
                     {
                         nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
-                        gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                        nextPhase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
                     }
                 }
             }
@@ -243,21 +243,21 @@ public static class GamePlayHelpers
                     if (gameState.Phase.CurrentPlayer == gameState.Phase.EndPlayer)
                     {
                         nextPhase.PhaseState = GameStates.RollOrUseDevCard;
-                        gameState.Dice.SetWaiting();
-                        gameState.Phase.EndPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                        nextPhase.SetWaitingForRoll();
+                        nextPhase.EndPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
                     }
                     else
                     {
                         nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
-                        gameState.Phase.CurrentPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+                        nextPhase.CurrentPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
                     }
                 }
             }
-            else if (gameState.Phase.PhaseState == GameStates.RollOrUseDevCard && !gameState.Dice.WaitingForRoll)
+            else if (gameState.Phase.PhaseState == GameStates.RollOrUseDevCard && !gameState.Phase.WaitingForRoll)
             {
                 if (gameState.Dice.Die1.Value + gameState.Dice.Die2.Value == 7)
                 {
-                    gameState.Phase.SetStateToReturnTo(GameStates.BuildOrTrade, gameState.RobberTile);
+                    nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, gameState.RobberTile);
                     nextPhase.PhaseState = GameStates.PlaceRobber;
                 }
                 else
@@ -268,7 +268,7 @@ public static class GamePlayHelpers
                 && gameState.Phase.OriginalRobberTile != null && gameState.RobberTile.Id != gameState.Phase.OriginalRobberTile.Id)
             {
                 nextPhase.PhaseState = (GameStates)gameState.Phase.PreviousState;
-                gameState.Phase.ClearRobberState();
+                nextPhase.ClearRobberState();
             }
             else if (gameState.Phase.PhaseState == GameStates.FirstDevCardRoad
                 && CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > gameState.Phase.RoadsPreRoadBuilding)
@@ -278,7 +278,7 @@ public static class GamePlayHelpers
                 && gameState.Phase.PreviousState != null)
             {
                 nextPhase.PhaseState = (GameStates)gameState.Phase.PreviousState;
-                gameState.Phase.ClearRoadBuildingState();
+                nextPhase.ClearRoadBuildingState();
             }
         }
 
@@ -302,7 +302,7 @@ public static class GamePlayHelpers
 
         gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
         gameState.Phase.PhaseState = GameStates.RollOrUseDevCard;
-        gameState.Dice.SetWaiting();
+        gameState.Phase.SetWaitingForRoll();
 
         if (!skipGameLoop)
             GameLoop(gameState);
@@ -605,6 +605,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException($"Unexpected Exception. Roll called when game in {gs.Phase.PhaseState}. Player: {gs.Phase.CurrentPlayer}.");
 
         gs.Dice.Roll();
+        gs.Phase.ClearWaitingForRoll();
         GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
         gs.EventRecord.Add(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.RollDice, gs.Dice));
 

@@ -201,13 +201,13 @@ public class TestGameBoard
     }
 
 
-    public TestGameBoard(List<ResourceType> resources, List<int> diceValues)
+    public TestGameBoard(List<ResourceType> resources, List<int> diceValues, bool bluePlayerBot = false)
     {
          GS = new GameState(new Guid());
          CreateBoardInGameState(resources, diceValues);
 
-         GS.Players.Add(new Player("Human", PlayerColor.Red));
-         GS.Players.Add(new Player("Bot", PlayerColor.Blue, true));
+         GS.Players.Add(new Player("PlayerA", PlayerColor.Red));
+         GS.Players.Add(new Player("PlayerB", PlayerColor.Blue, bluePlayerBot));
     }
 
     public GameState GetGameState()
@@ -245,11 +245,20 @@ public class TestGameBoard
         return Edges[edgeRef];
     }
 
-    public bool InExpectedState(GameStates state, Player currentPlayer)
+    public bool InExpectedState(GameStates state, Player currentPlayer, Player? endPlayer = null)
     {
         return GS.Phase != null &&
             GS.Phase.PhaseState == state && 
             GS.Phase.CurrentPlayer != null &&
-            GS.Phase.CurrentPlayer.Id == currentPlayer.Id;
+            GS.Phase.CurrentPlayer.Id == currentPlayer.Id &&
+            (endPlayer == null || (GS.Phase.EndPlayer != null && GS.Phase.EndPlayer.Id == endPlayer.Id));
+    }
+
+    public Player GetCurrentPlayer()
+    {
+        if (GS.Phase == null || GS.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("Unexpected Error. Current player is not set.");
+
+        return GS.Phase.CurrentPlayer;
     }
 }

@@ -11,7 +11,7 @@ public class GamePhase
     public GameStates? PreviousState {get; private set; } = null;
     public Tile OriginalRobberTile { get; private set; } = null;
     public int? RoadsPreRoadBuilding { get; private set; } = null;
-
+    public bool WaitingForRoll { get; private set; } = false;
 
     // TODO: Can all callers to this version be changed to use the DTO version?
     public GamePhase(GameStates state, Player? current = null, Player? end = null)
@@ -38,6 +38,7 @@ public class GamePhase
             OriginalRobberTile = gs.Tiles.First(t => t.Id == dto.OriginalRobberTileId);
 
         RoadsPreRoadBuilding = dto.RoadsPreRoadBuilding;
+        WaitingForRoll = dto.WaitingForRoll;
     }
 
     // Copy Constructor
@@ -49,6 +50,7 @@ public class GamePhase
         PreviousState = gamePhase.PreviousState;
         OriginalRobberTile = gamePhase.OriginalRobberTile;
         RoadsPreRoadBuilding = gamePhase.RoadsPreRoadBuilding;
+        WaitingForRoll = gamePhase.WaitingForRoll;
     }
     
     public void SetStateToReturnTo(GameStates state, Tile originalTile)
@@ -77,4 +79,15 @@ public class GamePhase
         RoadsPreRoadBuilding = roadCount;
         PreviousState = currentState;
     }
+
+    public void SetWaitingForRoll()
+    {
+        WaitingForRoll = true;
+    }
+
+    public void ClearWaitingForRoll()
+    {
+        WaitingForRoll = false;
+    }
+
 }

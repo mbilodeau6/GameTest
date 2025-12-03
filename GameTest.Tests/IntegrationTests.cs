@@ -26,7 +26,7 @@ public class IntegrationTests
     [Fact]
     public void BotBuildAtEndOfSetupPhase_TriggeredByBuildRoadByUser()
     {
-        var board = TestHelpers.CreateOriginalTestBoard();
+        var board = TestHelpers.CreateOriginalTestBoard(true);
         board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetRedPlayer());
 
         // Build Bot's first settlement and road

@@ -13,7 +13,6 @@ public class GameDiceTests
 
         Assert.True(dice.Die1.Random);
         Assert.True(dice.Die2.Random);
-        Assert.False(dice.WaitingForRoll);
     }
 
     [Fact]
@@ -23,19 +22,17 @@ public class GameDiceTests
 
         Assert.False(dice.Die1.Random);
         Assert.False(dice.Die2.Random);
-        Assert.False(dice.WaitingForRoll);
     }
 
     [Fact]
     public void Constructor_Serialization()
     {
-        GameDice dice = new GameDice(5, 1, true, true);
+        GameDice dice = new GameDice(5, 1, true);
 
         Assert.True(dice.Die1.Random);
         Assert.Equal(5, dice.Die1.Value);
         Assert.True(dice.Die2.Random);
         Assert.Equal(1, dice.Die2.Value);
-        Assert.True(dice.WaitingForRoll);
     }
 
     [Fact]
@@ -49,8 +46,6 @@ public class GameDiceTests
             int sum = dice.Die1.Value + dice.Die2.Value;
             Assert.True(sum >= 2 && sum <= 12);
         }
-
-        Assert.False(dice.WaitingForRoll);
     }
 
     [Fact]
@@ -64,24 +59,8 @@ public class GameDiceTests
         Assert.Equal(5, dice.Die1.Value + dice.Die2.Value);
         dice.Roll();
         Assert.Equal(7, dice.Die1.Value + dice.Die2.Value);
-
-        Assert.False(dice.WaitingForRoll);
     }
 
-    [Fact]
-    public void SetWaiting_ValueSet()
-    {
-        // Arrange
-        GameDice dice = new GameDice(true);
-        Assert.False(dice.WaitingForRoll);
-
-        // Act
-        dice.SetWaiting();
-
-        // Assert
-        Assert.True(dice.WaitingForRoll);
-    }
-    
     [Fact]
     public void GetCombinedValue_Valid()
     {
