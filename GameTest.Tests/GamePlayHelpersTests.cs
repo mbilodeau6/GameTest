@@ -3006,4 +3006,111 @@ public class GamePlayHelpersTests
         Assert.Equal(humanResourceCount + 1, human.ResourceCount);
         Assert.Equal(botResourceCount - 1, bot.ResourceCount);
     }
+
+    [Fact]
+    public void PlaceSecondRoad_OnFirstPlaceRoad_Invalid()
+    {
+        // Arrange
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        board.GetVertex(TestVertex.V2).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E8).BuildRoad(board.GetBluePlayer());
+        board.GetVertex(TestVertex.V4).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E10).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V6).BuildSettlement(board.GetRedPlayer());
+
+        board.GetGameState().Phase.CurrentPlayer = board.GetRedPlayer();
+        board.GetGameState().Phase.EndPlayer = board.GetBluePlayer();
+        board.GetGameState().Phase.PhaseState = GameStates.PlaceSecondRoad;
+
+        // Act
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(board.GetGameState(), board.GetRedPlayer().Id, board.GetEdge(TestEdge.E22).Id);
+
+        // Assert
+        Assert.False(response.Success);
+        Assert.Equal(1042, response.ErrorCode);
+    }
+
+    [Fact]
+    public void FindVertexWithoutRoads_OnlyOneSettelment_HasNoRoad()
+    {
+        // Arrange
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+
+        // Act
+        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
+
+        // Assert
+        Assert.NotNull(vertex);
+        Assert.NotEmpty(vertex.Edges);
+        Assert.Equal(board.GetVertex(TestVertex.V10).Id, vertex.Id);
+        Assert.True(vertex.Edges.All(e => e.Owner == null));
+    }
+
+    [Fact]
+    public void FindVertexWithoutRoads_OnlyOneSettelment_HasRoad()
+    {
+        // Arrange
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E8).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetBluePlayer()); // Opponents settlment
+
+        // Act
+        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
+
+        // Assert
+        Assert.Null(vertex);
+    }
+
+    [Fact]
+    public void FindVertexWithoutRoads_TwoSettelments_OneWithoutRoad()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E8).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetBluePlayer()); // Opponents settlment
+        board.GetEdge(TestEdge.E5).BuildRoad(board.GetBluePlayer()); // Oppenents settlement
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+
+        // Act
+        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
+
+        // Assert
+        Assert.NotNull(vertex);
+        Assert.NotEmpty(vertex.Edges);
+        Assert.Equal(board.GetVertex(TestVertex.V3).Id, vertex.Id);
+        Assert.True(vertex.Edges.All(e => e.Owner == null));    
+    }
+
+    [Fact]
+    public void FindVertexWithoutRoads_TwoSettelments_BothHaveRoad()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E8).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetBluePlayer()); // Opponents settlment
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E2).BuildRoad(board.GetRedPlayer()); 
+
+        // Act
+        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
+
+        // Assert
+        Assert.Null(vertex);
+    }
+
+    [Fact]
+    public void FindVertexWithoutRoads_TwoSettelmentsWithoutRoad_Exception()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetBluePlayer()); // Opponents settlment
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+
+        // Act & Assert
+        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.Null(vertex);
+    }
 }

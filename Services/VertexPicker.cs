@@ -28,7 +28,7 @@ public class VertexPicker
         else if (gs.Phase.PhaseState == GameStates.PlaceFirstRoad || gs.Phase.PhaseState == GameStates.PlaceSecondRoad)
         {
             // Search for vertices that can be reached from new settlement
-            var targetVertex = AIHelpers.FindVertexWithoutRoads(gs, gs.Phase.CurrentPlayer);
+            var targetVertex = GamePlayHelpers.FindSettlementWithNoRoads(gs, gs.Phase.CurrentPlayer);
             TargetVertices = AIHelpers.GetRankedListOfVertexTargets(gs, new List<Vertex> { targetVertex });
         }
         else

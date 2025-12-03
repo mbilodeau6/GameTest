@@ -358,6 +358,24 @@ public static class GamePlayHelpers
             gs.Phase.PhaseState == GameStates.BuildOrTrade;
     }
 
+    public static Vertex FindSettlementWithNoRoads(GameState gs, Player player)
+    {
+        List<Vertex> verticesWithoutRoads = new List<Vertex>();
+        foreach(var vertex in gs.Vertices.FindAll(v => v.Owner != null && v.Owner.Id == player.Id))
+            if (vertex.Edges.All(e => e.Owner == null))
+                verticesWithoutRoads.Add(vertex);
+
+        if (verticesWithoutRoads.Count > 1)
+            throw new InvalidOperationException("Invalid state. A valid game can not have two or more settlements without any roads.");
+
+        if (verticesWithoutRoads.Count == 1)
+            return verticesWithoutRoads.First();
+        else
+            throw new InvalidOperationException("Unexpected Error. FindSettlementWithNoRoads() could not find a vertex without a road.");
+    }
+
+
+
     private static bool BuildCityPhase(GameState gs)
     {
         return gs.Phase.PhaseState == GameStates.BuildOrTrade;
@@ -368,12 +386,17 @@ public static class GamePlayHelpers
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
             WithdrawResourcesToBuildRoad(player);
 
+        if (gs.Phase.PhaseState == GameStates.PlaceSecondRoad)
+        {
+            var targetVertex =  FindSettlementWithNoRoads(gs, player);
+            if (!edge.Vertices.Any(v => v.Id == targetVertex.Id))
+            throw new InvalidOperationException($"Unexpected Error. Attempting to place second road away from second settlement. GameId: {gs.Id}; EdgeId: {edge.Id}; Player: {player.Id}");
+        }
+
         edge.BuildRoad(player);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
     }
 
-    // TODO: Return a GameResult type that can indicate success/failure and include messages.
-    // Right now, an empty string indicates success.
     public static ResponseDTO BuildRoadRequestFromUser(GameState gs, string playerId, string edgeId)
     {
         if (!BuildRoadPhase(gs) || gs.Phase.CurrentPlayer == null)
@@ -396,6 +419,13 @@ public static class GamePlayHelpers
 
         if (!IsEdgeAdjacentToPlayerBuild(gs, edge, player))
             return new ResponseDTO(false, 1015, $"GameId: {gs.Id}; EdgeId: {edgeId}; Player: {playerId}", null as GameStateDTO);
+
+        if (gs.Phase.PhaseState == GameStates.PlaceSecondRoad)
+        {
+            var targetVertex =  FindSettlementWithNoRoads(gs, player);
+            if (!edge.Vertices.Any(v => v.Id == targetVertex.Id))
+                return new ResponseDTO(false, 1042, $"GameId: {gs.Id}; EdgeId: {edgeId}; Player: {playerId}", null as GameStateDTO);
+        }
 
         if (edge.Owner != null)
             return new ResponseDTO(false, 1016, $"GameId: {gs.Id}; EdgeId: {edgeId}", null as GameStateDTO);

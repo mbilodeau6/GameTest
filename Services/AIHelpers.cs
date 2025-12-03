@@ -184,22 +184,6 @@ public static class AIHelpers
         return rankedGoals.OrderByDescending(g => g.OverallScore).ToList();
     }
 
-    public static Vertex FindVertexWithoutRoads(GameState gs, Player player)
-    {
-        List<Vertex> verticesWithoutRoads = new List<Vertex>();
-        foreach(var vertex in gs.Vertices.FindAll(v => v.Owner != null && v.Owner.Id == player.Id))
-            if (vertex.Edges.All(e => e.Owner == null))
-                verticesWithoutRoads.Add(vertex);
-
-        if (verticesWithoutRoads.Count > 1)
-            throw new InvalidOperationException("Invalid state. A valid game can not have two or more settlements without any roads.");
-
-        if (verticesWithoutRoads.Count == 1)
-            return verticesWithoutRoads.First();
-        else
-            return null;
-    }
-
     public static Dictionary<ResourceType, int> CalculateResourcesNeededForRoad(Dictionary<ResourceType, int> ownedResources)
     {
         var needed = new Dictionary<ResourceType, int>();

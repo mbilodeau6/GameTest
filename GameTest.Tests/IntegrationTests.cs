@@ -29,7 +29,7 @@ public class IntegrationTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetRedPlayer());
 
-        // Build Bot's first settlement and road
+        // Build Bot's first settlement (triggers bot to build road)
         Assert.True(
             GamePlayHelpers.BuildSettlementRequestFromUser(
                 board.GetGameState(), 
