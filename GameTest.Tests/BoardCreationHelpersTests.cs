@@ -90,60 +90,6 @@ public class BoardCreationHelpersTests
     }
 
     [Fact]
-    public void CreateTilesForTestBoard_CorrectTiles()
-    {
-        // Act
-        var tiles = BoardCreationHelpers.CreateTilesForTestBoard();
-
-        // Assert
-        Assert.Equal(7, tiles.Count);
-        Assert.Equal(ResourceType.Desert, tiles.GetTileAt(-1, -1).Resource);
-        Assert.Equal(ResourceType.Wool, tiles.GetTileAt(1, -1).Resource);
-        Assert.Equal(11, tiles.GetTileAt(1, -1).DiceNumber);
-        Assert.Equal(ResourceType.Brick, tiles.GetTileAt(-2, 0).Resource);
-        Assert.Equal(5, tiles.GetTileAt(-2, 0).DiceNumber);
-        Assert.Equal(ResourceType.Grain, tiles.GetTileAt(0, 0).Resource);
-        Assert.Equal(9, tiles.GetTileAt(0, 0).DiceNumber);
-        Assert.Equal(ResourceType.Ore, tiles.GetTileAt(2, 0).Resource);
-        Assert.Equal(3, tiles.GetTileAt(2, 0).DiceNumber);
-        Assert.Equal(ResourceType.Wool, tiles.GetTileAt(-1, 1).Resource);
-        Assert.Equal(2, tiles.GetTileAt(-1, 1).DiceNumber);
-        Assert.Equal(ResourceType.Wood, tiles.GetTileAt(1, 1).Resource);
-        Assert.Equal(6, tiles.GetTileAt(1, 1).DiceNumber);
-    }
-
-    [Fact]
-    public void CreateEdgesAndVerticesForTestBoard_AllCreated()
-    {
-        // Act
-        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-
-        gameState.Players.Add(new Player("Alice", PlayerColor.Red));
-        gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
-
-        // Assert
-        Assert.Equal(30, gameState.Edges.Count);
-        Assert.Equal(24, gameState.Vertices.Count);
-        Assert.True(TestHelpers.IsGameStateValid(gameState));
-
-        // Check specific edges and vertices
-        // Check that inner tile at (0,0) has edges and vertices connected correctly
-        var t1 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 0);
-        var t2 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 2, 0);
-        var t3 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 1, -1);
-        Assert.NotNull(gameState.Edges.FirstOrDefault(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t2)));
-        Assert.NotNull(gameState.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Tiles.Contains(t2) && v.Tiles.Contains(t3)));
-
-        // Check that corner tile at (-2,0) has edges and vertices connected correctly
-        var t4 = BoardCreationHelpers.GetTileAt(gameState.Tiles, -2, 0);
-        Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t4)));
-        Assert.Equal(3, gameState.Edges.Count(e => e.Tiles.Contains(t4) && e.Direction != null));
-        Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t4)));
-        Assert.Equal(2, gameState.Vertices.Count(v => v.Tiles.Contains(t4) && v.Direction != null));
-        Assert.NotNull(gameState.Edges.FirstOrDefault(e => e.Tiles.Contains(t4) && e.Direction == HexDirection.W));
-    }
-
-    [Fact]
     public void CreateEdgesAndVerticesForStarterBoard_AllCreated()
     {
         // Act
@@ -195,7 +141,7 @@ public class BoardCreationHelpersTests
     public void AddPlayers_AddTwoPlayers()
     {
         // Arrange
-        var gameState = new GameState(Guid.NewGuid(), GameType.Default);
+        var gameState = new GameState(Guid.NewGuid());
 
         // Act
         BoardCreationHelpers.AddPlayers(gameState);
@@ -252,7 +198,7 @@ public class BoardCreationHelpersTests
     [Fact]
     public void AddPortsForStarter_UnsupportedGameType()
     {
-        GameState gs = new GameState(new Guid(), GameType.Default);
+        GameState gs = new GameState(new Guid());
         Assert.Throws<InvalidOperationException>(() => BoardCreationHelpers.AddPortsForStarter(gs));
     }
 

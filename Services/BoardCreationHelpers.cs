@@ -199,10 +199,6 @@ public static class BoardCreationHelpers
                 foreach (var tile in CreateTilesForStarterBoard())
                     gameState.AddTile(tile);
                 break;
-            case GameType.Test:
-                foreach (var tile in CreateTilesForTestBoard())
-                    gameState.AddTile(tile);
-                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(gameType), $"Unhandled game type: {gameType}");
         }
@@ -220,28 +216,6 @@ public static class BoardCreationHelpers
             case GameType.Starter:
                 BoardCreationHelpers.AddPortsForStarter(gameState); 
                 break;           
-        }
-
-        if (gameType == GameType.Test)
-        {
-            // Add some roads/settlements for testing purposes
-            var BrickTile = GetTileAt(gameState.Tiles, -2, 0);
-            var GrainTile = GetTileAt(gameState.Tiles, 0, 0);
-            var OreTile = GetTileAt(gameState.Tiles, 2, 0);
-            var LowerWoolTile = GetTileAt(gameState.Tiles, -1, 1);
-            var WoodTile = GetTileAt(gameState.Tiles, 1, 1);
-
-            var redEdge = gameState.Edges.First(e => e.Tiles.Contains(BrickTile) && e.Tiles.Contains(LowerWoolTile));
-            redEdge.BuildRoad(gameState.Players[0]);
-
-            var redVertex = gameState.Vertices.First(v => v.Tiles.Contains(BrickTile) && v.Tiles.Contains(GrainTile) && v.Tiles.Contains(LowerWoolTile));
-            redVertex.BuildSettlement(gameState.Players[0]);
-
-            var blueEdge = gameState.Edges.First(e => e.Tiles.Contains(GrainTile) && e.Tiles.Contains(WoodTile));
-            blueEdge.BuildRoad(gameState.Players[1]);
-
-            var blueVertex = gameState.Vertices.First(v => v.Tiles.Contains(OreTile) && v.Tiles.Contains(GrainTile) && v.Tiles.Contains(WoodTile));
-            blueVertex.BuildSettlement(gameState.Players[1]);
         }
 
         return gameState;
@@ -460,7 +434,7 @@ public static class BoardCreationHelpers
     public static void AddPortsForStarter(GameState gs)
     {
         if (gs.Settings.Type != GameType.Starter)
-            throw new InvalidOperationException("AddPorts only works with GameType.Default.");
+            throw new InvalidOperationException("AddPortsForStarter only works with GameType.Starter.");
 
         var ore10Tile = GetTileAt(gs.Tiles, -2, -2);
         var v1 = GetVertexFromTileInfo(gs.Vertices, ore10Tile, null, null, VertexDirection.N);

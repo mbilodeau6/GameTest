@@ -203,7 +203,7 @@ public class TestGameBoard
 
     public TestGameBoard(List<ResourceType> resources, List<int> diceValues, bool bluePlayerBot = false)
     {
-         GS = new GameState(new Guid());
+         GS = new GameState(new Guid(), GameType.Test);
          CreateBoardInGameState(resources, diceValues);
 
          GS.Players.Add(new Player("PlayerA", PlayerColor.Red));

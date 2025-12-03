@@ -12,7 +12,7 @@ public class GamePlayHelpersTests
     public void GetResourcesEarnedOnLastRoll_NoBuildingsOnMatchingTiles()
     {
         // Arrage
-        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        var gameState = TestHelpers.CreateOriginalTestBoard().GetGameState();
         gameState.SetDiceForTesting(new GameDice(new GameDie(3), new GameDie(5)));
 
         // Act
@@ -26,35 +26,22 @@ public class GamePlayHelpersTests
     public void GetResourcesEarnedOnLastRoll_BuildingsOnMatchingTiles()
     {
         // Arrage
-        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
 
-        var targetTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 0);
-        Assert.NotNull(targetTile);
-        Assert.Equal(9, targetTile.DiceNumber);
-
-        var bluePlayer = gameState.Players.First(p => p.Color == PlayerColor.Blue);
-        Assert.NotNull(bluePlayer);
-        var redPlayer = gameState.Players.First(p => p.Color == PlayerColor.Red);
-        Assert.NotNull(redPlayer);
-
-        var blueVertex = gameState.Vertices.First(v => v.Tiles.Contains(targetTile) && v.Owner == bluePlayer);
-        Assert.NotNull(blueVertex);
-        Assert.Equal(BuildingType.Settlement, blueVertex.Building);
-        blueVertex.UpgradeToCity();
-
-        gameState.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(5)));
+        board.GetGameState().SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(5)));
 
         // Act
-        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(gameState);
+        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(board.GetGameState());
 
         // Assert
         Assert.NotEmpty(resources);
-        Assert.True(resources.ContainsKey(bluePlayer));
-        Assert.True(resources.ContainsKey(redPlayer));
-        Assert.True(resources[redPlayer].ContainsKey(ResourceType.Grain));
-        Assert.Equal(1, resources[redPlayer][ResourceType.Grain]);
-        Assert.True(resources[bluePlayer].ContainsKey(ResourceType.Grain));
-        Assert.Equal(2, resources[bluePlayer][ResourceType.Grain]);
+        Assert.True(resources.ContainsKey(board.GetBluePlayer()));
+        Assert.True(resources.ContainsKey(board.GetRedPlayer()));
+        Assert.True(resources[board.GetRedPlayer()].ContainsKey(ResourceType.Grain));
+        Assert.Equal(1, resources[board.GetRedPlayer()][ResourceType.Grain]);
+        Assert.True(resources[board.GetBluePlayer()].ContainsKey(ResourceType.Grain));
+        Assert.Equal(2, resources[board.GetBluePlayer()][ResourceType.Grain]);
     }
 
     [Fact]
@@ -610,41 +597,16 @@ public class GamePlayHelpersTests
         Assert.Equal(7, bluePlayer.VictoryPoints);
     }
 
-    private void BuildTestCities(TestGameBoard board, int count)
-    {
-        int vIndex = 0;
-
-        for (int i = 0; i < count; i++)
-        {
-            while (board.GetGameState().Vertices[vIndex].Building != null)
-                vIndex++;
-
-            board.GetGameState().Vertices[vIndex].BuildSettlement(board.GetCurrentPlayer());
-            board.GetGameState().Vertices[vIndex].UpgradeToCity();
-        }
-    }
-
-    private void BuildTestSettlements(TestGameBoard board, int count)
-    {
-        int vIndex = 0;
-
-        for (int i = 0; i < count; i++)
-        {
-            while (board.GetGameState().Vertices[vIndex].Building != null)
-                vIndex++;
-
-            board.GetGameState().Vertices[vIndex].BuildSettlement(board.GetCurrentPlayer());
-        }
-    }
-
     [Fact]
     public void PlayerHasWon_DefaultThreshold_Not_Met()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
         Assert.True(board.InExpectedState(GameStates.RollOrUseDevCard, board.GetRedPlayer()));
-        BuildTestCities(board, 4);
-        BuildTestSettlements(board, 1);
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
 
         Assert.False(GamePlayHelpers.PlayerHasWon(board.GetGameState(), board.GetRedPlayer()));
     }
@@ -655,8 +617,11 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
         Assert.True(board.InExpectedState(GameStates.RollOrUseDevCard, board.GetRedPlayer()));
-        BuildTestCities(board, 4);
-        BuildTestSettlements(board, 2);
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V10).UpgradeToCity();
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
 
         Assert.True(GamePlayHelpers.PlayerHasWon(board.GetGameState(), board.GetRedPlayer()));
     }
@@ -1038,8 +1003,11 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        BuildTestCities(board, 4);
-        BuildTestSettlements(board, 2);
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V10).UpgradeToCity();
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
 
         var phase = GamePlayHelpers.GetNextPhase(board.GetGameState());
 
@@ -1878,117 +1846,98 @@ public class GamePlayHelpersTests
         Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
     }
 
-    private static GameState CreateBoardWithOnlyOneOfEachBuildAvailable()
+    private static TestGameBoard CreateBoardWithOnlyOneOfEachBuildAvailable()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        var player = gs.Players.First(p => !p.IsBot);
-
-        var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
-        var brickTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
-        var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
-        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var player = board.GetRedPlayer();
 
         // build all but one road
-        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, null, HexDirection.SW).BuildRoad(player);
-        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, grainTile, null).BuildRoad(player);
-        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, desertTile, null).BuildRoad(player);
-        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, desertTile, null).BuildRoad(player);
+        board.GetEdge(TestEdge.E25).BuildRoad(player);
+        board.GetEdge(TestEdge.E5).BuildRoad(player);
+        board.GetEdge(TestEdge.E12).BuildRoad(player);
+        board.GetEdge(TestEdge.E6).BuildRoad(player);
 
         // build all but one city
-        gs.Vertices.First(v => v.Building == BuildingType.Settlement && v.Owner != null && v.Owner.Id == player.Id).UpgradeToCity();
+        board.GetVertex(TestVertex.V5).UpgradeToCity();
 
         // build all but one settlement
-        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, null, null, VertexDirection.SW).BuildSettlement(player);
-        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brickTile, desertTile, null, null).BuildSettlement(player);
+        board.GetVertex(TestVertex.V20).BuildSettlement(player);
+        board.GetVertex(TestVertex.V22).BuildSettlement(player);
 
-        return gs;
+        return board;
     }
 
-    private static GameState CreateBoardWithAllBuildingsInUse()
+    private static TestGameBoard CreateBoardWithAllBuildingsInUse()
     {
-        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.First(p => !p.IsBot);
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
 
         // Build remaining buildings to hit max
-        var wool2Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
-        var desertTile = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
-        var wool11Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
-        var grainTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V1).UpgradeToCity();
+        board.GetEdge(TestEdge.E24).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V18).BuildSettlement(board.GetRedPlayer());
 
-        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, desertTile, grainTile, wool11Tile, null);
-        v1.BuildSettlement(player);
-        v1.UpgradeToCity();
-
-        BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, null, HexDirection.W).BuildRoad(player);
-        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wool2Tile, null, null, VertexDirection.SW).BuildSettlement(player);
-
-        return gs;
+        return board;
     }
 
     [Fact]
     public void UnusedRoadAvailable_Yes()
     {
         // Arrange
-        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.First(p => !p.IsBot);
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
 
         // Act & Assert
-        Assert.True(GamePlayHelpers.UnusedRoadAvailable(gs, player)); 
+        Assert.True(GamePlayHelpers.UnusedRoadAvailable(board.GetGameState(), board.GetRedPlayer())); 
     }
 
     [Fact]
     public void UnusedRoadAvailable_No()
     {
         // Arrange
-        var gs = CreateBoardWithAllBuildingsInUse();
-        var player = gs.Players.First(p => !p.IsBot);
+        var board = CreateBoardWithAllBuildingsInUse();
 
         // Act & Assert
-        Assert.False(GamePlayHelpers.UnusedRoadAvailable(gs, player)); 
+        Assert.False(GamePlayHelpers.UnusedRoadAvailable(board.GetGameState(), board.GetRedPlayer())); 
     }
 
     [Fact]
     public void UnusedSettlementAvailable_Yes()
     {
         // Arrange
-        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.First(p => !p.IsBot);
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
 
         // Act & Assert
-        Assert.True(GamePlayHelpers.UnusedSettlementAvailable(gs, player)); 
+        Assert.True(GamePlayHelpers.UnusedSettlementAvailable(board.GetGameState(), board.GetRedPlayer())); 
     }
 
     [Fact]
     public void UnusedSettlementAvailable_No()
     {
         // Arrange
-        var gs = CreateBoardWithAllBuildingsInUse();
-        var player = gs.Players.First(p => !p.IsBot);
+        var board = CreateBoardWithAllBuildingsInUse();
 
         // Act & Assert
-        Assert.False(GamePlayHelpers.UnusedSettlementAvailable(gs, player)); 
+        Assert.False(GamePlayHelpers.UnusedSettlementAvailable(board.GetGameState(), board.GetRedPlayer())); 
     }
 
     [Fact]
     public void UnusedCityAvailable_Yes()
     {
         // Arrange
-        var gs = CreateBoardWithOnlyOneOfEachBuildAvailable();
-        var player = gs.Players.First(p => !p.IsBot);
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
 
         // Act & Assert
-        Assert.True(GamePlayHelpers.UnusedCityAvailable(gs, player)); 
+        Assert.True(GamePlayHelpers.UnusedCityAvailable(board.GetGameState(), board.GetRedPlayer())); 
     }
 
     [Fact]
     public void UnusedCityAvailable_No()
     {
         // Arrange
-        var gs = CreateBoardWithAllBuildingsInUse();
-        var player = gs.Players.First(p => !p.IsBot);
+        var board = CreateBoardWithAllBuildingsInUse();
 
         // Act & Assert
-        Assert.False(GamePlayHelpers.UnusedCityAvailable(gs, player)); 
+        Assert.False(GamePlayHelpers.UnusedCityAvailable(board.GetGameState(), board.GetRedPlayer())); 
     }
 
     [Fact]
@@ -2027,12 +1976,12 @@ public class GamePlayHelpersTests
     public void RollDice_InvalidState_Exception()
     {
         // Arrange
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        gs.Phase.PhaseState = GameStates.BuildOrTrade;
-        gs.Phase.CurrentPlayer = gs.Players[0];
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase.PhaseState = GameStates.BuildOrTrade;
+        board.GetGameState().Phase.CurrentPlayer = board.GetRedPlayer();
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RollDice(gs));
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RollDice(board.GetGameState()));
     }
 
     private static GameState CreateGameForRobberTesting(GameStates previousState)
@@ -2117,15 +2066,15 @@ public class GamePlayHelpersTests
     public void PlaceRobber_ValidMove()
     {
         // Arrange
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        var human = gs.Players.First(p => !p.IsBot);
-        var bot = gs.Players.First(p => p.IsBot);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var human = board.GetRedPlayer();
+        var bot = board.GetBluePlayer();
         bot.AssignResources(ResourceType.Ore, 2);
-        var botTile = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == bot.Id).Tiles.First(t => t.Resource != ResourceType.Desert);
+        var botTile = board.GetTile(TestTile.T2);
 
-        gs.Phase.CurrentPlayer = human;
-        gs.Phase.PhaseState = GameStates.PlaceRobber;
-        gs.Phase.SetStateToReturnTo(GameStates.BuildOrTrade, gs.RobberTile);
+        board.GetGameState().Phase.CurrentPlayer = human;
+        board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetGameState().RobberTile);
 
         Assert.Contains(ResourceType.Ore, human.Resources);
         Assert.Equal(0, human.Resources[ResourceType.Ore]);
@@ -2133,13 +2082,13 @@ public class GamePlayHelpersTests
         Assert.Equal(2, bot.Resources[ResourceType.Ore]);
 
         // Act
-        GamePlayHelpers.PlaceRobber(gs, human, botTile);
-        GamePlayHelpers.GameLoop(gs);
+        GamePlayHelpers.PlaceRobber(board.GetGameState(), human, botTile);
+        GamePlayHelpers.GameLoop(board.GetGameState());
 
         // Assert
-        Assert.Equal(botTile.Id, gs.RobberTile.Id);
-        Assert.Null(gs.Phase.PreviousState);
-        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.Equal(botTile.Id, board.GetGameState().RobberTile.Id);
+        Assert.Null(board.GetGameState().Phase.PreviousState);
+        Assert.Equal(GameStates.BuildOrTrade, board.GetGameState().Phase.PhaseState);
         Assert.Contains(ResourceType.Ore, human.Resources);
         Assert.Equal(1, human.Resources[ResourceType.Ore]);
         Assert.Contains(ResourceType.Ore, bot.Resources);

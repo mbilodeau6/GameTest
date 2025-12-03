@@ -35,7 +35,7 @@ public class AIHelpersTests
     [Fact]
     public void GetBaseResourceAcquisitionRates_NoOwnedVertices_AllZero()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
+        var gs = TestHelpers.CreateOriginalTestBoardWithSettlements().GetGameState();
         gs.AddPlayer(new Player("Player3", PlayerColor.Red, isBot: false));
         
         Dictionary<ResourceType, double> baseRates = AIHelpers.GetBaseResourceAcquisitionRates(gs, gs.Players[2]);
@@ -52,10 +52,9 @@ public class AIHelpersTests
     [Fact]
     public void GetBaseResourceAcquisitionRates_OwnedVertices_CorrectRates()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        Assert.Equal(PlayerColor.Blue, gs.Players[1].Color);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
 
-        Dictionary<ResourceType, double> baseRates = AIHelpers.GetBaseResourceAcquisitionRates(gs, gs.Players[1]);
+        Dictionary<ResourceType, double> baseRates = AIHelpers.GetBaseResourceAcquisitionRates(board.GetGameState(), board.GetBluePlayer());
 
         Assert.Equal(0.0, baseRates[ResourceType.Brick]);
         Assert.Equal(0.0, baseRates[ResourceType.Wool]);
@@ -67,13 +66,11 @@ public class AIHelpersTests
     [Fact]
     public void GetSettlementToUpgrade_NoOwnedSettlements_Null()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
-        gs.Phase.CurrentPlayer = gs.Players[0];
-        var existingSettlement = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == gs.Players[0].Id);
-        existingSettlement.UpgradeToCity();
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        board.GetGameState().Phase.CurrentPlayer = board.GetRedPlayer();
+        board.GetVertex(TestVertex.V5).UpgradeToCity();
 
-        var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(gs);
+        var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(board.GetGameState());
 
         Assert.Null(settlementToUpgrade);
     }
@@ -81,33 +78,25 @@ public class AIHelpersTests
     [Fact]
     public void GetSettlementToUpgrade_SelectHigherProducingSettlement()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
-        gs.Phase.CurrentPlayer = gs.Players[0];
-        gs.Players[0].AssignResources(ResourceType.Ore, 3);
-        gs.Players[0].AssignResources(ResourceType.Grain, 2);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        board.GetGameState().Phase.CurrentPlayer = board.GetRedPlayer();
+        board.GetRedPlayer().AssignResources(ResourceType.Ore, 3);
+        board.GetRedPlayer().AssignResources(ResourceType.Grain, 2);
+        board.GetVertex(TestVertex.V22).BuildSettlement(board.GetRedPlayer());
 
-        var vertex1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == gs.Players[0].Id);
-
-        var tile1 = gs.Tiles.First(t => t.Resource == ResourceType.Brick);
-        var tile2 = gs.Tiles.First(t => t.Resource == ResourceType.Desert);
-        var vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
-        vertex2.BuildSettlement(gs.Phase.CurrentPlayer);
-
-        var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(gs);
+        var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(board.GetGameState());
 
         Assert.NotNull(settlementToUpgrade);
-        Assert.Equal(vertex1.Id, settlementToUpgrade.Id);
+        Assert.Equal(board.GetVertex(TestVertex.V5).Id, settlementToUpgrade.Id);
     }
 
     [Fact]
     public void GetVertexReadyForSettlement_NoAvailableVertices_Null()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
-        gs.Phase.CurrentPlayer = gs.Players[0];
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        board.GetGameState().Phase.CurrentPlayer = board.GetRedPlayer();
 
-        var vertexForSettlement = AIHelpers.GetVertexReadyForSettlement(gs);
+        var vertexForSettlement = AIHelpers.GetVertexReadyForSettlement(board.GetGameState());
 
         Assert.Null(vertexForSettlement);
     }
@@ -115,33 +104,20 @@ public class AIHelpersTests
     [Fact]
     public void GetVertexReadyForSettlement_ThreeOptions_BestSelected()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Test);
-        GamePlayHelpers.MarkBlockedVertices(gs);
-        BoardCreationHelpers.LinkEdgesAndVertices(gs);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
 
-        Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
-        gs.Phase.CurrentPlayer = gs.Players[0];
+        board.GetGameState().Phase.CurrentPlayer = board.GetRedPlayer();
 
-        var brickTile = gs.Tiles.First(t => t.Resource == ResourceType.Brick);
-        var e1 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, brickTile, null, HexDirection.SW);
-        e1.BuildRoad(gs.Phase.CurrentPlayer);
-        var wool2Tile = gs.Tiles.First(t => t.Resource == ResourceType.Wool && t.DiceNumber == 2);
-        var e2 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, wool2Tile, null, HexDirection.W);
-        e2.BuildRoad(gs.Phase.CurrentPlayer);
-        var grainTile = gs.Tiles.First(t => t.Resource == ResourceType.Grain);
-        var e3 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, grainTile, brickTile, null);
-        e3.BuildRoad(gs.Phase.CurrentPlayer);
-        var dessertTile = gs.Tiles.First(t => t.Resource == ResourceType.Desert);
-        var e4 = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, dessertTile, grainTile, null);
-        e4.BuildRoad(gs.Phase.CurrentPlayer);
+        board.GetEdge(TestEdge.E25).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E24).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E5).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E6).BuildRoad(board.GetRedPlayer());
 
-        var wool11Tile = gs.Tiles.First(t => t.Resource == ResourceType.Wool && t.DiceNumber == 11);
-        var expectedVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, wool11Tile, grainTile, dessertTile, null);
-
-        var vertexForSettlement = AIHelpers.GetVertexReadyForSettlement(gs);
+        var vertexForSettlement = AIHelpers.GetVertexReadyForSettlement(board.GetGameState());
 
         Assert.NotNull(vertexForSettlement);
-        Assert.Equal(expectedVertex.Id, vertexForSettlement.Id);
+        Assert.Equal(board.GetVertex(TestVertex.V1).Id, vertexForSettlement.Id);
     }
 
     private GameState CreateGameStateForOwnershipTesting()
