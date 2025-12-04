@@ -31,7 +31,7 @@ public class GameState
 
     public List<DevelopmentCardType> DevelopmentCards { get; private set; } = new List<DevelopmentCardType>();
 
-    public GamePhase Phase { get; set; } = new GamePhase(GameStates.SettingUpBoard);
+    public GamePhase Phase { get; set; }
 
     public List<Port> Ports {get; } = new();
 
@@ -61,6 +61,8 @@ public class GameState
     {
         Id = guid;
         Settings = type == GameType.Test ? new GameSettings(type, 2, 5, 6, 3, 2) : new GameSettings(type);
+
+        Phase = new GamePhase(GameStates.SettingUpBoard, Settings.VictoryPointsToWin);
 
         if (type == GameType.Test)
             Dice = new GameDice(false);

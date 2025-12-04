@@ -141,22 +141,6 @@ public static class GamePlayHelpers
         }
     }
 
-    public static Player GetNextPlayer(Player currentPlayer, List<Player> players)
-    {
-        int currentPlayerIndex = players.FindIndex(p => p.Id == currentPlayer.Id);
-        int nextPlayerIndex = (currentPlayerIndex + 1) % players.Count;
-
-        return players[nextPlayerIndex];
-    }
-
-    public static Player GetPreviousPlayer(Player currentPlayer, List<Player> players)
-    {
-        int currentPlayerIndex = players.FindIndex(p => p.Id == currentPlayer.Id);
-        int previousPlayerIndex = (currentPlayerIndex + players.Count - 1) % players.Count;
-
-        return players[previousPlayerIndex];
-    }
-
     public static int CountSettlementsForPlayer(GameState gs, Player player)
     {
         return gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
@@ -186,106 +170,6 @@ public static class GamePlayHelpers
         player.SetVictoryPoints(victoryPoints);
     }
 
-    public static bool PlayerHasWon(GameState gs, Player player)
-    {
-        UpdatePlayerVictoryPoints(gs, player);
-        return player.VictoryPoints >= gs.Settings.VictoryPointsToWin;
-    }
-
-    public static GamePhase GetNextPhase(GameState gameState)
-    {
-        var nextPhase = new GamePhase(gameState.Phase);
-
-        if (gameState.Phase.PhaseState == GameStates.SettingUpBoard)
-        {
-            nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
-            nextPhase.CurrentPlayer = gameState.Players[_random.Next(gameState.Players.Count)];
-            nextPhase.EndPlayer = GamePlayHelpers.GetPreviousPlayer(nextPhase.CurrentPlayer, gameState.Players);
-        }
-        else
-        {
-            if (gameState.Phase.CurrentPlayer == null)
-                throw new InvalidOperationException("CurrentPlayer expected to be set to a valid value.");
-
-            if (PlayerHasWon(gameState, gameState.Phase.CurrentPlayer))
-            {
-                nextPhase.PhaseState = GameStates.GameOver;
-            }
-            else if (gameState.Phase.PhaseState == GameStates.PlaceFirstSettlement)
-            {
-                if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
-                    nextPhase.PhaseState = GameStates.PlaceFirstRoad;
-            }
-            else if (gameState.Phase.PhaseState == GameStates.PlaceFirstRoad)
-            {
-                if (CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 0)
-                {
-                    if (gameState.Phase.CurrentPlayer == gameState.Phase.EndPlayer)
-                    {
-                        nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
-                        nextPhase.EndPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
-                    }
-                    else
-                    {
-                        nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
-                        nextPhase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
-                    }
-                }
-            }
-            else if (gameState.Phase.PhaseState == GameStates.PlaceSecondSettlement)
-            {
-                if (CountSettlementsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 1)
-                    nextPhase.PhaseState = GameStates.PlaceSecondRoad;
-            }
-            else if (gameState.Phase.PhaseState == GameStates.PlaceSecondRoad)
-            {
-                if (CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > 1)
-                {
-                    if (gameState.Phase.CurrentPlayer == gameState.Phase.EndPlayer)
-                    {
-                        nextPhase.PhaseState = GameStates.RollOrUseDevCard;
-                        nextPhase.SetWaitingForRoll();
-                        nextPhase.EndPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
-                    }
-                    else
-                    {
-                        nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
-                        nextPhase.CurrentPlayer = GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
-                    }
-                }
-            }
-            else if (gameState.Phase.PhaseState == GameStates.RollOrUseDevCard && !gameState.Phase.WaitingForRoll)
-            {
-                if (gameState.Dice.Die1.Value + gameState.Dice.Die2.Value == 7)
-                {
-                    nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, gameState.RobberTile);
-                    nextPhase.PhaseState = GameStates.PlaceRobber;
-                }
-                else
-                    nextPhase.PhaseState = GameStates.BuildOrTrade;
-            }
-            else if (gameState.Phase.PhaseState == GameStates.PlaceRobber 
-                && gameState.Phase.PreviousState != null 
-                && gameState.Phase.OriginalRobberTile != null && gameState.RobberTile.Id != gameState.Phase.OriginalRobberTile.Id)
-            {
-                nextPhase.PhaseState = (GameStates)gameState.Phase.PreviousState;
-                nextPhase.ClearRobberState();
-            }
-            else if (gameState.Phase.PhaseState == GameStates.FirstDevCardRoad
-                && CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > gameState.Phase.RoadsPreRoadBuilding)
-                nextPhase.PhaseState = GameStates.SecondDevCardRoad;
-            else if (gameState.Phase.PhaseState == GameStates.SecondDevCardRoad
-                && CountRoadsForPlayer(gameState, gameState.Phase.CurrentPlayer) > gameState.Phase.RoadsPreRoadBuilding + 1
-                && gameState.Phase.PreviousState != null)
-            {
-                nextPhase.PhaseState = (GameStates)gameState.Phase.PreviousState;
-                nextPhase.ClearRoadBuildingState();
-            }
-        }
-
-        return nextPhase;
-    }
-
     public static void EndTurn(Player player, GameState gameState, bool skipGameLoop = false)
     {
         // Verify EndTurn is only called in appropriate circumstances. Expect callers to protects
@@ -301,7 +185,8 @@ public static class GamePlayHelpers
 
         player.MakeNewDevelopmentCardsPlayable();
 
-        gameState.Phase.CurrentPlayer = GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+        // TODO: Shouldn't have GetNextPlayer exposed here.
+        gameState.Phase.CurrentPlayer = gameState.Phase.GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
         gameState.Phase.PhaseState = GameStates.RollOrUseDevCard;
         gameState.Phase.SetWaitingForRoll();
 
@@ -553,7 +438,7 @@ public static class GamePlayHelpers
     {
         int loopCounter = 0; // Failsafe to prevent infinite loops
 
-        gs.Phase = GetNextPhase(gs);
+        gs.Phase = gs.Phase.GetNextPhase(gs.Players, CountSettlementsForPlayer(gs, gs.Phase.CurrentPlayer), CountRoadsForPlayer(gs, gs.Phase.CurrentPlayer), gs.Dice.GetCombinedValue(), gs.RobberTile);
 
         if (gs.Phase.CurrentPlayer == null)
             throw new InvalidOperationException("Shouldn't call GameLoop before current player set.");
@@ -625,7 +510,7 @@ public static class GamePlayHelpers
                     GamePlayHelpers.PlaceRobber(gs, gs.Phase.CurrentPlayer, tile);
                 }
 
-                gs.Phase = GetNextPhase(gs);
+                gs.Phase = gs.Phase.GetNextPhase(gs.Players, CountSettlementsForPlayer(gs, gs.Phase.CurrentPlayer), CountRoadsForPlayer(gs, gs.Phase.CurrentPlayer), gs.Dice.GetCombinedValue(), gs.RobberTile);
             }
         }
     }
@@ -1028,6 +913,7 @@ public static class GamePlayHelpers
         player.PlayDevelopmentCard(DevelopmentCardType.Knight);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
+        UpdatePlayerVictoryPoints(gs, player);
     }
 
     public static ResponseDTO PlayKnightDevCardFromUser(GameState gs, PlayDevCardRequest request)

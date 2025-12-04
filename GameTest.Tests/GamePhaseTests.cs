@@ -1,6 +1,7 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
+using GameTest.Services;
 using System.Security.Cryptography;
 
 namespace GameTest.Tests;
@@ -151,4 +152,474 @@ public class GamePhaseTests
         phaseState.ClearWaitingForRoll();
         Assert.False(phaseState.WaitingForRoll);
     }
+
+    // TODO: Should be private. Need to refactor additional routines in GamePlayHelpers
+    public static bool IsNextPhaseAsExpected(GamePhase nextPhase, GameStates expectedState, Player expectedCurrent, Player? expectedEnd = null)
+    {
+        var result = nextPhase.PhaseState.Equals(expectedState)
+            && nextPhase.CurrentPlayer != null
+            && nextPhase.CurrentPlayer.Id.Equals(expectedCurrent.Id);
+
+        if (expectedEnd != null)
+            return result && nextPhase.EndPlayer != null 
+                && nextPhase.EndPlayer.Id.Equals(expectedEnd.Id);
+        else
+            return result;
+    }
+
+    private static List<Player> CreateListOfPlayersForGetNextPlayerTests()
+    {
+        List<Player> players = new List<Player>();
+        players.Add(new Player("Michael", PlayerColor.Red));
+        players.Add(new Player("Jason", PlayerColor.Blue));
+        players.Add(new Player("Jeff", PlayerColor.White));
+
+        return players;
+    }
+
+    [Fact]
+    public void GetNextPlayer_FirstOfThree()
+    {
+        var players = CreateListOfPlayersForGetNextPlayerTests();
+        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard);
+        var nextPlayer = gamePhase.GetNextPlayer(players[0], players);
+
+        Assert.Equal(players[1], nextPlayer);
+    }
+
+    [Fact]
+    public void GetNextPlayer_SecondOfThree()
+    {
+        var players = CreateListOfPlayersForGetNextPlayerTests();
+        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard);
+        var nextPlayer = gamePhase.GetNextPlayer(players[1], players);
+
+        Assert.Equal(players[2], nextPlayer);
+    }
+
+    [Fact]
+    public void GetNextPlayer_ThreeOfThree()
+    {
+        var players = CreateListOfPlayersForGetNextPlayerTests();
+        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard);
+        var nextPlayer =gamePhase.GetNextPlayer(players[2], players);
+
+        Assert.Equal(players[0], nextPlayer);
+    }
+
+    [Fact]
+    public void GetPreviousPlayer_FirstOfThree()
+    {
+        var players = CreateListOfPlayersForGetNextPlayerTests();
+        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard);
+        var nextPlayer = gamePhase.GetPreviousPlayer(players[0], players);
+
+        Assert.Equal(players[2], nextPlayer);
+    }
+
+    [Fact]
+    public void GetPreviousPlayer_SecondOfThree()
+    {
+        var players = CreateListOfPlayersForGetNextPlayerTests();
+        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard);
+        var nextPlayer = gamePhase.GetPreviousPlayer(players[1], players);
+
+        Assert.Equal(players[0], nextPlayer);
+    }
+
+    [Fact]
+    public void GetPreviousPlayer_ThreeOfThree()
+    {
+        var players = CreateListOfPlayersForGetNextPlayerTests();
+        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard);
+        var nextPlayer = gamePhase.GetPreviousPlayer(players[2], players);
+
+        Assert.Equal(players[1], nextPlayer);
+    }
+
+    [Fact]
+    public void GetNextPhase_SettingUpBoard_MoveToPlaceFirstSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.SettingUpBoard);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.NotNull(phase.CurrentPlayer);
+        if (phase.CurrentPlayer.Id == board.GetRedPlayer().Id)
+            Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetBluePlayer()));
+        else
+            Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceFirstSettlement_NoSettlementStayPut()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceFirstSettlement_MoveToPlaceFirstRoad()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceFirstRoad_NoRoadStayPut()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceFirstRoad_MoveToNextPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 1, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceFirstRoad_MoveToPlaceSecondSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetBluePlayer(), board.GetBluePlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 1, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceSecondSettlement, board.GetBluePlayer(), board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondSettlement_No2ndStayPut()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetBluePlayer(), board.GetRedPlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 1, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceSecondSettlement, board.GetBluePlayer(), board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondSettlement_MoveToPlaceSecondRoad()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetBluePlayer(), board.GetRedPlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 2, 1, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceSecondRoad, board.GetBluePlayer(), board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondRoad_No2ndStayPut()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceSecondRoad, board.GetBluePlayer(), board.GetRedPlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 2, 1, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceSecondRoad, board.GetBluePlayer(), board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondRoad_MoveToNextPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceSecondRoad, board.GetBluePlayer(), board.GetRedPlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 2, 2, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceSecondSettlement, board.GetRedPlayer(), board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceSecondRoad_MoveToRollOrUseDevCard()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceSecondRoad, board.GetRedPlayer(), board.GetRedPlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 2, 2, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_RollOrUseDevCard_NoRollStayPut()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_RollOrUseDevCard_MoveToBuildOrTrade()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+
+        do
+            GamePlayHelpers.RollDice(board.GetGameState(), true);
+        while (board.GetGameState().Dice.GetCombinedValue() == 7);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void GetNextPhase_RollOrUseDevCard_MoveToPlaceRobber()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+
+        do
+            GamePlayHelpers.RollDice(board.GetGameState(), true);
+        while (board.GetGameState().Dice.GetCombinedValue() != 7);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceRobber_RobberNotMovedStayPut()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetGameState().RobberTile);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Equal(GameStates.RollOrUseDevCard, board.GetGameState().Phase.PreviousState);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceRobber_MoveToRollOrUseDevCard()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetGameState().RobberTile);
+        board.GetGameState().SetRobberTile(board.GetTile(TestTile.T5));
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+        board.GetGameState().Phase.ClearRobberState();
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Null(board.GetGameState().Phase.PreviousState);
+        Assert.Null(board.GetGameState().Phase.OriginalRobberTile);
+        Assert.Equal(board.GetTile(TestTile.T5).Id, board.GetGameState().RobberTile.Id);
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceRobber_MoveToBuildOrTrade()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetGameState().RobberTile);
+        board.GetGameState().SetRobberTile(board.GetTile(TestTile.T5));
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+        board.GetGameState().Phase.ClearRobberState();
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Null(board.GetGameState().Phase.PreviousState);
+        Assert.Null(board.GetGameState().Phase.OriginalRobberTile);
+        Assert.Equal(board.GetTile(TestTile.T5).Id, board.GetGameState().RobberTile.Id);
+    }
+
+    private TestGameBoard CreateGameStateForRoadBuildingPhaseTesting(GameStates startingState)
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(startingState, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetEdge(TestEdge.E2).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E17).BuildRoad(board.GetRedPlayer());
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        board.GetRedPlayer().MakeNewDevelopmentCardsPlayable();
+        GamePlayHelpers.PlayRoadBuildingDevCard(board.GetGameState(), board.GetRedPlayer());
+
+        return board;
+    }
+
+    // TODO: This is really testing that GetNextPhase() stays as the phase transition
+    // is being done by the call to GamePlayHelpers.PlayRoadBuildingDevCard().
+    // Need to review and make sure this makes sense. If yes, should change to 
+    // a PlayRoadBuildingDevCard test or integration test.
+    [Fact]
+    public void GetNextPhase_BuildOrTrade_MoveToFirstDevCardRoad()
+    {
+        // Arrange
+        var board = CreateGameStateForRoadBuildingPhaseTesting(GameStates.BuildOrTrade);
+
+        // Act
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 2, 0, board.GetGameState().RobberTile);
+
+        // Assert
+        Assert.Equal(GameStates.FirstDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    // TODO: This is really testing that GetNextPhase() stays as the phase transition
+    // is being done by the call to GamePlayHelpers.PlayRoadBuildingDevCard().
+    // Need to review and make sure this makes sense. If yes, should change to 
+    // a PlayRoadBuildingDevCard test or integration test.
+    [Fact]
+    public void GetNextPhase_RollOrUseDevCard_MoveToFirstDevCardRoad()
+    {
+        // Arrange
+        var board = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+
+        // Act
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 2, 0, board.GetGameState().RobberTile);
+
+        // Assert
+        Assert.Equal(GameStates.FirstDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_FirstDevCardRoad_MoveToSecondDevCardRoad()
+    {
+        // Arrange
+        var board = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+
+        // Act
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 3, 0, board.GetGameState().RobberTile);
+
+        Assert.Equal(GameStates.SecondDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_SecondDevCardRoad_StayBecauseConditionsNotSatisfied()
+    {
+        // Arrange
+        var board = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+        GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetRedPlayer(), board.GetEdge(TestEdge.E16));
+        GamePlayHelpers.GameLoop(board.GetGameState());
+        Assert.Equal(GameStates.SecondDevCardRoad, board.GetGameState().Phase.PhaseState);
+
+        // Act
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 3, 0, board.GetGameState().RobberTile);
+
+        Assert.Equal(GameStates.SecondDevCardRoad, phase.PhaseState);
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PreviousState);
+        Assert.Equal(2, phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_SecondDevCardRoad_MoveToBuildOrTrade()
+    {
+        var board = CreateGameStateForRoadBuildingPhaseTesting(GameStates.BuildOrTrade);
+        GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetRedPlayer(), board.GetEdge(TestEdge.E16));
+        GamePlayHelpers.GameLoop(board.GetGameState());
+        Assert.Equal(GameStates.SecondDevCardRoad, board.GetGameState().Phase.PhaseState);
+        GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetRedPlayer(), board.GetEdge(TestEdge.E18));
+
+        // Act
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 4, 0, board.GetGameState().RobberTile);
+
+        Assert.Equal(GameStates.BuildOrTrade, phase.PhaseState);
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_SecondDevCardRoad_MoveToRollOrUseDevCard()
+    {
+        var board = CreateGameStateForRoadBuildingPhaseTesting(GameStates.RollOrUseDevCard);
+        GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetRedPlayer(), board.GetEdge(TestEdge.E16));
+        GamePlayHelpers.GameLoop(board.GetGameState());
+        Assert.Equal(GameStates.SecondDevCardRoad, board.GetGameState().Phase.PhaseState);
+        GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetRedPlayer(), board.GetEdge(TestEdge.E18));
+
+        // Act
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 4, 0, board.GetGameState().RobberTile);
+
+        Assert.Equal(GameStates.RollOrUseDevCard, phase.PhaseState);
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void GetNextPhase_BuildOrTrade_MoveToGameOverWin()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetGameState().Settings.VictoryPointsToWin, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V10).UpgradeToCity();
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
+        GamePlayHelpers.UpdatePlayerVictoryPoints(board.GetGameState(), board.GetRedPlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.GameOver, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    // TODO: Seems like moving from any state to GameOver due to the resignation
+    // of all other players would be from explicit calls from the users vs
+    // something that would happen due to a call to GetNextPhase.
+
+    [Fact]
+    public void PlayerHasWon_DefaultThreshold_Not_Met()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetGameState().Settings.VictoryPointsToWin, board.GetRedPlayer(), board.GetBluePlayer());
+        Assert.True(board.InExpectedState(GameStates.RollOrUseDevCard, board.GetRedPlayer()));
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
+        GamePlayHelpers.UpdatePlayerVictoryPoints(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.False(board.GetGameState().Phase.PlayerHasWon(board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void PlayerHasWon_DefaultThreshold_Met()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetGameState().Settings.VictoryPointsToWin, board.GetRedPlayer(), board.GetBluePlayer());
+        Assert.True(board.InExpectedState(GameStates.RollOrUseDevCard, board.GetRedPlayer()));
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V10).UpgradeToCity();
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
+        GamePlayHelpers.UpdatePlayerVictoryPoints(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.True(board.GetGameState().Phase.PlayerHasWon(board.GetRedPlayer()));
+    }
+
 }

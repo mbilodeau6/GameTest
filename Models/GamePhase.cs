@@ -5,6 +5,9 @@ using GameTest.Services;
 
 public class GamePhase
 {
+    // TODO: Would like to remove this but currently need to set up player order in SettingUpBoard phase.
+    private static readonly Random _random = new();
+
     public GameStates PhaseState { get; set; } = GameStates.SettingUpBoard;
     public Player? CurrentPlayer { get; set; }
     public Player? EndPlayer { get; set; }
@@ -12,14 +15,19 @@ public class GamePhase
     public Tile OriginalRobberTile { get; private set; } = null;
     public int? RoadsPreRoadBuilding { get; private set; } = null;
     public bool WaitingForRoll { get; private set; } = false;
+    private int VictoryPointsToWin { get; init; }
 
     // TODO: Can all callers to this version be changed to use the DTO version?
-    public GamePhase(GameStates state, Player? current = null, Player? end = null)
+    public GamePhase(GameStates state, int victoryPointsToWin, Player? current = null, Player? end = null)
     {
         PhaseState = state;
         CurrentPlayer = current ?? null;
         EndPlayer = end ?? null;
-        
+        VictoryPointsToWin = victoryPointsToWin;
+    }
+
+    public GamePhase(GameStates state, Player? current = null, Player? end = null) : this(state, 10, current, end)
+    {
     }
 
     public GamePhase(GameState gs, GamePhaseDTO dto)
@@ -39,6 +47,7 @@ public class GamePhase
 
         RoadsPreRoadBuilding = dto.RoadsPreRoadBuilding;
         WaitingForRoll = dto.WaitingForRoll;
+        VictoryPointsToWin = gs.Settings.VictoryPointsToWin;
     }
 
     // Copy Constructor
@@ -51,6 +60,7 @@ public class GamePhase
         OriginalRobberTile = gamePhase.OriginalRobberTile;
         RoadsPreRoadBuilding = gamePhase.RoadsPreRoadBuilding;
         WaitingForRoll = gamePhase.WaitingForRoll;
+        VictoryPointsToWin = gamePhase.VictoryPointsToWin;
     }
     
     public void SetStateToReturnTo(GameStates state, Tile originalTile)
@@ -90,4 +100,128 @@ public class GamePhase
         WaitingForRoll = false;
     }
 
+    // TODO: Should be private but have public for testing
+    public Player GetNextPlayer(Player currentPlayer, List<Player> players)
+    {
+        int currentPlayerIndex = players.FindIndex(p => p.Id == currentPlayer.Id);
+        int nextPlayerIndex = (currentPlayerIndex + 1) % players.Count;
+
+        return players[nextPlayerIndex];
+    }
+
+    // TODO: Should be private but have public for testing
+    public Player GetPreviousPlayer(Player currentPlayer, List<Player> players)
+    {
+        int currentPlayerIndex = players.FindIndex(p => p.Id == currentPlayer.Id);
+        int previousPlayerIndex = (currentPlayerIndex + players.Count - 1) % players.Count;
+
+        return players[previousPlayerIndex];
+    }
+
+    // TODO: Should be private but have public for testing
+    public bool PlayerHasWon(Player player)
+    {
+        return player.VictoryPoints >= VictoryPointsToWin;
+    }
+
+    // TODO: Should be private but have public for testing
+    // TODO: Also see not below... If SettingUpBoard is moved out of the game loop, 
+    // we could also pass List<Player> in the constructor and not have to pass it in
+    // with each call to GetNextPhase.
+    public GamePhase GetNextPhase(List<Player> players, int playerSettlementCount, int playerRoadCount, int diceValue, Tile robberTile)
+    {
+        var nextPhase = new GamePhase(this);
+
+        // TODO: Consider moving SettingUpBoard logic outside of GameLoop as 
+        // it doesn't have CurrentPlayer. Could set up player order outside
+        // of GamePhase.
+        if (PhaseState == GameStates.SettingUpBoard)
+        {
+            nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
+            nextPhase.CurrentPlayer = players[_random.Next(players.Count)];
+            nextPhase.EndPlayer = GetPreviousPlayer(nextPhase.CurrentPlayer, players);
+        }
+        else
+        {
+            if (CurrentPlayer == null)
+                throw new InvalidOperationException("CurrentPlayer expected to be set to a valid value.");
+
+            if (PlayerHasWon(CurrentPlayer))
+            {
+                nextPhase.PhaseState = GameStates.GameOver;
+            }
+            else if (PhaseState == GameStates.PlaceFirstSettlement)
+            {
+                if (playerSettlementCount > 0)
+                    nextPhase.PhaseState = GameStates.PlaceFirstRoad;
+            }
+            else if (PhaseState == GameStates.PlaceFirstRoad)
+            {
+                if (playerRoadCount > 0)
+                {
+                    if (CurrentPlayer == EndPlayer)
+                    {
+                        nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
+                        nextPhase.EndPlayer = GetNextPlayer(CurrentPlayer, players);
+                    }
+                    else
+                    {
+                        nextPhase.PhaseState = GameStates.PlaceFirstSettlement;
+                        nextPhase.CurrentPlayer = GetNextPlayer(CurrentPlayer, players);
+                    }
+                }
+            }
+            else if (PhaseState == GameStates.PlaceSecondSettlement)
+            {
+                if (playerSettlementCount > 1)
+                    nextPhase.PhaseState = GameStates.PlaceSecondRoad;
+            }
+            else if (PhaseState == GameStates.PlaceSecondRoad)
+            {
+                if (playerRoadCount > 1)
+                {
+                    if (CurrentPlayer == EndPlayer)
+                    {
+                        nextPhase.PhaseState = GameStates.RollOrUseDevCard;
+                        nextPhase.SetWaitingForRoll();
+                        nextPhase.EndPlayer = GetPreviousPlayer(CurrentPlayer, players);
+                    }
+                    else
+                    {
+                        nextPhase.PhaseState = GameStates.PlaceSecondSettlement;
+                        nextPhase.CurrentPlayer = GetPreviousPlayer(CurrentPlayer, players);
+                    }
+                }
+            }
+            else if (PhaseState == GameStates.RollOrUseDevCard && !WaitingForRoll)
+            {
+                if (diceValue == 7)
+                {
+                    nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, robberTile);
+                    nextPhase.PhaseState = GameStates.PlaceRobber;
+                }
+                else
+                    nextPhase.PhaseState = GameStates.BuildOrTrade;
+            }
+            else if (PhaseState == GameStates.PlaceRobber 
+                && PreviousState != null 
+                && OriginalRobberTile != null && robberTile.Id != OriginalRobberTile.Id)
+            {
+                nextPhase.PhaseState = (GameStates)PreviousState;
+                nextPhase.ClearRobberState();
+            }
+            else if (PhaseState == GameStates.FirstDevCardRoad
+                && playerRoadCount > RoadsPreRoadBuilding)
+                nextPhase.PhaseState = GameStates.SecondDevCardRoad;
+            else if (PhaseState == GameStates.SecondDevCardRoad
+                && playerRoadCount > RoadsPreRoadBuilding + 1
+                && PreviousState != null)
+            {
+                nextPhase.PhaseState = (GameStates)PreviousState;
+                nextPhase.ClearRoadBuildingState();
+            }
+        }
+
+        return nextPhase;
+    }
 }
