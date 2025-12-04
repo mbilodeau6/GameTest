@@ -874,7 +874,7 @@ public class GamePlayHelpersTests
         gs.Edges.Add(e4);
 
         // Act
-        var edge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, t2, null);
+        var edge = gs.GetEdgeFromTileInfo(t1, t2, null);
 
         // Assert
         Assert.Equal(e3.Id, edge.Id);
@@ -897,7 +897,7 @@ public class GamePlayHelpersTests
         gs.Edges.Add(e4);
 
         // Act
-        var edge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, null, HexDirection.E);
+        var edge = gs.GetEdgeFromTileInfo(t1, null, HexDirection.E);
 
         // Assert
         Assert.Equal(e2.Id, edge.Id);
@@ -917,7 +917,7 @@ public class GamePlayHelpersTests
         gs.Edges.Add(e2);
 
         // Act & Assert
-        var edge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t1, t2, HexDirection.E);
+        var edge = gs.GetEdgeFromTileInfo(t1, t2, HexDirection.E);
 
         Assert.Equal(e2.Id, edge.Id);
     }
@@ -938,7 +938,7 @@ public class GamePlayHelpersTests
 
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(() =>
-                BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, t2, t3, null));
+                gs.GetEdgeFromTileInfo(t2, t3, null));
 
         Assert.Equal("Sequence contains no matching element", exception.Message);
     }
@@ -956,7 +956,7 @@ public class GamePlayHelpersTests
         gs.Vertices.Add(v1);
         var v2 = new Vertex(t1, VertexDirection.SW);
 
-        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t2, t3, VertexDirection.N);
+        var vertex = gs.GetVertexFromTileInfo(t1, t2, t3, VertexDirection.N);
 
         Assert.Equal(v1.Id, vertex.Id);
     }
@@ -977,7 +977,7 @@ public class GamePlayHelpersTests
 
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(() =>
-                BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t2, t3, null));
+                gs.GetVertexFromTileInfo(t1, t2, t3, null));
 
         Assert.Equal("Sequence contains no matching element", exception.Message);
     }
@@ -999,7 +999,7 @@ public class GamePlayHelpersTests
         gs.Vertices.Add(v3);
 
         // Act & Assert
-        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t2, t3, null);
+        var vertex = gs.GetVertexFromTileInfo(t1, t2, t3, null);
 
         Assert.Equal(vertex.Id, v3.Id);
     }
@@ -1021,7 +1021,7 @@ public class GamePlayHelpersTests
         gs.Vertices.Add(v3);
 
         // Act & Assert
-        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t1, t3, null, null);
+        var vertex = gs.GetVertexFromTileInfo(t1, t3, null, null);
 
         Assert.Equal(vertex.Id, v2.Id);
     }
@@ -1043,7 +1043,7 @@ public class GamePlayHelpersTests
         gs.Vertices.Add(v3);
 
         // Act & Assert
-        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t1, null, t3, null);
+        var vertex = gs.GetVertexFromTileInfo(t1, null, t3, null);
 
         Assert.Equal(vertex.Id, v2.Id);
     }
@@ -1065,7 +1065,7 @@ public class GamePlayHelpersTests
         gs.Vertices.Add(v3);
 
         // Act & Assert
-        var vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t1, null, null, VertexDirection.S);
+        var vertex = gs.GetVertexFromTileInfo(t1, null, null, VertexDirection.S);
 
         Assert.Equal(vertex.Id, v3.Id);
     }
@@ -1089,14 +1089,14 @@ public class GamePlayHelpersTests
         var t2 = gs.GetTileAt(-3, -1);
 
         // build on vertices
-        var v53 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t9, null, null, VertexDirection.NE);
+        var v53 = gs.GetVertexFromTileInfo(t9, null, null, VertexDirection.NE);
         v53.BuildSettlement(gs.Players[1]);
         v53.UpgradeToCity();
 
-        var v43 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t9, t10, t17, null);
+        var v43 = gs.GetVertexFromTileInfo(t9, t10, t17, null);
         v43.BuildSettlement(gs.Players[0]);
 
-        var v19 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t3, t4, null, null);
+        var v19 = gs.GetVertexFromTileInfo(t3, t4, null, null);
         v19.BuildSettlement(gs.Players[1]);
 
         // Act
@@ -1104,35 +1104,35 @@ public class GamePlayHelpersTests
 
         // Assert
         // Verify that vertices that should be blocked by above buildings is blocked
-        var v52 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t9, t10, null, null);
+        var v52 = gs.GetVertexFromTileInfo(t9, t10, null, null);
         Assert.Equal(BuildingType.Blocked, v52.Building);
-        var v54 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t9, null, null, VertexDirection.SE);
+        var v54 = gs.GetVertexFromTileInfo(t9, null, null, VertexDirection.SE);
         Assert.Equal(BuildingType.Blocked, v54.Building);
-        var v42 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t10, t17, t18, null);
+        var v42 = gs.GetVertexFromTileInfo(t10, t17, t18, null);
         Assert.Equal(BuildingType.Blocked, v42.Building);
-        var v39 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t8, t9, t17, null);
+        var v39 = gs.GetVertexFromTileInfo(t8, t9, t17, null);
         Assert.Equal(BuildingType.Blocked, v39.Building);
-        var v18 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t3, t4, t14, null);
+        var v18 = gs.GetVertexFromTileInfo(t3, t4, t14, null);
         Assert.Equal(BuildingType.Blocked, v18.Building);
-        var v20 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t3, null, null, VertexDirection.SW);
+        var v20 = gs.GetVertexFromTileInfo(t3, null, null, VertexDirection.SW);
         Assert.Equal(BuildingType.Blocked, v20.Building);
-        var v25 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t4, null, null, VertexDirection.SW);
+        var v25 = gs.GetVertexFromTileInfo(t4, null, null, VertexDirection.SW);
         Assert.Equal(BuildingType.Blocked, v25.Building);
 
         // Verify that vertices not blocked by above buildings is free (i.e. null)
-        var v51 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t10, null, null, VertexDirection.NE);
+        var v51 = gs.GetVertexFromTileInfo(t10, null, null, VertexDirection.NE);
         Assert.Null(v51.Building);
-        var v40 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t8, t9, null, null);
+        var v40 = gs.GetVertexFromTileInfo(t8, t9, null, null);
         Assert.Null(v40.Building);
-        var v34 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t8, t16, t17, null);
+        var v34 = gs.GetVertexFromTileInfo(t8, t16, t17, null);
         Assert.Null(v34.Building);
-        var v21 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t3, null, null, VertexDirection.NW);
+        var v21 = gs.GetVertexFromTileInfo(t3, null, null, VertexDirection.NW);
         Assert.Null(v21.Building);
-        var v24 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t4, t5, null, null);
+        var v24 = gs.GetVertexFromTileInfo(t4, t5, null, null);
         Assert.Null(v24.Building);
-        var v15 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t2, t3, t14, null);
+        var v15 = gs.GetVertexFromTileInfo(t2, t3, t14, null);
         Assert.Null(v15.Building);
-        var v22 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t4, t14, t15, null);
+        var v22 = gs.GetVertexFromTileInfo(t4, t14, t15, null);
         Assert.Null(v22.Building);
 
     }
@@ -1146,8 +1146,8 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
-        var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
+        var testEdge = gs.GetEdgeFromTileInfo(woodTile, woolTile, null);
+        var road = gs.GetEdgeFromTileInfo(oreTile, woolTile, null);
         road.BuildRoad(gs.Players[0]);
 
         Assert.True(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
@@ -1162,8 +1162,8 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
-        var settlement = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
+        var testEdge = gs.GetEdgeFromTileInfo(woodTile, woolTile, null);
+        var settlement = gs.GetVertexFromTileInfo(oreTile, woolTile, woodTile, null);
         settlement.BuildSettlement(gs.Players[0]);
 
         Assert.True(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
@@ -1178,8 +1178,8 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
-        var city = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
+        var testEdge = gs.GetEdgeFromTileInfo(woodTile, woolTile, null);
+        var city = gs.GetVertexFromTileInfo(oreTile, woolTile, woodTile, null);
         city.BuildSettlement(gs.Players[0]);
         city.UpgradeToCity();
 
@@ -1195,8 +1195,8 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
-        var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woolTile, null, HexDirection.E);
+        var testEdge = gs.GetEdgeFromTileInfo(woodTile, woolTile, null);
+        var road = gs.GetEdgeFromTileInfo(woolTile, null, HexDirection.E);
         road.BuildRoad(gs.Players[0]);
 
         Assert.False(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
@@ -1211,8 +1211,8 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
-        var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
+        var testEdge = gs.GetEdgeFromTileInfo(woodTile, woolTile, null);
+        var road = gs.GetEdgeFromTileInfo(oreTile, woolTile, null);
         road.BuildRoad(gs.Players[1]);
 
         Assert.False(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
@@ -1227,11 +1227,11 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
-        var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
+        var testEdge = gs.GetEdgeFromTileInfo(woodTile, woolTile, null);
+        var road = gs.GetEdgeFromTileInfo(oreTile, woolTile, null);
         road.BuildRoad(gs.Players[0]);
 
-        var settlement = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
+        var settlement = gs.GetVertexFromTileInfo(oreTile, woolTile, woodTile, null);
         settlement.BuildSettlement(gs.Players[1]);
 
         Assert.False(GamePlayHelpers.IsEdgeAdjacentToPlayerBuild(gs, testEdge, gs.Players[0]));
@@ -1246,8 +1246,8 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, oreTile, woolTile, null);
-        var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, null, HexDirection.NE);
+        var testVertex = gs.GetVertexFromTileInfo(woodTile, oreTile, woolTile, null);
+        var road = gs.GetEdgeFromTileInfo(oreTile, null, HexDirection.NE);
         road.BuildRoad(gs.Players[0]);
 
         Assert.False(GamePlayHelpers.IsVertexAdjacentToPlayerRoad(gs, testVertex, gs.Players[0]));
@@ -1262,8 +1262,8 @@ public class GamePlayHelpersTests
         var oreTile = gs.GetTileAt(4, 0);
         var woolTile = gs.GetTileAt(3, 1);
 
-        var testVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, oreTile, woolTile, null);
-        var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woodTile, null);
+        var testVertex = gs.GetVertexFromTileInfo(woodTile, oreTile, woolTile, null);
+        var road = gs.GetEdgeFromTileInfo(oreTile, woodTile, null);
         road.BuildRoad(gs.Players[0]);
 
         Assert.True(GamePlayHelpers.IsVertexAdjacentToPlayerRoad(gs, testVertex, gs.Players[0]));
@@ -1471,12 +1471,12 @@ public class GamePlayHelpersTests
         var ore8Tile = gs.GetTileAt(4, 0);
 
 
-        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grain12Tile, grain9Tile, null, null).BuildSettlement(human);
-        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grain9Tile, brick8Tile, null, null);
+        gs.GetVertexFromTileInfo(grain12Tile, grain9Tile, null, null).BuildSettlement(human);
+        var v1 = gs.GetVertexFromTileInfo(grain9Tile, brick8Tile, null, null);
         v1.BuildSettlement(human);
         v1.UpgradeToCity();
 
-        BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, ore8Tile, null, null, VertexDirection.NE).BuildSettlement(bot);
+        gs.GetVertexFromTileInfo(ore8Tile, null, null, VertexDirection.NE).BuildSettlement(bot);
 
         // Act
         GamePlayHelpers.PopulatePlayerPorts(gs);
@@ -1803,9 +1803,9 @@ public class GamePlayHelpersTests
         // Build one settlement for each player so that resources and be stolen when knight placed
         BoardCreationHelpers.CreateEdgesAndVerticesForBoard(gs);
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
-        var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.SW);
+        var v1 = gs.GetVertexFromTileInfo(tile1, null, null, VertexDirection.SW);
         v1.BuildSettlement(player1);
-        var v2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.NE);
+        var v2 = gs.GetVertexFromTileInfo(tile2, null, null, VertexDirection.NE);
         v2.BuildSettlement(player2);
         GamePlayHelpers.MarkBlockedVertices(gs);
 

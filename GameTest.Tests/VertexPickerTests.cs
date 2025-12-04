@@ -15,8 +15,8 @@ public class VertexPickerTests
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
 
         VertexPicker picker = new VertexPicker(gs);
-        var expectedVertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.GrainTile, TH.Wool5Tile, null);
-        var expectedVertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool5Tile, TH.WoodTile, TH.OreTile, null);
+        var expectedVertex1 = gs.GetVertexFromTileInfo(TH.WoodTile, TH.GrainTile, TH.Wool5Tile, null);
+        var expectedVertex2 = gs.GetVertexFromTileInfo(TH.Wool5Tile, TH.WoodTile, TH.OreTile, null);
 
         // Act
         var selectedVertex = picker.PickVertex();
@@ -32,15 +32,15 @@ public class VertexPickerTests
     {
         // Arrange
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
-        var oreWoodWool5Vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool5Tile, TH.WoodTile, TH.OreTile, null);
+        var oreWoodWool5Vertex = gs.GetVertexFromTileInfo(TH.Wool5Tile, TH.WoodTile, TH.OreTile, null);
         oreWoodWool5Vertex.BuildSettlement(TH.HumanPlayer);
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
         GamePlayHelpers.MarkBlockedVertices(gs, oreWoodWool5Vertex);
         
 
         VertexPicker picker = new VertexPicker(gs);
-        var expectedVertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.BrickTile, TH.OreTile, null);
-        var expectedVertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.GrainTile, TH.WoodTile, TH.DesertTile, null);
+        var expectedVertex1 = gs.GetVertexFromTileInfo(TH.WoodTile, TH.BrickTile, TH.OreTile, null);
+        var expectedVertex2 = gs.GetVertexFromTileInfo(TH.GrainTile, TH.WoodTile, TH.DesertTile, null);
 
         // Act
         var selectedVertex = picker.PickVertex();
@@ -56,7 +56,7 @@ public class VertexPickerTests
     {
         // Arrange
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
-        var desertWoodWool2Vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.WoodTile, TH.DesertTile, null);
+        var desertWoodWool2Vertex = gs.GetVertexFromTileInfo(TH.Wool2Tile, TH.WoodTile, TH.DesertTile, null);
         desertWoodWool2Vertex.BuildSettlement(TH.BotPlayer);
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
         GamePlayHelpers.MarkBlockedVertices(gs, desertWoodWool2Vertex);
@@ -64,7 +64,7 @@ public class VertexPickerTests
         gs.Phase.CurrentPlayer = TH.BotPlayer;        
 
         VertexPicker picker = new VertexPicker(gs);
-        var expectedEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.DesertTile, TH.WoodTile, null);
+        var expectedEdge = gs.GetEdgeFromTileInfo(TH.DesertTile, TH.WoodTile, null);
 
         // Act
         var selectedEdge = picker.PickEdge();
@@ -79,13 +79,13 @@ public class VertexPickerTests
     {
         // Arrange
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
-        var desertWoodWool2Vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.WoodTile, TH.DesertTile, null);
+        var desertWoodWool2Vertex = gs.GetVertexFromTileInfo(TH.Wool2Tile, TH.WoodTile, TH.DesertTile, null);
         desertWoodWool2Vertex.BuildSettlement(TH.BotPlayer);
-        var desertWoodEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.DesertTile, TH.WoodTile, null);
+        var desertWoodEdge = gs.GetEdgeFromTileInfo(TH.DesertTile, TH.WoodTile, null);
         desertWoodEdge.BuildRoad(TH.BotPlayer);
-        var wool2BrickVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.BrickTile, null, null);
+        var wool2BrickVertex = gs.GetVertexFromTileInfo(TH.Wool2Tile, TH.BrickTile, null, null);
         wool2BrickVertex.BuildSettlement(TH.HumanPlayer);
-        var brickOreVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.BrickTile, TH.OreTile, null, null);
+        var brickOreVertex = gs.GetVertexFromTileInfo(TH.BrickTile, TH.OreTile, null, null);
         brickOreVertex.BuildSettlement(TH.BotPlayer);
 
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
@@ -94,7 +94,7 @@ public class VertexPickerTests
         gs.Phase.CurrentPlayer = TH.BotPlayer;        
 
         VertexPicker picker = new VertexPicker(gs);
-        var expectedEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.BrickTile, TH.OreTile, null);
+        var expectedEdge = gs.GetEdgeFromTileInfo(TH.BrickTile, TH.OreTile, null);
 
         // Act
         var selectedEdge = picker.PickEdge();
@@ -109,11 +109,11 @@ public class VertexPickerTests
     {
         // Arrange
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
-        var woodWool2BrickVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool2Tile, TH.WoodTile, TH.BrickTile, null);
+        var woodWool2BrickVertex = gs.GetVertexFromTileInfo(TH.Wool2Tile, TH.WoodTile, TH.BrickTile, null);
         woodWool2BrickVertex.BuildSettlement(TH.HumanPlayer);
-        var desertWoodGrainVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.GrainTile, TH.DesertTile, null);
+        var desertWoodGrainVertex = gs.GetVertexFromTileInfo(TH.WoodTile, TH.GrainTile, TH.DesertTile, null);
         desertWoodGrainVertex.BuildSettlement(TH.BotPlayer);
-        var woodWool5Edge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.WoodTile, TH.Wool5Tile, null);
+        var woodWool5Edge = gs.GetEdgeFromTileInfo(TH.WoodTile, TH.Wool5Tile, null);
         woodWool5Edge.BuildRoad(TH.BotPlayer);
         gs.Phase.PhaseState = GameStates.BuildOrTrade;
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
@@ -121,7 +121,7 @@ public class VertexPickerTests
         
 
         VertexPicker picker = new VertexPicker(gs);
-        var expectedVertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.Wool5Tile, TH.OreTile, null);
+        var expectedVertex1 = gs.GetVertexFromTileInfo(TH.WoodTile, TH.Wool5Tile, TH.OreTile, null);
 
         // Act
         var selectedVertex = picker.PickVertex();
@@ -142,27 +142,27 @@ public class VertexPickerTests
         var gs = TestHelpers.CreateGameStateForSetUpPhase();
 
         // Bot settlements are all in SE corner
-        var oreSEVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.OreTile, null, null, VertexDirection.SE);
+        var oreSEVertex = gs.GetVertexFromTileInfo(TH.OreTile, null, null, VertexDirection.SE);
         oreSEVertex.BuildSettlement(TH.BotPlayer);
-        var oreSEEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.OreTile, null, HexDirection.SE);
+        var oreSEEdge = gs.GetEdgeFromTileInfo(TH.OreTile, null, HexDirection.SE);
         oreSEEdge.BuildRoad(TH.BotPlayer);
-        var wool5SEVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.Wool5Tile, null, null, VertexDirection.SE);
+        var wool5SEVertex = gs.GetVertexFromTileInfo(TH.Wool5Tile, null, null, VertexDirection.SE);
         wool5SEVertex.BuildSettlement(TH.BotPlayer);
-        var wool5SEEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.Wool5Tile, null, HexDirection.SE);
+        var wool5SEEdge = gs.GetEdgeFromTileInfo(TH.Wool5Tile, null, HexDirection.SE);
         wool5SEEdge.BuildRoad(TH.BotPlayer);
 
         // Set up opponent to block all vertices from bot
-        var woodOreBrickVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.OreTile, TH.WoodTile, TH.BrickTile, null);
+        var woodOreBrickVertex = gs.GetVertexFromTileInfo(TH.OreTile, TH.WoodTile, TH.BrickTile, null);
         woodOreBrickVertex.BuildSettlement(TH.HumanPlayer);
-        var brickOreEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.BrickTile, TH.OreTile, null);
+        var brickOreEdge = gs.GetEdgeFromTileInfo(TH.BrickTile, TH.OreTile, null);
         brickOreEdge.BuildRoad(TH.HumanPlayer);
-        var oreNEEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.OreTile, null, HexDirection.NE);
+        var oreNEEdge = gs.GetEdgeFromTileInfo(TH.OreTile, null, HexDirection.NE);
         oreNEEdge.BuildRoad(TH.HumanPlayer);
-        var woodGrainWool5Vertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, TH.WoodTile, TH.Wool5Tile, TH.GrainTile, null);
+        var woodGrainWool5Vertex = gs.GetVertexFromTileInfo(TH.WoodTile, TH.Wool5Tile, TH.GrainTile, null);
         woodGrainWool5Vertex.BuildSettlement(TH.HumanPlayer);
-        var grainWool5Edge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.GrainTile, TH.Wool5Tile, null);
+        var grainWool5Edge = gs.GetEdgeFromTileInfo(TH.GrainTile, TH.Wool5Tile, null);
         grainWool5Edge.BuildRoad(TH.HumanPlayer);
-        var wool5SWEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, TH.Wool5Tile, null, HexDirection.SW);
+        var wool5SWEdge = gs.GetEdgeFromTileInfo(TH.Wool5Tile, null, HexDirection.SW);
         wool5SWEdge.BuildRoad(TH.HumanPlayer);
 
         gs.Phase.PhaseState = GameStates.BuildOrTrade;

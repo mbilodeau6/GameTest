@@ -183,4 +183,25 @@ public class GameState
     public Tile GetTileAt(int x, int y)
        => Tiles.First(t => t.X == x && t.Y == y);
 
+    public Vertex GetVertexFromTileInfo(Tile t1, Tile? t2, Tile? t3, VertexDirection? dir)
+    {
+        if (t1 != null && t2 != null && t3 != null)
+            return Vertices.First(v => v.Tiles.Contains(t1) && v.Tiles.Contains(t2) && v.Tiles.Contains(t3));
+
+        if (t1 != null && t2 != null && t3 == null)
+            return Vertices.First(v => v.Tiles.Count() == 2 && v.Tiles.Contains(t1) && v.Tiles.Contains(t2));
+
+        if (t1 != null && t2 == null && t3 != null)
+            return Vertices.First(v => v.Tiles.Count() == 2 && v.Tiles.Contains(t1) && v.Tiles.Contains(t3));
+
+        return Vertices.First(v => v.Tiles.Count() == 1 && v.Tiles.Contains(t1) && v.Direction == dir);
+    }
+
+    public Edge GetEdgeFromTileInfo(Tile t1, Tile? t2, HexDirection? dir)
+    {
+        if (t2 != null)
+            return Edges.First(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t2));
+
+        return Edges.First(e => e.Tiles.Contains(t1) && e.Direction == dir);
+    }
 }
