@@ -91,13 +91,13 @@ public class TestGameBoard
 
     private void PopulateTiles()
     {
-        Tiles.Add(TestTile.T0, BoardCreationHelpers.GetTileAt(GS.Tiles, 0, 0));
-        Tiles.Add(TestTile.T1, BoardCreationHelpers.GetTileAt(GS.Tiles, 1, -1));
-        Tiles.Add(TestTile.T2, BoardCreationHelpers.GetTileAt(GS.Tiles, 2, 0));
-        Tiles.Add(TestTile.T3, BoardCreationHelpers.GetTileAt(GS.Tiles, 1, 1));
-        Tiles.Add(TestTile.T4, BoardCreationHelpers.GetTileAt(GS.Tiles, -1, 1));
-        Tiles.Add(TestTile.T5, BoardCreationHelpers.GetTileAt(GS.Tiles, -2, 0));
-        Tiles.Add(TestTile.T6, BoardCreationHelpers.GetTileAt(GS.Tiles, -1, -1));
+        Tiles.Add(TestTile.T0, GS.GetTileAt(0, 0));
+        Tiles.Add(TestTile.T1, GS.GetTileAt(1, -1));
+        Tiles.Add(TestTile.T2, GS.GetTileAt(2, 0));
+        Tiles.Add(TestTile.T3, GS.GetTileAt(1, 1));
+        Tiles.Add(TestTile.T4, GS.GetTileAt(-1, 1));
+        Tiles.Add(TestTile.T5, GS.GetTileAt(-2, 0));
+        Tiles.Add(TestTile.T6, GS.GetTileAt(-1, -1));
     }
 
     private void PopulateVertices()

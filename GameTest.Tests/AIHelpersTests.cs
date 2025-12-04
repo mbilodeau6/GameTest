@@ -173,24 +173,24 @@ public class AIHelpersTests
         gs.Phase.CurrentPlayer = gs.Players[1];
 
         // Get references to all tiles needed for test
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, -2);
-        var t2 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
-        var t3 = BoardCreationHelpers.GetTileAt(gs.Tiles, -4, 0);
-        var t4 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, 1);
-        var t5 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 2);
-        var t6 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 2);
-        var t7 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 2);
-        var t8 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
-        var t9 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var t10 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var t12 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, -2);
-        var t13 = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, -1);
-        var t14 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
-        var t15 = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
-        var t16 = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
-        var t17 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var t18 = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
-        var t19 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0);
+        var t1 = gs.GetTileAt(-2, -2);
+        var t2 = gs.GetTileAt(-3, -1);
+        var t3 = gs.GetTileAt(-4, 0);
+        var t4 = gs.GetTileAt(-3, 1);
+        var t5 = gs.GetTileAt(-2, 2);
+        var t6 = gs.GetTileAt(0, 2);
+        var t7 = gs.GetTileAt(2, 2);
+        var t8 = gs.GetTileAt(3, 1);
+        var t9 = gs.GetTileAt(4, 0);
+        var t10 = gs.GetTileAt(3, -1);
+        var t12 = gs.GetTileAt(0, -2);
+        var t13 = gs.GetTileAt(-1, -1);
+        var t14 = gs.GetTileAt(-2, 0);
+        var t15 = gs.GetTileAt(-1, 1);
+        var t16 = gs.GetTileAt(1, 1);
+        var t17 = gs.GetTileAt(2, 0);
+        var t18 = gs.GetTileAt(1, -1);
+        var t19 = gs.GetTileAt(0, 0);
 
         // Place green opponent pieces (blocking)
         BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t3, null, null, VertexDirection.SW).BuildSettlement(gs.Players[2]);
@@ -558,11 +558,11 @@ public class AIHelpersTests
     {
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var wool4Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
-        var wood3Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var wood9Tile = gs.GetTileAt(2, -2);
+        var brick10Tile = gs.GetTileAt(3, -1);
+        var wool4Tile = gs.GetTileAt(1, -1);
+        var wood3Tile = gs.GetTileAt(2, 0);
+        var ore8Tile = gs.GetTileAt(4, 0);
 
         var human = gs.Players.First(p => !p.IsBot);
         var bot = gs.Players.First(p => p.IsBot);
@@ -585,7 +585,7 @@ public class AIHelpersTests
 
         var target = AIHelpers.PickTargetForRobber(gs, human);
 
-        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var ore8Tile = gs.GetTileAt(4, 0);
 
         Assert.NotNull(target);
         Assert.Equal(ore8Tile.Id, target.Id);
@@ -597,8 +597,8 @@ public class AIHelpersTests
         var gs = CreateGameForPickRobberTargetTests();
         var human = gs.Players.First(p => !p.IsBot);
 
-        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var wood9Tile = gs.GetTileAt(2, -2);
+        var brick10Tile = gs.GetTileAt(3, -1);
 
         var v1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == human.Id && v.Tiles.Contains(wood9Tile));
         v1.UpgradeToCity();
@@ -614,8 +614,8 @@ public class AIHelpersTests
     {
         var gs = CreateGameForPickRobberTargetTests();
 
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var brick10Tile = gs.GetTileAt(3, -1);
+        var ore8Tile = gs.GetTileAt(4, 0);
 
         var human = gs.Players.First(p => !p.IsBot);
         var bot = gs.Players.First(p => p.IsBot);
@@ -634,17 +634,17 @@ public class AIHelpersTests
     {
         var gs = CreateGameForPickRobberTargetTests();
 
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var brick10Tile = gs.GetTileAt(3, -1);
         var human = gs.Players.First(p => !p.IsBot);
         var bot = gs.Players.First(p => p.IsBot);
 
         var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, brick10Tile, null, null, VertexDirection.NE);
         v1.BuildSettlement(bot);
 
-        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var ore8Tile = gs.GetTileAt(4, 0);
         gs.SetRobberTile(ore8Tile);
 
-        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        var wood9Tile = gs.GetTileAt(2, -2);
 
         var target = AIHelpers.PickTargetForRobber(gs, human);
 
@@ -658,11 +658,11 @@ public class AIHelpersTests
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         var originalRobberTile = gs.RobberTile;
 
-        var wood9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var wool4Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
-        var wood3Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var wood9Tile = gs.GetTileAt(2, -2);
+        var brick10Tile = gs.GetTileAt(3, -1);
+        var wool4Tile = gs.GetTileAt(1, -1);
+        var wood3Tile = gs.GetTileAt(2, 0);
+        var ore8Tile = gs.GetTileAt(4, 0);
 
         var human = gs.Players.First(p => !p.IsBot);
         var bot = gs.Players.First(p => p.IsBot);
@@ -691,7 +691,7 @@ public class AIHelpersTests
     public void GetResourceProbabilityForTile_PlayerNotOnTile()
     {
         var gs = CreateGameForPickRobberTargetTests();
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var brick10Tile = gs.GetTileAt(3, -1);
         var bot = gs.Players.First(p => p.IsBot);
 
         var value = AIHelpers.GetResourcePayoutValueForTile(gs, brick10Tile, bot);
@@ -703,8 +703,8 @@ public class AIHelpersTests
     public void GetResourceProbabilityForTile_SingleSettlement()
     {
         var gs = CreateGameForPickRobberTargetTests();
-        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var ore8Tile = gs.GetTileAt(4, 0);
+        var brick10Tile = gs.GetTileAt(3, -1);
 
         var v1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, ore8Tile, brick10Tile, null, null);
         var bot = gs.Players.First(p => p.IsBot);
@@ -719,7 +719,7 @@ public class AIHelpersTests
     public void GetResourceProbabilityForTile_SettlementAndCity()
     {
         var gs = CreateGameForPickRobberTargetTests();
-        var brick10Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
+        var brick10Tile = gs.GetTileAt(3, -1);
         var human = gs.Players.First(p => !p.IsBot);
         var v1 = gs.Vertices.First(v => v.Tiles.Contains(brick10Tile) && v.Owner != null && v.Owner.Id == human.Id);
         v1.UpgradeToCity();

@@ -5,8 +5,7 @@ namespace GameTest.Services;
 
 public static class BoardCreationHelpers
 {
-    public static Tile GetTileAt(this IEnumerable<Tile> tiles, int x, int y)
-       => tiles.First(t => t.X == x && t.Y == y);
+
 
     public static List<Tile> CreateTilesForRandomBoard()
     {
@@ -108,10 +107,10 @@ public static class BoardCreationHelpers
         return tiles;
     }
 
-    public static void CreateEdgesAndVerticesForBoard(GameState gameState)
+    public static void CreateEdgesAndVerticesForBoard(GameState gs)
     {
         var stack = new Stack<Tile>();
-        stack.Push(GetTileAt(gameState.Tiles, 0, 0));
+        stack.Push(gs.GetTileAt(0, 0));
 
         while (stack.Count > 0)
         {
@@ -120,61 +119,61 @@ public static class BoardCreationHelpers
             foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection)))
             {
                 var neighborCoordinates = HexProximity.GetCoordinates((tile.X, tile.Y), dir);
-                var neighborTile = gameState.Tiles.FirstOrDefault(t => t.X == neighborCoordinates.Item1 && t.Y == neighborCoordinates.Item2);
+                var neighborTile = gs.Tiles.FirstOrDefault(t => t.X == neighborCoordinates.Item1 && t.Y == neighborCoordinates.Item2);
                 if (neighborTile != null)
                 {
-                    if (!gameState.Edges.Any(e => e.ConnectsTiles(tile.Id, neighborTile.Id)))
+                    if (!gs.Edges.Any(e => e.ConnectsTiles(tile.Id, neighborTile.Id)))
                     {
                         var edge = new Edge(tile, neighborTile);
-                        gameState.AddEdge(edge);
+                        gs.AddEdge(edge);
                         stack.Push(neighborTile);
                     }
                 }
                 else
                 {
-                    if (!gameState.Edges.Any(e => e.Tiles[0].Id == tile.Id && e.Direction == dir))
+                    if (!gs.Edges.Any(e => e.Tiles[0].Id == tile.Id && e.Direction == dir))
                     {
                         var edge = new Edge(tile, dir);
-                        gameState.AddEdge(edge);
+                        gs.AddEdge(edge);
                     }
                 }
 
                 var neighbor2Coordinates = HexProximity.GetCoordinates((tile.X, tile.Y), HexProximity.getPrecedingDirection(dir));
-                var neighbor2Tile = gameState.Tiles.FirstOrDefault(t => t.X == neighbor2Coordinates.Item1 && t.Y == neighbor2Coordinates.Item2);
+                var neighbor2Tile = gs.Tiles.FirstOrDefault(t => t.X == neighbor2Coordinates.Item1 && t.Y == neighbor2Coordinates.Item2);
                 var vertexDir = HexProximity.GetVertexDirectionForEdgeDirection(dir);
 
                 // If no neighboring tiles, create vertex with just this tile and direction
                 if (neighborTile == null && neighbor2Tile == null)
                 {
-                    if (!gameState.Vertices.Any(v => v.Tiles[0].Id == tile.Id && v.Direction == vertexDir))
+                    if (!gs.Vertices.Any(v => v.Tiles[0].Id == tile.Id && v.Direction == vertexDir))
                     {
                         var vertex = new Vertex(tile, vertexDir);
-                        gameState.AddVertex(vertex);
+                        gs.AddVertex(vertex);
                     }
                 }
                 // Otherwise, create vertex with this tile and any neighboring tiles
                 else if (neighborTile != null && neighbor2Tile != null)
                 {
-                    if (!gameState.Vertices.Any(v => v.ConnectsTiles(tile, neighborTile, neighbor2Tile)))
+                    if (!gs.Vertices.Any(v => v.ConnectsTiles(tile, neighborTile, neighbor2Tile)))
                     {
                         var vertex = new Vertex(tile, neighborTile, neighbor2Tile);
-                        gameState.AddVertex(vertex);
+                        gs.AddVertex(vertex);
                     }
                 }
                 else if (neighborTile != null)
                 {
-                    if (!gameState.Vertices.Any(v => v.ConnectsTiles(tile, neighborTile)))
+                    if (!gs.Vertices.Any(v => v.ConnectsTiles(tile, neighborTile)))
                     {
                         var vertex = new Vertex(tile, neighborTile);
-                        gameState.AddVertex(vertex);
+                        gs.AddVertex(vertex);
                     }
                 }
                 else if (neighbor2Tile != null)
                 {
-                    if (!gameState.Vertices.Any(v => v.ConnectsTiles(tile, neighbor2Tile)))
+                    if (!gs.Vertices.Any(v => v.ConnectsTiles(tile, neighbor2Tile)))
                     {
                         var vertex = new Vertex(tile, neighbor2Tile);
-                        gameState.AddVertex(vertex);
+                        gs.AddVertex(vertex);
                     }
                 }
             }
@@ -248,7 +247,7 @@ public static class BoardCreationHelpers
         var stack = new Stack<Tile>();
         var visitedTiles = new HashSet<string>();
 
-        stack.Push(BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 0));
+        stack.Push(gs.GetTileAt(0, 0));
 
         while (stack.Count > 0)
         {
@@ -301,36 +300,36 @@ public static class BoardCreationHelpers
         // of the starting points only have one possible orientation while most have two. The following list provides
         // the starting vertex option(s) for each position
         List<List<Vertex>> portStartLocations = new List<List<Vertex>>();
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 2, -2), null, null, VertexDirection.N)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 2, -2), null, null, VertexDirection.NE), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 2, -2), GetTileAt(gs.Tiles, 3, -1), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 3, -1), null, null, VertexDirection.NE), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 3, -1), GetTileAt(gs.Tiles, 4, 0), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 4, 0), null, null, VertexDirection.NE)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 4, 0), null, null, VertexDirection.SE), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 4, 0), GetTileAt(gs.Tiles, 3, 1), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 3, 1), null, null, VertexDirection.SE), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 3, 1), GetTileAt(gs.Tiles, 2, 2), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 2, 2), null, null, VertexDirection.SE)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 2, 2), null, null, VertexDirection.S), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 2, 2), GetTileAt(gs.Tiles, 0, 2), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 0, 2), null, null, VertexDirection.S), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 0, 2), GetTileAt(gs.Tiles, -2, 2), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -2, 2), null, null, VertexDirection.S)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -2, 2), null, null, VertexDirection.SW), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -2, 2), GetTileAt(gs.Tiles, -3, 1), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -3, 1), null, null, VertexDirection.SW), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -3, 1), GetTileAt(gs.Tiles, -4, 0), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -4, 0), null, null, VertexDirection.SW)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -4, 0), null, null, VertexDirection.NW), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -4, 0), GetTileAt(gs.Tiles, -3, -1), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -3, -1), null, null, VertexDirection.NW), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -3, -1), GetTileAt(gs.Tiles, -2, -2), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -2, -2), null, null, VertexDirection.NW)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -2, -2), null, null, VertexDirection.N), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -2, -2), GetTileAt(gs.Tiles, 0, -2), null, null)});
-        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, -0, -2), null, null, VertexDirection.N), 
-                GetVertexFromTileInfo(gs.Vertices, GetTileAt(gs.Tiles, 0, -2), GetTileAt(gs.Tiles, 2, -2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(2, -2), null, null, VertexDirection.N)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(2, -2), null, null, VertexDirection.NE), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(2, -2), gs.GetTileAt(3, -1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(3, -1), null, null, VertexDirection.NE), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(3, -1), gs.GetTileAt(4, 0), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(4, 0), null, null, VertexDirection.NE)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(4, 0), null, null, VertexDirection.SE), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(4, 0), gs.GetTileAt(3, 1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(3, 1), null, null, VertexDirection.SE), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(3, 1), gs.GetTileAt(2, 2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(2, 2), null, null, VertexDirection.SE)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(2, 2), null, null, VertexDirection.S), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(2, 2), gs.GetTileAt(0, 2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(0, 2), null, null, VertexDirection.S), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(0, 2), gs.GetTileAt(-2, 2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-2, 2), null, null, VertexDirection.S)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-2, 2), null, null, VertexDirection.SW), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-2, 2), gs.GetTileAt(-3, 1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-3, 1), null, null, VertexDirection.SW), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-3, 1), gs.GetTileAt(-4, 0), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-4, 0), null, null, VertexDirection.SW)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-4, 0), null, null, VertexDirection.NW), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-4, 0), gs.GetTileAt(-3, -1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-3, -1), null, null, VertexDirection.NW), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-3, -1), gs.GetTileAt(-2, -2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-2, -2), null, null, VertexDirection.NW)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-2, -2), null, null, VertexDirection.N), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-2, -2), gs.GetTileAt(0, -2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(-0, -2), null, null, VertexDirection.N), 
+                GetVertexFromTileInfo(gs.Vertices, gs.GetTileAt(0, -2), gs.GetTileAt(2, -2), null, null)});
 
         // TODO: There should be a more elegant/flexible way to do this that will work on random boards.
         // Need something that will move along the edges of the map.
@@ -436,58 +435,58 @@ public static class BoardCreationHelpers
         if (gs.Settings.Type != GameType.Starter)
             throw new InvalidOperationException("AddPortsForStarter only works with GameType.Starter.");
 
-        var ore10Tile = GetTileAt(gs.Tiles, -2, -2);
+        var ore10Tile = gs.GetTileAt(-2, -2);
         var v1 = GetVertexFromTileInfo(gs.Vertices, ore10Tile, null, null, VertexDirection.N);
         var v2 = GetVertexFromTileInfo(gs.Vertices, ore10Tile, null, null, VertexDirection.NW);
         var port = new Port(v1, v2, PortType.ThreeToOne);
         gs.Ports.Add(port);
 
-        var wool2Tile = GetTileAt(gs.Tiles, 0, -2);
-        var wood9Tile = GetTileAt(gs.Tiles, 2, -2);
+        var wool2Tile = gs.GetTileAt(0, -2);
+        var wood9Tile = gs.GetTileAt(2, -2);
         v1 = GetVertexFromTileInfo(gs.Vertices, wool2Tile, null, null, VertexDirection.N);
         v2 = GetVertexFromTileInfo(gs.Vertices, wool2Tile, wood9Tile, null, null);
         port = new Port(v1, v2, PortType.Grain);
         gs.Ports.Add(port);
 
-        var brick10Tile = GetTileAt(gs.Tiles, 3, -1);
+        var brick10Tile = gs.GetTileAt(3, -1);
         v1 = GetVertexFromTileInfo(gs.Vertices, brick10Tile, null, null, VertexDirection.NE);
         v2 = GetVertexFromTileInfo(gs.Vertices, brick10Tile, wood9Tile, null, null);
         port = new Port(v1, v2, PortType.Ore);
         gs.Ports.Add(port);
 
-        var ore8Tile = GetTileAt(gs.Tiles, 4, 0);
+        var ore8Tile = gs.GetTileAt(4, 0);
         v1 = GetVertexFromTileInfo(gs.Vertices, ore8Tile, null, null, VertexDirection.NE);
         v2 = GetVertexFromTileInfo(gs.Vertices, ore8Tile, null, null, VertexDirection.SE);
         port = new Port(v1, v2, PortType.ThreeToOne);
         gs.Ports.Add(port);
 
-        var wool5Tile = GetTileAt(gs.Tiles, 3, 1);
-        var wool11Tile = GetTileAt(gs.Tiles, 2, 2);
+        var wool5Tile = gs.GetTileAt(3, 1);
+        var wool11Tile = gs.GetTileAt(2, 2);
         v1 = GetVertexFromTileInfo(gs.Vertices, wool5Tile, null, null, VertexDirection.SE);
         v2 = GetVertexFromTileInfo(gs.Vertices, wool5Tile, wool11Tile, null, null);
         port = new Port(v1, v2, PortType.Wool);
         gs.Ports.Add(port);
 
-        var grain6Tile = GetTileAt(gs.Tiles, 0, 2);
+        var grain6Tile = gs.GetTileAt(0, 2);
         v1 = GetVertexFromTileInfo(gs.Vertices, grain6Tile, null, null, VertexDirection.S);
         v2 = GetVertexFromTileInfo(gs.Vertices, grain6Tile, wool11Tile, null, null);
         port = new Port(v1, v2, PortType.ThreeToOne);
         gs.Ports.Add(port);
 
-        var brick5Tile = GetTileAt(gs.Tiles, -2, 2);
+        var brick5Tile = gs.GetTileAt(-2, 2);
         v1 = GetVertexFromTileInfo(gs.Vertices, brick5Tile, null, null, VertexDirection.S);
         v2 = GetVertexFromTileInfo(gs.Vertices, brick5Tile, null, null, VertexDirection.SW);
         port = new Port(v1, v2, PortType.ThreeToOne);
         gs.Ports.Add(port);
 
-        var wood8Tile = GetTileAt(gs.Tiles, -3, 1);
-        var grain9Tile = GetTileAt(gs.Tiles, -4, 0);
+        var wood8Tile = gs.GetTileAt(-3, 1);
+        var grain9Tile = gs.GetTileAt(-4, 0);
         v1 = GetVertexFromTileInfo(gs.Vertices, wood8Tile, null, null, VertexDirection.SW);
         v2 = GetVertexFromTileInfo(gs.Vertices, wood8Tile, grain9Tile, null, null);
         port = new Port(v1, v2, PortType.Brick);
         gs.Ports.Add(port);
 
-        var grain12Tile = GetTileAt(gs.Tiles, -3, -1);
+        var grain12Tile = gs.GetTileAt(-3, -1);
         v1 = GetVertexFromTileInfo(gs.Vertices, grain12Tile, null, null, VertexDirection.NW);
         v2 = GetVertexFromTileInfo(gs.Vertices, grain12Tile, grain9Tile, null, null);
         port = new Port(v1, v2, PortType.Wood);

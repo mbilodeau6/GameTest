@@ -48,31 +48,31 @@ public class GamePlayHelpersTests
     public void GetResourcesEarnedOnLastRoll_DontIncludeDesert()
     {
         // Arrage
-        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var desertTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 0);
+        var desertTile = gs.GetTileAt(0, 0);
         Assert.NotNull(desertTile);
         Assert.Equal(ResourceType.Desert, desertTile.Resource);
 
-        var brickTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, -1, -1);
+        var brickTile = gs.GetTileAt(-1, -1);
         Assert.NotNull(brickTile);
         Assert.Equal(ResourceType.Brick, brickTile.Resource);
 
-        var woolTile = BoardCreationHelpers.GetTileAt(gameState.Tiles, 1, -1);
+        var woolTile = gs.GetTileAt(1, -1);
         Assert.NotNull(woolTile);
         Assert.Equal(ResourceType.Wool, woolTile.Resource);
 
-        var bluePlayer = gameState.Players.First(p => p.Color == PlayerColor.Blue);
+        var bluePlayer = gs.Players.First(p => p.Color == PlayerColor.Blue);
         Assert.NotNull(bluePlayer);
-        var redPlayer = gameState.Players.First(p => p.Color == PlayerColor.Red);
+        var redPlayer = gs.Players.First(p => p.Color == PlayerColor.Red);
         Assert.NotNull(redPlayer);
 
-        gameState.Vertices[0].BuildSettlement(bluePlayer);
+        gs.Vertices[0].BuildSettlement(bluePlayer);
 
-        gameState.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(3)));
+        gs.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(3)));
 
         // Act
-        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(gameState);
+        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(gs);
 
         // Assert
         Assert.Empty(resources);
@@ -1075,18 +1075,18 @@ public class GamePlayHelpersTests
     {
         // Find tiles on vertices I will build or test
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        var t9 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var t10 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var t17 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var t3 = BoardCreationHelpers.GetTileAt(gs.Tiles, -4, 0);
-        var t4 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, 1);
-        var t14 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 0);
-        var t15 = BoardCreationHelpers.GetTileAt(gs.Tiles, -1, 1);
-        var t18 = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, -1);
-        var t8 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
-        var t16 = BoardCreationHelpers.GetTileAt(gs.Tiles, 1, 1);
-        var t5 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 2);
-        var t2 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
+        var t9 = gs.GetTileAt(4, 0);
+        var t10 = gs.GetTileAt(3, -1);
+        var t17 = gs.GetTileAt(2, 0);
+        var t3 = gs.GetTileAt(-4, 0);
+        var t4 = gs.GetTileAt(-3, 1);
+        var t14 = gs.GetTileAt(-2, 0);
+        var t15 = gs.GetTileAt(-1, 1);
+        var t18 = gs.GetTileAt(1, -1);
+        var t8 = gs.GetTileAt(3, 1);
+        var t16 = gs.GetTileAt(1, 1);
+        var t5 = gs.GetTileAt(-2, 2);
+        var t2 = gs.GetTileAt(-3, -1);
 
         // build on vertices
         var v53 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, t9, null, null, VertexDirection.NE);
@@ -1142,9 +1142,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
         var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
@@ -1158,9 +1158,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
         var settlement = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
@@ -1174,9 +1174,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
         var city = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, oreTile, woolTile, woodTile, null);
@@ -1191,9 +1191,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
         var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woolTile, null, HexDirection.E);
@@ -1207,9 +1207,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
         var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
@@ -1223,9 +1223,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testEdge = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, woodTile, woolTile, null);
         var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woolTile, null);
@@ -1242,9 +1242,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, oreTile, woolTile, null);
         var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, null, HexDirection.NE);
@@ -1258,9 +1258,9 @@ public class GamePlayHelpersTests
     {
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        var woodTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
-        var oreTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        var woolTile = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        var woodTile = gs.GetTileAt(2, 0);
+        var oreTile = gs.GetTileAt(4, 0);
+        var woolTile = gs.GetTileAt(3, 1);
 
         var testVertex = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, woodTile, oreTile, woolTile, null);
         var road = BoardCreationHelpers.GetEdgeFromTileInfo(gs.Edges, oreTile, woodTile, null);
@@ -1465,10 +1465,10 @@ public class GamePlayHelpersTests
         var bot = gs.Players.First(p => p.IsBot);
         var human = gs.Players.First(p => !p.IsBot);
 
-        var grain12Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
-        var grain9Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -4, 0);
-        var brick8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, 1);
-        var ore8Tile = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        var grain12Tile = gs.GetTileAt(-3, -1);
+        var grain9Tile = gs.GetTileAt(-4, 0);
+        var brick8Tile = gs.GetTileAt(-3, 1);
+        var ore8Tile = gs.GetTileAt(4, 0);
 
 
         BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, grain12Tile, grain9Tile, null, null).BuildSettlement(human);
@@ -2360,7 +2360,7 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.PlaceRobber, DevelopmentCardType.Knight);
         var human = gs.Players.First(p => !p.IsBot);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
 
         PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
 
@@ -2376,7 +2376,7 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
         var bot = gs.Players.First(p => p.IsBot);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
 
         PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
 
@@ -2437,7 +2437,7 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
 
         PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
 
@@ -2453,7 +2453,7 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
         var human = gs.Players.First(p => !p.IsBot);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
 
         PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), null, t1.Id);
 
@@ -2471,7 +2471,7 @@ public class GamePlayHelpersTests
         var human = gs.Players.First(p => !p.IsBot);
         var readyKnightCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Knight);
         var playedKnightCount = human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
 
         PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
 
@@ -2488,7 +2488,7 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
         var bot = gs.Players.First(p => p.IsBot);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
 
         Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayKnightDevCard(gs, bot, t1));
     }
@@ -2498,7 +2498,7 @@ public class GamePlayHelpersTests
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
         var human = gs.Players.First(p => !p.IsBot);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
 
         Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayKnightDevCard(gs, human, gs.RobberTile));
     }
@@ -2511,7 +2511,7 @@ public class GamePlayHelpersTests
         var bot = gs.Players.First(p => p.IsBot);
         var readyKnightCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.Knight);
         var playedKnightCount = human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight);
-        var t1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 0);
+        var t1 = gs.GetTileAt(2, 0);
         var humanResourceCount = human.ResourceCount;
         var botResourceCount = human.ResourceCount;
 

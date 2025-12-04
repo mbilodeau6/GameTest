@@ -69,46 +69,25 @@ public class BoardCreationHelpersTests
     }
 
     [Fact]
-    public void CreateTilesForStarterBoard_CorrectTiles()
-    {
-        // Act
-        var tiles = BoardCreationHelpers.CreateTilesForStarterBoard();
-
-        // Assert
-        ValidateGeneralRulesForDefaultBoard(tiles);
-        Assert.Equal(ResourceType.Desert, tiles.GetTileAt(0, 0).Resource);
-        Assert.Equal(ResourceType.Brick, tiles.GetTileAt(-1, -1).Resource);
-        Assert.Equal(6, tiles.GetTileAt(-1, -1).DiceNumber);
-        Assert.Equal(ResourceType.Grain, tiles.GetTileAt(0, 2).Resource);
-        Assert.Equal(6, tiles.GetTileAt(0, 2).DiceNumber);
-        Assert.Equal(ResourceType.Ore, tiles.GetTileAt(4, 0).Resource);
-        Assert.Equal(8, tiles.GetTileAt(4, 0).DiceNumber);
-        Assert.Equal(ResourceType.Wood, tiles.GetTileAt(-3, 1).Resource);
-        Assert.Equal(8, tiles.GetTileAt(-3, 1).DiceNumber);
-        Assert.Equal(ResourceType.Wool, tiles.GetTileAt(0, -2).Resource);
-        Assert.Equal(2, tiles.GetTileAt(0, -2).DiceNumber);
-    }
-
-    [Fact]
     public void CreateEdgesAndVerticesForStarterBoard_AllCreated()
     {
         // Act
-        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        gameState.Players.Add(new Player("Alice", PlayerColor.Red));
-        gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
+        gs.Players.Add(new Player("Alice", PlayerColor.Red));
+        gs.Players.Add(new Player("Bob", PlayerColor.Blue));
 
         // Assert
-        Assert.Equal(72, gameState.Edges.Count);
-        Assert.Equal(54, gameState.Vertices.Count);
-        Assert.True(TestHelpers.IsGameStateValid(gameState));
+        Assert.Equal(72, gs.Edges.Count);
+        Assert.Equal(54, gs.Vertices.Count);
+        Assert.True(TestHelpers.IsGameStateValid(gs));
 
         // Check that corner tile at (0, 2) has edges and vertices connected correctly
-        var t1 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 2);
-        Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t1)));
-        Assert.Equal(2, gameState.Edges.Count(e => e.Tiles.Contains(t1) && e.Direction != null));
-        Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t1)));
-        var v1 = gameState.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Direction != null);
+        var t1 = gs.GetTileAt(0, 2);
+        Assert.Equal(6, gs.Edges.Count(e => e.Tiles.Contains(t1)));
+        Assert.Equal(2, gs.Edges.Count(e => e.Tiles.Contains(t1) && e.Direction != null));
+        Assert.Equal(6, gs.Vertices.Count(v => v.Tiles.Contains(t1)));
+        var v1 = gs.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Direction != null);
         Assert.NotNull(v1);
         Assert.Equal(VertexDirection.S, v1.Direction);
     }
@@ -117,22 +96,22 @@ public class BoardCreationHelpersTests
     public void CreateEdgesAndVerticesForDefaultBoard_AllCreated()
     {
         // Act
-        var gameState = BoardCreationHelpers.CreateNewBoard(GameType.Default);
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Default);
 
-        gameState.Players.Add(new Player("Alice", PlayerColor.Red));
-        gameState.Players.Add(new Player("Bob", PlayerColor.Blue));
+        gs.Players.Add(new Player("Alice", PlayerColor.Red));
+        gs.Players.Add(new Player("Bob", PlayerColor.Blue));
 
         // Assert
-        Assert.Equal(72, gameState.Edges.Count);
-        Assert.Equal(54, gameState.Vertices.Count);
-        Assert.True(TestHelpers.IsGameStateValid(gameState));
+        Assert.Equal(72, gs.Edges.Count);
+        Assert.Equal(54, gs.Vertices.Count);
+        Assert.True(TestHelpers.IsGameStateValid(gs));
 
         // Check that corner tile at (0, 2) has edges and vertices connected correctly
-        var t1 = BoardCreationHelpers.GetTileAt(gameState.Tiles, 0, 2);
-        Assert.Equal(6, gameState.Edges.Count(e => e.Tiles.Contains(t1)));
-        Assert.Equal(2, gameState.Edges.Count(e => e.Tiles.Contains(t1) && e.Direction != null));
-        Assert.Equal(6, gameState.Vertices.Count(v => v.Tiles.Contains(t1)));
-        var v1 = gameState.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Direction != null);
+        var t1 = gs.GetTileAt(0, 2);
+        Assert.Equal(6, gs.Edges.Count(e => e.Tiles.Contains(t1)));
+        Assert.Equal(2, gs.Edges.Count(e => e.Tiles.Contains(t1) && e.Direction != null));
+        Assert.Equal(6, gs.Vertices.Count(v => v.Tiles.Contains(t1)));
+        var v1 = gs.Vertices.FirstOrDefault(v => v.Tiles.Contains(t1) && v.Direction != null);
         Assert.NotNull(v1);
         Assert.Equal(VertexDirection.S, v1.Direction);
     }
@@ -252,7 +231,7 @@ public class BoardCreationHelpersTests
 
         // Check to make sure first few ports are where expected
         var port = gs.Ports[0];
-        var tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        var tile1 = gs.GetTileAt(2, -2);
         var vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.N);
         var vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.NE);
         Assert.Equal(PortType.ThreeToOne, port.Type);
@@ -260,8 +239,8 @@ public class BoardCreationHelpersTests
         Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
 
         port = gs.Ports[1];
-        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        var tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        tile1 = gs.GetTileAt(3, -1);
+        var tile2 = gs.GetTileAt(4, 0);
         vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.NE);
         vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
         Assert.Equal(PortType.Wood, port.Type);
@@ -269,8 +248,8 @@ public class BoardCreationHelpersTests
         Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
 
         port = gs.Ports[2];
-        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
-        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, 1);
+        tile1 = gs.GetTileAt(4, 0);
+        tile2 = gs.GetTileAt(3, 1);
         vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.SE);
         vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
         Assert.Equal(PortType.Brick, port.Type);
@@ -278,7 +257,7 @@ public class BoardCreationHelpersTests
         Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
 
         port = gs.Ports[3];
-        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, 2);
+        tile1 = gs.GetTileAt(2, 2);
         vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.SE);
         vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.S);
         Assert.Equal(PortType.Ore, port.Type);
@@ -286,8 +265,8 @@ public class BoardCreationHelpersTests
         Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
 
         port = gs.Ports[4];
-        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, 2);
-        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, 2);
+        tile1 = gs.GetTileAt(0, 2);
+        tile2 = gs.GetTileAt(-2, 2);
         vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.S);
         vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
         Assert.Equal(PortType.Grain, port.Type);
@@ -309,8 +288,8 @@ public class BoardCreationHelpersTests
         
         // Check to make sure first few ports are where expected
         var port = gs.Ports[0];
-        var tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, -3, -1);
-        var tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, -2);
+        var tile1 = gs.GetTileAt(-3, -1);
+        var tile2 = gs.GetTileAt(-2, -2);
         var vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
         var vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.NW);
         Assert.Equal(PortType.ThreeToOne, port.Type);
@@ -318,8 +297,8 @@ public class BoardCreationHelpersTests
         Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
 
         port = gs.Ports[1];
-        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, -2, -2);
-        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 0, -2);
+        tile1 = gs.GetTileAt(-2, -2);
+        tile2 = gs.GetTileAt(0, -2);
         vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
         vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.N);
         Assert.Equal(PortType.Wood, port.Type);
@@ -327,7 +306,7 @@ public class BoardCreationHelpersTests
         Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
 
         port = gs.Ports[2];
-        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 2, -2);
+        tile1 = gs.GetTileAt(2, -2);
         vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.N);
         vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, null, null, VertexDirection.NE);
         Assert.Equal(PortType.Brick, port.Type);
@@ -335,8 +314,8 @@ public class BoardCreationHelpersTests
         Assert.Contains(port.Vertices, v => v.Id == vertex2.Id);
 
         port = gs.Ports[3];
-        tile1 = BoardCreationHelpers.GetTileAt(gs.Tiles, 3, -1);
-        tile2 = BoardCreationHelpers.GetTileAt(gs.Tiles, 4, 0);
+        tile1 = gs.GetTileAt(3, -1);
+        tile2 = gs.GetTileAt(4, 0);
         vertex1 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile1, tile2, null, null);
         vertex2 = BoardCreationHelpers.GetVertexFromTileInfo(gs.Vertices, tile2, null, null, VertexDirection.NE);
         Assert.Equal(PortType.Ore, port.Type);

@@ -180,4 +180,7 @@ public class GameState
         PlayerWithLargestArmy = player;
     }
 
+    public Tile GetTileAt(int x, int y)
+       => Tiles.First(t => t.X == x && t.Y == y);
+
 }
