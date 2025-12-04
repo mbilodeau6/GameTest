@@ -99,7 +99,7 @@ public class BotAITests
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceFirstSettlement);
         var bai = new BotAI(gs);
 
-        Assert.Equal(0, GamePlayHelpers.CountSettlementsForPlayer(gs, GetBotPlayer(gs)));
+        Assert.Equal(0, gs.CountSettlementsForPlayer(GetBotPlayer(gs)));
 
         // Act
         var move = bai.GetSetUpMove();
@@ -121,7 +121,7 @@ public class BotAITests
         var botPlayer = GetBotPlayer(gs);
         vertex.BuildSettlement(botPlayer);
 
-        Assert.Equal(0, GamePlayHelpers.CountRoadsForPlayer(gs, botPlayer));
+        Assert.Equal(0, gs.CountRoadsForPlayer(botPlayer));
 
         // Act
         var move = bai.GetSetUpMove();
@@ -147,7 +147,7 @@ public class BotAITests
 
         var bai = new BotAI(gs);
 
-        Assert.Equal(1, GamePlayHelpers.CountSettlementsForPlayer(gs, GetBotPlayer(gs)));
+        Assert.Equal(1, gs.CountSettlementsForPlayer(GetBotPlayer(gs)));
 
         // Act
         var move = bai.GetSetUpMove();
@@ -178,7 +178,7 @@ public class BotAITests
 
         var bai = new BotAI(gs);
 
-        Assert.Equal(1, GamePlayHelpers.CountRoadsForPlayer(gs, botPlayer));
+        Assert.Equal(1, gs.CountRoadsForPlayer(botPlayer));
 
         // Act
         var move = bai.GetSetUpMove();

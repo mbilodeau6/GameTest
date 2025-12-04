@@ -1,9 +1,5 @@
-using System.Diagnostics.Eventing.Reader;
-using System.Linq.Expressions;
-using Azure;
 using GameTest.DTOs;
 using GameTest.Models;
-using Microsoft.Identity.Client.Extensibility;
 
 namespace GameTest.Services;
 
@@ -62,7 +58,6 @@ public static class GamePlayHelpers
                 kvpPlayer.Key.AssignResources(kvpResource.Key, kvpResource.Value);
             }
         }
-
     }
 
     public static void AssignResourcesBasedOnLastDiceRoll(GameState gameState)
@@ -141,33 +136,10 @@ public static class GamePlayHelpers
         }
     }
 
-    public static int CountSettlementsForPlayer(GameState gs, Player player)
-    {
-        return gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
-    }
-
-    public static int CountCitiesForPlayer(GameState gs, Player player)
-    {
-        return gs.Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City);
-    }
-
-    public static int CountRoadsForPlayer(GameState gs, Player player)
-    {
-        return gs.Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
-    }
-
     public static int CountVictoryPointDevCardsForPlayer(Player player)
     {
         return player.DevCardsPurchasedThisRound.Count(d => d == DevelopmentCardType.VictoryPoint) 
             + player.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.VictoryPoint);
-    }
-
-    public static void UpdatePlayerVictoryPoints(GameState gs, Player player)
-    {
-        int victoryPoints = CountSettlementsForPlayer(gs, player) + (CountCitiesForPlayer(gs, player) * 2)
-            + CountVictoryPointDevCardsForPlayer(player);
-
-        player.SetVictoryPoints(victoryPoints);
     }
 
     public static void EndTurn(Player player, GameState gameState, bool skipGameLoop = false)
@@ -338,7 +310,7 @@ public static class GamePlayHelpers
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
         MarkBlockedVertices(gs, vertex);
         PopulatePlayerPorts(gs);
-        UpdatePlayerVictoryPoints(gs, player);
+        gs.UpdatePlayerVictoryPoints(player);
     }
 
     // TODO: Return a GameResult type that can indicate success/failure and include messages.
@@ -391,7 +363,7 @@ public static class GamePlayHelpers
             WithdrawResourcesToBuildCity(player);
             vertex.UpgradeToCity();
             gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
-            UpdatePlayerVictoryPoints(gs, player);
+            gs.UpdatePlayerVictoryPoints(player);
         }
     }
 
@@ -438,7 +410,9 @@ public static class GamePlayHelpers
     {
         int loopCounter = 0; // Failsafe to prevent infinite loops
 
-        gs.Phase = gs.Phase.GetNextPhase(gs.Players, CountSettlementsForPlayer(gs, gs.Phase.CurrentPlayer), CountRoadsForPlayer(gs, gs.Phase.CurrentPlayer), gs.Dice.GetCombinedValue(), gs.RobberTile);
+        gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
+            gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer), 
+            gs.Dice.GetCombinedValue(), gs.RobberTile);
 
         if (gs.Phase.CurrentPlayer == null)
             throw new InvalidOperationException("Shouldn't call GameLoop before current player set.");
@@ -510,7 +484,9 @@ public static class GamePlayHelpers
                     GamePlayHelpers.PlaceRobber(gs, gs.Phase.CurrentPlayer, tile);
                 }
 
-                gs.Phase = gs.Phase.GetNextPhase(gs.Players, CountSettlementsForPlayer(gs, gs.Phase.CurrentPlayer), CountRoadsForPlayer(gs, gs.Phase.CurrentPlayer), gs.Dice.GetCombinedValue(), gs.RobberTile);
+                gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
+                    gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer), 
+                    gs.Dice.GetCombinedValue(), gs.RobberTile);
             }
         }
     }
@@ -555,7 +531,7 @@ public static class GamePlayHelpers
         MarkBlockedVertices(gs);
         PopulatePlayerPorts(gs);
         foreach(var player in gs.Players)
-            UpdatePlayerVictoryPoints(gs, player);
+            gs.UpdatePlayerVictoryPoints(player);
 
         return gs;
     }
@@ -621,17 +597,17 @@ public static class GamePlayHelpers
 
     public static bool UnusedRoadAvailable(GameState gs, Player player)
     {
-        return CountRoadsForPlayer(gs, player) < gs.Settings.RoadsPerPlayer;
+        return gs.CountRoadsForPlayer(player) < gs.Settings.RoadsPerPlayer;
     }
 
     public static bool UnusedSettlementAvailable(GameState gs, Player player)
     {
-        return CountSettlementsForPlayer(gs, player) < gs.Settings.SettlementsPerPlayer;
+        return gs.CountSettlementsForPlayer(player) < gs.Settings.SettlementsPerPlayer;
     }
 
     public static bool UnusedCityAvailable(GameState gs, Player player)
     {
-        return CountCitiesForPlayer(gs, player) < gs.Settings.CitiesPerPlayer;
+        return gs.CountCitiesForPlayer(player) < gs.Settings.CitiesPerPlayer;
     }
 
     public static void PopulatePlayerPorts(GameState gs)
@@ -716,7 +692,7 @@ public static class GamePlayHelpers
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.BuyDevelopmentCard, gs.DevelopmentCards[0]));
         gs.DevelopmentCards.RemoveAt(0);
         WithdrawResourcesToBuyDevCard(player);
-        UpdatePlayerVictoryPoints(gs, player);
+        gs.UpdatePlayerVictoryPoints(player);
     }
     public static ResponseDTO BuyDevCardFromUser(GameState gs, string playerId)
     {
@@ -913,7 +889,7 @@ public static class GamePlayHelpers
         player.PlayDevelopmentCard(DevelopmentCardType.Knight);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
-        UpdatePlayerVictoryPoints(gs, player);
+        gs.UpdatePlayerVictoryPoints(player);
     }
 
     public static ResponseDTO PlayKnightDevCardFromUser(GameState gs, PlayDevCardRequest request)

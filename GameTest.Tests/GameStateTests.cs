@@ -1,6 +1,7 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
+using GameTest.Services;
 
 namespace GameTest.Tests;
 
@@ -364,4 +365,133 @@ public class GameStateTests
         Assert.NotNull(game.PlayerWithLargestArmy);
         Assert.Equal(p1.Id, game.PlayerWithLargestArmy.Id);
     }
+
+
+    private static GameState CreateTestGameWithManyRoads()
+    {
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var player3 = new Player("Alex", PlayerColor.Orange);
+        gs.AddPlayer(player3);
+        gs.Edges[0].BuildRoad(gs.Players[0]);
+        gs.Vertices[0].BuildSettlement(gs.Players[0]);
+        gs.Vertices[1].BuildSettlement(gs.Players[1]);
+        gs.Vertices[2].BuildSettlement(gs.Players[1]);
+        gs.Vertices[3].BuildSettlement(gs.Players[1]);
+        gs.Vertices[4].BuildSettlement(gs.Players[1]);
+        gs.Vertices[4].UpgradeToCity();
+        gs.Edges[1].BuildRoad(player3);
+        gs.Edges[2].BuildRoad(player3);
+        gs.Vertices[5].BuildSettlement(player3);
+        gs.Vertices[5].UpgradeToCity();
+        gs.Vertices[6].BuildSettlement(player3);
+        gs.Vertices[6].UpgradeToCity();
+
+        return gs;
+    }
+
+    [Fact]
+    public void CountSettlementsForPlayer_CountRedPlayer_1()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = gs.CountSettlementsForPlayer(gs.Players[0]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void CountSettlementsForPlayer_CountBluePlayer_3()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = gs.CountSettlementsForPlayer(gs.Players[1]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Blue, gs.Players[1].Color);
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public void CountSettlementsForPlayer_CountOrangePlayer_0()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = gs.CountSettlementsForPlayer(gs.Players[2]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Orange, gs.Players[2].Color);
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public void CountRoadsForPlayer_CountRedPlayer_1()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = gs.CountRoadsForPlayer(gs.Players[0]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Red, gs.Players[0].Color);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void CountRoadsForPlayer_CountBluePlayer_3()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = gs.CountRoadsForPlayer(gs.Players[1]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Blue, gs.Players[1].Color);
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public void CountRoadsForPlayer_CountOrangePlayer_0()
+    {
+        // Arrange
+        var gs = CreateTestGameWithManyRoads();
+
+        // Act
+        var count = gs.CountRoadsForPlayer(gs.Players[2]);
+
+        // Assert
+        Assert.Equal(PlayerColor.Orange, gs.Players[2].Color);
+        Assert.Equal(2, count);
+    }
+
+    [Fact]
+    public void UpdatePlayerVictoryPoints_BluePlayer()
+    {
+        var gs = CreateTestGameWithManyRoads();
+        var bluePlayer = gs.Players.First(p => p.Color == PlayerColor.Blue);
+        gs.UpdatePlayerVictoryPoints(bluePlayer);
+        Assert.Equal(5, bluePlayer.VictoryPoints);
+
+        bluePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        gs.UpdatePlayerVictoryPoints(bluePlayer);
+        Assert.Equal(6, bluePlayer.VictoryPoints);
+
+        bluePlayer.MakeNewDevelopmentCardsPlayable();
+        bluePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        gs.UpdatePlayerVictoryPoints(bluePlayer);
+        Assert.Equal(7, bluePlayer.VictoryPoints);
+    }
+
+    // TODO: Add tests where victory points come from dev cards, longest road, and largest army
+
+
 }

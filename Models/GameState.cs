@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics.Eventing.Reader;
 using GameTest.DTOs;
+using GameTest.Services;
 
 namespace GameTest.Models;
 
@@ -203,5 +204,28 @@ public class GameState
             return Edges.First(e => e.Tiles.Contains(t1) && e.Tiles.Contains(t2));
 
         return Edges.First(e => e.Tiles.Contains(t1) && e.Direction == dir);
+    }
+
+    public int CountSettlementsForPlayer(Player player)
+    {
+        return Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
+    }
+
+    public int CountCitiesForPlayer(Player player)
+    {
+        return Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City);
+    }
+
+    public int CountRoadsForPlayer(Player player)
+    {
+        return Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
+    }
+
+    public void UpdatePlayerVictoryPoints(Player player)
+    {
+        int victoryPoints = CountSettlementsForPlayer(player) + (CountCitiesForPlayer(player) * 2)
+            + GamePlayHelpers.CountVictoryPointDevCardsForPlayer(player);
+
+        player.SetVictoryPoints(victoryPoints);
     }
 }

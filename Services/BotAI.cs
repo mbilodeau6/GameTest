@@ -85,7 +85,7 @@ public class BotAI
         var tradeRates = CalculateTradeRates(State.Phase.CurrentPlayer);
 
         if (couldBuildCity && shortForCity > 0 && (!couldBuildRoad 
-            || GamePlayHelpers.CountSettlementsForPlayer(State, State.Phase.CurrentPlayer) >= State.Settings.SettlementsPerPlayer
+            || State.CountSettlementsForPlayer(State.Phase.CurrentPlayer) >= State.Settings.SettlementsPerPlayer
             || (shortForRoad > shortForCity && !couldBuildSettlement)
             || shortForSettlement > shortForCity))
         {

@@ -72,8 +72,8 @@ public class IntegrationTests
 
         // TODO: Figure out a way to know the type/count of vertices/edges. Will likely need
         // mock dice implemented.
-        Assert.True(GamePlayHelpers.CountSettlementsForPlayer(board.GetGameState(), board.GetBluePlayer()) >= 2);
-        Assert.True(GamePlayHelpers.CountRoadsForPlayer(board.GetGameState(), board.GetBluePlayer()) >= 2);
+        Assert.True(board.GetGameState().CountSettlementsForPlayer(board.GetBluePlayer()) >= 2);
+        Assert.True(board.GetGameState().CountRoadsForPlayer(board.GetBluePlayer()) >= 2);
 
         foreach(var vertex in board.GetGameState().Vertices)
             if (GamePlayHelpers.HasBuilding(vertex))

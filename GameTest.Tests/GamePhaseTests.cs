@@ -580,7 +580,7 @@ public class GamePhaseTests
         board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
         board.GetVertex(TestVertex.V10).UpgradeToCity();
         board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
-        GamePlayHelpers.UpdatePlayerVictoryPoints(board.GetGameState(), board.GetRedPlayer());
+        board.GetGameState().UpdatePlayerVictoryPoints(board.GetRedPlayer());
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 0, 0, board.GetGameState().RobberTile);
 
@@ -601,7 +601,7 @@ public class GamePhaseTests
         board.GetVertex(TestVertex.V3).UpgradeToCity();
         board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
         board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
-        GamePlayHelpers.UpdatePlayerVictoryPoints(board.GetGameState(), board.GetRedPlayer());
+        board.GetGameState().UpdatePlayerVictoryPoints(board.GetRedPlayer());
 
         Assert.False(board.GetGameState().Phase.PlayerHasWon(board.GetRedPlayer()));
     }
@@ -617,7 +617,7 @@ public class GamePhaseTests
         board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
         board.GetVertex(TestVertex.V10).UpgradeToCity();
         board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
-        GamePlayHelpers.UpdatePlayerVictoryPoints(board.GetGameState(), board.GetRedPlayer());
+        board.GetGameState().UpdatePlayerVictoryPoints(board.GetRedPlayer());
 
         Assert.True(board.GetGameState().Phase.PlayerHasWon(board.GetRedPlayer()));
     }
