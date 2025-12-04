@@ -3056,11 +3056,8 @@ public class GamePlayHelpersTests
         board.GetEdge(TestEdge.E8).BuildRoad(board.GetRedPlayer());
         board.GetVertex(TestVertex.V5).BuildSettlement(board.GetBluePlayer()); // Opponents settlment
 
-        // Act
-        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
-
-        // Assert
-        Assert.Null(vertex);
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer()));
     }
 
     [Fact]
@@ -3093,11 +3090,8 @@ public class GamePlayHelpersTests
         board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
         board.GetEdge(TestEdge.E2).BuildRoad(board.GetRedPlayer()); 
 
-        // Act
-        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
-
-        // Assert
-        Assert.Null(vertex);
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer()));
     }
 
     [Fact]
@@ -3109,8 +3103,6 @@ public class GamePlayHelpersTests
         board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
 
         // Act & Assert
-        var vertex = GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer());
-
-        Assert.Null(vertex);
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.FindSettlementWithNoRoads(board.GetGameState(), board.GetRedPlayer()));
     }
 }
