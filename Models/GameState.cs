@@ -228,4 +228,19 @@ public class GameState
 
         player.SetVictoryPoints(victoryPoints);
     }
+
+    public bool UnusedRoadAvailable(Player player)
+    {
+        return CountRoadsForPlayer(player) < Settings.RoadsPerPlayer;
+    }
+
+    public bool UnusedSettlementAvailable(Player player)
+    {
+        return CountSettlementsForPlayer(player) < Settings.SettlementsPerPlayer;
+    }
+
+    public bool UnusedCityAvailable(Player player)
+    {
+        return CountCitiesForPlayer(player) < Settings.CitiesPerPlayer;
+    }
 }

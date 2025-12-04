@@ -266,7 +266,7 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer.Id != playerId)
             return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
-        if (!UnusedRoadAvailable(gs, player))
+        if (!gs.UnusedRoadAvailable(player))
             return new ResponseDTO(false, 1030, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
 
@@ -327,7 +327,7 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer.Id != playerId)
             return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
-        if (!UnusedSettlementAvailable(gs, player))
+        if (!gs.UnusedSettlementAvailable(player))
             return new ResponseDTO(false, 1029, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
@@ -380,7 +380,7 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer.Id != playerId)
             return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
-        if (!UnusedCityAvailable(gs, player))
+        if (!gs.UnusedCityAvailable(player))
             return new ResponseDTO(false, 1028, $"GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);
 
         var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
@@ -593,21 +593,6 @@ public static class GamePlayHelpers
 
         
         return BankTrade(gs, new TradeRequest(gs, request));
-    }
-
-    public static bool UnusedRoadAvailable(GameState gs, Player player)
-    {
-        return gs.CountRoadsForPlayer(player) < gs.Settings.RoadsPerPlayer;
-    }
-
-    public static bool UnusedSettlementAvailable(GameState gs, Player player)
-    {
-        return gs.CountSettlementsForPlayer(player) < gs.Settings.SettlementsPerPlayer;
-    }
-
-    public static bool UnusedCityAvailable(GameState gs, Player player)
-    {
-        return gs.CountCitiesForPlayer(player) < gs.Settings.CitiesPerPlayer;
     }
 
     public static void PopulatePlayerPorts(GameState gs)

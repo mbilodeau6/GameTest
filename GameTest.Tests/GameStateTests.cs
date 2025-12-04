@@ -493,5 +493,98 @@ public class GameStateTests
 
     // TODO: Add tests where victory points come from dev cards, longest road, and largest army
 
+    private static TestGameBoard CreateBoardWithOnlyOneOfEachBuildAvailable()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var player = board.GetRedPlayer();
 
+        // build all but one road
+        board.GetEdge(TestEdge.E25).BuildRoad(player);
+        board.GetEdge(TestEdge.E5).BuildRoad(player);
+        board.GetEdge(TestEdge.E12).BuildRoad(player);
+        board.GetEdge(TestEdge.E6).BuildRoad(player);
+
+        // build all but one city
+        board.GetVertex(TestVertex.V5).UpgradeToCity();
+
+        // build all but one settlement
+        board.GetVertex(TestVertex.V20).BuildSettlement(player);
+        board.GetVertex(TestVertex.V22).BuildSettlement(player);
+
+        return board;
+    }
+
+    private static TestGameBoard CreateBoardWithAllBuildingsInUse()
+    {
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
+
+        // Build remaining buildings to hit max
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V1).UpgradeToCity();
+        board.GetEdge(TestEdge.E24).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V18).BuildSettlement(board.GetRedPlayer());
+
+        return board;
+    }
+
+
+    [Fact]
+    public void UnusedRoadAvailable_Yes()
+    {
+        // Arrange
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
+
+        // Act & Assert
+        Assert.True(board.GetGameState().UnusedRoadAvailable(board.GetRedPlayer())); 
+    }
+
+    [Fact]
+    public void UnusedRoadAvailable_No()
+    {
+        // Arrange
+        var board = CreateBoardWithAllBuildingsInUse();
+
+        // Act & Assert
+        Assert.False(board.GetGameState().UnusedRoadAvailable(board.GetRedPlayer())); 
+    }
+
+    [Fact]
+    public void UnusedSettlementAvailable_Yes()
+    {
+        // Arrange
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
+
+        // Act & Assert
+        Assert.True(board.GetGameState().UnusedSettlementAvailable(board.GetRedPlayer())); 
+    }
+
+    [Fact]
+    public void UnusedSettlementAvailable_No()
+    {
+        // Arrange
+        var board = CreateBoardWithAllBuildingsInUse();
+
+        // Act & Assert
+        Assert.False(board.GetGameState().UnusedSettlementAvailable(board.GetRedPlayer())); 
+    }
+
+    [Fact]
+    public void UnusedCityAvailable_Yes()
+    {
+        // Arrange
+        var board = CreateBoardWithOnlyOneOfEachBuildAvailable();
+
+        // Act & Assert
+        Assert.True(board.GetGameState().UnusedCityAvailable(board.GetRedPlayer())); 
+    }
+
+    [Fact]
+    public void UnusedCityAvailable_No()
+    {
+        // Arrange
+        var board = CreateBoardWithAllBuildingsInUse();
+
+        // Act & Assert
+        Assert.False(board.GetGameState().UnusedCityAvailable(board.GetRedPlayer())); 
+    }
 }
