@@ -587,4 +587,151 @@ public class GameStateTests
         // Act & Assert
         Assert.False(board.GetGameState().UnusedCityAvailable(board.GetRedPlayer())); 
     }
+
+    private TestGameBoard CreateLengthTestBoard2_1()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E1).BuildRoad(board.GetRedPlayer());
+
+        board.GetVertex(TestVertex.V3).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E3).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E10).BuildRoad(board.GetBluePlayer());
+
+        return board;
+    }
+    [Fact]
+    public void GetLongestRoadLength_One()
+    {
+        var board = CreateLengthTestBoard2_1();
+        Assert.Equal(1, board.GetGameState().GetLongestRoadLength(board.GetRedPlayer()));        
+    }
+
+    [Fact]
+    public void GetLongestRoadLength_Two()
+    {
+        var board = CreateLengthTestBoard2_1();
+        Assert.Equal(2, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));        
+    }
+
+    private TestGameBoard CreateLengthTestBoard6_4()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V22).BuildSettlement(board.GetBluePlayer());
+        board.GetVertex(TestVertex.V1).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E27).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E26).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E25).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E11).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E5).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E12).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E6).BuildRoad(board.GetBluePlayer());
+
+        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V13).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E4).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E3).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E9).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E18).BuildRoad(board.GetRedPlayer());
+
+        return board;
+    }
+
+    [Fact]
+    public void GetLongestRoadLength_StraightFour()
+    {
+        var board = CreateLengthTestBoard6_4();
+
+        Assert.Equal(4, board.GetGameState().GetLongestRoadLength(board.GetRedPlayer()));        
+    }
+
+    [Fact]
+    public void GetLongestRoadLength_SixDueToBranch()
+    {
+        var board = CreateLengthTestBoard6_4();
+
+        Assert.Equal(6, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));        
+    }
+
+    private TestGameBoard CreateLengthTestBoard7_2()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V15).BuildSettlement(board.GetBluePlayer());
+        board.GetVertex(TestVertex.V6).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E5).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E4).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E10).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E21).BuildRoad(board.GetBluePlayer());
+
+        board.GetVertex(TestVertex.V4).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V13).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E3).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E9).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E2).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E8).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E16).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E17).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E18).BuildRoad(board.GetRedPlayer());
+
+        return board;
+    }
+
+    [Fact]
+    public void GetLongestRoadLength_Seven()
+    {
+        var board = CreateLengthTestBoard7_2();
+
+        Assert.Equal(7, board.GetGameState().GetLongestRoadLength(board.GetRedPlayer()));        
+    }
+
+    [Fact]
+    public void GetLongestRoadLength_TwoDueToSplit()
+    {
+        var board = CreateLengthTestBoard7_2();
+
+        Assert.Equal(2, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));        
+    }
+
+    private TestGameBoard CreateLengthTestBoard8_4()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetVertex(TestVertex.V9).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E14).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E13).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E7).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E1).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E8).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E15).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E16).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E2).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E3).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E6).BuildRoad(board.GetBluePlayer());
+
+        board.GetVertex(TestVertex.V4).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V18).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E10).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E4).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E24).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E5).BuildRoad(board.GetRedPlayer());
+
+        return board;
+    }
+
+    [Fact]
+    public void GetLongestRoadLength_FourBranch()
+    {
+        var board = CreateLengthTestBoard8_4();
+
+        Assert.Equal(4, board.GetGameState().GetLongestRoadLength(board.GetRedPlayer()));        
+    }
+
+
+    [Fact]
+    public void GetLongestRoadLength_Eight()
+    {
+         var board = CreateLengthTestBoard8_4();
+
+        Assert.Equal(8, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));        
+   }
 }

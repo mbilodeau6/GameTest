@@ -253,6 +253,18 @@ public static class GamePlayHelpers
 
         edge.BuildRoad(player);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
+
+        if (gs.PlayerWithLongestRoad == null && gs.GetLongestRoadLength(player) > 4)
+            gs.AssignLongestRoadToPlayer(player);
+
+        if (gs.PlayerWithLongestRoad != null && player.Id != gs.PlayerWithLongestRoad.Id && gs.GetLongestRoadLength(player) > gs.GetLongestRoadLength(gs.PlayerWithLongestRoad))
+        {
+            var previousPlayer = gs.PlayerWithLongestRoad;
+            gs.AssignLongestRoadToPlayer(player);
+            gs.UpdatePlayerVictoryPoints(previousPlayer);
+        }
+
+        gs.UpdatePlayerVictoryPoints(player);
     }
 
     public static ResponseDTO BuildRoadRequestFromUser(GameState gs, string playerId, string edgeId)

@@ -221,6 +221,47 @@ public class GameState
         return Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
     }
 
+    public int GetLongestRoadLength(int lengthSoFar, Player player, Edge edge, List<string> visitedEdgeIds, List<string> visitedVertexIds)
+    {
+        if (edge.Owner == null || (edge.Owner != null && edge.Owner.Id != player.Id) || visitedEdgeIds.Contains(edge.Id))
+            return lengthSoFar;
+
+        visitedEdgeIds.Add(edge.Id);
+        lengthSoFar++;
+
+        var newLongest = lengthSoFar;
+
+        foreach (var vertex in edge.Vertices)
+        {
+            if ((vertex.Owner != null && vertex.Owner.Id != player.Id) || visitedVertexIds.Contains(vertex.Id))
+                continue;
+
+            visitedVertexIds.Add(vertex.Id);
+
+            foreach (var edge2 in vertex.Edges)
+            {
+                var newLength = GetLongestRoadLength(lengthSoFar, player, edge2, new List<string>(visitedEdgeIds), new List<string>(visitedVertexIds));
+                if (newLength > newLongest)
+                    newLongest = newLength;
+            }
+        }
+
+        return newLongest;
+    }
+
+    public int GetLongestRoadLength(Player player)
+    {
+        var longestSoFar = 0;
+
+        foreach(var edge in Edges.Where(e => e.Owner != null && e.Owner.Id == player.Id)) {
+            var length = GetLongestRoadLength(0, player, edge, new List<string>(), new List<string>());
+            if (length > longestSoFar)
+                longestSoFar = length;
+        }
+
+        return longestSoFar;
+    }
+
     public void UpdatePlayerVictoryPoints(Player player)
     {
         int victoryPoints = CountSettlementsForPlayer(player) + (CountCitiesForPlayer(player) * 2)

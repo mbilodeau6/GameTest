@@ -150,6 +150,8 @@ public static class TestHelpers
         board.GetEdge(TestEdge.E3).BuildRoad(board.GetBluePlayer());
         board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
         board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
+        board.GetGameState().UpdatePlayerVictoryPoints(board.GetBluePlayer());
+        board.GetGameState().UpdatePlayerVictoryPoints(board.GetRedPlayer());
 
         return board;
     }
