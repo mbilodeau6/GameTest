@@ -96,7 +96,8 @@ public class ResponseDTO
         { 1039, "Player does not have the development card required for this action."},
         { 1040, "YearOfPlenty requires the selection of exactly two resources."},
         { 1041, "A play Knight request must specify a tile id."},
-        { 1042, "During set up, the second road must be built off of the second settlement not off of the first settlement or first road."}, 
+        { 1042, "During set up, the second road must be built off of the second settlement not off of the first settlement or first road."},
+        { 1043, "Can not play two development cards in the same round."}, 
         { 9999, "Unexpected error."},
     };
 }

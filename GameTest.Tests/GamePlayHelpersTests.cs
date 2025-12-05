@@ -447,6 +447,47 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void PlayDevCard_SetsDevCardPlayedState()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        board.GetRedPlayer().MakeNewDevelopmentCardsPlayable();
+
+        Assert.False(board.GetGameState().Phase.DevCardPlayedThisRound);
+        GamePlayHelpers.PlayYearOfPlentyDevCard(board.GetGameState(), board.GetRedPlayer(), new List<ResourceType>() { ResourceType.Wood, ResourceType.Brick});
+        Assert.True(board.GetGameState().Phase.DevCardPlayedThisRound);
+    }
+
+    [Fact]
+    public void EndTurn_ClearsDevCardPlayedState()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetDevCardPlayedThisRound();
+        Assert.True(board.GetGameState().Phase.DevCardPlayedThisRound);
+
+        GamePlayHelpers.EndTurn(board.GetRedPlayer(), board.GetGameState());
+
+        Assert.False(board.GetGameState().Phase.DevCardPlayedThisRound);
+    }
+
+    [Fact]
+    public void PlayDevCard_PreventSecondInSingleTurn()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.Knight);
+        board.GetRedPlayer().MakeNewDevelopmentCardsPlayable();
+
+        Assert.False(board.GetGameState().Phase.DevCardPlayedThisRound);
+        GamePlayHelpers.PlayYearOfPlentyDevCard(board.GetGameState(), board.GetRedPlayer(), new List<ResourceType>() { ResourceType.Wood, ResourceType.Brick});
+        Assert.True(board.GetGameState().Phase.DevCardPlayedThisRound);
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayKnightDevCard(board.GetGameState(), board.GetRedPlayer(), board.GetTile(TestTile.T3)));
+    }
+
+    [Fact]
     public void BuildRoad_MissingPlayer()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
@@ -1722,6 +1763,23 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void PlayMonopolyDevCardFromUser_AlreadyPlayedDevCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
+        gs.Phase.SetDevCardPlayedThisRound();
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1043, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
     public void PlayMonopolyDevCardFromUser_Valid()
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
@@ -1965,6 +2023,24 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_AlreadyPlayedDevCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.YearOfPlenty);
+        gs.Phase.SetDevCardPlayedThisRound();
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1043, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+
+    [Fact]
     public void PlayYearOfPlentyDevCardFromUser_Valid()
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
@@ -2094,6 +2170,22 @@ public class GamePlayHelpersTests
 
         Assert.False(response.Success);
         Assert.Equal(1039, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+    
+    [Fact]
+    public void PlayRoadBuildingDevCardFromUser_AlreadyPlayedDevCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.RoadBuilding);
+        gs.Phase.SetDevCardPlayedThisRound();
+        var human = gs.Players.First(p => !p.IsBot);
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+
+        var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1043, response.ErrorCode);
         Assert.Null(response.GameState);
     }
 
@@ -2241,6 +2333,22 @@ public class GamePlayHelpersTests
 
         Assert.False(response.Success);
         Assert.Equal(9999, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void PlayKnightDevCardFromUser_AlreadyPlayedDevCard()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Knight);
+        gs.Phase.SetDevCardPlayedThisRound();
+        var human = gs.Players.First(p => !p.IsBot);
+        var t1 = gs.GetTileAt(2, 0);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1043, response.ErrorCode);
         Assert.Null(response.GameState);
     }
 

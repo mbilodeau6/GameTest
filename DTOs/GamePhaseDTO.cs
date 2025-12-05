@@ -14,14 +14,13 @@ public class GamePhaseDTO
     public string? OriginalRobberTileId { get; } = null;
     public int? RoadsPreRoadBuilding {get; } = null;
     public bool WaitingForRoll { get; } = false;
-
-
+    public bool DevCardPlayedThisRound {get; } = false;
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public GamePhaseDTO(string phaseState, string? currentPlayerId = null, string? endPlayerId = null, 
         string? previousState = null, string? originalRobberTileId = null, int? roadsPreRoadBuilding = null,
-        bool waitingForRoll = false)
+        bool waitingForRoll = false, bool devCardPlayedThisRound = false)
     {
         CurrentPlayerId = currentPlayerId;
         PhaseState = phaseState;
@@ -30,6 +29,7 @@ public class GamePhaseDTO
         OriginalRobberTileId = originalRobberTileId;
         RoadsPreRoadBuilding = roadsPreRoadBuilding;
         WaitingForRoll = waitingForRoll;
+        DevCardPlayedThisRound = devCardPlayedThisRound;
     }
 
     public GamePhaseDTO(GamePhase gamePhase)
@@ -46,6 +46,7 @@ public class GamePhaseDTO
             OriginalRobberTileId = gamePhase.OriginalRobberTile.Id.ToString();
         RoadsPreRoadBuilding = gamePhase.RoadsPreRoadBuilding;
         WaitingForRoll = gamePhase.WaitingForRoll;
+        DevCardPlayedThisRound = gamePhase.DevCardPlayedThisRound;
     }
 }
 

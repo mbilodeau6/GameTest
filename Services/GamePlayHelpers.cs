@@ -161,6 +161,7 @@ public static class GamePlayHelpers
         gameState.Phase.CurrentPlayer = gameState.Phase.GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
         gameState.Phase.PhaseState = GameStates.RollOrUseDevCard;
         gameState.Phase.SetWaitingForRoll();
+        gameState.Phase.ClearDevCardPlayState();
 
         if (!skipGameLoop)
             GameLoop(gameState);
@@ -713,6 +714,9 @@ public static class GamePlayHelpers
 
         if (!player.DevCardsReadyToPlay.Contains(devCard))
             throw new InvalidOperationException($"Unexpected Error. Player does not have a {devCard} to play.");
+
+        if (gs.Phase.DevCardPlayedThisRound)
+            throw new InvalidOperationException($"Unexpected Error. Players shouldn't be allowed to play two dev cards in a single round.");
     }
 
     private static ResponseDTO StandardPlayDevCardValidationForUserRequest(GameState gs, PlayDevCardRequest request, DevelopmentCardType targetType)
@@ -753,7 +757,16 @@ public static class GamePlayHelpers
         if (!player.DevCardsReadyToPlay.Contains(targetType))
             return new ResponseDTO(false, 1039, $"Action: Play{targetType}DevCard; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
 
+        if (gs.Phase.DevCardPlayedThisRound)
+            return new ResponseDTO(false, 1043, $"Action: Play{targetType}DevCard; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
         return new ResponseDTO(true, 0, null, gs);
+    }
+
+    public static void SharedPlayDevCard(GameState gs, Player player, DevelopmentCardType type)
+    {
+        player.PlayDevelopmentCard(type);
+        gs.Phase.SetDevCardPlayedThisRound();
     }
 
     public static void PlayMonopolyDevCard(GameState gs, Player player, ResourceType requestedResource)
@@ -776,7 +789,7 @@ public static class GamePlayHelpers
             resourcesReceived += opponentCount;
         }
 
-        player.PlayDevelopmentCard(DevelopmentCardType.Monopoly);
+        SharedPlayDevCard(gs, player, DevelopmentCardType.Monopoly);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayMonoploy, new Dictionary<ResourceType, int>() { {requestedResource, resourcesReceived} }));
     }
 
@@ -813,7 +826,7 @@ public static class GamePlayHelpers
         foreach(var resource in requestedResources)
             player.AssignResources(resource, 1);
 
-        player.PlayDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        SharedPlayDevCard(gs, player, DevelopmentCardType.YearOfPlenty);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
     }
 
@@ -844,7 +857,8 @@ public static class GamePlayHelpers
 
         gs.Phase.StoreStateDevCardRoadBuilding(gs.Phase.PhaseState, gs.Edges.Count(e => e.Owner != null && e.Owner.Id == player.Id));
         gs.Phase.PhaseState = GameStates.FirstDevCardRoad;
-        player.PlayDevelopmentCard(DevelopmentCardType.RoadBuilding);
+
+        SharedPlayDevCard(gs, player, DevelopmentCardType.RoadBuilding);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayRoadBuilding));
 
     }
@@ -871,7 +885,7 @@ public static class GamePlayHelpers
         if (targetTile.Id == gs.RobberTile.Id)
             throw new InvalidOperationException("Unexpected Error. The robber can not be moved to the tile it is already on.");
 
-        player.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        SharedPlayDevCard(gs, player, DevelopmentCardType.Knight);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
         gs.UpdatePlayerVictoryPoints(player);

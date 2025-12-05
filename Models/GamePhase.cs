@@ -12,10 +12,11 @@ public class GamePhase
     public Player? CurrentPlayer { get; set; }
     public Player? EndPlayer { get; set; }
     public GameStates? PreviousState {get; private set; } = null;
-    public Tile OriginalRobberTile { get; private set; } = null;
+    public Tile? OriginalRobberTile { get; private set; } = null;
     public int? RoadsPreRoadBuilding { get; private set; } = null;
     public bool WaitingForRoll { get; private set; } = false;
     private int VictoryPointsToWin { get; init; }
+    public bool DevCardPlayedThisRound {get; private set; } = false;
 
     // TODO: Can all callers to this version be changed to use the DTO version?
     public GamePhase(GameStates state, int victoryPointsToWin, Player? current = null, Player? end = null)
@@ -47,6 +48,7 @@ public class GamePhase
 
         RoadsPreRoadBuilding = dto.RoadsPreRoadBuilding;
         WaitingForRoll = dto.WaitingForRoll;
+        DevCardPlayedThisRound = dto.DevCardPlayedThisRound;
         VictoryPointsToWin = gs.Settings.VictoryPointsToWin;
     }
 
@@ -60,6 +62,7 @@ public class GamePhase
         OriginalRobberTile = gamePhase.OriginalRobberTile;
         RoadsPreRoadBuilding = gamePhase.RoadsPreRoadBuilding;
         WaitingForRoll = gamePhase.WaitingForRoll;
+        DevCardPlayedThisRound = gamePhase.DevCardPlayedThisRound;
         VictoryPointsToWin = gamePhase.VictoryPointsToWin;
     }
     
@@ -93,6 +96,16 @@ public class GamePhase
     public void SetWaitingForRoll()
     {
         WaitingForRoll = true;
+    }
+
+    public void SetDevCardPlayedThisRound()
+    {
+        DevCardPlayedThisRound = true;
+    }
+
+    public void ClearDevCardPlayState()
+    {
+        DevCardPlayedThisRound = false;
     }
 
     public void ClearWaitingForRoll()

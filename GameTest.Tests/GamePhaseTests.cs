@@ -24,6 +24,7 @@ public class GamePhaseTests
         gamePhase.SetStateToReturnTo(GameStates.BuildOrTrade, t1);
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 3);
         gamePhase.SetWaitingForRoll();
+        gamePhase.SetDevCardPlayedThisRound();
 
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
 
@@ -38,6 +39,7 @@ public class GamePhaseTests
         Assert.Equal(gamePhase.PreviousState, newGamePhase.PreviousState);
         Assert.Equal(3, newGamePhase.RoadsPreRoadBuilding);
         Assert.True(newGamePhase.WaitingForRoll);
+        Assert.True(newGamePhase.DevCardPlayedThisRound);
     }
 
     [Fact]
@@ -61,6 +63,7 @@ public class GamePhaseTests
         Assert.Equal(originalGamePhase.PreviousState, newGamePhase.PreviousState);
         Assert.Equal(originalGamePhase.RoadsPreRoadBuilding, newGamePhase.RoadsPreRoadBuilding);
         Assert.Equal(originalGamePhase.WaitingForRoll, newGamePhase.WaitingForRoll);
+        Assert.Equal(originalGamePhase.DevCardPlayedThisRound, newGamePhase.DevCardPlayedThisRound);
 
         // Change original and make sure new not changed
         originalGamePhase.PhaseState = GameStates.PlaceSecondRoad;
@@ -130,6 +133,20 @@ public class GamePhaseTests
 
         // Assert
         Assert.Null(phaseState.RoadsPreRoadBuilding);
+    }
+
+    [Fact]
+    public void ClearDevCardPlayState()
+    {
+        var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null);
+        phaseState.SetDevCardPlayedThisRound();
+        Assert.True(phaseState.DevCardPlayedThisRound);
+
+        // Act
+        phaseState.ClearDevCardPlayState();
+
+        // Assert
+        Assert.False(phaseState.DevCardPlayedThisRound);
     }
 
     [Fact]

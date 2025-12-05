@@ -22,6 +22,7 @@ public class GamePhaseDTOTests
         Assert.Equal(player2.Id, dto.EndPlayerId);
         Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
         Assert.False(dto.WaitingForRoll);
+        Assert.False(dto.DevCardPlayedThisRound);
     }
 
     [Fact]
@@ -65,6 +66,7 @@ public class GamePhaseDTOTests
         gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile);
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 7);
         gamePhase.SetWaitingForRoll();
+        gamePhase.SetDevCardPlayedThisRound();
 
         GamePhaseDTO gamePhaseDTO = new GamePhaseDTO(gamePhase);
 
@@ -76,5 +78,6 @@ public class GamePhaseDTOTests
         Assert.Equal(gamePhase.OriginalRobberTile.Id.ToString(), gamePhaseDTO.OriginalRobberTileId);
         Assert.Equal(7, gamePhaseDTO.RoadsPreRoadBuilding);
         Assert.True(gamePhase.WaitingForRoll);
+        Assert.True(gamePhase.DevCardPlayedThisRound);
     }
 }
