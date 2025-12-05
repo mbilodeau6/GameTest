@@ -734,4 +734,23 @@ public class GameStateTests
 
         Assert.Equal(8, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));        
    }
+
+   [Fact]
+   public void Constructor_MaintainLongestRoadAndLargestArmy()
+    {
+        var gs = new GameState(new Guid());
+        gs.AddPlayer(new Player("Tim", PlayerColor.White));
+        gs.AddPlayer(new Player("Mary", PlayerColor.Brown));
+        gs.AssignLargestArmyToPlayer(gs.Players[0]);
+        gs.AssignLongestRoadToPlayer(gs.Players[1]);
+
+        var dto = new GameStateDTO(gs);
+
+        var newGS = new GameState(dto);
+
+        Assert.NotNull(newGS.PlayerWithLargestArmy);
+        Assert.Equal(gs.Players[0].Id, newGS.PlayerWithLargestArmy.Id);
+        Assert.NotNull(newGS.PlayerWithLongestRoad);
+        Assert.Equal(gs.Players[1].Id, newGS.PlayerWithLongestRoad.Id);
+    }
 }

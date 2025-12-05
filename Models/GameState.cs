@@ -119,6 +119,12 @@ public class GameState
 
         if (dto.Phase != null)
             Phase = new GamePhase(this, dto.Phase);
+
+        if (dto.HasLargestArmyPlayerId != null)
+            PlayerWithLargestArmy = Players.First(p => p.Id == dto.HasLargestArmyPlayerId);
+
+        if (dto.HasLongestRoadPlayerId != null)
+            PlayerWithLongestRoad = Players.First(p => p.Id == dto.HasLongestRoadPlayerId);
     }
 
     public void AddPlayer(Player player)
