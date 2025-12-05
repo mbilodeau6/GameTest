@@ -888,6 +888,17 @@ public static class GamePlayHelpers
         SharedPlayDevCard(gs, player, DevelopmentCardType.Knight);
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
+
+        if (gs.PlayerWithLargestArmy == null && player.CountPlayedKnights() > 2)
+            gs.AssignLargestArmyToPlayer(player);
+
+        if (gs.PlayerWithLargestArmy != null && player.CountPlayedKnights() > gs.PlayerWithLargestArmy.CountPlayedKnights())
+        {
+            var otherPlayer = gs.PlayerWithLargestArmy;
+            gs.AssignLargestArmyToPlayer(player);
+            gs.UpdatePlayerVictoryPoints(otherPlayer);
+        }
+
         gs.UpdatePlayerVictoryPoints(player);
     }
 

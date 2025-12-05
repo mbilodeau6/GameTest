@@ -226,6 +226,12 @@ public class GameState
         int victoryPoints = CountSettlementsForPlayer(player) + (CountCitiesForPlayer(player) * 2)
             + GamePlayHelpers.CountVictoryPointDevCardsForPlayer(player);
 
+        if (PlayerWithLargestArmy != null && PlayerWithLargestArmy.Id == player.Id)
+            victoryPoints += 2;
+
+        if (PlayerWithLongestRoad != null && PlayerWithLongestRoad.Id == player.Id)
+            victoryPoints += 2;
+
         player.SetVictoryPoints(victoryPoints);
     }
 

@@ -93,7 +93,7 @@ public class ResponseDTO
         { 1036, "PlayDevCard received a request with an unsupported DevCardType."},
         { 1037, "Monopoly requires the selection of one, and only one, resource"},
         { 1038, "Invalid resource type requested."},
-        { 1039, "Player does not have the development card required for this action."},
+        { 1039, "Player does not have the development card required for this action. Or the card is not playable yet."},
         { 1040, "YearOfPlenty requires the selection of exactly two resources."},
         { 1041, "A play Knight request must specify a tile id."},
         { 1042, "During set up, the second road must be built off of the second settlement not off of the first settlement or first road."},

@@ -152,5 +152,10 @@ public class Player
         VictoryPoints = victoryPoints;
     }
 
+    public int CountPlayedKnights()
+    {
+        return DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight);
+    }
+
     public override string ToString() => $"{Name} ({Id}) - {Color}";
 }

@@ -3,6 +3,7 @@ using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.AspNetCore.SignalR;
 
 namespace GameTest.Tests;
 
@@ -2410,6 +2411,94 @@ public class GamePlayHelpersTests
         Assert.Equal(GameStates.BuildOrTrade ,gs.Phase.PhaseState);
         Assert.Equal(humanResourceCount + 1, human.ResourceCount);
         Assert.Equal(botResourceCount - 1, bot.ResourceCount);
+        Assert.Null(gs.PlayerWithLargestArmy);
+    }
+
+    [Fact]
+    public void PlayKnightDevCard_GainLargestArmy()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+        human.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        human.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        human.AssignDevelopmentCard(DevelopmentCardType.Monopoly);
+        human.MakeNewDevelopmentCardsPlayable();
+        human.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        human.PlayDevelopmentCard(DevelopmentCardType.Monopoly);
+        human.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        gs.UpdatePlayerVictoryPoints(human);
+        Assert.Null(gs.PlayerWithLargestArmy);
+        Assert.Equal(1, human.VictoryPoints);
+
+        human.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        human.MakeNewDevelopmentCardsPlayable();
+        GamePlayHelpers.PlayKnightDevCard(gs, human, gs.GetTileAt(2,0));
+        
+        Assert.NotNull(gs.PlayerWithLargestArmy);
+        Assert.Equal(human.Id, gs.PlayerWithLargestArmy.Id);
+        Assert.Equal(3, human.VictoryPoints);
+    }
+
+    private GameState CreateGameWhereBotLargestArmy()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.MakeNewDevelopmentCardsPlayable();
+        bot.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        bot.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        gs.Phase.CurrentPlayer = bot;
+
+        GamePlayHelpers.PlayKnightDevCard(gs, bot, gs.GetTileAt(2, 0));
+
+        human.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        human.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        human.MakeNewDevelopmentCardsPlayable();
+        human.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        human.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        gs.Phase.CurrentPlayer = human;
+        gs.Phase.ClearDevCardPlayState();
+
+        return gs;
+    }
+
+    [Fact]
+    public void PlayKnightDevCard_SomeoneAlreadyHasLargestArmy()
+    {
+        var gs = CreateGameWhereBotLargestArmy();
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        Assert.NotNull(gs.PlayerWithLargestArmy);
+        Assert.Equal(gs.PlayerWithLargestArmy.Id, bot.Id);
+
+        GamePlayHelpers.PlayKnightDevCard(gs, human, gs.GetTileAt(0, 0));
+
+        Assert.NotNull(gs.PlayerWithLargestArmy);
+        Assert.Equal(gs.PlayerWithLargestArmy.Id, bot.Id);
+    }
+
+    [Fact]
+    public void PlayKnightDevCard_TakeOverLargestArmy()
+    {
+        var gs = CreateGameWhereBotLargestArmy();
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        human.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        human.MakeNewDevelopmentCardsPlayable();
+        human.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        Assert.Equal(3, bot.VictoryPoints);
+        Assert.Equal(0, human.VictoryPoints);
+
+        GamePlayHelpers.PlayKnightDevCard(gs, human, gs.GetTileAt(0, 0));
+
+        Assert.NotNull(gs.PlayerWithLargestArmy);
+        Assert.Equal(gs.PlayerWithLargestArmy.Id, human.Id);
+        Assert.Equal(1, bot.VictoryPoints);
+        Assert.Equal(3, human.VictoryPoints);
     }
 
     [Fact]
