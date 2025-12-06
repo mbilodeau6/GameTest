@@ -303,6 +303,56 @@ public static class AIHelpers
         return tileWithHighestValue;
     }
 
+    // Primary use case is to help the Bot decide which resources to discard if a 7 is rolled. Could also be used
+    // to identify cards that it would be willing to trade (and/or wants in a trade).
+    // TODO: Review to determine if better to return a specialized class vs tuple.
+    // InputParams: "needForX" values should add up to 1.0. They could have equal need but likely there are 
+    // scenarios where one has need of 1.0 or that multiple have need of 0.0.
+    // ReturnValue: First member of tuple reflects the value (between 0.0 and 1.0). The second number reflects 
+    // how much of that resources the player needs to meet one of its goals (TBD if it is the max for any of the 
+    // goals or max for one of the goals).
+    public static Dictionary<ResourceType, (double, int)> RankedResourceListGivenStateAndGoals(GameState gs, Player player, 
+        double needForRoad, double needForSettlement, double needForCity, double needForDevCard)
+    {
+        if (needForRoad + needForSettlement + needForCity + needForDevCard != 1.0)
+            throw new ArgumentException("The sum of needFor values must be 1.0.");
+
+        var resourceValues = new Dictionary<ResourceType, (double, int)>();
+
+        foreach(var resource in Enum.GetValues<ResourceType>())
+            resourceValues.Add(resource, (0.0, 0));
+
+        // TODO: Shoudl return sorted to make it easy to pick the resource(s) that can be given up first.
+        return resourceValues;
+    }
+
+    // Remove all instances of items in b from a
+    public static List<ResourceType> MultiSetSubtraction(List<ResourceType> a, List<ResourceType> b)
+    {
+        var result = new List<ResourceType>(a);
+
+        foreach (var item in b)
+        {
+            if (result.Contains(item))
+                result.Remove(item);
+        }
+
+        return result;
+    }
+
+    public static List<ResourceType> ConvertResourceDictToList(Dictionary<ResourceType, int> resourceDict)
+    {
+        var resourceList = new List<ResourceType>();
+
+        foreach (var kvp in resourceDict)
+        {
+            for (int i = 0; i < kvp.Value; i++)
+                resourceList.Add(kvp.Key);
+        }
+
+        return resourceList;
+    }
+
     public static double GetAIWeight(AIWeights name)
     {
         if (!AIWeightValues.ContainsKey(name))

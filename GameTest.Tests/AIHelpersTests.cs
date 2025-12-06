@@ -728,6 +728,65 @@ public class AIHelpersTests
 
         Assert.Equal(3.0/36.0 * 3, value);
     }
+
+    [Fact]
+    public void MultiSetSubtraction_NoOverlap_FullFirstReturned()
+    {
+        var first = new List<ResourceType>() { ResourceType.Brick, ResourceType.Wood };
+        var second = new List<ResourceType>() { ResourceType.Ore, ResourceType.Grain };
+
+        var result = AIHelpers.MultiSetSubtraction(first, second);
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(ResourceType.Brick, result);
+        Assert.Contains(ResourceType.Wood, result);
+    }
+
+    [Fact]
+    public void MultiSetSubtraction_SameList_EmptyReturned()
+    {
+        var first = new List<ResourceType>() { ResourceType.Brick, ResourceType.Wood, ResourceType.Wood };
+        var second = new List<ResourceType>() { ResourceType.Wood, ResourceType.Brick, ResourceType.Wood };
+
+        var result = AIHelpers.MultiSetSubtraction(first, second);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void MultiSetSubtraction_MultiOfOne_OnlyRemoveNumberFromB()
+    {
+        var first = new List<ResourceType>() { ResourceType.Brick, ResourceType.Wood, ResourceType.Wood, ResourceType.Wood };
+        var second = new List<ResourceType>() { ResourceType.Wood, ResourceType.Wood };
+
+        var result = AIHelpers.MultiSetSubtraction(first, second);
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(ResourceType.Brick, result);
+        Assert.Contains(ResourceType.Wood, result);
+    }
+
+    [Fact]
+    public void ConvertResourceDictToList_CorrectCounts()
+    {
+        var resourceDict = new Dictionary<ResourceType, int>()
+        {
+            { ResourceType.Brick, 2 },
+            { ResourceType.Wood, 1 },
+            { ResourceType.Ore, 0 },
+            { ResourceType.Grain, 3 },
+            { ResourceType.Wool, 1 }
+        };
+
+        var result = AIHelpers.ConvertResourceDictToList(resourceDict);
+
+        Assert.Equal(7, result.Count);
+        Assert.Equal(2, result.Count(r => r == ResourceType.Brick));
+        Assert.Equal(1, result.Count(r => r == ResourceType.Wood));
+        Assert.Equal(0, result.Count(r => r == ResourceType.Ore));
+        Assert.Equal(3, result.Count(r => r == ResourceType.Grain));
+        Assert.Equal(1, result.Count(r => r == ResourceType.Wool));
+    }
 }
 
 

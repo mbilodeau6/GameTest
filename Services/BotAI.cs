@@ -143,21 +143,15 @@ public class BotAI
         return (false, null);
     }
 
-    public BotMove GetBuildMove()
+    private BotMove DeterminePreferredMove(bool restrictToHeldResources = true)
     {
-        if (State.Phase.PhaseState != GameStates.BuildOrTrade)
-            throw new InvalidOperationException($"GetBuildMove should only be called if phase is BuildOrTrade. Current phase is {State.Phase.PhaseState.ToString()}");
-
-        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
-            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
-
         var move = new BotMove();
 
         // First look to see if we can upgrade settlements to a city
         var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(State);
         if (settlementToUpgrade != null 
             && State.UnusedCityAvailable(State.Phase.CurrentPlayer) 
-            && GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer))
+            && (GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer) || !restrictToHeldResources))
         {
                 move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
                 return move;
@@ -169,7 +163,7 @@ public class BotAI
         {
             // Next, see if you can build on the most valuable vertex identified
             if (State.UnusedSettlementAvailable(State.Phase.CurrentPlayer)
-                && GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer) 
+                && (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer) || !restrictToHeldResources) 
                 && candidateVertices.First().RoadsNeeded == 0)
             {
                 move.VertexMove = new VertexDTO(candidateVertices.First().TargetVertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
@@ -179,7 +173,7 @@ public class BotAI
             // If there isn't a vertex the Bot can build on (yet), build the next road needed to make that vertex available
             if (State.UnusedRoadAvailable(State.Phase.CurrentPlayer)
                 && State.UnusedSettlementAvailable(State.Phase.CurrentPlayer)
-                && GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer) 
+                && (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer) || !restrictToHeldResources) 
                 && candidateVertices.First().RoadsNeeded > 0)
             {
                 move.EdgeMove = new EdgeDTO(candidateVertices.First().NextEdgeToTarget.Id, State.Phase.CurrentPlayer.Id, null);
@@ -191,7 +185,22 @@ public class BotAI
             // it helps it get a settlement (needed to buy settlement or trade for resources needed).
             // TODO: Need to revisit and set up rules for when the Bot should go ahead and build a road even though it isn't
             // required for the highest value target.
+
+            // TODO: Add rules to determine if the Bot should buy a dev card
         }
+
+        return move;        
+    }
+
+    public BotMove GetBuildMove()
+    {
+        if (State.Phase.PhaseState != GameStates.BuildOrTrade)
+            throw new InvalidOperationException($"GetBuildMove should only be called if phase is BuildOrTrade. Current phase is {State.Phase.PhaseState.ToString()}");
+
+        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
+            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
+
+        var move = DeterminePreferredMove();
 
         var tradeAnalysis = AnalyzePossibleBankTrades();
         if (tradeAnalysis.CanTrade && tradeAnalysis.TradeRequest != null)
@@ -227,5 +236,45 @@ public class BotAI
         move.TileMove = new TileDTO(AIHelpers.PickTargetForRobber(State, State.Players.First(p => !p.IsBot)));
 
         return move;
+    }
+
+    private GoalWeights ExtractWeightsFromBotMove(BotMove move)
+    {
+        double settlementWeight = 0.0;
+        double cityWeight = 0.0;
+        double roadWeight = 0.0;
+        double devCardWeight = 0.0;
+
+        if (move.VertexMove != null && move.VertexMove.Building == BuildingType.Settlement.ToString())
+            settlementWeight = 1.0;
+
+        if (move.VertexMove != null && move.VertexMove.Building == BuildingType.City.ToString())
+            cityWeight = 1.0;
+
+        if (move.EdgeMove != null)
+            roadWeight = 1.0;
+
+        if (move.BuyDevelopmentCard)
+            devCardWeight = 1.0;
+
+        return new GoalWeights(settlementWeight, cityWeight, roadWeight, devCardWeight);
+    }
+
+    public List<ResourceType> DetermineCardsToDiscard()
+    {
+        var discard = new List<ResourceType>();
+
+        // Determine what the bot would like to do
+        var wishWeights = ExtractWeightsFromBotMove(DeterminePreferredMove(false));
+        var preDiscardWeights = ExtractWeightsFromBotMove(DeterminePreferredMove(true));
+
+
+        // Determine which cards aren't needed to do that and discard those first
+
+        // If it doesn't have to discard all the cards it doesn't need, keep the most useful cards
+
+        // If the bot still has to discard after that, discard the least useful cards
+
+        return discard;
     }
 }
