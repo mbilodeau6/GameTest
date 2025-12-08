@@ -260,21 +260,107 @@ public class BotAI
         return new GoalWeights(settlementWeight, cityWeight, roadWeight, devCardWeight);
     }
 
-    public List<ResourceType> DetermineCardsToDiscard()
+    public static List<ResourceType> ResourcePlayerDoesntNeed(List<ResourceType> heldResources, GoalWeights weights)
     {
         var discard = new List<ResourceType>();
 
+        var oreNeeded = 0;
+        var grainNeeded = 0;
+        var woolNeeded = 0;
+        var woodNeeded = 0;
+        var brickNeeded = 0;
+
+        if (weights.CityWeight == 1.0)
+        {
+            oreNeeded = 3;
+            grainNeeded = 2;
+        }
+        else if (weights.SettlementWeight == 1.0)
+        {
+            woodNeeded = 1;
+            brickNeeded = 1;
+            grainNeeded = 1;
+            woolNeeded = 1;
+        }
+        else if (weights.RoadWeight == 1.0)
+        {
+            woodNeeded = 1;
+            brickNeeded = 1;
+        }
+        else if (weights.DevelopmentCardWeight == 1.0)
+        {
+            oreNeeded = 1;
+            grainNeeded = 1;
+            woolNeeded = 1;
+        }
+
+        var oreCount = heldResources.Count(r => r == ResourceType.Ore);
+        var grainCount = heldResources.Count(r => r == ResourceType.Grain);
+        var woolCount = heldResources.Count(r => r == ResourceType.Wool);
+        var woodCount = heldResources.Count(r => r == ResourceType.Wood);
+        var brickCount = heldResources.Count(r => r == ResourceType.Brick);
+
+        if (oreCount > oreNeeded)
+        {
+            discard.AddRange(heldResources.Where(r => r == ResourceType.Ore).Take(oreCount - oreNeeded));
+        }
+
+        if (grainCount > grainNeeded)
+        {
+            discard.AddRange(heldResources.Where(r => r == ResourceType.Grain).Take(grainCount - grainNeeded));
+        }
+
+        if (woolCount > woolNeeded)
+        {
+            discard.AddRange(heldResources.Where(r => r == ResourceType.Wool).Take(woolCount - woolNeeded));
+        }
+
+        if (woodCount > woodNeeded)
+        {
+            discard.AddRange(heldResources.Where(r => r == ResourceType.Wood).Take(woodCount - woodNeeded));
+        }
+
+        if (brickCount > brickNeeded)
+        {
+            discard.AddRange(heldResources.Where(r => r == ResourceType.Brick).Take(brickCount - brickNeeded));
+        }
+
+        return discard;
+    }
+
+    public List<ResourceType> DetermineCardsToDiscard()
+    {
+        var discard = new List<ResourceType>();
+        var resourcesHeld = AIHelpers.ConvertResourceDictToList(State.Phase.CurrentPlayer.Resources);
+        int discardCount = (resourcesHeld.Count() / 2);
+
         // Determine what the bot would like to do
         var wishWeights = ExtractWeightsFromBotMove(DeterminePreferredMove(false));
-        var preDiscardWeights = ExtractWeightsFromBotMove(DeterminePreferredMove(true));
-
+        var weightsWithActualCards = ExtractWeightsFromBotMove(DeterminePreferredMove(true));
 
         // Determine which cards aren't needed to do that and discard those first
+        discard.AddRange(ResourcePlayerDoesntNeed(resourcesHeld, weightsWithActualCards));
 
         // If it doesn't have to discard all the cards it doesn't need, keep the most useful cards
+        if (discard.Count > discardCount)
+            return discard.Take(discardCount).ToList();
 
         // If the bot still has to discard after that, discard the least useful cards
+        var remainingResources = AIHelpers.MultiSetSubtraction(resourcesHeld, discard);
+        // TODO: Refine to consider wishWeights, likelihood of rolling resources, ports, etc.
+        var orderToDiscardCards = new List<ResourceType>() { ResourceType.Wool, ResourceType.Wood, ResourceType.Brick, ResourceType.Grain, ResourceType.Ore };
 
+        while (discard.Count < discardCount)
+        {
+            if (orderToDiscardCards.Count == 0)
+                throw new InvalidOperationException("Unexpected Error. Program must have a bug as it can't find enough cards to discard.");
+
+            if (remainingResources.Contains(orderToDiscardCards[0]))
+                discard.Add(orderToDiscardCards[0]);
+            else
+                orderToDiscardCards.RemoveAt(0);
+        }
+        
         return discard;
     }
 }

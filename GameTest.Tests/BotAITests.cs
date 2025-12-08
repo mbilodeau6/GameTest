@@ -485,4 +485,216 @@ public class BotAITests
         Assert.Null(move.VertexMove);
         Assert.False(move.RollDice);
     }
+
+    [Fact]
+    public void DetermineCardsToDiscard_WantToBuildCity_HaveCardsEvenAfterDiscard()
+    {
+        // Arrange
+        var board = CreateBoardForBuildTest();
+        var botPlayer = board.GetBluePlayer();
+
+        // Build all settlements so that settlements aren't an option. City should be the strong preference.
+        board.GetVertex(TestVertex.V10).BuildSettlement(botPlayer);
+        board.GetVertex(TestVertex.V16).BuildSettlement(botPlayer);
+
+        botPlayer.AssignResources(ResourceType.Ore, 4);
+        botPlayer.AssignResources(ResourceType.Grain, 3);
+        botPlayer.AssignResources(ResourceType.Wood, 1);
+        botPlayer.AssignResources(ResourceType.Brick, 1);
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var discard = bot.DetermineCardsToDiscard();
+
+        // Assert - Make sure bot keeps enough cards to build city
+        Assert.Equal(4, discard.Count);
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Ore));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Grain));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Wood));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Brick));
+    }
+
+    [Fact]
+    public void DetermineCardsToDiscard_WantToBuildCity_HasCardsButNeedToDiscardSome()
+    {
+        // Arrange
+        var board = CreateBoardForBuildTest();
+        var botPlayer = board.GetBluePlayer();
+
+        // Build all settlements so that settlements aren't an option. City should be the strong preference.
+        board.GetVertex(TestVertex.V10).BuildSettlement(botPlayer);
+        board.GetVertex(TestVertex.V16).BuildSettlement(botPlayer);
+
+        botPlayer.AssignResources(ResourceType.Ore, 3);
+        botPlayer.AssignResources(ResourceType.Grain, 2);
+        botPlayer.AssignResources(ResourceType.Wood, 2);
+        botPlayer.AssignResources(ResourceType.Brick, 1);
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var discard = bot.DetermineCardsToDiscard();
+
+        // Assert - Make sure bot discards all other cards first
+        Assert.Equal(4, discard.Count);
+        Assert.Equal(2, discard.Count(r => r == ResourceType.Wood));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Brick));
+    }
+
+    [Fact]
+    public void DetermineCardsToDiscard_WantToBuildRoad_HaveCardsEvenAfterDiscard()
+    {
+        // Arrange
+        var board = CreateBoardForBuildTest();
+        var botPlayer = board.GetBluePlayer();
+
+        // Only build is already city and don't have roads to open settlement (yet)
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+
+        botPlayer.AssignResources(ResourceType.Grain, 1);
+        botPlayer.AssignResources(ResourceType.Ore, 1);
+        botPlayer.AssignResources(ResourceType.Wool, 2);
+        botPlayer.AssignResources(ResourceType.Wood, 3);
+        botPlayer.AssignResources(ResourceType.Brick, 2);
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var discard = bot.DetermineCardsToDiscard();
+
+        // Assert - Make sure bot keeps enough cards to road
+        var playerResources = AIHelpers.ConvertResourceDictToList(botPlayer.Resources);
+        var resourcesAfterDiscard = AIHelpers.MultiSetSubtraction(playerResources, discard);
+
+        Assert.Equal(4, discard.Count);
+        Assert.Contains(ResourceType.Wood, resourcesAfterDiscard);
+        Assert.Contains(ResourceType.Brick, resourcesAfterDiscard);
+    }
+
+    [Fact]
+    public void DetermineCardsToDiscard_WantToBuildSettlement_HaveCardsEvenAfterDiscard()
+    {
+        // Arrange
+        var board = CreateBoardForBuildTest();
+        var botPlayer = board.GetBluePlayer();
+
+        // Build road to open up settlement option
+        board.GetEdge(TestEdge.E10).BuildRoad(botPlayer);
+
+        botPlayer.AssignResources(ResourceType.Grain, 1);
+        botPlayer.AssignResources(ResourceType.Ore, 1);
+        botPlayer.AssignResources(ResourceType.Wool, 2);
+        botPlayer.AssignResources(ResourceType.Wood, 2);
+        botPlayer.AssignResources(ResourceType.Brick, 2);
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var discard = bot.DetermineCardsToDiscard();
+
+        // Assert - Make sure bot keeps enough cards to road
+        var playerResources = AIHelpers.ConvertResourceDictToList(botPlayer.Resources);
+        var resourcesAfterDiscard = AIHelpers.MultiSetSubtraction(playerResources, discard);
+
+        Assert.Equal(4, discard.Count);
+        Assert.Contains(ResourceType.Wood, resourcesAfterDiscard);
+        Assert.Contains(ResourceType.Brick, resourcesAfterDiscard);
+        Assert.Contains(ResourceType.Grain, resourcesAfterDiscard);
+        Assert.Contains(ResourceType.Wool, resourcesAfterDiscard);
+    }
+
+    // TODO: Need more tests for DetermineCardsToDiscard covering all scenarios
+    // 1. When multiple potential goals, keep cards that help with both
+    // 2. Keep most useful cards to likely future goals.
+    // 3. Keep cards that are most valuable in trades.
+
+    [Fact]
+    public void ResourcePlayerDoesntNeed_PlayerNeedsAll_ReturnEmptyList()
+    {
+        var discard = BotAI.ResourcePlayerDoesntNeed(new List<ResourceType>()
+        {
+            ResourceType.Brick,
+            ResourceType.Wood,
+            ResourceType.Grain,
+            ResourceType.Wool
+        }, new GoalWeights(1, 0, 0, 0));
+
+        Assert.Empty(discard);
+    }
+
+    [Fact]
+    public void ResourcePlayerDoesntNeed_KeepEnoughForCity()
+    {
+        var discard = BotAI.ResourcePlayerDoesntNeed(new List<ResourceType>()
+        {
+            ResourceType.Ore,
+            ResourceType.Ore,
+            ResourceType.Brick,
+            ResourceType.Wood,
+            ResourceType.Grain,
+            ResourceType.Wool,
+            ResourceType.Ore,
+            ResourceType.Grain,
+            ResourceType.Ore,
+            ResourceType.Grain
+        }, new GoalWeights(0, 1, 0, 0));
+
+        Assert.NotEmpty(discard);
+        Assert.Equal(5, discard.Count);
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Ore));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Grain));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Brick));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Wood));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Wool));
+    }
+
+    [Fact]
+    public void ResourcePlayerDoesntNeed_KeepEnoughForRoad()
+    {
+        var discard = BotAI.ResourcePlayerDoesntNeed(new List<ResourceType>()
+        {
+            ResourceType.Wood,
+            ResourceType.Wood,
+            ResourceType.Brick,
+            ResourceType.Wood,
+            ResourceType.Grain,
+            ResourceType.Wool,
+            ResourceType.Ore,
+            ResourceType.Grain,
+        }, new GoalWeights(0, 0, 1, 0));
+
+        Assert.NotEmpty(discard);
+        Assert.Equal(6, discard.Count);
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Ore));
+        Assert.Equal(2, discard.Count(r => r == ResourceType.Grain));
+        Assert.Equal(0, discard.Count(r => r == ResourceType.Brick));
+        Assert.Equal(2, discard.Count(r => r == ResourceType.Wood));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Wool));
+    }
+
+    [Fact]
+    public void ResourcePlayerDoesntNeed_KeepEnoughForDevCard()
+    {
+        var discard = BotAI.ResourcePlayerDoesntNeed(new List<ResourceType>()
+        {
+            ResourceType.Wood,
+            ResourceType.Wood,
+            ResourceType.Brick,
+            ResourceType.Wood,
+            ResourceType.Grain,
+            ResourceType.Wool,
+            ResourceType.Ore,
+            ResourceType.Grain,
+        }, new GoalWeights(0, 0, 0, 1));
+
+        Assert.NotEmpty(discard);
+        Assert.Equal(5, discard.Count);
+        Assert.Equal(0, discard.Count(r => r == ResourceType.Ore));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Grain));
+        Assert.Equal(1, discard.Count(r => r == ResourceType.Brick));
+        Assert.Equal(3, discard.Count(r => r == ResourceType.Wood));
+        Assert.Equal(0, discard.Count(r => r == ResourceType.Wool));
+    }
+
 }
