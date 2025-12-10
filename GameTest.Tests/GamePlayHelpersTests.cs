@@ -2719,7 +2719,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetBluePlayer().AssignResources(ResourceType.Brick, 8);
         var cardsToDiscard = new List<string>();
@@ -2738,7 +2738,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
         var cardsToDiscard = new List<string>();
@@ -2756,7 +2756,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 9);
         var cardsToDiscard = new List<string>();
@@ -2774,7 +2774,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 3);
         board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
@@ -2793,7 +2793,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 4);
         board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
@@ -2830,7 +2830,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetBluePlayer().AssignResources(ResourceType.Brick, 8);
         var cardsToDiscard = new List<ResourceType>();
@@ -2845,7 +2845,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
         var cardsToDiscard = new List<ResourceType>();
@@ -2860,7 +2860,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 3);
         board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
@@ -2876,7 +2876,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 7);
         var cardsToDiscard = new List<ResourceType>();
@@ -2891,7 +2891,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 4);
         board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);

@@ -425,7 +425,7 @@ public class GamePhaseTests
     }
 
     [Fact]
-    public void GetNextPhase_RollOrUseDevCard_MoveToSevenDiscardCurrentPlayer()
+    public void GetNextPhase_RollOrUseDevCard_MoveToDiscardCardsCurrentPlayer()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
@@ -439,12 +439,12 @@ public class GamePhaseTests
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
 
-        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetRedPlayer(), board.GetRedPlayer()));
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.DiscardCards, board.GetRedPlayer(), board.GetRedPlayer()));
         Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
     }
 
     [Fact]
-    public void GetNextPhase_RollOrUseDevCard_MoveToSevenDiscardNextPlayer() // Because current player doesn't have to discard
+    public void GetNextPhase_RollOrUseDevCard_MoveToDiscardCardsNextPlayer() // Because current player doesn't have to discard
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
@@ -459,12 +459,12 @@ public class GamePhaseTests
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
 
-        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetBluePlayer(), board.GetRedPlayer()));
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.DiscardCards, board.GetBluePlayer(), board.GetRedPlayer()));
         Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
     }
 
     [Fact]
-    public void GetNextPhase_SevenDiscard_BothNeedToDiscard()
+    public void GetNextPhase_DiscardCards_BothNeedToDiscard()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
@@ -480,12 +480,12 @@ public class GamePhaseTests
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
 
-        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetRedPlayer(), board.GetRedPlayer()));
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.DiscardCards, board.GetRedPlayer(), board.GetRedPlayer()));
         Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
     }
 
     [Fact]
-    public void GetNextPhase_SevenDiscardCurrentPlayer_MoveToPlaceRobber() // Because other player doesn't have to discard
+    public void GetNextPhase_DiscardCardsCurrentPlayer_MoveToPlaceRobber() // Because other player doesn't have to discard
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
@@ -502,7 +502,7 @@ public class GamePhaseTests
     }
 
     [Fact]
-    public void GetNextPhase_SevenDiscardOtherPlayer_MoveToPlaceRobber()
+    public void GetNextPhase_DiscardCardsOtherPlayer_MoveToPlaceRobber()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
@@ -515,7 +515,7 @@ public class GamePhaseTests
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
 
-        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetBluePlayer(), board.GetRedPlayer()));
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.DiscardCards, board.GetBluePlayer(), board.GetRedPlayer()));
         Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
 
         board.GetBluePlayer().RemoveResources(ResourceType.Wool, 4);

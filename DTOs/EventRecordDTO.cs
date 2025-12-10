@@ -75,8 +75,8 @@ public class EventRecordDTO
 
     public EventRecordDTO(Player player, EventRecordAction action, List<ResourceType> resourcesUsed) : this(player,action)
     {
-        if (action != EventRecordAction.SevenDiscard)
-            throw new InvalidOperationException("Unexpected Exception. Should only be used for SevenDiscard.");
+        if (action != EventRecordAction.DiscardCards)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for DiscardCards.");
 
         ResourcesUsed = new Dictionary<string, int>();
 

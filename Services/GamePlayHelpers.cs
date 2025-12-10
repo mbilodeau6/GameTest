@@ -454,7 +454,7 @@ public static class GamePlayHelpers
                 {
                     move = bot.GetBuildMove();
                 }
-                else if (gs.Phase.PhaseState == GameStates.SevenDiscard)
+                else if (gs.Phase.PhaseState == GameStates.DiscardCards)
                 {
                     move = bot.GetDiscardMove();
                 }   
@@ -953,7 +953,7 @@ public static class GamePlayHelpers
         if (player.ResourceCount <= 7)
             throw new InvalidOperationException($"Unexpected Error. Player doen't have enough cards to be included in discarding cards. GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}");
 
-        if ((gs.Phase.PhaseState != GameStates.SevenDiscard) || gs.Phase.CurrentPlayer == null)
+        if ((gs.Phase.PhaseState != GameStates.DiscardCards) || gs.Phase.CurrentPlayer == null)
             throw new InvalidOperationException($"Unexpected Error. Invalid state for calling DiscardCards. GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}");
 
         if (gs.Phase.CurrentPlayer.Id != player.Id)
@@ -970,14 +970,14 @@ public static class GamePlayHelpers
             player.RemoveResources(resource, 1);
         }
 
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.SevenDiscard, cardsToDiscard));
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.DiscardCards, cardsToDiscard));
         GameLoop(gs);
     }
 
     public static ResponseDTO DiscardCardRequestFromUser(GameState gs, DiscardRequest request)
     {
-        if ((gs.Phase.PhaseState != GameStates.SevenDiscard) || gs.Phase.CurrentPlayer == null)
-            return new ResponseDTO(false, 1003, $"Action: SevenDiscard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+        if ((gs.Phase.PhaseState != GameStates.DiscardCards) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: DiscardCards; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
         if (player == null)
@@ -1004,11 +1004,11 @@ public static class GamePlayHelpers
             }
             catch (ArgumentException)
             {
-                return new ResponseDTO(false, 1038, $"Action: SevenDiscard; RequestedResource: {resourceString}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+                return new ResponseDTO(false, 1038, $"Action: DiscardCards; RequestedResource: {resourceString}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
             }
 
             if (!ownedResourcesAsList.Contains(resource))
-                return new ResponseDTO(false, 1017, $"Action: SevenDiscard; MissingResource: {resourceString}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+                return new ResponseDTO(false, 1017, $"Action: DiscardCards; MissingResource: {resourceString}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
 
             ownedResourcesAsList.Remove(resource);
         }

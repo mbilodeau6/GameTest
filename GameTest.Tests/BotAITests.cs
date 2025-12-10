@@ -586,7 +586,7 @@ public class BotAITests
         var board = CreateBoardForBuildTest();
 
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
-        board.GetGameState().Phase.PhaseState = GameStates.SevenDiscard;
+        board.GetGameState().Phase.PhaseState = GameStates.DiscardCards;
         board.GetBluePlayer().AssignResources(ResourceType.Brick, 2);
         board.GetBluePlayer().AssignResources(ResourceType.Wood, 2);
         board.GetBluePlayer().AssignResources(ResourceType.Wool, 2);

@@ -368,8 +368,8 @@ public class BotAI
 
     public BotMove GetDiscardMove()
     {
-        if (State.Phase.PhaseState != GameStates.SevenDiscard)
-            throw new InvalidOperationException($"Unexpected Error. GetDiscardMove should only be called if phase is SevenDiscard. Current phase is {State.Phase.PhaseState.ToString()}");
+        if (State.Phase.PhaseState != GameStates.DiscardCards)
+            throw new InvalidOperationException($"Unexpected Error. GetDiscardMove should only be called if phase is DiscardCards. Current phase is {State.Phase.PhaseState.ToString()}");
 
         var move = new BotMove();
         move.DiscardResources = DetermineCardsToDiscard();

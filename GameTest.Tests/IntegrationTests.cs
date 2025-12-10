@@ -99,7 +99,7 @@ public class IntegrationTests
         board.GetGameState().SetDiceForTesting(new GameDice(3, 4)); // Force a 7
         GamePlayHelpers.GameLoop(board.GetGameState());
 
-        Assert.Equal(GameStates.SevenDiscard, board.GetGameState().Phase.PhaseState);
+        Assert.Equal(GameStates.DiscardCards, board.GetGameState().Phase.PhaseState);
         Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
 
         GamePlayHelpers.DiscardCardRequestFromUser(board.GetGameState(), 
@@ -129,7 +129,7 @@ public class IntegrationTests
         board.GetGameState().SetDiceForTesting(new GameDice(3, 4)); // Force a 7
         GamePlayHelpers.GameLoop(board.GetGameState());
 
-        Assert.Equal(GameStates.SevenDiscard, board.GetGameState().Phase.PhaseState);
+        Assert.Equal(GameStates.DiscardCards, board.GetGameState().Phase.PhaseState);
         Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
 
         GamePlayHelpers.DiscardCardRequestFromUser(board.GetGameState(), 

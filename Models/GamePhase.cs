@@ -215,7 +215,7 @@ public class GamePhase
                     nextPhase.EndPlayer = CurrentPlayer;
 
                     if (CurrentPlayer.Resources.Values.Sum() > 7)
-                        nextPhase.PhaseState = GameStates.SevenDiscard;
+                        nextPhase.PhaseState = GameStates.DiscardCards;
                     else 
                     {
                         nextPhase.CurrentPlayer = GetNextPlayer(CurrentPlayer, players);
@@ -228,13 +228,13 @@ public class GamePhase
                             nextPhase.EndPlayer = GetPreviousPlayer(nextPhase.CurrentPlayer, players);
                         }
                         else
-                            nextPhase.PhaseState = GameStates.SevenDiscard;
+                            nextPhase.PhaseState = GameStates.DiscardCards;
                     }
                 }
                 else
                     nextPhase.PhaseState = GameStates.BuildOrTrade;
             }
-            else if (PhaseState == GameStates.SevenDiscard)
+            else if (PhaseState == GameStates.DiscardCards)
             {
                 nextPhase.CurrentPlayer = GetNextPlayer(CurrentPlayer, players);
                 while (nextPhase.CurrentPlayer.Id != EndPlayer.Id && nextPhase.CurrentPlayer.Resources.Values.Sum() <= 7)
@@ -243,7 +243,7 @@ public class GamePhase
                 if (nextPhase.CurrentPlayer.Id == EndPlayer.Id)
                     nextPhase.PhaseState = GameStates.PlaceRobber;
                 else
-                    nextPhase.PhaseState = GameStates.SevenDiscard;
+                    nextPhase.PhaseState = GameStates.DiscardCards;
             }
             else if (PhaseState == GameStates.PlaceRobber 
                 && PreviousState != null 

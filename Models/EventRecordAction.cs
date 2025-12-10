@@ -9,7 +9,7 @@ public enum EventRecordAction
     PlaceRobber,
     StealResource,
     SelectRobberTarget,
-    SevenDiscard,
+    DiscardCards,
     PlayMonoploy,
     PlayKnight,
     PlayYearOfPlenty,
