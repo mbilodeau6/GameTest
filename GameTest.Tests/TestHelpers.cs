@@ -152,7 +152,8 @@ public static class TestHelpers
         board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
         board.GetGameState().UpdatePlayerVictoryPoints(board.GetBluePlayer());
         board.GetGameState().UpdatePlayerVictoryPoints(board.GetRedPlayer());
-
+        GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
+        
         return board;
     }
 }

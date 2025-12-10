@@ -258,25 +258,13 @@ public class BotAITests
         Assert.Null(move.VertexMove);
     }
 
-    // TODO: Need to figure out when Bot should build each resource, buy dev
-    // card, trade, and end turn. Current version just builds settlement, if it can.
-    // If it can't build a settlement, it builds a road, if it can.
     [Fact]
-    public void GetBuildMove_BuildRoadAndSettlement()
+    public void GetBuildMove_BuildRoad()
     {
-        var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
-        var botPlayer = GetBotPlayer(gs);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var botPlayer = board.GetBluePlayer();
+        var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, GetHumanPlayer(gs));
-
-        var desertTile = gs.GetTileAt(0, 0);
-        var brickTile = gs.GetTileAt(-1, -1);
-        var sheepTile = gs.GetTileAt(1, -1);
-        var vertex = gs.GetVertexFromTileInfo(desertTile, brickTile, sheepTile, null);
-        vertex.BuildSettlement(botPlayer);
-        GamePlayHelpers.MarkBlockedVertices(gs, vertex);
-
-        var edge = gs.GetEdgeFromTileInfo(desertTile, sheepTile, null);
-        edge.BuildRoad(botPlayer);
 
         botPlayer.Resources[ResourceType.Brick] = 1;
         botPlayer.Resources[ResourceType.Wood] = 1;
@@ -289,10 +277,100 @@ public class BotAITests
         Assert.Equal(botPlayer.Id, move.EdgeMove.PlayerId);
         var selectedEdge = gs.Edges.First(e => e.Id == move.EdgeMove.Id);
         Assert.Null(selectedEdge.Owner);
-
+        Assert.Null(move.VertexMove);
         Assert.False(move.BuyDevelopmentCard);
         Assert.False(move.RollDice);
     }
+
+    [Fact]
+    public void GetBuildMove_BuildCity()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var botPlayer = board.GetBluePlayer();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, GetHumanPlayer(gs));
+
+        botPlayer.Resources[ResourceType.Ore] = 4;
+        botPlayer.Resources[ResourceType.Grain] = 2;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+
+        var bai = new BotAI(gs);
+
+        var move = bai.GetBuildMove();
+
+        Assert.NotNull(move.VertexMove);
+        Assert.Equal(BuildingType.City.ToString(), move.VertexMove.Building);
+        Assert.Equal(botPlayer.Id, move.VertexMove.PlayerId);
+        var selectedVertex = gs.Vertices.First(v => v.Id == move.VertexMove.Id);
+        Assert.NotNull(selectedVertex.Owner);
+        Assert.Equal(botPlayer.Id, selectedVertex.Owner.Id);
+        Assert.Equal(BuildingType.Settlement, selectedVertex.Building);
+        Assert.Null(move.EdgeMove);
+        Assert.False(move.BuyDevelopmentCard);
+        Assert.False(move.RollDice);
+    }
+
+    [Fact]
+    public void GetBuildMove_BuildSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var botPlayer = board.GetBluePlayer();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, GetHumanPlayer(gs));
+        board.GetEdge(TestEdge.E10).BuildRoad(botPlayer);
+
+        botPlayer.Resources[ResourceType.Brick] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 2;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+        botPlayer.Resources[ResourceType.Wood] = 1;
+
+        var bai = new BotAI(gs);
+
+        var move = bai.GetBuildMove();
+
+        Assert.NotNull(move.VertexMove);
+        Assert.Equal(BuildingType.Settlement.ToString(), move.VertexMove.Building);
+        Assert.Equal(botPlayer.Id, move.VertexMove.PlayerId);
+        var selectedVertex = gs.Vertices.First(v => v.Id == move.VertexMove.Id);
+        Assert.Null(selectedVertex.Owner);
+        Assert.Null(move.EdgeMove);
+        Assert.False(move.BuyDevelopmentCard);
+        Assert.False(move.RollDice);
+    }
+
+    [Fact]
+    public void GetBuildMove_TradeWithBank()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var botPlayer = board.GetBluePlayer();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, GetHumanPlayer(gs));
+
+        botPlayer.Resources[ResourceType.Brick] = 1;
+        botPlayer.Resources[ResourceType.Wool] = 4;
+
+        var bai = new BotAI(gs);
+
+        var move = bai.GetBuildMove();
+
+        Assert.NotNull(move.BankTrade);
+        Assert.Equal(move.BankTrade.PlayerId, botPlayer.Id);
+        Assert.NotNull(move.BankTrade.Offer);
+        Assert.Contains(ResourceType.Wool.ToString(), move.BankTrade.Offer.Keys);
+        Assert.Equal(4, move.BankTrade.Offer[ResourceType.Wool.ToString()]);
+        Assert.NotNull(move.BankTrade.Request);
+        Assert.Contains(ResourceType.Wood.ToString(), move.BankTrade.Request.Keys);
+        Assert.Equal(1, move.BankTrade.Request[ResourceType.Wood.ToString()]);
+        Assert.Null(move.VertexMove);
+        Assert.Null(move.EdgeMove);
+        Assert.False(move.BuyDevelopmentCard);
+        Assert.False(move.RollDice);
+    }
+
+    // TODO: Need to add
+    // 1. More complex scenarios where AI needs to make a decision on what to do
+    // 2. Buy Dev Card
+    // 3. Play Dev Card (especially when it has multiple options)
 
     [Fact]
     public void AnalyzePossibleBankTrades_NotEnoughResources_NoTradePossible()

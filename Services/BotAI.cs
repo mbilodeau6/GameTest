@@ -201,7 +201,7 @@ public class BotAI
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
         var move = DeterminePreferredMove();
-        if (move.VertexMove != null && move.EdgeMove != null && move.BuyDevelopmentCard)
+        if (move.VertexMove != null || move.EdgeMove != null || move.BuyDevelopmentCard)
             return move;
 
         var tradeAnalysis = AnalyzePossibleBankTrades();

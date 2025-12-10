@@ -690,6 +690,30 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void GameLoop_BuildRoadAndSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var botPlayer = board.GetBluePlayer();
+        var humanPlayer = board.GetRedPlayer();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, humanPlayer);
+
+        var roadCountBefore = gs.CountRoadsForPlayer(botPlayer);
+        var settlementCountBefore = gs.CountSettlementsForPlayer(botPlayer);
+
+        botPlayer.Resources[ResourceType.Brick] = 2;
+        botPlayer.Resources[ResourceType.Grain] = 2;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+        botPlayer.Resources[ResourceType.Wood] = 2;
+
+        GamePlayHelpers.GameLoop(gs);
+
+        Assert.Equal(roadCountBefore + 1, gs.CountRoadsForPlayer(botPlayer));
+        Assert.Equal(settlementCountBefore + 1, gs.CountSettlementsForPlayer(botPlayer));
+    }
+
+
+    [Fact]
     public void LinkEdgesAndVertices_AroundCenter()
     {
         // Arrange
