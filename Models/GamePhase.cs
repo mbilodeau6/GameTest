@@ -138,8 +138,8 @@ public class GamePhase
     }
 
     // TODO: Should be private but have public for testing
-    // TODO: Also see not below... If SettingUpBoard is moved out of the game loop, 
-    // we could also pass List<Player> in the constructor and not have to pass it in
+    // TODO: See note below... If SettingUpBoard is moved out of the game loop, 
+    // we could pass List<Player> in the constructor and not have to pass it in
     // with each call to GetNextPhase.
     public GamePhase GetNextPhase(List<Player> players, int playerSettlementCount, int playerRoadCount, int diceValue, Tile robberTile)
     {
@@ -211,10 +211,38 @@ public class GamePhase
                 if (diceValue == 7)
                 {
                     nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, robberTile);
-                    nextPhase.PhaseState = GameStates.PlaceRobber;
+                    nextPhase.EndPlayer = CurrentPlayer;
+
+                    if (CurrentPlayer.Resources.Values.Sum() > 7)
+                        nextPhase.PhaseState = GameStates.SevenDiscard;
+                    else 
+                    {
+                        nextPhase.CurrentPlayer = GetNextPlayer(CurrentPlayer, players);
+                        while (nextPhase.CurrentPlayer.Id != nextPhase.EndPlayer.Id && nextPhase.CurrentPlayer.Resources.Values.Sum() <= 7)
+                            nextPhase.CurrentPlayer = GetNextPlayer(nextPhase.CurrentPlayer, players);
+
+                        if (nextPhase.CurrentPlayer.Id == nextPhase.EndPlayer.Id)
+                        {
+                            nextPhase.PhaseState = GameStates.PlaceRobber;
+                            nextPhase.EndPlayer = GetPreviousPlayer(nextPhase.CurrentPlayer, players);
+                        }
+                        else
+                            nextPhase.PhaseState = GameStates.SevenDiscard;
+                    }
                 }
                 else
                     nextPhase.PhaseState = GameStates.BuildOrTrade;
+            }
+            else if (PhaseState == GameStates.SevenDiscard)
+            {
+                nextPhase.CurrentPlayer = GetNextPlayer(CurrentPlayer, players);
+                while (nextPhase.CurrentPlayer.Id != EndPlayer.Id && nextPhase.CurrentPlayer.Resources.Values.Sum() <= 7)
+                    nextPhase.CurrentPlayer = GetNextPlayer(nextPhase.CurrentPlayer, players);
+
+                if (nextPhase.CurrentPlayer.Id == EndPlayer.Id)
+                    nextPhase.PhaseState = GameStates.PlaceRobber;
+                else
+                    nextPhase.PhaseState = GameStates.SevenDiscard;
             }
             else if (PhaseState == GameStates.PlaceRobber 
                 && PreviousState != null 

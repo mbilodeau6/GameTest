@@ -2671,4 +2671,214 @@ public class GamePlayHelpersTests
         Assert.Equal(1, board.GetBluePlayer().VictoryPoints);
         Assert.Equal(3, board.GetRedPlayer().VictoryPoints);
     }
+
+    [Fact]
+    public void DiscardCardRequestFromUser_InvalidState()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SettingUpBoard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
+        var cardsToDiscard = new List<string>();
+        for (int i = 0; i < 4; i++)
+            cardsToDiscard.Add(ResourceType.Brick.ToString());
+
+        var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+    }
+
+    [Fact]
+    public void DiscardCardRequestFromUser_NotUsersTurn()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetBluePlayer().AssignResources(ResourceType.Brick, 8);
+        var cardsToDiscard = new List<string>();
+        for (int i = 0; i < 4; i++)
+            cardsToDiscard.Add(ResourceType.Brick.ToString());
+
+        var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetBluePlayer().Id, cardsToDiscard));
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+    }
+
+
+    [Fact]
+    public void DiscardCardRequestFromUser_DiscardingTooFew()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
+        var cardsToDiscard = new List<string>();
+        for (int i = 0; i < 3; i++)
+            cardsToDiscard.Add(ResourceType.Brick.ToString());
+
+        var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
+
+        Assert.False(response.Success);
+        Assert.Equal(1045, response.ErrorCode);
+    }
+
+    [Fact]
+    public void DiscardCardRequestFromUser_DiscardingTooMany()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 9);
+        var cardsToDiscard = new List<string>();
+        for (int i = 0; i < 5; i++)
+            cardsToDiscard.Add(ResourceType.Brick.ToString());
+
+        var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
+
+        Assert.False(response.Success);
+        Assert.Equal(1045, response.ErrorCode);
+    }
+
+    [Fact]
+    public void DiscardCardRequestFromUser_DoNotHaveSelectedResources()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 3);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
+        var cardsToDiscard = new List<string>();
+        for (int i = 0; i < 4; i++)
+            cardsToDiscard.Add(ResourceType.Brick.ToString());
+
+        var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
+
+        Assert.False(response.Success);
+        Assert.Equal(1017, response.ErrorCode);
+    }
+
+    [Fact]
+    public void DiscardCardRequestFromUser_Valid()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 4);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
+        var cardsToDiscard = new List<string>();
+        for (int i = 0; i < 4; i++)
+            cardsToDiscard.Add(ResourceType.Brick.ToString());
+
+        var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
+
+        Assert.True(response.Success);
+        Assert.Contains(ResourceType.Brick, board.GetRedPlayer().Resources);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Contains(ResourceType.Wood, board.GetRedPlayer().Resources);
+        Assert.Equal(5, board.GetRedPlayer().Resources[ResourceType.Wood]);
+    }
+
+    [Fact]
+    public void DiscardCards_InvalidState()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SettingUpBoard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
+        var cardsToDiscard = new List<ResourceType>();
+        for (int i = 0; i < 4; i++)
+            cardsToDiscard.Add(ResourceType.Brick);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.DiscardCards(gs, board.GetRedPlayer(), cardsToDiscard));
+    }
+
+    [Fact]
+    public void DiscardCards_NotUsersTurn()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetBluePlayer().AssignResources(ResourceType.Brick, 8);
+        var cardsToDiscard = new List<ResourceType>();
+        for (int i = 0; i < 4; i++)
+            cardsToDiscard.Add(ResourceType.Brick);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.DiscardCards(gs, board.GetBluePlayer(), cardsToDiscard));
+    }
+
+    [Fact]
+    public void DiscardCards_DiscardingTooFew()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
+        var cardsToDiscard = new List<ResourceType>();
+        for (int i = 0; i < 3; i++)
+            cardsToDiscard.Add(ResourceType.Brick);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.DiscardCards(gs, board.GetRedPlayer(), cardsToDiscard));
+    }
+
+    [Fact]
+    public void DiscardCards_DoNotHaveSelectedResources()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 3);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
+        var cardsToDiscard = new List<ResourceType>();
+        for (int i = 0; i < 4; i++)
+            cardsToDiscard.Add(ResourceType.Brick);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.DiscardCards(gs, board.GetRedPlayer(), cardsToDiscard));
+    }
+
+    [Fact]
+    public void DiscardCards_UserDoesntNeedToDiscard()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 7);
+        var cardsToDiscard = new List<ResourceType>();
+        for (int i = 0; i < 3; i++)
+            cardsToDiscard.Add(ResourceType.Brick);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.DiscardCards(gs, board.GetRedPlayer(), cardsToDiscard));
+    }
+
+    [Fact]
+    public void DiscardCardRequest_Valid()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SevenDiscard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 4);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
+        var cardsToDiscard = new List<ResourceType>() { ResourceType.Brick, ResourceType.Brick, ResourceType.Wood, ResourceType.Wood };
+
+        GamePlayHelpers.DiscardCards(gs, board.GetRedPlayer(), cardsToDiscard);
+
+        Assert.Contains(ResourceType.Brick, board.GetRedPlayer().Resources);
+        Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Contains(ResourceType.Wood, board.GetRedPlayer().Resources);
+        Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(5, board.GetRedPlayer().ResourceCount);
+    }
 }

@@ -9,7 +9,7 @@ public enum GameStates
     FirstDevCardRoad,
     SecondDevCardRoad,
     PlaceRobber,
-    SevenDiscardResources,
+    SevenDiscard,
     TradeResponse,
     TradeReview,
     BuildOrTrade,

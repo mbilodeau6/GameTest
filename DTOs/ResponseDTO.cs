@@ -97,7 +97,9 @@ public class ResponseDTO
         { 1040, "YearOfPlenty requires the selection of exactly two resources."},
         { 1041, "A play Knight request must specify a tile id."},
         { 1042, "During set up, the second road must be built off of the second settlement not off of the first settlement or first road."},
-        { 1043, "Can not play two development cards in the same round."}, 
+        { 1043, "Can not play two development cards in the same round."},
+        { 1044, "Discard request must specify player and selected resources."},
+        { 1045, "Player must discard half (and only half) their resources when a 7 is rolled."},
         { 9999, "Unexpected error."},
     };
 }

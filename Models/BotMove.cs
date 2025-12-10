@@ -15,5 +15,6 @@ public class BotMove
 
     public TradeRequestDTO? BankTrade { get; set; }
     public TileDTO? TileMove { get; set; }
+    public List<ResourceType>? DiscardResources { get; set; }
 }
 

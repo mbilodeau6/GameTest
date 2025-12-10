@@ -309,4 +309,25 @@ public class Games
         return await CreateSuccessResponse(req, response);
     }
 
+    [Function("DiscardCards")]
+    public async Task<HttpResponseData> DiscardCards(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/discard-cards")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("Dev-Card/Play called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await req.ReadFromJsonAsync<DiscardRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || request.SelectedResources == null || request.SelectedResources.Count() == 0)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1044, $"GameId: {id}");
+
+        var response = await _gameService.DiscardCardsAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
 }

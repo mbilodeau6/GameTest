@@ -568,7 +568,6 @@ public class GameService
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
 
-            // TODO: Need to create/call individual GamePlayHelpers
             response = null; //  = GamePlayHelpers.BuyDevCard(gs, playerId);
             switch(request.DevCardType)
             {
@@ -610,6 +609,48 @@ public class GameService
         {
             _logger.LogError(ex, "Play Development Card {DevCardType} for player {playerId} for game {GameId} failed.", request.DevCardType, request.PlayerId, gameId);
             return new ResponseDTO(false, 9999, $"Action: PlayDevCard; GameId: {gameId}; PlayerId: {request.PlayerId}; DevCardType: {request.DevCardType}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
+    public async Task<ResponseDTO> DiscardCardsAsync(Guid gameId, DiscardRequest request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            response = GamePlayHelpers.DiscardCardRequestFromUser(gs, request);
+
+            if (response == null)
+            {
+                return new ResponseDTO(false, 9999, $"Action: DiscardCards; GameId: {gameId}; PlayerId: {request.PlayerId}", null as GameStateDTO);
+            }
+
+            if (!response.Success)
+                return response;
+
+            var json = JsonSerializer.Serialize(response.GameState, GetSerializerOptions());
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed Discard Cards for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Discard Cards for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: DiscardCards; GameId: {gameId}; PlayerId: {request.PlayerId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 

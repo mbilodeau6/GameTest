@@ -81,49 +81,99 @@ public class IntegrationTests
     }
 
     [Fact]
+    public void BotRollsSeven_HumanHasToDisardBeforeBeforeBotPlacesRober()
+    {
+        // Build 2 settlements and roads for each player
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E15).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V20).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E25).BuildRoad(board.GetBluePlayer());
+
+        // Give human player enough cards to force discard
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 4);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 4);
+
+        // Set phase to bot's turn to roll
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetBluePlayer(), board.GetRedPlayer());
+        board.GetGameState().SetDiceForTesting(new GameDice(3, 4)); // Force a 7
+        GamePlayHelpers.GameLoop(board.GetGameState());
+
+        Assert.Equal(GameStates.SevenDiscard, board.GetGameState().Phase.PhaseState);
+        Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
+
+        GamePlayHelpers.DiscardCardRequestFromUser(board.GetGameState(), 
+            new DiscardRequest(board.GetRedPlayer().Id, 
+            new List<string>() {ResourceType.Brick.ToString(), ResourceType.Brick.ToString(), ResourceType.Wood.ToString(), ResourceType.Wood.ToString()}));
+
+        Assert.Equal(GameStates.PlaceRobber, board.GetGameState().Phase.PhaseState);
+        Assert.Equal(board.GetBluePlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
+    }
+
+    [Fact]
+    public void HumanRollsSeven_HumanHasToDisardBeforeBeforePlacingRober()
+    {
+        // Build 2 settlements and roads for each player
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E15).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V20).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E25).BuildRoad(board.GetBluePlayer());
+
+        // Give human player enough cards to force discard
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 4);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 4);
+
+        // Set phase to human's turn to roll
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().SetDiceForTesting(new GameDice(3, 4)); // Force a 7
+        GamePlayHelpers.GameLoop(board.GetGameState());
+
+        Assert.Equal(GameStates.SevenDiscard, board.GetGameState().Phase.PhaseState);
+        Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
+
+        GamePlayHelpers.DiscardCardRequestFromUser(board.GetGameState(), 
+            new DiscardRequest(board.GetRedPlayer().Id, 
+            new List<string>() {ResourceType.Brick.ToString(), ResourceType.Brick.ToString(), ResourceType.Wood.ToString(), ResourceType.Wood.ToString()}));
+
+        Assert.Equal(GameStates.PlaceRobber, board.GetGameState().Phase.PhaseState);
+        Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
+    }
+
+
+    [Fact]
     public async Task FullGameThroughInterfacesExposedToUser()
     {
-        var gameService = new GameService();
-        var gs = gameService.CreateGame(GameType.Starter.ToString());
+        // var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        // GamePlayHelpers.StartGame(gs);
 
-        Assert.NotNull(gs);
-
-        var gameId = gs.Id;
-        var humanId = gs.Players.Find(p => p.IsBot == false);
-        var botId = gs.Players.Find(p => p.IsBot == true);
-
-        Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
-
-        // TODO: Need to figure out how to set up (or bypass) connection to blob container.
-        // var response = await gameService.StartGameAsync(gameId);
-        // Assert.True(response.Success);
-
-        // var vp = new VertexPicker(gs);
-        // Assert.NotNull(vp);
-
-        // Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
-        // response =  await gameService.BuildSettlementAsync(gameId, vp.PickVertex().Id, gs.Phase.CurrentPlayer.Id);
-        // Assert.True(response.Success);
-
-        // Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
-        // response = await gameService.BuildRoadAsync(gameId, vp.PickEdge().Id, gs.Phase.CurrentPlayer.Id);
-        // Assert.True(response.Success);
-
-        // Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
-        // response =  await gameService.BuildSettlementAsync(gameId, vp.PickVertex().Id, gs.Phase.CurrentPlayer.Id);
-        // Assert.True(response.Success);
-
-        // Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
-        // response = await gameService.BuildRoadAsync(gameId, vp.PickEdge().Id, gs.Phase.CurrentPlayer.Id);
-        // Assert.True(response.Success);
-
-        // Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
-        // response = await gameService.RollDiceAsync(gameId);
-        // Assert.True(response.Success);
-
-
-        // TODO: Continue to implement. Stopped because I couldn't figure out an easy way to deal with
-        // blob container.
+        // while (gs.Phase.PhaseState != GameStates.GameOver)
+        // {
+        //     var currentPlayer = gs.Phase.CurrentPlayer;
+        //     if (!currentPlayer.IsBot)
+        //     {
+        //         if (gs.Phase.PhaseState == GameStates.PlaceFirstSettlement)
+        //         {
+        //             var v = gs.GetVertexFromTileInfo(gs.GetTileAt(2, 0), gs.GetTileAt(3, -1), gs.GetTileAt(4, 0), null);
+        //             GamePlayHelpers.BuildSettlementRequestFromUser(gs, currentPlayer.Id, v.Id);
+        //             var e = gs.GetEdgeFromTileInfo(gs.GetTileAt(2, 0), gs.GetTileAt(4, 0), null);
+        //             GamePlayHelpers.BuildRoadRequestFromUser(gs, currentPlayer.Id, e.Id);
+        //         }
+        //         else if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement)
+        //         {
+        //             var v = gs.GetVertexFromTileInfo(gs.GetTileAt(1, 1), gs.GetTileAt(0, 2), gs.GetTileAt(2, 2), null);
+        //             GamePlayHelpers.BuildSettlementRequestFromUser(gs, currentPlayer.Id, v.Id);
+        //             var e = gs.GetEdgeFromTileInfo(gs.GetTileAt(1, 1), gs.GetTileAt(2, 2), null);
+        //             GamePlayHelpers.BuildSettlementRequestFromUser(gs, currentPlayer.Id, v.Id);
+        //         }
+        //         else if (gs.Phase.PhaseState == GameStates.RollOrUseDevCard)
+        //         {
+        //             GamePlayHelpers.RollDice(gs);
+        //         }
+        //     }
+            
+        //     GamePlayHelpers.GameLoop(gs);
+        // }
     }
 
     [Fact]

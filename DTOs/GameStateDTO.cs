@@ -20,9 +20,8 @@ public class GameStateDTO
     public List<EdgeDTO> Edges { get; } = new();
     public List<VertexDTO> Vertices { get; } = new();
     public List<PortDTO> Ports {get; } = new();
-    public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
-
     public List<string> DevelopmentCards { get; } = new();
+    public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]

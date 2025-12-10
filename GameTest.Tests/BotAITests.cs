@@ -487,6 +487,47 @@ public class BotAITests
     }
 
     [Fact]
+    public void GetDiscardMove_WrongState()
+    {
+        // Arrange
+        var board = CreateBoardForBuildTest();
+
+        board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
+        board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        Assert.Throws<InvalidOperationException>(() => bot.GetDiscardMove());
+    }
+
+    [Fact]
+    public void GetDiscardMove_Valid()
+    {
+        // Arrange
+        var board = CreateBoardForBuildTest();
+
+        board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
+        board.GetGameState().Phase.PhaseState = GameStates.SevenDiscard;
+        board.GetBluePlayer().AssignResources(ResourceType.Brick, 2);
+        board.GetBluePlayer().AssignResources(ResourceType.Wood, 2);
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 2);
+        board.GetBluePlayer().AssignResources(ResourceType.Ore, 2);
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var move = bot.GetDiscardMove();
+
+        Assert.NotNull(move.DiscardResources);
+        Assert.Equal(4, move.DiscardResources.Count);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.False(move.RollDice);
+        Assert.False(move.EndTurn);
+    }
+
+    [Fact]
     public void DetermineCardsToDiscard_WantToBuildCity_HaveCardsEvenAfterDiscard()
     {
         // Arrange
@@ -696,5 +737,4 @@ public class BotAITests
         Assert.Equal(3, discard.Count(r => r == ResourceType.Wood));
         Assert.Equal(0, discard.Count(r => r == ResourceType.Wool));
     }
-
 }

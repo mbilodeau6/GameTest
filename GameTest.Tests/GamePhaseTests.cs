@@ -425,6 +425,108 @@ public class GamePhaseTests
     }
 
     [Fact]
+    public void GetNextPhase_RollOrUseDevCard_MoveToSevenDiscardCurrentPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 5);
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 3);
+
+        do
+            GamePlayHelpers.RollDice(board.GetGameState(), true);
+        while (board.GetGameState().Dice.GetCombinedValue() != 7);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetRedPlayer(), board.GetRedPlayer()));
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+    }
+
+    [Fact]
+    public void GetNextPhase_RollOrUseDevCard_MoveToSevenDiscardNextPlayer() // Because current player doesn't have to discard
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+        board.GetBluePlayer().AssignResources(ResourceType.Ore, 3);
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 3);
+        board.GetBluePlayer().AssignResources(ResourceType.Grain, 3);
+
+        do
+            GamePlayHelpers.RollDice(board.GetGameState(), true);
+        while (board.GetGameState().Dice.GetCombinedValue() != 7);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetBluePlayer(), board.GetRedPlayer()));
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+    }
+
+    [Fact]
+    public void GetNextPhase_SevenDiscard_BothNeedToDiscard()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 5);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 3);
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 4);
+        board.GetBluePlayer().AssignResources(ResourceType.Brick, 4);
+
+        do
+            GamePlayHelpers.RollDice(board.GetGameState(), true);
+        while (board.GetGameState().Dice.GetCombinedValue() != 7);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetRedPlayer(), board.GetRedPlayer()));
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+    }
+
+    [Fact]
+    public void GetNextPhase_SevenDiscardCurrentPlayer_MoveToPlaceRobber() // Because other player doesn't have to discard
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+
+        do
+            GamePlayHelpers.RollDice(board.GetGameState(), true);
+        while (board.GetGameState().Dice.GetCombinedValue() != 7);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+    }
+
+    [Fact]
+    public void GetNextPhase_SevenDiscardOtherPlayer_MoveToPlaceRobber()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetWaitingForRoll();
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 4);
+        board.GetBluePlayer().AssignResources(ResourceType.Brick, 4);
+        do
+            GamePlayHelpers.RollDice(board.GetGameState(), true);
+        while (board.GetGameState().Dice.GetCombinedValue() != 7);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SevenDiscard, board.GetBluePlayer(), board.GetRedPlayer()));
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+
+        board.GetBluePlayer().RemoveResources(ResourceType.Wool, 4);
+
+        phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, board.GetGameState().Dice.GetCombinedValue(), board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+    }
+
+    [Fact]
     public void GetNextPhase_PlaceRobber_RobberNotMovedStayPut()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
