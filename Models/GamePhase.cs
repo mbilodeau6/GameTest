@@ -159,7 +159,8 @@ public class GamePhase
             if (CurrentPlayer == null)
                 throw new InvalidOperationException("CurrentPlayer expected to be set to a valid value.");
 
-            if (PlayerHasWon(CurrentPlayer))
+            // Also need to check previous player in case they won with their last turn.
+            if (PlayerHasWon(CurrentPlayer) || PlayerHasWon(GetPreviousPlayer(CurrentPlayer, players)))
             {
                 nextPhase.PhaseState = GameStates.GameOver;
             }
