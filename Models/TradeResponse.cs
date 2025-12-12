@@ -15,16 +15,16 @@ public class TradeResponse
         Player = player ?? throw new ArgumentNullException(nameof(player));
         ResponseType = resposneType;
 
-        if (resposneType == TradeResponseType.Counter)
+        if (resposneType == TradeResponseType.Counter || resposneType == TradeResponseType.Original)
         {
             if (offer == null || offer.Count == 0)
-                throw new ArgumentNullException(nameof(offer), "Offer cannot be null or empty for a counter trade response.");
+                throw new ArgumentNullException(nameof(offer), "Offer cannot be null or empty for a counter or original trade response.");
 
             if (request == null || request.Count == 0)
-                throw new ArgumentNullException(nameof(request), "Request cannot be null or empty for a counter trade response.");
+                throw new ArgumentNullException(nameof(request), "Request cannot be null or empty for a counter or original trade response.");
 
             if (offer.Count == request.Count && !offer.Except(request).Any())
-                throw new ArgumentException("Offer and Request cannot be the same for a counter trade response.");
+                throw new ArgumentException("Offer and Request cannot be the same for a counter or original trade response.");
         }
 
         Offer = offer;
@@ -42,7 +42,7 @@ public class TradeResponse
         Player = gs.Players.First(p => p.Id == dto.PlayerId);
         ResponseType = dto.ResponseType;
 
-        if (ResponseType == TradeResponseType.Counter && dto.Offer != null && dto.Request != null)
+        if ((ResponseType == TradeResponseType.Counter || ResponseType == TradeResponseType.Original) && dto.Offer != null && dto.Request != null)
         {
             Offer = new Dictionary<ResourceType, int>();
             Request = new Dictionary<ResourceType, int>();

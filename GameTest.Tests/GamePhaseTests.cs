@@ -25,7 +25,8 @@ public class GamePhaseTests
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 3);
         gamePhase.SetWaitingForRoll();
         gamePhase.SetDevCardPlayedThisRound();
-        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null));
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Original, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}));
 
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
 
@@ -765,9 +766,36 @@ public class GamePhaseTests
     }
 
     [Fact]
+    public void AddPendingTradeResponse_NoOriginal_ThrowsException()
+    {
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+
+        Assert.Throws<InvalidOperationException>(() => gamePhase.AddPendingTradeResponse(
+            new TradeResponse(new Player("TestPlayer", PlayerColor.Green), TradeResponseType.Accept, null ,null)));
+    }
+
+    private void AddOriginalTradeRequest(GamePhase gamePhase)
+    {
+        var offer = new Dictionary<ResourceType, int>
+        {
+            { ResourceType.Brick, 2 },
+            { ResourceType.Wood, 1 }
+        };
+
+        var request = new Dictionary<ResourceType, int>
+        {
+            { ResourceType.Ore, 2 }
+        };
+        
+        var originalTrade = new TradeResponse(new Player("CurrentPlayer", PlayerColor.Orange), TradeResponseType.Original, offer, request);
+        gamePhase.AddPendingTradeResponse(originalTrade);
+    }
+
+    [Fact]
     public void AddPendingTradeResponse_NullTradeResponse_ThrowsException()
     {
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        AddOriginalTradeRequest(gamePhase);
 
         Assert.Throws<ArgumentNullException>(() => gamePhase.AddPendingTradeResponse(null!));
     }
@@ -779,13 +807,14 @@ public class GamePhaseTests
         var player = new Player("TestPlayer", PlayerColor.Green); 
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
         var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
+        AddOriginalTradeRequest(gamePhase);
 
         // Act
         gamePhase.AddPendingTradeResponse(tradeResponse);
 
         // Assert
         Assert.NotNull(gamePhase.PendingTradeResponses);
-        Assert.Single(gamePhase.PendingTradeResponses);
+        Assert.Equal(2, gamePhase.PendingTradeResponses.Count);
         Assert.Contains(tradeResponse, gamePhase.PendingTradeResponses);
     }
 
@@ -797,6 +826,7 @@ public class GamePhaseTests
         var player2 = new Player("AnotherPlayer", PlayerColor.Blue);
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
         var tradeResponse = new TradeResponse(player1, TradeResponseType.Accept, null ,null);
+        AddOriginalTradeRequest(gamePhase);
         gamePhase.AddPendingTradeResponse(tradeResponse);
         tradeResponse = new TradeResponse(player2, TradeResponseType.Reject, null ,null);
         gamePhase.AddPendingTradeResponse(tradeResponse);
@@ -808,9 +838,23 @@ public class GamePhaseTests
 
         // Assert
         Assert.NotNull(gamePhase.PendingTradeResponses);
-        Assert.Equal(2, gamePhase.PendingTradeResponses.Count);
+        Assert.Equal(3, gamePhase.PendingTradeResponses.Count);
         Assert.Single(gamePhase.PendingTradeResponses, p => p.Player.Id.Equals(player1.Id));
-        Assert.Equal(TradeResponseType.Counter, gamePhase.PendingTradeResponses.First(p => p.Player.Id.Equals(player1.Id)).ResponseType);
+    }
+
+    [Fact]
+    public void AddPendingTradeResponse_SendSecondOriginal_ThrowsException()
+    {
+        // Arrange
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        AddOriginalTradeRequest(gamePhase);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => 
+            gamePhase.AddPendingTradeResponse(
+                new TradeResponse(new Player("AnotherPlayer", PlayerColor.Blue), 
+                TradeResponseType.Original, new Dictionary<ResourceType, int>() {{ResourceType.Wool, 1}}, 
+                    new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}})));
     }
 
     [Fact]
@@ -820,6 +864,7 @@ public class GamePhaseTests
         var player = new Player("TestPlayer", PlayerColor.Green); 
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
         var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
+        AddOriginalTradeRequest(gamePhase);
         gamePhase.AddPendingTradeResponse(tradeResponse);
 
         // Act

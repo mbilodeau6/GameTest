@@ -170,4 +170,38 @@ public class TradeResponseTests
         Assert.Single(responseFromDto.Request);
         Assert.Contains(responseFromDto.Request, kvp => kvp.Key == ResourceType.Wood && kvp.Value == 2);
     }
+
+    [Fact]
+    public void Constructor_Original_Valid()
+    {
+        // Arrange
+        var player = new Player("player1", PlayerColor.Red);
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+
+        // Act
+        var response = new TradeResponse(player, TradeResponseType.Original, offer, request);
+
+        // Assert
+        Assert.Equal(player.Id, response.Player.Id);
+        Assert.Equal(TradeResponseType.Original, response.ResponseType);
+        Assert.NotNull(response.Offer);
+        Assert.Single(response.Offer);
+        Assert.Contains(response.Offer, kvp => kvp.Key == ResourceType.Wood && kvp.Value == 2);
+        Assert.NotNull(response.Request);
+        Assert.Single(response.Request);
+        Assert.Contains(response.Request, kvp => kvp.Key == ResourceType.Brick && kvp.Value == 1);
+    }
+
+    [Fact]
+    public void Constructor_Original_CantGiveSomethingForNothing()
+    {
+        // Arrange
+        var player = new Player("player1", PlayerColor.Red);
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
+        var request = new Dictionary<ResourceType, int>();
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new TradeResponse(player, TradeResponseType.Original, offer, request));
+    }
 }

@@ -71,7 +71,8 @@ public class GamePhaseDTOTests
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 7);
         gamePhase.SetWaitingForRoll();
         gamePhase.SetDevCardPlayedThisRound();
-        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Reject, null, null));
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Original, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}));
 
         GamePhaseDTO gamePhaseDTO = new GamePhaseDTO(gamePhase);
 
@@ -87,6 +88,6 @@ public class GamePhaseDTOTests
         Assert.NotNull(gamePhaseDTO.PendingTradeResponses);
         Assert.Single(gamePhaseDTO.PendingTradeResponses);  
         Assert.Equal(p2.Id, gamePhaseDTO.PendingTradeResponses[0].PlayerId);
-        Assert.Equal(TradeResponseType.Reject, gamePhaseDTO.PendingTradeResponses[0].ResponseType);
+        Assert.Equal(TradeResponseType.Original, gamePhaseDTO.PendingTradeResponses[0].ResponseType);
     }
 }

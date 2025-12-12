@@ -286,6 +286,12 @@ public class GamePhase
         if (PendingTradeResponses == null)
             PendingTradeResponses = new List<TradeResponse>();
 
+        if (tradeResponse.ResponseType != TradeResponseType.Original && !PendingTradeResponses.Any(tr => tr.ResponseType == TradeResponseType.Original))
+            throw new InvalidOperationException("Cannot add a trade response before an original trade request is added.");
+
+        if (tradeResponse.ResponseType == TradeResponseType.Original && PendingTradeResponses.Any(tr => tr.ResponseType == TradeResponseType.Original))
+            throw new InvalidOperationException("An original trade request has already been added.");
+
         if (PendingTradeResponses.Any(tr => tr.Player.Id == tradeResponse.Player.Id))
             PendingTradeResponses.RemoveAll(tr => tr.Player.Id == tradeResponse.Player.Id);
 

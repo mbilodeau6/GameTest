@@ -24,7 +24,7 @@ public class TradeResponseDTO
         PlayerId = response.Player.Id;
         ResponseType = response.ResponseType;
 
-        if (ResponseType == TradeResponseType.Counter)
+        if (ResponseType == TradeResponseType.Counter || ResponseType == TradeResponseType.Original)
         {
             if (response.Offer == null || response.Offer.Count == 0 || response.Request == null || response.Request.Count == 0)
                 throw new InvalidOperationException("Offer and Request cannot be null or empty for a counter trade response.");
