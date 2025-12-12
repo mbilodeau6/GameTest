@@ -1218,8 +1218,8 @@ public class GamePlayHelpersTests
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
         var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
-                new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
-                new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
+                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
+                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
 
         var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
@@ -1236,8 +1236,8 @@ public class GamePlayHelpersTests
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
         var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
-                new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
-                new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
+                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
+                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
 
         var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
@@ -1257,8 +1257,8 @@ public class GamePlayHelpersTests
 
         gs.Players[0].AssignResources(ResourceType.Wood, 2);
         var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
-                new Dictionary<string, int>() { { ResourceType.Wood.ToString(), 4 } },
-                new Dictionary<string, int>() { { ResourceType.Brick.ToString(), 1 } });
+                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
+                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
 
         var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
@@ -1669,7 +1669,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.PlaceRobber, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), new List<string>() { ResourceType.Wood.ToString()}, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, new List<ResourceType>() { ResourceType.Wood}, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1684,7 +1684,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
         var bot = gs.Players.First(p => p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.Monopoly.ToString(), new List<string>() { ResourceType.Wood.ToString()}, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.Monopoly, new List<ResourceType>() { ResourceType.Wood}, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1699,7 +1699,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), new List<string>(), null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, new List<ResourceType>(), null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1714,7 +1714,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, null, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1729,8 +1729,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString()}, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick}, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1745,24 +1745,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
-            new List<string>()  { ResourceType.Desert.ToString()}, null);
-
-        var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1038, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void PlayMonopolyDevCardFromUser_RequestInvalidResource()
-    {
-        var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.Monopoly);
-        var human = gs.Players.First(p => !p.IsBot);
-
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
-            new List<string>()  { "Apple"}, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, 
+            new List<ResourceType>()  { ResourceType.Desert}, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1777,8 +1761,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.RollOrUseDevCard, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, 
+            new List<ResourceType>()  { ResourceType.Wood }, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1794,8 +1778,8 @@ public class GamePlayHelpersTests
         gs.Phase.SetDevCardPlayedThisRound();
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, 
+            new List<ResourceType>()  { ResourceType.Wood }, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1816,8 +1800,8 @@ public class GamePlayHelpersTests
         var botWoodCount = bot.Resources[ResourceType.Wood];
         Assert.True(botWoodCount > 0);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, 
+            new List<ResourceType>()  { ResourceType.Wood }, null);
 
         var response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
 
@@ -1893,8 +1877,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.PlaceSecondSettlement, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -1909,8 +1893,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
         var bot = gs.Players.First(p => p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -1925,8 +1909,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -1941,8 +1925,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>(), null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>(), null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -1957,7 +1941,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
             null, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
@@ -1973,8 +1957,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString(), ResourceType.Brick.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick, ResourceType.Brick }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -1989,24 +1973,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Desert.ToString(), ResourceType.Wood.ToString() }, null);
-
-        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1038, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void PlayYearOfPlentyDevCardFromUser_InvalidSecondResourcesSelected()
-    {
-        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
-        var human = gs.Players.First(p => !p.IsBot);
-
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), "Pear" }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Desert, ResourceType.Wood }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -2021,8 +1989,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Monopoly, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -2037,8 +2005,8 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -2054,8 +2022,8 @@ public class GamePlayHelpersTests
         gs.Phase.SetDevCardPlayedThisRound();
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -2074,8 +2042,8 @@ public class GamePlayHelpersTests
         var countBrick = human.Resources[ResourceType.Brick];
         var countYearOfPlenty = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), 
-            new List<string>()  { ResourceType.Wood.ToString(), ResourceType.Brick.ToString() }, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
 
         var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
 
@@ -2144,7 +2112,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.SettingUpBoard, DevelopmentCardType.RoadBuilding);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding, null, null);
 
         var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
 
@@ -2159,7 +2127,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.RoadBuilding);
         var bot = gs.Players.First(p => p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.RoadBuilding, null, null);
 
         var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
 
@@ -2174,7 +2142,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.RoadBuilding);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, null, null);
 
         var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
 
@@ -2189,7 +2157,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Monopoly);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding, null, null);
 
         var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
 
@@ -2205,7 +2173,7 @@ public class GamePlayHelpersTests
         gs.Phase.SetDevCardPlayedThisRound();
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding, null, null);
 
         var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
 
@@ -2221,7 +2189,7 @@ public class GamePlayHelpersTests
         var human = gs.Players.First(p => !p.IsBot);
         var roadBuildingCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.RoadBuilding, null, null);
 
         var response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
 
@@ -2259,7 +2227,7 @@ public class GamePlayHelpersTests
         var human = gs.Players.First(p => !p.IsBot);
         var t1 = gs.GetTileAt(2, 0);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight, null, t1.Id);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2275,7 +2243,7 @@ public class GamePlayHelpersTests
         var bot = gs.Players.First(p => p.IsBot);
         var t1 = gs.GetTileAt(2, 0);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+        PlayDevCardRequest request = new PlayDevCardRequest(bot.Id, DevelopmentCardType.Knight, null, t1.Id);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2290,7 +2258,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, null);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight, null, null);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2305,7 +2273,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, "TT1");
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight, null, "TT1");
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2320,7 +2288,7 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.Knight);
         var human = gs.Players.First(p => !p.IsBot);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, gs.RobberTile.Id);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight, null, gs.RobberTile.Id);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2336,7 +2304,7 @@ public class GamePlayHelpersTests
         var human = gs.Players.First(p => !p.IsBot);
         var t1 = gs.GetTileAt(2, 0);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight, null, t1.Id);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2352,7 +2320,7 @@ public class GamePlayHelpersTests
         var human = gs.Players.First(p => !p.IsBot);
         var t1 = gs.GetTileAt(2, 0);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty.ToString(), null, t1.Id);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, null, t1.Id);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2368,7 +2336,7 @@ public class GamePlayHelpersTests
         gs.Phase.SetDevCardPlayedThisRound();
         var human = gs.Players.First(p => !p.IsBot);
         var t1 = gs.GetTileAt(2, 0);
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight, null, t1.Id);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2386,7 +2354,7 @@ public class GamePlayHelpersTests
         var playedKnightCount = human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight);
         var t1 = gs.GetTileAt(2, 0);
 
-        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight.ToString(), null, t1.Id);
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.Knight, null, t1.Id);
 
         var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
 
@@ -2704,9 +2672,9 @@ public class GamePlayHelpersTests
         gs.Phase = new GamePhase(GameStates.SettingUpBoard, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
-        var cardsToDiscard = new List<string>();
+        var cardsToDiscard = new List<ResourceType>();
         for (int i = 0; i < 4; i++)
-            cardsToDiscard.Add(ResourceType.Brick.ToString());
+            cardsToDiscard.Add(ResourceType.Brick);
 
         var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
 
@@ -2722,9 +2690,9 @@ public class GamePlayHelpersTests
         gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetBluePlayer().AssignResources(ResourceType.Brick, 8);
-        var cardsToDiscard = new List<string>();
+        var cardsToDiscard = new List<ResourceType>();
         for (int i = 0; i < 4; i++)
-            cardsToDiscard.Add(ResourceType.Brick.ToString());
+            cardsToDiscard.Add(ResourceType.Brick);
 
         var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetBluePlayer().Id, cardsToDiscard));
 
@@ -2741,9 +2709,9 @@ public class GamePlayHelpersTests
         gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 8);
-        var cardsToDiscard = new List<string>();
+        var cardsToDiscard = new List<ResourceType>();
         for (int i = 0; i < 3; i++)
-            cardsToDiscard.Add(ResourceType.Brick.ToString());
+            cardsToDiscard.Add(ResourceType.Brick);
 
         var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
 
@@ -2759,9 +2727,9 @@ public class GamePlayHelpersTests
         gs.Phase = new GamePhase(GameStates.DiscardCards, board.GetRedPlayer(), board.GetBluePlayer());
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 9);
-        var cardsToDiscard = new List<string>();
+        var cardsToDiscard = new List<ResourceType>();
         for (int i = 0; i < 5; i++)
-            cardsToDiscard.Add(ResourceType.Brick.ToString());
+            cardsToDiscard.Add(ResourceType.Brick);
 
         var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
 
@@ -2778,9 +2746,9 @@ public class GamePlayHelpersTests
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 3);
         board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
-        var cardsToDiscard = new List<string>();
+        var cardsToDiscard = new List<ResourceType>();
         for (int i = 0; i < 4; i++)
-            cardsToDiscard.Add(ResourceType.Brick.ToString());
+            cardsToDiscard.Add(ResourceType.Brick);
 
         var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
 
@@ -2797,9 +2765,9 @@ public class GamePlayHelpersTests
 
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 4);
         board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
-        var cardsToDiscard = new List<string>();
+        var cardsToDiscard = new List<ResourceType>();
         for (int i = 0; i < 4; i++)
-            cardsToDiscard.Add(ResourceType.Brick.ToString());
+            cardsToDiscard.Add(ResourceType.Brick);
 
         var response = GamePlayHelpers.DiscardCardRequestFromUser(gs, new DiscardRequest(board.GetRedPlayer().Id, cardsToDiscard));
 

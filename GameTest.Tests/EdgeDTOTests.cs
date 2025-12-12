@@ -68,7 +68,7 @@ public class EdgeDTOTests
         Assert.Single(dto.TileIds);
         Assert.Equal(owner.Id, dto.PlayerId);
         Assert.Contains(tile1.Id, dto.TileIds);
-        Assert.Equal(HexDirection.NE.ToString(), dto.Direction);
+        Assert.Equal(HexDirection.NE, dto.Direction);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class EdgeDTOTests
         Assert.Single(dto.TileIds);
         Assert.Null(dto.PlayerId);
         Assert.Contains(tile1.Id, dto.TileIds);
-        Assert.Equal(HexDirection.NE.ToString(), dto.Direction);
+        Assert.Equal(HexDirection.NE, dto.Direction);
     }
 
 }

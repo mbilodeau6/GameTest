@@ -46,16 +46,6 @@ public class GameService
         }
     }
 
-    private JsonSerializerOptions GetSerializerOptions()
-    {
-        return new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                Converters = { new JsonStringEnumConverter() }
-            };
-    }
-
     public GameState CreateGame(string gameTypeString)
     {
         GameType gameType = Enum.Parse<GameType>(gameTypeString, ignoreCase: true);
@@ -68,7 +58,7 @@ public class GameService
             {
                 var dto = new DTOs.GameStateDTO(gs);
 
-                var json = JsonSerializer.Serialize(dto, GetSerializerOptions());
+                var json = JsonSerializer.Serialize(dto, JsonOptions.Default);
                 var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
                 using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -108,7 +98,7 @@ public class GameService
             var download = await blob.DownloadContentAsync();
             string json = download.Value.Content.ToString();
 
-            var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, GetSerializerOptions());
+            var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, JsonOptions.Default);
             return new ResponseDTO(true, 0, string.Empty, dto);
         }
         catch (Exception ex)
@@ -160,7 +150,7 @@ public class GameService
             {
                 er = response.GameState.EventRecord[i];
 
-                stringBuilder.Append($"{er.PlayerId} {er.Action} {er.VertexId ?? ""}{er.EdgeId ?? ""}{er.DevelopmentCard ?? ""}{er.TileId ?? ""}{er.TargetPlayerId ?? ""}{er.DiceRoll.ToString() ?? "" }");
+                stringBuilder.Append($"{er.PlayerId} {er.Action} {er.VertexId ?? ""}{er.EdgeId ?? ""}{er.DevelopmentCard.ToString() ?? ""}{er.TileId ?? ""}{er.TargetPlayerId ?? ""}{er.DiceRoll.ToString() ?? "" }");
                 if (er.ResourcesUsed != null && er.ResourcesUsed.Count > 0)
                 {
                     stringBuilder.Append("{");
@@ -204,7 +194,7 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var json = JsonSerializer.Serialize(buildResponse.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(buildResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -242,7 +232,7 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var json = JsonSerializer.Serialize(buildResponse.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(buildResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -279,7 +269,7 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var json = JsonSerializer.Serialize(buildResponse.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(buildResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -325,7 +315,7 @@ public class GameService
 
             var updatedDto = new DTOs.GameStateDTO(gs);
 
-            var json = JsonSerializer.Serialize(updatedDto, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(updatedDto, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -373,7 +363,7 @@ public class GameService
 
             var updatedDto = new DTOs.GameStateDTO(gs);
 
-            var json = JsonSerializer.Serialize(updatedDto, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(updatedDto, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -423,7 +413,7 @@ public class GameService
 
             var updatedDto = new DTOs.GameStateDTO(gs);
 
-            var json = JsonSerializer.Serialize(updatedDto, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(updatedDto, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -461,7 +451,7 @@ public class GameService
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -498,7 +488,7 @@ public class GameService
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -535,7 +525,7 @@ public class GameService
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -571,16 +561,16 @@ public class GameService
             response = null; //  = GamePlayHelpers.BuyDevCard(gs, playerId);
             switch(request.DevCardType)
             {
-                case "Monopoly":
+                case DevelopmentCardType.Monopoly:
                     response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
                     break;
-                case "YearOfPlenty":
+                case DevelopmentCardType.YearOfPlenty:
                     response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
                     break;
-                case "Knight":
+                case DevelopmentCardType.Knight:
                     response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
                     break;
-                case "RoadBuilding":
+                case DevelopmentCardType.RoadBuilding:
                     response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
                     break;
                 default: 
@@ -595,7 +585,7 @@ public class GameService
             if (!response.Success)
                 return response;
 
-            var json = JsonSerializer.Serialize(response.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(response.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -637,7 +627,7 @@ public class GameService
             if (!response.Success)
                 return response;
 
-            var json = JsonSerializer.Serialize(response.GameState, GetSerializerOptions());
+            var json = JsonSerializer.Serialize(response.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));

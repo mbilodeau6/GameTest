@@ -33,15 +33,14 @@ public class GamePhase
 
     public GamePhase(GameState gs, GamePhaseDTO dto)
     {
-        PhaseState = Enum.Parse<GameStates>(dto.PhaseState);
+        PhaseState = dto.PhaseState;
         if (dto.CurrentPlayerId != null)
             CurrentPlayer = GamePlayHelpers.GetPlayerFromPlayerId(gs, dto.CurrentPlayerId);
 
         if (dto.EndPlayerId != null)
             EndPlayer = GamePlayHelpers.GetPlayerFromPlayerId(gs, dto.EndPlayerId);
 
-        if (!string.IsNullOrEmpty(dto.PreviousState))
-            PreviousState = Enum.Parse<GameStates>(dto.PreviousState);
+        PreviousState = dto.PreviousState;
 
         if (dto.OriginalRobberTileId != null)
             OriginalRobberTile = gs.Tiles.First(t => t.Id == dto.OriginalRobberTileId);

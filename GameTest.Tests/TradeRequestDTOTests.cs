@@ -31,9 +31,9 @@ public class TradeRequestDTOTests
         // Assert
         Assert.Equal(player.Id, dto.PlayerId);
         Assert.Equal(2, dto.Offer.Count);
-        Assert.Equal(2, dto.Offer["Wood"]);
-        Assert.Equal(1, dto.Offer["Brick"]);
+        Assert.Equal(2, dto.Offer[ResourceType.Wood]);
+        Assert.Equal(1, dto.Offer[ResourceType.Brick]);
         Assert.Single(dto.Request);
-        Assert.Equal(3, dto.Request["Wool"]);
+        Assert.Equal(3, dto.Request[ResourceType.Wool]);
     }
 }

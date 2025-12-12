@@ -4,22 +4,22 @@ using GameTest.Models;
 public class EventRecordDTO
 {
     public string PlayerId { get; init; }
-    public string Action { get; private set; }
+    public EventRecordAction Action { get; private set; }
     public string? VertexId { get; private set; }
     public string? EdgeId {get; private set; }
-    public Dictionary<string, int>? ResourcesUsed {get; private set; }
-    public Dictionary<string, int>? ResourcesReceived {get; private set; }
+    public Dictionary<ResourceType, int>? ResourcesUsed {get; private set; }
+    public Dictionary<ResourceType, int>? ResourcesReceived {get; private set; }
     public int? DiceRoll {get; private set; }
-    public string? DevelopmentCard { get; private set; }
+    public DevelopmentCardType? DevelopmentCard { get; private set; }
     public string? TargetPlayerId { get; private set; }
     public string? TileId { get; private set; }
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public EventRecordDTO(string playerId, string action, 
+    public EventRecordDTO(string playerId, EventRecordAction action, 
             string? vertexId, string? edgeId,
-            Dictionary<string, int>? resourcesUsed, Dictionary<string, int>? resourcesReceived, 
-            int? diceRoll, string? developmentCard, string? targetPlayerId, string? tileId)
+            Dictionary<ResourceType, int>? resourcesUsed, Dictionary<ResourceType, int>? resourcesReceived, 
+            int? diceRoll, DevelopmentCardType? developmentCard, string? targetPlayerId, string? tileId)
     {
         PlayerId = playerId;
         Action = action;
@@ -37,7 +37,7 @@ public class EventRecordDTO
     public EventRecordDTO(Player player, EventRecordAction action)
     {
         PlayerId = player.Id;
-        Action = action.ToString();
+        Action = action;
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, GameDice dice) : this(player, action)
@@ -78,13 +78,13 @@ public class EventRecordDTO
         if (action != EventRecordAction.DiscardCards)
             throw new InvalidOperationException("Unexpected Exception. Should only be used for DiscardCards.");
 
-        ResourcesUsed = new Dictionary<string, int>();
+        ResourcesUsed = new Dictionary<ResourceType, int>();
 
         foreach (var resource in resourcesUsed)
-            if (!ResourcesUsed.ContainsKey(resource.ToString()))
-                ResourcesUsed.Add(resource.ToString(), 1);    
+            if (!ResourcesUsed.ContainsKey(resource))
+                ResourcesUsed.Add(resource, 1);    
             else
-                ResourcesUsed[resource.ToString()]++;
+                ResourcesUsed[resource]++;
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, Player targetPlayer, ResourceType resourceGained) : this(player,action)
@@ -94,7 +94,7 @@ public class EventRecordDTO
 
         TargetPlayerId = targetPlayer.Id;
 
-        ResourcesReceived = new Dictionary<string, int>() { {resourceGained.ToString(), 1 } };
+        ResourcesReceived = new Dictionary<ResourceType, int>() { {resourceGained, 1 } };
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, Dictionary<ResourceType, int> resourcesGained) : this(player,action)
@@ -102,10 +102,10 @@ public class EventRecordDTO
         if (action != EventRecordAction.PlayMonoploy && action != EventRecordAction.PlayYearOfPlenty)
             throw new InvalidOperationException("Unexpected Exception. Should only be used for PlayMonopoly or PlayYearOfPlenty.");
 
-        ResourcesReceived = new Dictionary<string, int>();
+        ResourcesReceived = new Dictionary<ResourceType, int>();
 
         foreach (var resource in resourcesGained)
-            ResourcesReceived.Add(resource.Key.ToString(), resource.Value);
+            ResourcesReceived.Add(resource.Key, resource.Value);
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, DevelopmentCardType devCard) : this(player,action)
@@ -113,7 +113,7 @@ public class EventRecordDTO
         if (action != EventRecordAction.BuyDevelopmentCard)
             throw new InvalidOperationException("Unexpected Exception. Should only be used for BuyDevelopmentCard.");
 
-        DevelopmentCard = devCard.ToString();
+        DevelopmentCard = devCard;
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, Player targetPlayer, Dictionary<ResourceType, int> resourcesGained, Dictionary<ResourceType, int> resourcesUsed) : this(player,action)
@@ -123,15 +123,15 @@ public class EventRecordDTO
 
         TargetPlayerId = targetPlayer.Id;
 
-        ResourcesReceived = new Dictionary<string, int>();
+        ResourcesReceived = new Dictionary<ResourceType, int>();
 
         foreach (var resource in resourcesGained)
-            ResourcesReceived.Add(resource.Key.ToString(), resource.Value);    
+            ResourcesReceived.Add(resource.Key, resource.Value);    
 
-        ResourcesUsed = new Dictionary<string, int>();
+        ResourcesUsed = new Dictionary<ResourceType, int>();
 
         foreach (var resource in resourcesUsed)
-            ResourcesUsed.Add(resource.Key.ToString(), resource.Value);    
+            ResourcesUsed.Add(resource.Key, resource.Value);    
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, Dictionary<ResourceType, int>resourcesGained, Dictionary<ResourceType, int> resourcesUsed) : this(player,action)
@@ -139,15 +139,14 @@ public class EventRecordDTO
         if (action != EventRecordAction.TradeWithBank)
             throw new InvalidOperationException("Unexpected Exception. Should only be used for TradeWithBank.");
 
-        ResourcesReceived = new Dictionary<string, int>();
+        ResourcesReceived = new Dictionary<ResourceType, int>();
 
         foreach (var resource in resourcesGained)
-            ResourcesReceived.Add(resource.Key.ToString(), resource.Value);    
+            ResourcesReceived.Add(resource.Key, resource.Value);    
 
-        ResourcesUsed = new Dictionary<string, int>();
+        ResourcesUsed = new Dictionary<ResourceType, int>();
 
         foreach (var resource in resourcesUsed)
-            ResourcesUsed.Add(resource.Key.ToString(), resource.Value);    
-
+            ResourcesUsed.Add(resource.Key, resource.Value);    
     }
 }

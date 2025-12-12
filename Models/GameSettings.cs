@@ -25,7 +25,7 @@ public class GameSettings
     
     public GameSettings(GameSettingsDTO dto)
     {
-        Type = Enum.Parse<GameType>(dto.Type);
+        Type = dto.Type;
         MaxPlayers = dto.MaxPlayers;
         VictoryPointsToWin = dto.VictoryPointsToWin;
         RoadsPerPlayer = dto.RoadsPerPlayer;

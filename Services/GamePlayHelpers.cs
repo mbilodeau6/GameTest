@@ -331,7 +331,7 @@ public static class GamePlayHelpers
     public static ResponseDTO BuildSettlementRequestFromUser(GameState gs, string playerId, string vertexId)
     {
         if (!BuildSettlementPhase(gs) || gs.Phase.CurrentPlayer == null)
-            return new ResponseDTO(false, 1003, $"Action: BankSettlement; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+            return new ResponseDTO(false, 1003, $"Action: BuildSettlement; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
@@ -478,7 +478,7 @@ public static class GamePlayHelpers
                 {
                     var vertex = GetVertexFromVertexId(gs, move.VertexMove.Id);
 
-                    if (move.VertexMove.Building == BuildingType.Settlement.ToString())
+                    if (move.VertexMove.Building == BuildingType.Settlement)
                         BuildSettlement(gs, gs.Phase.CurrentPlayer, vertex);
                     else
                         UpgradeToCity(gs, gs.Phase.CurrentPlayer, vertex);
@@ -745,7 +745,7 @@ public static class GamePlayHelpers
         if ((gs.Phase.PhaseState != GameStates.RollOrUseDevCard && gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
             return new ResponseDTO(false, 1003, $"Action: Play{targetType}DevCard; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
-        if (request.DevCardType != targetType.ToString())
+        if (request.DevCardType != targetType)
             return new ResponseDTO(false, 9999, $"Requested: {request.DevCardType}; Called: {targetType}; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}", null as GameStateDTO);
 
         var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
@@ -757,20 +757,9 @@ public static class GamePlayHelpers
 
         if (request.SelectedResources != null)
         {
-            var requestedResource = ResourceType.Desert;
-
             foreach (var resource in request.SelectedResources)
             {
-                try {
-                    requestedResource = Enum.Parse<ResourceType>(resource);
-                }
-                catch (ArgumentException)
-                {
-                    // convert exception into failure  resources
-                    return new ResponseDTO(false, 1038, $"Action: Play{targetType}DevCard; RequestedResource: {resource}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
-                }
-
-                if (requestedResource == ResourceType.Desert)
+                if (resource == ResourceType.Desert)
                     return new ResponseDTO(false, 1038, $"Action: Play{targetType}DevCard; RequestedResource: {resource}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
             }
         }
@@ -825,7 +814,7 @@ public static class GamePlayHelpers
             return response;
 
         var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
-        var requestedResource = Enum.Parse<ResourceType>(request.SelectedResources[0]);
+        var requestedResource = request.SelectedResources[0];
 
         PlayMonopolyDevCard(gs, player, requestedResource);
         GameLoop(gs);
@@ -862,11 +851,7 @@ public static class GamePlayHelpers
             return response;
 
         var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
-        var requestedResources = new List<ResourceType>();
-        foreach (var resourceString in request.SelectedResources)
-            requestedResources.Add(Enum.Parse<ResourceType>(resourceString));
-
-        PlayYearOfPlentyDevCard(gs, player, requestedResources);
+        PlayYearOfPlentyDevCard(gs, player, request.SelectedResources);
         GameLoop(gs);
 
         return new ResponseDTO(true, 0, null, gs);
@@ -994,26 +979,15 @@ public static class GamePlayHelpers
             return new ResponseDTO(false, 1045, $"GameId: {gs.Id}; Player: {request.PlayerId}; TotalCards: {totalCards}; RequestedDiscardCount: {request.SelectedResources.Count}", null as GameStateDTO);
 
         var ownedResourcesAsList = AIHelpers.ConvertResourceDictToList(player.Resources);
-        var selectedResources = new List<ResourceType>();
-        foreach (var resourceString in request.SelectedResources)
+        foreach (var resource in request.SelectedResources)
         {
-            ResourceType resource;
-            try {
-                resource = Enum.Parse<ResourceType>(resourceString);
-                selectedResources.Add(resource);
-            }
-            catch (ArgumentException)
-            {
-                return new ResponseDTO(false, 1038, $"Action: DiscardCards; RequestedResource: {resourceString}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
-            }
-
             if (!ownedResourcesAsList.Contains(resource))
-                return new ResponseDTO(false, 1017, $"Action: DiscardCards; MissingResource: {resourceString}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+                return new ResponseDTO(false, 1017, $"Action: DiscardCards; MissingResource: {resource}; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
 
             ownedResourcesAsList.Remove(resource);
         }
 
-        DiscardCards(gs, player, selectedResources);
+        DiscardCards(gs, player, request.SelectedResources);
 
         return new ResponseDTO(true, 0, null, gs);
     }

@@ -28,7 +28,7 @@ public class Tile
     public Tile(TileDTO dto)
     {
         Id = dto.Id;
-        Resource = Enum.Parse<ResourceType>(dto.Resource);
+        Resource = dto.Resource;
         DiceNumber = dto.DiceNumber;
         X = dto.X;
         Y = dto.Y;

@@ -60,23 +60,23 @@ public class GameStateDTOTests
         // Assert
         // TODO: Should add tests to check specific instances of players, tiles, edges, vertices
         Assert.Equal(2, gameStateDTO.Players.Count);
-        Assert.Equal("Red", gameStateDTO.Players[1].Color);
+        Assert.Equal(PlayerColor.Red, gameStateDTO.Players[1].Color);
         Assert.Equal(2, gameStateDTO.Tiles.Count);
-        Assert.Equal("Brick", gameStateDTO.Tiles[0].Resource);
+        Assert.Equal(ResourceType.Brick, gameStateDTO.Tiles[0].Resource);
         Assert.Equal(3, gameStateDTO.Edges.Count);
         Assert.Equal(2, gameStateDTO.Vertices.Count);
-        Assert.Equal("Settlement", gameStateDTO.Vertices[0].Building);
+        Assert.Equal(BuildingType.Settlement, gameStateDTO.Vertices[0].Building);
         Assert.Equal(gameState.Id.ToString(), gameStateDTO.Id);
         Assert.Equal("Default", gameStateDTO.Settings.Type.ToString());
         Assert.Equal(gameState.Tiles[1].Id, gameStateDTO.RobberTileId);
-        Assert.Equal(gameState.Settings.Type.ToString(), gameStateDTO.Settings.Type);
+        Assert.Equal(gameState.Settings.Type, gameStateDTO.Settings.Type);
         Assert.NotNull(gameState.Phase);
         if (gameState.Phase.CurrentPlayer != null) 
             Assert.Equal(gameState.Phase.CurrentPlayer.Id, gameStateDTO.Phase.CurrentPlayerId);
-        Assert.Equal(gameState.Phase.PhaseState.ToString(), gameStateDTO.Phase.PhaseState);
+        Assert.Equal(gameState.Phase.PhaseState, gameStateDTO.Phase.PhaseState);
         Assert.True(gameStateDTO.Dice.Die1.Random);
         Assert.Single(gameStateDTO.Ports);
-        Assert.Equal(PortType.Ore.ToString(), gameStateDTO.Ports[0].Type);
+        Assert.Equal(PortType.Ore, gameStateDTO.Ports[0].Type);
         Assert.Null(gameStateDTO.HasLargestArmyPlayerId);
         Assert.Null(gameStateDTO.HasLongestRoadPlayerId);
     }
@@ -117,15 +117,15 @@ public class GameStateDTOTests
         Assert.Equal(2, gsTransformed.Players[0].Resources[ResourceType.Ore]);
         Assert.Empty(gsTransformed.Players[0].DevCardsPlayed);
         Assert.Single(gsTransformed.Players[0].DevCardsPurchasedThisRound);
-        Assert.Contains(DevelopmentCardType.YearOfPlenty.ToString(), gsTransformed.Players[0].DevCardsPurchasedThisRound);
+        Assert.Contains(DevelopmentCardType.YearOfPlenty, gsTransformed.Players[0].DevCardsPurchasedThisRound);
         Assert.Single(gsTransformed.Players[0].DevCardsReadyToPlay);
-        Assert.Contains(DevelopmentCardType.RoadBuilding.ToString(), gsTransformed.Players[0].DevCardsReadyToPlay);
+        Assert.Contains(DevelopmentCardType.RoadBuilding, gsTransformed.Players[0].DevCardsReadyToPlay);
         Assert.Equal(2, gsTransformed.Players[0].DevelopmentCardCount);
         Assert.Equal(2, gsTransformed.Players[0].ResourceCount);
         Assert.Equal(2, gsTransformed.Players[1].DevelopmentCardCount);
         Assert.NotNull(gsTransformed.Players[1].DevCardsPlayed);
         Assert.NotEmpty(gsTransformed.Players[1].DevCardsPlayed);  // All played cards are visible
-        Assert.Contains(DevelopmentCardType.Knight.ToString(), gsTransformed.Players[1].DevCardsPlayed);
+        Assert.Contains(DevelopmentCardType.Knight, gsTransformed.Players[1].DevCardsPlayed);
         Assert.Empty(gsTransformed.Players[1].DevCardsPurchasedThisRound);
         Assert.Empty(gsTransformed.Players[1].DevCardsReadyToPlay);
         Assert.Equal(1, gsTransformed.Players[1].ResourceCount);

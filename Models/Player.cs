@@ -72,21 +72,21 @@ public class Player
     {
         Id = dto.Id;
         Name = dto.Name;
-        Color = Enum.Parse<PlayerColor>(dto.Color);
+        Color = dto.Color;
 
         DevelopmentCardCount = dto.DevelopmentCardCount;
 
         if (dto.DevCardsPlayed != null)
             foreach(var dc in dto.DevCardsPlayed)
-                DevCardsPlayed.Add(Enum.Parse<DevelopmentCardType>(dc));
+                DevCardsPlayed.Add(dc);
 
         if (dto.DevCardsPurchasedThisRound != null)
             foreach(var dc in dto.DevCardsPurchasedThisRound)
-                DevCardsPurchasedThisRound.Add(Enum.Parse<DevelopmentCardType>(dc));
+                DevCardsPurchasedThisRound.Add(dc);
 
         if (dto.DevCardsReadyToPlay != null)
             foreach(var dc in dto.DevCardsReadyToPlay)
-                DevCardsReadyToPlay.Add(Enum.Parse<DevelopmentCardType>(dc));
+                DevCardsReadyToPlay.Add(dc);
 
         ResourceCount = dto.ResourceCount;
         foreach (var kvp in dto.Resources)

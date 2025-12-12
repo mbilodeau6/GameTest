@@ -105,7 +105,7 @@ public class BotAITests
         var move = bai.GetSetUpMove();
 
         Assert.NotNull(move.VertexMove);
-        Assert.Equal(BuildingType.Settlement.ToString(), move.VertexMove.Building);
+        Assert.Equal(BuildingType.Settlement, move.VertexMove.Building);
         Assert.Null(move.EdgeMove);
     }
 
@@ -153,7 +153,7 @@ public class BotAITests
         var move = bai.GetSetUpMove();
 
         Assert.NotNull(move.VertexMove);
-        Assert.Equal(BuildingType.Settlement.ToString(), move.VertexMove.Building);
+        Assert.Equal(BuildingType.Settlement, move.VertexMove.Building);
         Assert.True(move.VertexMove.Id != gs.Vertices[0].Id);
         Assert.True(move.VertexMove.Id != gs.Vertices[1].Id);
         Assert.Null(move.EdgeMove);
@@ -299,7 +299,7 @@ public class BotAITests
         var move = bai.GetBuildMove();
 
         Assert.NotNull(move.VertexMove);
-        Assert.Equal(BuildingType.City.ToString(), move.VertexMove.Building);
+        Assert.Equal(BuildingType.City, move.VertexMove.Building);
         Assert.Equal(botPlayer.Id, move.VertexMove.PlayerId);
         var selectedVertex = gs.Vertices.First(v => v.Id == move.VertexMove.Id);
         Assert.NotNull(selectedVertex.Owner);
@@ -329,7 +329,7 @@ public class BotAITests
         var move = bai.GetBuildMove();
 
         Assert.NotNull(move.VertexMove);
-        Assert.Equal(BuildingType.Settlement.ToString(), move.VertexMove.Building);
+        Assert.Equal(BuildingType.Settlement, move.VertexMove.Building);
         Assert.Equal(botPlayer.Id, move.VertexMove.PlayerId);
         var selectedVertex = gs.Vertices.First(v => v.Id == move.VertexMove.Id);
         Assert.Null(selectedVertex.Owner);
@@ -356,11 +356,11 @@ public class BotAITests
         Assert.NotNull(move.BankTrade);
         Assert.Equal(move.BankTrade.PlayerId, botPlayer.Id);
         Assert.NotNull(move.BankTrade.Offer);
-        Assert.Contains(ResourceType.Wool.ToString(), move.BankTrade.Offer.Keys);
-        Assert.Equal(4, move.BankTrade.Offer[ResourceType.Wool.ToString()]);
+        Assert.Contains(ResourceType.Wool, move.BankTrade.Offer.Keys);
+        Assert.Equal(4, move.BankTrade.Offer[ResourceType.Wool]);
         Assert.NotNull(move.BankTrade.Request);
-        Assert.Contains(ResourceType.Wood.ToString(), move.BankTrade.Request.Keys);
-        Assert.Equal(1, move.BankTrade.Request[ResourceType.Wood.ToString()]);
+        Assert.Contains(ResourceType.Wood, move.BankTrade.Request.Keys);
+        Assert.Equal(1, move.BankTrade.Request[ResourceType.Wood]);
         Assert.Null(move.VertexMove);
         Assert.Null(move.EdgeMove);
         Assert.False(move.BuyDevelopmentCard);

@@ -20,7 +20,7 @@ public class GamePhaseDTOTests
         // Assert
         Assert.Equal(player1.Id, dto.CurrentPlayerId);
         Assert.Equal(player2.Id, dto.EndPlayerId);
-        Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad, dto.PhaseState);
         Assert.False(dto.WaitingForRoll);
         Assert.False(dto.DevCardPlayedThisRound);
     }
@@ -38,7 +38,7 @@ public class GamePhaseDTOTests
         // Assert
         Assert.Equal(player1.Id, dto.CurrentPlayerId);
         Assert.Null(dto.EndPlayerId);
-        Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad, dto.PhaseState);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class GamePhaseDTOTests
         // Assert
         Assert.Null(dto.CurrentPlayerId);
         Assert.Null(dto.EndPlayerId);
-        Assert.Equal(GameStates.PlaceFirstRoad.ToString(), dto.PhaseState);
+        Assert.Equal(GameStates.PlaceFirstRoad, dto.PhaseState);
     }
 
     [Fact]
@@ -70,12 +70,12 @@ public class GamePhaseDTOTests
 
         GamePhaseDTO gamePhaseDTO = new GamePhaseDTO(gamePhase);
 
-        Assert.Equal(gamePhase.PhaseState.ToString(), gamePhaseDTO.PhaseState);
+        Assert.Equal(gamePhase.PhaseState, gamePhaseDTO.PhaseState);
         Assert.Equal(gamePhase.CurrentPlayer.Id, gamePhaseDTO.CurrentPlayerId);
         Assert.Equal(gamePhase.EndPlayer.Id, gamePhaseDTO.EndPlayerId);
-        Assert.Equal(gamePhase.PreviousState.ToString(), gamePhaseDTO.PreviousState);
+        Assert.Equal(gamePhase.PreviousState, gamePhaseDTO.PreviousState);
         Assert.Equal(gamePhase.OriginalRobberTile.Id, gamePhaseDTO.OriginalRobberTileId);
-        Assert.Equal(gamePhase.OriginalRobberTile.Id.ToString(), gamePhaseDTO.OriginalRobberTileId);
+        Assert.Equal(gamePhase.OriginalRobberTile.Id, gamePhaseDTO.OriginalRobberTileId);
         Assert.Equal(7, gamePhaseDTO.RoadsPreRoadBuilding);
         Assert.True(gamePhase.WaitingForRoll);
         Assert.True(gamePhase.DevCardPlayedThisRound);

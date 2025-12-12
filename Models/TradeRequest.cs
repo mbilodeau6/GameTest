@@ -29,19 +29,9 @@ public class TradeRequest
         Request = new Dictionary<ResourceType, int>();
 
         foreach (var resource in dto.Offer)
-        {
-            if (Enum.TryParse<ResourceType>(resource.Key, out var resType))
-            {
-                Offer[resType] = resource.Value;
-            }
-        }
+            Offer[resource.Key] = resource.Value;
 
         foreach (var resource in dto.Request)
-        {
-            if (Enum.TryParse<ResourceType>(resource.Key, out var resType))
-            {
-                Request[resType] = resource.Value;
-            }
-        }
+            Request[resource.Key] = resource.Value;
     }
 }

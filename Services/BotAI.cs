@@ -33,7 +33,7 @@ public class BotAI
         var move = new BotMove();
 
         if (State.Phase.PhaseState == GameStates.PlaceFirstSettlement || State.Phase.PhaseState == GameStates.PlaceSecondSettlement)
-            move.VertexMove = new VertexDTO(new VertexPicker(State).PickVertex().Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
+            move.VertexMove = new VertexDTO(new VertexPicker(State).PickVertex().Id, BuildingType.Settlement, State.Phase.CurrentPlayer.Id, null);
         else if (State.Phase.PhaseState == GameStates.PlaceFirstRoad || State.Phase.PhaseState == GameStates.PlaceSecondRoad)
             move.EdgeMove = new EdgeDTO(new VertexPicker(State).PickEdge().Id, State.Phase.CurrentPlayer.Id, null);
 
@@ -153,7 +153,7 @@ public class BotAI
             && State.UnusedCityAvailable(State.Phase.CurrentPlayer) 
             && (GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer) || !restrictToHeldResources))
         {
-                move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City.ToString(), State.Phase.CurrentPlayer.Id, null);
+                move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City, State.Phase.CurrentPlayer.Id, null);
                 return move;
         }
 
@@ -166,7 +166,7 @@ public class BotAI
                 && (GamePlayHelpers.HasResourcesToBuildSettlement(State.Phase.CurrentPlayer) || !restrictToHeldResources) 
                 && candidateVertices.First().RoadsNeeded == 0)
             {
-                move.VertexMove = new VertexDTO(candidateVertices.First().TargetVertex.Id, BuildingType.Settlement.ToString(), State.Phase.CurrentPlayer.Id, null);
+                move.VertexMove = new VertexDTO(candidateVertices.First().TargetVertex.Id, BuildingType.Settlement, State.Phase.CurrentPlayer.Id, null);
                 return move;
             }
 
@@ -247,10 +247,10 @@ public class BotAI
         double roadWeight = 0.0;
         double devCardWeight = 0.0;
 
-        if (move.VertexMove != null && move.VertexMove.Building == BuildingType.Settlement.ToString())
+        if (move.VertexMove != null && move.VertexMove.Building == BuildingType.Settlement)
             settlementWeight = 1.0;
 
-        if (move.VertexMove != null && move.VertexMove.Building == BuildingType.City.ToString())
+        if (move.VertexMove != null && move.VertexMove.Building == BuildingType.City)
             cityWeight = 1.0;
 
         if (move.EdgeMove != null)

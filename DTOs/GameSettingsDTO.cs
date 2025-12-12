@@ -6,7 +6,7 @@ namespace GameTest.DTOs;
 
 public class GameSettingsDTO
 {
-    public string Type { get; }
+    public GameType Type { get; }
     public int MaxPlayers { get; }
     public int VictoryPointsToWin { get; }
     public int RoadsPerPlayer { get; }
@@ -14,11 +14,11 @@ public class GameSettingsDTO
     public int CitiesPerPlayer { get; }
 
     [JsonConstructor]
-    public GameSettingsDTO(string type,
+    public GameSettingsDTO(GameType type,
         int maxPlayers = 0, int victoryPointsToWin = 0, int roadsPerPlayer = 0,
         int settlementsPerPlayer = 0, int citiesPerPlayer = 0) 
     {
-        Type = type ?? string.Empty;
+        Type = type;
         MaxPlayers = maxPlayers;
         VictoryPointsToWin = victoryPointsToWin;
         RoadsPerPlayer = roadsPerPlayer;
@@ -28,7 +28,7 @@ public class GameSettingsDTO
 
     public GameSettingsDTO(GameSettings settings)
     {
-        Type = settings.Type.ToString();
+        Type = settings.Type;
         MaxPlayers = settings.MaxPlayers;
         VictoryPointsToWin = settings.VictoryPointsToWin;
         RoadsPerPlayer = settings.RoadsPerPlayer;

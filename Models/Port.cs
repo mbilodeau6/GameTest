@@ -36,7 +36,7 @@ public class Port
     public Port(PortDTO portDto, List<Vertex> vertices)
     {
         Id = portDto.Id;
-        Type = Enum.Parse<PortType>(portDto.Type);
+        Type = portDto.Type;
         
         Vertices = new List<Vertex>();
         foreach (var vertexId in portDto.Vertices)

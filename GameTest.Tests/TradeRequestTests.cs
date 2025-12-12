@@ -111,12 +111,12 @@ public class TradeRequestTests
     public void Constructor_FromDTO_NullGameState()
     {
         // Arrange
-        var dto = new TradeRequestDTO("player1", new Dictionary<string, int>
+        var dto = new TradeRequestDTO("player1", new Dictionary<ResourceType, int>
         {
-            { "Wood", 2 }
-        }, new Dictionary<string, int>
+            { ResourceType.Wood, 2 }
+        }, new Dictionary<ResourceType, int>
         {
-            { "Brick", 1 }
+            { ResourceType.Brick, 1 }
         });
 
         // Act
@@ -133,12 +133,12 @@ public class TradeRequestTests
     {
         // Arrange
         var gs = new GameState(new Guid());
-        var dto = new TradeRequestDTO("player1", new Dictionary<string, int>
+        var dto = new TradeRequestDTO("player1", new Dictionary<ResourceType, int>
         {
-            { "Wood", 2 }
-        }, new Dictionary<string, int>
+            { ResourceType.Wood, 2 }
+        }, new Dictionary<ResourceType, int>
         {
-            { "Brick", 1 }
+            { ResourceType.Brick, 1 }
         });
 
         // Act
@@ -155,12 +155,12 @@ public class TradeRequestTests
         // Arrange
         var gs = new GameState(new Guid());
         gs.Players.Add(new Player("Bob", PlayerColor.Red));
-        var dto = new TradeRequestDTO(gs.Players[0].Id, new Dictionary<string, int>
+        var dto = new TradeRequestDTO(gs.Players[0].Id, new Dictionary<ResourceType, int>
         {
-            { "Wood", 2 }
-        }, new Dictionary<string, int>
+            { ResourceType.Wood, 2 }
+        }, new Dictionary<ResourceType, int>
         {
-            { "Brick", 1 }
+            { ResourceType.Brick, 1 }
         });
 
         // Act

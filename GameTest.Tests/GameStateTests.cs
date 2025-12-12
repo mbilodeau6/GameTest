@@ -63,7 +63,7 @@ public class GameStateTests
 
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
-        Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
+        Assert.Equal(dto.Settings.Type, game.Settings.Type);
 
         Assert.Empty(game.Players);
         Assert.Empty(game.Tiles);
@@ -85,7 +85,7 @@ public class GameStateTests
 
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
-        Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
+        Assert.Equal(dto.Settings.Type, game.Settings.Type);
         Assert.Equal(gs.Phase.PhaseState, game.Phase.PhaseState);
         Assert.Null(game.Phase.CurrentPlayer);
         Assert.Null(game.Phase.EndPlayer);
@@ -126,7 +126,7 @@ public class GameStateTests
 
         // Assert
         Assert.Equal(dto.Id, game.Id.ToString());
-        Assert.Equal(dto.Settings.Type, game.Settings.Type.ToString());
+        Assert.Equal(dto.Settings.Type, game.Settings.Type);
         Assert.Equal(2, game.Settings.MaxPlayers);
         Assert.Equal(5, game.Settings.VictoryPointsToWin);
         Assert.Equal(6, game.Settings.RoadsPerPlayer);

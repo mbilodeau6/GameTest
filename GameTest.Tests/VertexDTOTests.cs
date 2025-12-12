@@ -1,7 +1,6 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
-using System.Drawing;
 
 namespace GameTest.Tests;
 
@@ -70,7 +69,7 @@ public class VertexDTOTests
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Null(dto.Building);
         Assert.Null(dto.PlayerId);
-        Assert.Equal(VertexDirection.N.ToString(), dto.Direction);
+        Assert.Equal(VertexDirection.N, dto.Direction);
     }
 
     [Fact]
@@ -94,7 +93,7 @@ public class VertexDTOTests
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
         Assert.Contains(tile3.Id, dto.TileIds);
-        Assert.Equal(BuildingType.Settlement.ToString(), dto.Building);
+        Assert.Equal(BuildingType.Settlement, dto.Building);
         Assert.Equal(owner.Id, dto.PlayerId);
         Assert.Null(dto.Direction);
     }
@@ -119,7 +118,7 @@ public class VertexDTOTests
         Assert.Equal(2, dto.TileIds.Count);
         Assert.Contains(tile1.Id, dto.TileIds);
         Assert.Contains(tile2.Id, dto.TileIds);
-        Assert.Equal(BuildingType.City.ToString(), dto.Building);
+        Assert.Equal(BuildingType.City, dto.Building);
         Assert.Equal(owner.Id, dto.PlayerId);
         Assert.Null(dto.Direction);
     }
@@ -141,8 +140,8 @@ public class VertexDTOTests
         Assert.Equal(vertex.Id, dto.Id);
         Assert.Single(dto.TileIds);
         Assert.Contains(tile1.Id, dto.TileIds);
-        Assert.Equal(BuildingType.Settlement.ToString(), dto.Building);
+        Assert.Equal(BuildingType.Settlement, dto.Building);
         Assert.Equal(owner.Id, dto.PlayerId);
-        Assert.Equal(VertexDirection.N.ToString(), dto.Direction);
+        Assert.Equal(VertexDirection.N, dto.Direction);
     }
 }

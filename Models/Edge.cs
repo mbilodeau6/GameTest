@@ -58,7 +58,7 @@ public class Edge
                 Tiles.Add(tile);
         }
 
-        Direction = edgeDto.Direction != null ? Enum.Parse<HexDirection>(edgeDto.Direction) : null;      
+        Direction = edgeDto.Direction;
     }
 
     // TODO: Consider adding methods to add/remove vertices with validation

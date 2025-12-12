@@ -24,21 +24,27 @@ public class Games
     {
         var response = req.CreateResponse(code);
         var responseDto = new ResponseDTO(false, errorCode, errorMsg, null as GameStateDTO);
-        await response.WriteAsJsonAsync(responseDto);
+        var json = JsonSerializer.Serialize(responseDto, JsonOptions.Default);
+        response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+        await response.WriteStringAsync(json);
         return response;
     }
 
     private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode code, ResponseDTO responseDto)
     {
         var response = req.CreateResponse(code);
-        await response.WriteAsJsonAsync(responseDto);
+        var json = JsonSerializer.Serialize(responseDto, JsonOptions.Default);
+        response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+        await response.WriteStringAsync(json);
         return response;
     }
 
     private async Task<HttpResponseData> CreateSuccessResponse(HttpRequestData req, ResponseDTO responseDto)
     {
         var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(responseDto);
+        var json = JsonSerializer.Serialize(responseDto, JsonOptions.Default);
+        response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+        await response.WriteStringAsync(json);
         return response;
     }
 
@@ -46,10 +52,17 @@ public class Games
     {
         var responseDto = new ResponseDTO(true, 0, string.Empty, gs);
         var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(responseDto);
+        var json = JsonSerializer.Serialize(responseDto, JsonOptions.Default);
+        response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+        await response.WriteStringAsync(json);
         return response;
     }
 
+    private static async Task<T?> ReadRequestBodyAsync<T>(HttpRequestData req)
+    {
+        var body = await new StreamReader(req.Body).ReadToEndAsync();
+        return JsonSerializer.Deserialize<T>(body, JsonOptions.Default);
+    }
 
     [Function("Games")]
     public async Task<HttpResponseData> CreateGame(
@@ -77,7 +90,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<BuildRoadRequest>();
+        var request = await ReadRequestBodyAsync<BuildRoadRequest>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.EdgeId))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1005, $"GameId: {id}");
 
@@ -98,7 +111,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
+        var request = await ReadRequestBodyAsync<BuildOnVertexRequest>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1024, $"GameId: {id}");
 
@@ -119,7 +132,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<BuildOnVertexRequest>();
+        var request = await ReadRequestBodyAsync<BuildOnVertexRequest>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.VertexId))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1025, $"GameId: {id}");
 
@@ -162,7 +175,9 @@ public class Games
             return await CreateErrorResponse(req, HttpStatusCode.NotFound, 1002, $"GameId: {id}");
 
         var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(summary);
+        var json = JsonSerializer.Serialize(summary, JsonOptions.Default);
+        ok.Headers.Add("Content-Type", "application/json; charset=utf-8");
+        await ok.WriteStringAsync(json);
         return ok;
     }
 
@@ -235,7 +250,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<TradeRequestDTO>();
+        var request = await ReadRequestBodyAsync<TradeRequestDTO>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || request.Request.Count == 0 || request.Offer.Count == 0)
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1026, $"GameId: {id}");
 
@@ -256,7 +271,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<PlaceOnTileRequest>();
+        var request = await ReadRequestBodyAsync<PlaceOnTileRequest>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.TileId))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1031, $"GameId: {id}");
 
@@ -277,7 +292,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<BaseRequest>();
+        var request = await ReadRequestBodyAsync<BaseRequest>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1034, $"GameId: {id}");
 
@@ -298,8 +313,8 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<PlayDevCardRequest>();
-        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.DevCardType))
+        var request = await ReadRequestBodyAsync<PlayDevCardRequest>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1035, $"GameId: {id}");
 
         var response = await _gameService.PlayDevCardAsync(guid, request);
@@ -319,7 +334,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await req.ReadFromJsonAsync<DiscardRequest>();
+        var request = await ReadRequestBodyAsync<DiscardRequest>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || request.SelectedResources == null || request.SelectedResources.Count() == 0)
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1044, $"GameId: {id}");
 

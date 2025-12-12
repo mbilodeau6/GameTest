@@ -29,6 +29,6 @@ public class PortDTOTests
         Assert.Equal(expectedPort.Vertices.Count, portDto.Vertices.Count);
         Assert.Contains(vertex1.Id, portDto.Vertices);
         Assert.Contains(vertex2.Id, portDto.Vertices);
-        Assert.Equal(expectedPort.Type.ToString(), portDto.Type);
+        Assert.Equal(expectedPort.Type, portDto.Type);
     }
 }

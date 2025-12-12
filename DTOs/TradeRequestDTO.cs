@@ -6,28 +6,28 @@ namespace GameTest.DTOs;
 public class TradeRequestDTO
 {
     public string PlayerId { get; private set; }
-    public Dictionary<string, int> Offer { get; private set; }
-    public Dictionary<string, int> Request { get; private set; }
+    public Dictionary<ResourceType, int> Offer { get; private set; }
+    public Dictionary<ResourceType, int> Request { get; private set; }
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public TradeRequestDTO(string playerId, Dictionary<string, int> offer, Dictionary<string, int> request)
+    public TradeRequestDTO(string playerId, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
     {
         PlayerId = playerId ?? string.Empty;
-        Offer = offer ?? new Dictionary<string, int>();
-        Request = request ?? new Dictionary<string, int>();
+        Offer = offer ?? new Dictionary<ResourceType, int>();
+        Request = request ?? new Dictionary<ResourceType, int>();
     }
     
     public TradeRequestDTO(TradeRequest request)
     {
         PlayerId = request.Player.Id;
-        Offer = new Dictionary<string, int>();
-        Request = new Dictionary<string, int>();
+        Offer = new Dictionary<ResourceType, int>();
+        Request = new Dictionary<ResourceType, int>();
 
         foreach (var resource in request.Offer)
-            Offer[resource.Key.ToString()] = resource.Value;
+            Offer[resource.Key] = resource.Value;
 
         foreach (var resource in request.Request)
-            Request[resource.Key.ToString()] = resource.Value;
+            Request[resource.Key] = resource.Value;
     }
 }

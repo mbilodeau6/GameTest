@@ -1,11 +1,15 @@
+using GameTest.Models;
+
 namespace GameTest.DTOs;
 
 public class DiscardRequest : BaseRequest
 {
-    public List<string> SelectedResources { get; init; }
+    public List<ResourceType> SelectedResources { get; init; }
 
-    public DiscardRequest(string playerId, List<string> selectedResources) : base(playerId)
+    public DiscardRequest(string playerId, List<ResourceType> selectedResources) : base(playerId)
     {
-        SelectedResources = selectedResources;
+        SelectedResources = new();
+        foreach(var resource in selectedResources)
+            SelectedResources.Add(resource);
     }
 }

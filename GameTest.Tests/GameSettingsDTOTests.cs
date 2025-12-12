@@ -16,7 +16,7 @@ public class GameSettingsDTOTests
         var settingsDTO = new GameSettingsDTO(settings);
 
         // Assert
-        Assert.Equal(settings.Type.ToString(), settingsDTO.Type);
+        Assert.Equal(settings.Type, settingsDTO.Type);
         Assert.Equal(settings.CitiesPerPlayer, settingsDTO.CitiesPerPlayer);
         Assert.Equal(settings.MaxPlayers, settingsDTO.MaxPlayers);
         Assert.Equal(settings.RoadsPerPlayer, settingsDTO.RoadsPerPlayer);
@@ -35,7 +35,7 @@ public class GameSettingsDTOTests
         var copiedDTO = new GameSettingsDTO(settingsDTO);
 
         // Assert
-        Assert.Equal(settings.Type.ToString(), copiedDTO.Type);
+        Assert.Equal(settings.Type, copiedDTO.Type);
         Assert.Equal(settings.CitiesPerPlayer, copiedDTO.CitiesPerPlayer);
         Assert.Equal(settings.MaxPlayers, copiedDTO.MaxPlayers);
         Assert.Equal(settings.RoadsPerPlayer, copiedDTO.RoadsPerPlayer);

@@ -113,7 +113,7 @@ public class GameState
             EventRecord.Add(er);
 
         foreach (var dc in dto.DevelopmentCards)
-            DevelopmentCards.Add(Enum.Parse<DevelopmentCardType>(dc));
+            DevelopmentCards.Add(dc);
 
         Dice = dto.Dice;
 

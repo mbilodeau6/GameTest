@@ -104,7 +104,7 @@ public class IntegrationTests
 
         GamePlayHelpers.DiscardCardRequestFromUser(board.GetGameState(), 
             new DiscardRequest(board.GetRedPlayer().Id, 
-            new List<string>() {ResourceType.Brick.ToString(), ResourceType.Brick.ToString(), ResourceType.Wood.ToString(), ResourceType.Wood.ToString()}));
+            new List<ResourceType>() {ResourceType.Brick, ResourceType.Brick, ResourceType.Wood, ResourceType.Wood}));
 
         Assert.Equal(GameStates.PlaceRobber, board.GetGameState().Phase.PhaseState);
         Assert.Equal(board.GetBluePlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
@@ -134,7 +134,7 @@ public class IntegrationTests
 
         GamePlayHelpers.DiscardCardRequestFromUser(board.GetGameState(), 
             new DiscardRequest(board.GetRedPlayer().Id, 
-            new List<string>() {ResourceType.Brick.ToString(), ResourceType.Brick.ToString(), ResourceType.Wood.ToString(), ResourceType.Wood.ToString()}));
+            new List<ResourceType>() {ResourceType.Brick, ResourceType.Brick, ResourceType.Wood, ResourceType.Wood}));
 
         Assert.Equal(GameStates.PlaceRobber, board.GetGameState().Phase.PhaseState);
         Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
