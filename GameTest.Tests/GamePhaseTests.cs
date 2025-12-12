@@ -25,6 +25,7 @@ public class GamePhaseTests
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 3);
         gamePhase.SetWaitingForRoll();
         gamePhase.SetDevCardPlayedThisRound();
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null));
 
         GamePhaseDTO dto = new GamePhaseDTO(gamePhase);
 
@@ -40,6 +41,10 @@ public class GamePhaseTests
         Assert.Equal(3, newGamePhase.RoadsPreRoadBuilding);
         Assert.True(newGamePhase.WaitingForRoll);
         Assert.True(newGamePhase.DevCardPlayedThisRound);
+        Assert.NotNull(newGamePhase.PendingTradeResponses);
+        Assert.Single(newGamePhase.PendingTradeResponses);
+        Assert.Equal(gamePhase.PendingTradeResponses[0].Player.Id, newGamePhase.PendingTradeResponses[0].Player.Id);
+        Assert.Equal(gamePhase.PendingTradeResponses[0].ResponseType, newGamePhase.PendingTradeResponses[0].ResponseType);
     }
 
     [Fact]
@@ -573,6 +578,24 @@ public class GamePhaseTests
         Assert.Equal(board.GetTile(TestTile.T5).Id, board.GetGameState().RobberTile.Id);
     }
 
+    [Fact]
+    public void GetNextPhase_RespondToTrade_StayPut()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void GetNextPhase_RespondToTrade_MoveToBuildOrTradeAfterAcceptance()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void GetNextPhase_RespondToTrade_MoveToBuildOrTradeAfterRejection()
+    {
+        Assert.True(false);
+    }
+
     private TestGameBoard CreateGameStateForRoadBuildingPhaseTesting(GameStates startingState)
     {
         var board = TestHelpers.CreateOriginalTestBoard();
@@ -741,4 +764,68 @@ public class GamePhaseTests
         Assert.True(board.GetGameState().Phase.PlayerHasWon(board.GetRedPlayer()));
     }
 
+    [Fact]
+    public void AddPendingTradeResponse_NullTradeResponse_ThrowsException()
+    {
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+
+        Assert.Throws<ArgumentNullException>(() => gamePhase.AddPendingTradeResponse(null!));
+    }
+
+    [Fact]
+    public void AddPendingTradeResponse_FirstForPlayer()
+    {
+        // Arrange
+        var player = new Player("TestPlayer", PlayerColor.Green); 
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
+
+        // Act
+        gamePhase.AddPendingTradeResponse(tradeResponse);
+
+        // Assert
+        Assert.NotNull(gamePhase.PendingTradeResponses);
+        Assert.Single(gamePhase.PendingTradeResponses);
+        Assert.Contains(tradeResponse, gamePhase.PendingTradeResponses);
+    }
+
+    [Fact]
+    public void AddPendingTradeResponse_SecondForPlayer()
+    {
+        // Arrange
+        var player1 = new Player("TestPlayer", PlayerColor.Green); 
+        var player2 = new Player("AnotherPlayer", PlayerColor.Blue);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var tradeResponse = new TradeResponse(player1, TradeResponseType.Accept, null ,null);
+        gamePhase.AddPendingTradeResponse(tradeResponse);
+        tradeResponse = new TradeResponse(player2, TradeResponseType.Reject, null ,null);
+        gamePhase.AddPendingTradeResponse(tradeResponse);
+
+        // Act
+        tradeResponse = new TradeResponse(player1, TradeResponseType.Counter, 
+            new Dictionary<ResourceType, int>() {{ ResourceType.Wood, 1 }}, new Dictionary<ResourceType, int>() {{ ResourceType.Brick, 1 }});
+        gamePhase.AddPendingTradeResponse(tradeResponse);
+
+        // Assert
+        Assert.NotNull(gamePhase.PendingTradeResponses);
+        Assert.Equal(2, gamePhase.PendingTradeResponses.Count);
+        Assert.Single(gamePhase.PendingTradeResponses, p => p.Player.Id.Equals(player1.Id));
+        Assert.Equal(TradeResponseType.Counter, gamePhase.PendingTradeResponses.First(p => p.Player.Id.Equals(player1.Id)).ResponseType);
+    }
+
+    [Fact]
+    public void ClearPendingTradeResponses()
+    {
+        // Arrange
+        var player = new Player("TestPlayer", PlayerColor.Green); 
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
+        gamePhase.AddPendingTradeResponse(tradeResponse);
+
+        // Act
+        gamePhase.ClearPendingTradeResponses();
+
+        // Assert
+        Assert.Null(gamePhase.PendingTradeResponses);
+    }
 }

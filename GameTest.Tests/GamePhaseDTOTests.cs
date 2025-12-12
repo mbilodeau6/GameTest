@@ -23,6 +23,10 @@ public class GamePhaseDTOTests
         Assert.Equal(GameStates.PlaceFirstRoad, dto.PhaseState);
         Assert.False(dto.WaitingForRoll);
         Assert.False(dto.DevCardPlayedThisRound);
+        Assert.Null(dto.PreviousState);
+        Assert.Null(dto.OriginalRobberTileId);
+        Assert.Null(dto.RoadsPreRoadBuilding);
+        Assert.Null(dto.PendingTradeResponses);
     }
 
     [Fact]
@@ -67,6 +71,7 @@ public class GamePhaseDTOTests
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 7);
         gamePhase.SetWaitingForRoll();
         gamePhase.SetDevCardPlayedThisRound();
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Reject, null, null));
 
         GamePhaseDTO gamePhaseDTO = new GamePhaseDTO(gamePhase);
 
@@ -79,5 +84,9 @@ public class GamePhaseDTOTests
         Assert.Equal(7, gamePhaseDTO.RoadsPreRoadBuilding);
         Assert.True(gamePhase.WaitingForRoll);
         Assert.True(gamePhase.DevCardPlayedThisRound);
+        Assert.NotNull(gamePhaseDTO.PendingTradeResponses);
+        Assert.Single(gamePhaseDTO.PendingTradeResponses);  
+        Assert.Equal(p2.Id, gamePhaseDTO.PendingTradeResponses[0].PlayerId);
+        Assert.Equal(TradeResponseType.Reject, gamePhaseDTO.PendingTradeResponses[0].ResponseType);
     }
 }

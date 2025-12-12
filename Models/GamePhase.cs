@@ -17,6 +17,7 @@ public class GamePhase
     public bool WaitingForRoll { get; private set; } = false;
     private int VictoryPointsToWin { get; init; }
     public bool DevCardPlayedThisRound {get; private set; } = false;
+    public List<TradeResponse>? PendingTradeResponses { get; private set; }
 
     // TODO: Can all callers to this version be changed to use the DTO version?
     public GamePhase(GameStates state, int victoryPointsToWin, Player? current = null, Player? end = null)
@@ -49,6 +50,17 @@ public class GamePhase
         WaitingForRoll = dto.WaitingForRoll;
         DevCardPlayedThisRound = dto.DevCardPlayedThisRound;
         VictoryPointsToWin = gs.Settings.VictoryPointsToWin;
+
+        if (dto.PendingTradeResponses != null)
+        {
+            PendingTradeResponses = new List<TradeResponse>();
+            foreach (var trDto in dto.PendingTradeResponses)
+            {
+                var player = GamePlayHelpers.GetPlayerFromPlayerId(gs, trDto.PlayerId);
+                var tradeResponse = new TradeResponse(player, trDto.ResponseType, trDto.Offer, trDto.Request);
+                PendingTradeResponses.Add(tradeResponse);
+            }
+        }
     }
 
     // Copy Constructor
@@ -264,5 +276,24 @@ public class GamePhase
         }
 
         return nextPhase;
+    }
+
+    public void AddPendingTradeResponse(TradeResponse tradeResponse)
+    {
+        if (tradeResponse == null)
+            throw new ArgumentNullException(nameof(tradeResponse));
+
+        if (PendingTradeResponses == null)
+            PendingTradeResponses = new List<TradeResponse>();
+
+        if (PendingTradeResponses.Any(tr => tr.Player.Id == tradeResponse.Player.Id))
+            PendingTradeResponses.RemoveAll(tr => tr.Player.Id == tradeResponse.Player.Id);
+
+        PendingTradeResponses.Add(tradeResponse);
+    }
+
+    public void ClearPendingTradeResponses()
+    {
+        PendingTradeResponses = null;
     }
 }
