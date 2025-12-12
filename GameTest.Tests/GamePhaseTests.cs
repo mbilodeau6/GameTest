@@ -579,22 +579,76 @@ public class GamePhaseTests
         Assert.Equal(board.GetTile(TestTile.T5).Id, board.GetGameState().RobberTile.Id);
     }
 
+    private TradeResponse CreateOriginalWSingleResource(Player player, 
+        ResourceType offerType, int offerCount, ResourceType requestType, int requestCount)
+    {
+        return new TradeResponse(player, TradeResponseType.Original, 
+            new Dictionary<ResourceType, int>() {{offerType, offerCount}}, 
+            new Dictionary<ResourceType, int>() {{requestType, requestCount}});
+    }
+
+    [Fact]
+    public void GetNextPhase_BuildOrTrade_MoveToRespondToTrade()
+    {
+        // Arrange
+        var players = new List<Player>();
+        var p1 = new Player("Tim", PlayerColor.Red);
+        players.Add(p1);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, p1, p1);
+        gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
+
+        // Act
+        var nextPhase = gamePhase.GetNextPhase(players, 2, 2, 8, null!);
+
+        // Assert
+        Assert.Equal(GameStates.RespondToTrade, nextPhase.PhaseState);
+        Assert.NotNull(nextPhase.CurrentPlayer);
+        Assert.Equal(p1.Id, nextPhase.CurrentPlayer.Id);
+    }
+
     [Fact]
     public void GetNextPhase_RespondToTrade_StayPut()
     {
-        Assert.True(false);
+        // Arrange
+        var players = new List<Player>();
+        var p1 = new Player("Tim", PlayerColor.Red);
+        players.Add(p1);
+        var p2 = new Player("Tony", PlayerColor.White);
+        players.Add(p2);
+        var gamePhase = new GamePhase(GameStates.RespondToTrade, p1, p2);
+        gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null));
+
+        // Act
+        var nextPhase = gamePhase.GetNextPhase(players, 2, 2, 8, null!);
+
+        // Assert
+        Assert.Equal(GameStates.RespondToTrade, nextPhase.PhaseState);
+        Assert.NotNull(nextPhase.CurrentPlayer);
+        Assert.Equal(p1.Id, nextPhase.CurrentPlayer.Id);
     }
 
     [Fact]
-    public void GetNextPhase_RespondToTrade_MoveToBuildOrTradeAfterAcceptance()
+    public void GetNextPhase_RespondToTrade_MoveToBuildOrTrade()
     {
-        Assert.True(false);
-    }
+        // Arrange
+        var players = new List<Player>();
+        var p1 = new Player("Tim", PlayerColor.Red);
+        players.Add(p1);
+        var p2 = new Player("Tony", PlayerColor.White);
+        players.Add(p2);
+        var gamePhase = new GamePhase(GameStates.RespondToTrade, p1, p2);
+        gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null));
+        gamePhase.ClearPendingTradeResponses();
 
-    [Fact]
-    public void GetNextPhase_RespondToTrade_MoveToBuildOrTradeAfterRejection()
-    {
-        Assert.True(false);
+        // Act
+        var nextPhase = gamePhase.GetNextPhase(players, 2, 2, 8, null!);
+
+        // Assert
+        Assert.Equal(GameStates.BuildOrTrade, nextPhase.PhaseState);
+        Assert.NotNull(nextPhase.CurrentPlayer);
+        Assert.Equal(p1.Id, nextPhase.CurrentPlayer.Id);
     }
 
     private TestGameBoard CreateGameStateForRoadBuildingPhaseTesting(GameStates startingState)

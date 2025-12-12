@@ -266,6 +266,14 @@ public class GamePhase
             else if (PhaseState == GameStates.FirstDevCardRoad
                 && playerRoadCount > RoadsPreRoadBuilding)
                 nextPhase.PhaseState = GameStates.SecondDevCardRoad;
+            else if (PhaseState == GameStates.BuildOrTrade && PendingTradeResponses != null && PendingTradeResponses.Count > 0)
+            {
+                nextPhase.PhaseState = GameStates.RespondToTrade;
+            }
+            else if (PhaseState == GameStates.RespondToTrade && (PendingTradeResponses == null || PendingTradeResponses.Count == 0))
+            {
+                nextPhase.PhaseState = GameStates.BuildOrTrade;
+            }
             else if (PhaseState == GameStates.SecondDevCardRoad
                 && playerRoadCount > RoadsPreRoadBuilding + 1
                 && PreviousState != null)
