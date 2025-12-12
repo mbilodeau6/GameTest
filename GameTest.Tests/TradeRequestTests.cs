@@ -1,9 +1,6 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
-using GameTest.Services;
-using GameTest.Functions;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 
 namespace GameTest.Tests;
 
