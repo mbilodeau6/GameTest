@@ -837,7 +837,10 @@ public static class GamePlayHelpers
             player.AssignResources(resource, 1);
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.YearOfPlenty);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
+        if (requestedResources[0] == requestedResources[1])
+            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 2} }));
+        else
+            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
     }
 
     public static ResponseDTO PlayYearOfPlentyDevCardFromUser(GameState gs, PlayDevCardRequest request)

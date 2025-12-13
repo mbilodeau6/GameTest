@@ -2089,6 +2089,20 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void PlayYearOfPlentyDevCard_RequestTwoOfSameResource()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+        var grainCount = human.Resources[ResourceType.Grain];
+
+        var request = new List<ResourceType>() { ResourceType.Grain, ResourceType.Grain};
+
+        GamePlayHelpers.PlayYearOfPlentyDevCard(gs, human, request);
+
+        Assert.Equal(grainCount + 2, human.Resources[ResourceType.Grain]);
+    }
+
+    [Fact]
     public void PlayYearOfPlentyDevCard_Valid()
     {
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
@@ -2872,5 +2886,173 @@ public class GamePlayHelpersTests
         Assert.Contains(ResourceType.Wood, board.GetRedPlayer().Resources);
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(5, board.GetRedPlayer().ResourceCount);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_InvalidState()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_NotPlayersTurn()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_MissingOffer()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_MissingRequest()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_EmptyOffer()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_EmptyRequest()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_OfferMatchesRequest()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_DontHaveCardsOffered()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void OpenTradeFromUser_Valid()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_InvalidState()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_CantOfferOnYourOwnTrade()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_CantUseOriginalType()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_CounterWithNoOffer()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_CounterWithEmptyOffer()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_CounterWithNoRequest()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_CounterWithEmptyRequest()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_CounterOfferMatchesRequest()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_DoesntHaveOfferCards()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_Valid()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_InvalidState()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_NotPlayersTurn()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_CantAcceptOwnTrade()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_PlayerDidntRespond()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_PlayerRejectTrade()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_Valid()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RejectAllOffersFromUser_InvalidState()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RejectAllOffersFromUser_NotPlayersTurn()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void RejectAllOffersFromUser_Valid()
+    {
+        Assert.True(false);
     }
 }
