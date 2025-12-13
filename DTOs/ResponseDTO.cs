@@ -100,6 +100,8 @@ public class ResponseDTO
         { 1043, "Can not play two development cards in the same round."},
         { 1044, "Discard request must specify player and selected resources."},
         { 1045, "Player must discard half (and only half) their resources when a 7 is rolled."},
+        { 1046, "TradeResponse must specify offered and requested cards if the response type is Counter. All responses must identify the player."},
+        { 1047, "AcceptTrade must specify the player accepting the trade and the player id of the trade being accepted."},
         { 9999, "Unexpected error."},
     };
 }

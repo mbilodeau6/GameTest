@@ -991,4 +991,24 @@ public static class GamePlayHelpers
 
         return new ResponseDTO(true, 0, null, gs);
     }
+
+    public static ResponseDTO OpenTradeFromUser(GameState gs, TradeRequestDTO request)
+    {
+        throw new NotImplementedException();
+    }
+
+    public static ResponseDTO RespondToTradeFromUser(GameState gs, TradeResponseDTO request)
+    {
+        throw new NotImplementedException();
+    }
+
+    public static ResponseDTO AcceptTradeFromUser(GameState gs, AcceptTradeDTO request)
+    {
+        throw new NotImplementedException();
+    }
+
+    public static ResponseDTO RejectAllOffersFromUser(GameState gs, BaseRequest request)
+    {
+        throw new NotImplementedException();
+    }
 }

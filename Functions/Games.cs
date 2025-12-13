@@ -3,6 +3,8 @@ using System.Text.Json;
 using GameTest.DTOs;
 using GameTest.Models;
 using GameTest.Services;
+using Google.Protobuf.Reflection;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -260,6 +262,93 @@ public class Games
 
         return await CreateSuccessResponse(req, response);
     }
+
+    [Function("OpenTrade")]
+    public async Task<HttpResponseData>OpenTrade(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/trades/open")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("OpenTrade called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<TradeRequestDTO>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || request.Request.Count == 0 || request.Offer.Count == 0)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1026, $"GameId: {id}");
+
+        var response = await _gameService.OpenTradeAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
+    [Function("TradeResponse")]
+    public async Task<HttpResponseData>TradeResponse(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/trades/respond")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("TradeResponse called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<TradeResponseDTO>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || request.ResponseType == TradeResponseType.Original || 
+            (request.ResponseType == TradeResponseType.Counter && 
+                (request.Request == null || request.Offer == null || request.Request.Count == 0 || request.Offer.Count == 0)))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1046, $"GameId: {id}");
+
+        var response = await _gameService.RespondToTradeAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
+    [Function("AcceptTrade")]
+    public async Task<HttpResponseData>AcceptTrade(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/trades/accept")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("AcceptTrade called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<AcceptTradeDTO>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.AcceptedPlayerId))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1047, $"GameId: {id}");
+
+        var response = await _gameService.AcceptTradeAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
+    [Function("RejectAllOffers")]
+    public async Task<HttpResponseData>RejectAllOffers(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/trades/reject-all")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("RejectAllOffers called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<BaseRequest>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1048, $"GameId: {id}");
+
+        var response = await _gameService.RejectAllOffersAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
 
     [Function("PlaceRobber")]
     public async Task<HttpResponseData> PlaceRobber(

@@ -468,6 +468,154 @@ public class GameService
         }
     }
 
+    public async Task<ResponseDTO> OpenTradeAsync(Guid gameId, TradeRequestDTO request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var tradeResponse = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+            if (!tradeResponse.Success)
+                return tradeResponse;
+
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed open trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
+            return tradeResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Open trade for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: OpenTrade; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
+    public async Task<ResponseDTO> RespondToTradeAsync(Guid gameId, TradeResponseDTO request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var tradeResponse = GamePlayHelpers.RespondToTradeFromUser(gs, request);
+
+            if (!tradeResponse.Success)
+                return tradeResponse;
+
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed respond to trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
+            return tradeResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Respond to trade for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: RespondToTrade; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
+public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var tradeResponse = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+            if (!tradeResponse.Success)
+                return tradeResponse;
+
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed accept trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
+            return tradeResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Accept trade for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: AcceptTrade; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
+    public async Task<ResponseDTO> RejectAllOffersAsync(Guid gameId, BaseRequest request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var tradeResponse = GamePlayHelpers.RejectAllOffersFromUser(gs, request);
+
+            if (!tradeResponse.Success)
+                return tradeResponse;
+
+            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            // synchronous wait on async upload to keep CreateGame signature unchanged
+            blob.Upload(ms, overwrite: true);
+
+            _logger.LogInformation("Completed reject all offers for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
+            return tradeResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Reject all offers for player {playerId} for game {GameId} failed.", request.PlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: RejectAllOffers; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
+
     public async Task<ResponseDTO> PlaceRobberAsync(Guid gameId, PlaceOnTileRequest request)
     {
         if (_container == null)
