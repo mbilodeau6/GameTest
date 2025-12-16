@@ -1209,6 +1209,22 @@ public class GamePlayHelpersTests
         Assert.True(GamePlayHelpers.IsVertexAdjacentToPlayerRoad(gs, testVertex, gs.Players[0]));
     }
 
+    private TradeRequestDTO CreateTradeRequestDTO(Player player, 
+        ResourceType offerType, int offerCount, ResourceType requestType, int requestCount)
+    {
+        return new TradeRequestDTO(player.Id, 
+            new Dictionary<ResourceType, int>() {{ offerType, offerCount}}, 
+            new Dictionary<ResourceType, int>() {{ requestType, requestCount}});
+    }
+
+    private TradeRequest CreateTradeRequest(Player player, 
+        ResourceType offerType, int offerCount, ResourceType requestType, int requestCount)
+    {
+        return new TradeRequest(player, 
+            new Dictionary<ResourceType, int>() {{ offerType, offerCount}}, 
+            new Dictionary<ResourceType, int>() {{ requestType, requestCount}});
+    }
+
     [Fact]
     public void BankTradeFromUser_Accepted()
     {
@@ -1217,9 +1233,7 @@ public class GamePlayHelpersTests
         gs.Phase.CurrentPlayer = gs.Players[0];
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
-        var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
-                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
-                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
+        var tradeDTO = CreateTradeRequestDTO(gs.Players[0], ResourceType.Wood, 4, ResourceType.Brick, 1);
 
         var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
@@ -1235,9 +1249,7 @@ public class GamePlayHelpersTests
         gs.Phase.PhaseState = GameStates.RollOrUseDevCard;
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
-        var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
-                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
-                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
+        var tradeDTO = CreateTradeRequestDTO(gs.Players[0], ResourceType.Wood, 4, ResourceType.Brick, 1);
 
         var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
@@ -1256,9 +1268,7 @@ public class GamePlayHelpersTests
 
 
         gs.Players[0].AssignResources(ResourceType.Wood, 2);
-        var tradeDTO = new TradeRequestDTO(gs.Players[0].Id,
-                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
-                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
+        var tradeDTO = CreateTradeRequestDTO(gs.Players[0], ResourceType.Wood, 4, ResourceType.Brick, 1);
 
         var response = GamePlayHelpers.BankTradeFromUser(gs, tradeDTO);
 
@@ -1274,9 +1284,7 @@ public class GamePlayHelpersTests
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
-        var tradeRequest = new TradeRequest(gs.Players[0],
-                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 4 } },
-                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
+        var tradeRequest = CreateTradeRequest(gs.Players[0], ResourceType.Wood, 4, ResourceType.Brick, 1);
 
         var response = GamePlayHelpers.BankTrade(new GameState(new Guid()), tradeRequest);
 
@@ -1291,9 +1299,7 @@ public class GamePlayHelpersTests
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
         gs.Players[0].AssignResources(ResourceType.Wood, 3);
-        var tradeRequest = new TradeRequest(gs.Players[0],
-                new Dictionary<ResourceType, int>() { { ResourceType.Wood, 2 } },
-                new Dictionary<ResourceType, int>() { { ResourceType.Brick, 1 } });
+        var tradeRequest = CreateTradeRequest(gs.Players[0], ResourceType.Wood, 2, ResourceType.Brick, 1);
 
         var response = GamePlayHelpers.BankTrade(new GameState(new Guid()), tradeRequest);
 
@@ -2891,168 +2897,662 @@ public class GamePlayHelpersTests
     [Fact]
     public void OpenTradeFromUser_InvalidState()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = CreateTradeRequestDTO(board.GetRedPlayer(), ResourceType.Brick, 1, ResourceType.Grain, 1);
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_NotPlayersTurn()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = CreateTradeRequestDTO(board.GetBluePlayer(), ResourceType.Brick, 1, ResourceType.Grain, 1);
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_MissingOffer()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new TradeRequestDTO(board.GetRedPlayer().Id, null!, new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}});
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1048, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_MissingRequest()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new TradeRequestDTO(board.GetRedPlayer().Id, new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}}, null!);
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1048, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_EmptyOffer()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new TradeRequestDTO(board.GetRedPlayer().Id, new Dictionary<ResourceType, int>(), new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}});
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1048, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_EmptyRequest()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new TradeRequestDTO(board.GetRedPlayer().Id, new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}}, new Dictionary<ResourceType, int>());
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1048, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_OfferMatchesRequest()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = CreateTradeRequestDTO(board.GetRedPlayer(), ResourceType.Brick, 3, ResourceType.Brick, 3);
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1049, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_DontHaveCardsOffered()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetRedPlayer().AssignResources(ResourceType.Ore, 2);
+        board.GetRedPlayer().AssignResources(ResourceType.Grain, 1);
+
+        var request = CreateTradeRequestDTO(board.GetRedPlayer(), ResourceType.Brick, 1, ResourceType.Wood, 1);
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1006, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void OpenTradeFromUser_Valid()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetRedPlayer().AssignResources(ResourceType.Ore, 4);
+        board.GetRedPlayer().AssignResources(ResourceType.Grain, 1);
+
+        var request = CreateTradeRequestDTO(board.GetRedPlayer(), ResourceType.Ore, 1, ResourceType.Grain, 1);
+
+        var response = GamePlayHelpers.OpenTradeFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.NotNull(gs.Phase.PendingTradeResponses);
+        Assert.NotEmpty(gs.Phase.PendingTradeResponses);
+        Assert.Equal(1, gs.Phase.PendingTradeResponses.Count(t => t.ResponseType == TradeResponseType.Original));
+        var storedTrade = gs.Phase.PendingTradeResponses.First(t => t.ResponseType == TradeResponseType.Original);
+        Assert.Equal(board.GetRedPlayer().Id, storedTrade.Player.Id);
+        Assert.NotNull(storedTrade.Offer);
+        Assert.Single(storedTrade.Offer);
+        Assert.Contains(ResourceType.Ore, storedTrade.Offer);
+        Assert.Equal(1, storedTrade.Offer[ResourceType.Ore]);
+        Assert.NotNull(storedTrade.Request);
+        Assert.Single(storedTrade.Request);
+        Assert.Contains(ResourceType.Grain, storedTrade.Request);
+        Assert.Equal(1, storedTrade.Request[ResourceType.Grain]);
+    }
+
+    [Fact]
+    public void OpenTrade_NotPlayersTurn()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = CreateTradeRequestDTO(board.GetBluePlayer(), ResourceType.Brick, 1, ResourceType.Grain, 1);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.OpenTrade(gs, board.GetBluePlayer(), request.Offer, request.Request));
+    }
+
+    [Fact]
+    public void OpenTrade_MissingOffer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new TradeRequestDTO(board.GetRedPlayer().Id, null!, new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}});
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.OpenTrade(gs, board.GetRedPlayer(), request.Offer, request.Request));
+    }
+
+    [Fact]
+    public void OpenTrade_MissingRequest()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new TradeRequestDTO(board.GetRedPlayer().Id, new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}}, null!);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.OpenTrade(gs, board.GetRedPlayer(), request.Offer, request.Request));
+    }
+
+    private TradeResponseDTO CreateTradeResponseDTO(Player player, TradeResponseType responseType,
+        ResourceType offerType, int offerCount, ResourceType requestType, int requestCount)
+    {
+        return new TradeResponseDTO(player.Id, responseType, new Dictionary<ResourceType, int>() { {offerType, offerCount}}, new Dictionary<ResourceType, int>() { {requestType, requestCount}});
     }
 
     [Fact]
     public void RespondToTradeFromUser_InvalidState()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Accept, null!, null!);
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_CantOfferOnYourOwnTrade()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetRedPlayer().Id, TradeResponseType.Accept, null!, null!);
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1050, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_CantUseOriginalType()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Original, null!, null!);
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1051, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_CounterWithNoOffer()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, null!, new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}});
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1052, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_CounterWithEmptyOffer()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, new Dictionary<ResourceType, int>(), new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}});
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1052, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_CounterWithNoRequest()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, null!);
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1052, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_CounterWithEmptyRequest()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, new Dictionary<ResourceType, int>());
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1052, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_CounterOfferMatchesRequest()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = CreateTradeResponseDTO(board.GetBluePlayer(), TradeResponseType.Counter, ResourceType.Wool, 2, ResourceType.Wool, 2);
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1049, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
-    public void RespondToTradeFromUser_DoesntHaveOfferCards()
+    public void RespondToTradeFromUser_DoesntHaveOfferedCards()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 1);
+        board.GetBluePlayer().AssignResources(ResourceType.Wood, 1);
+
+        var tradeResponse = CreateTradeResponseDTO(board.GetBluePlayer(), TradeResponseType.Counter, ResourceType.Wool, 2, ResourceType.Ore, 1);
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1006, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RespondToTradeFromUser_Valid()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
+        GamePlayHelpers.OpenTrade(gs, board.GetRedPlayer(), new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}});
+        gs.Phase.PhaseState = GameStates.RespondToTrade;
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 1);
+        board.GetBluePlayer().AssignResources(ResourceType.Wood, 1);
+
+        var tradeResponse = CreateTradeResponseDTO(board.GetBluePlayer(), TradeResponseType.Counter, ResourceType.Wool, 1, ResourceType.Ore, 1);
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.True(response.Success);
+        Assert.NotNull(gs);
+        Assert.NotNull(gs.Phase.PendingTradeResponses);
+        Assert.Single(gs.Phase.PendingTradeResponses.Where(r => r.ResponseType != TradeResponseType.Original));
+        var pendingTradeResponse = gs.Phase.PendingTradeResponses.First(r => r.ResponseType != TradeResponseType.Original);
+        Assert.Equal(board.GetBluePlayer().Id, pendingTradeResponse.Player.Id);
+        Assert.Equal(TradeResponseType.Counter, pendingTradeResponse.ResponseType);
+        Assert.Single(pendingTradeResponse.Offer);
+        Assert.True(pendingTradeResponse.Offer.ContainsKey(ResourceType.Wool));
+        Assert.Equal(1, pendingTradeResponse.Offer[ResourceType.Wool]);
+        Assert.Single(pendingTradeResponse.Request);
+        Assert.True(pendingTradeResponse.Request.ContainsKey(ResourceType.Ore));
+        Assert.Equal(1, pendingTradeResponse.Request[ResourceType.Ore]);
+     }
+
+    [Fact]
+    public void RespondToTrade_CantUseOriginalType()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Original, null!, null!);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), tradeResponse));
+    }
+
+    [Fact]
+    public void RespondToTrade_CounterWithNoOffer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, null!, new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}});
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), tradeResponse));
+    }
+
+    [Fact]
+    public void RespondToTrade_CounterWithEmptyOffer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, new Dictionary<ResourceType, int>(), new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}});
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), tradeResponse));
+    }
+
+    [Fact]
+    public void RespondToTrade_DoesntHaveOfferedCards()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
+        GamePlayHelpers.OpenTrade(gs, board.GetRedPlayer(), new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}});
+        gs.Phase.PhaseState = GameStates.RespondToTrade;
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 1);
+        board.GetBluePlayer().AssignResources(ResourceType.Wood, 1);
+
+        var tradeResponse = CreateTradeResponseDTO(board.GetBluePlayer(), TradeResponseType.Counter, ResourceType.Wool, 2, ResourceType.Ore, 1);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), tradeResponse));
+    }
+
+    private TestGameBoard CreateTestBoardForTradeAcceptanceTesting()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetRedPlayer().AssignResources(ResourceType.Wool, 1);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 1);
+        GamePlayHelpers.OpenTrade(gs, board.GetRedPlayer(), new Dictionary<ResourceType, int>() {{ResourceType.Wool, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}});
+        gs.Phase.PhaseState = GameStates.RespondToTrade;
+        board.GetBluePlayer().AssignResources(ResourceType.Brick, 1);
+        board.GetBluePlayer().AssignResources(ResourceType.Grain, 1);
+
+        return board;        
     }
 
     [Fact]
     public void AcceptOfferFromUser_InvalidState()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void AcceptOfferFromUser_NotPlayersTurn()
     {
-        Assert.True(false);
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        var request = new AcceptTradeDTO(board.GetBluePlayer().Id, board.GetRedPlayer().Id);
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void AcceptOfferFromUser_CantAcceptOwnTrade()
     {
-        Assert.True(false);
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetRedPlayer().Id);
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1053, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_AcceptedPlayerIdIsInvalid()
+    {
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, "PP1");
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1056, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void AcceptOfferFromUser_PlayerDidntRespond()
     {
-        Assert.True(false);
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1054, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
-    public void AcceptOfferFromUser_PlayerRejectTrade()
+    public void AcceptOfferFromUser_PlayerRejectedTrade()
     {
-        Assert.True(false);
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Reject, null!, null!));
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1055, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AcceptOfferFromUser_PlayerDoesntHaveCounterRequest()
+    {
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        // Counter with a request for ore, which player doesn't have
+        GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}}));
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1017, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void AcceptOfferFromUser_Valid()
     {
-        Assert.True(false);
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Accept, null!, null!));
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.AcceptTradeFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.NotNull(response.GameState.Phase);
+        Assert.Equal(GameStates.BuildOrTrade, response.GameState.Phase.PhaseState);
+        Assert.Equal(board.GetRedPlayer().Id, response.GameState.Phase.CurrentPlayerId);
+        Assert.Null(response.GameState.Phase.PendingTradeResponses);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
+        Assert.Equal(1, board.GetBluePlayer().Resources[ResourceType.Wool]);
+        Assert.Equal(0, board.GetBluePlayer().Resources[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void AcceptOffer_NotPlayersTurn()
+    {
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        var request = new AcceptTradeDTO(board.GetBluePlayer().Id, board.GetRedPlayer().Id);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.AcceptTrade(gs, board.GetBluePlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void AcceptOffer_CantAcceptOwnTrade()
+    {
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetRedPlayer().Id);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.AcceptTrade(gs, board.GetRedPlayer(), board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void AcceptOffer_PlayerDidntRespond()
+    {
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.AcceptTrade(gs, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void AcceptOffer_PlayerRejectedTrade()
+    {
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Reject, null!, null!));
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.AcceptTrade(gs, board.GetRedPlayer(), board.GetBluePlayer()));
+    }
+
+    [Fact]
+    public void AcceptOffer_PlayerDoesntHaveCounterRequest()
+    {
+        var board = CreateTestBoardForTradeAcceptanceTesting();
+        var gs = board.GetGameState();
+        // Counter with a request for ore, which player doesn't have
+        GamePlayHelpers.RespondToTrade(gs, board.GetBluePlayer(), new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Counter, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}}));
+        var request = new AcceptTradeDTO(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.AcceptTrade(gs, board.GetRedPlayer(), board.GetBluePlayer()));
     }
 
     [Fact]
     public void RejectAllOffersFromUser_InvalidState()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new BaseRequest(board.GetRedPlayer().Id);
+
+        var response = GamePlayHelpers.RejectAllOffersFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RejectAllOffersFromUser_NotPlayersTurn()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new BaseRequest(board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.RejectAllOffersFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
     [Fact]
     public void RejectAllOffersFromUser_Valid()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new BaseRequest(board.GetRedPlayer().Id);
+
+        var response = GamePlayHelpers.RejectAllOffersFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.Null(gs.Phase.PendingTradeResponses);
+    }
+
+    [Fact]
+    public void RejectAllOffers_InvalidState()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new BaseRequest(board.GetRedPlayer().Id);
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RejectAllOffers(gs, board.GetRedPlayer()));
     }
 }

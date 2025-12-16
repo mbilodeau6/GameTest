@@ -102,6 +102,15 @@ public class ResponseDTO
         { 1045, "Player must discard half (and only half) their resources when a 7 is rolled."},
         { 1046, "TradeResponse must specify offered and requested cards if the response type is Counter. All responses must identify the player."},
         { 1047, "AcceptTrade must specify the player accepting the trade and the player id of the trade being accepted."},
+        { 1048, "Trade request must specify cards offered and cards requested."}, 
+        { 1049, "Invalid trade. The offer and request are identical."},
+        { 1050, "Players can not offer a trade response for their own trades request."},
+        { 1051, "Invalid response type for trade response."},
+        { 1052, "Trade counter offers must specify the resources offered and requested."},
+        { 1053, "A player can not accept their own trade."},
+        { 1054, "Can not accept a trade response for a player who did not respond."},
+        { 1055, "Can not accept a rejected trade response."},
+        { 1056, "Attempt to accept offer from player that doesn't exist in game."},
         { 9999, "Unexpected error."},
     };
 }

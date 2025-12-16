@@ -75,6 +75,14 @@ public class GamePhase
         WaitingForRoll = gamePhase.WaitingForRoll;
         DevCardPlayedThisRound = gamePhase.DevCardPlayedThisRound;
         VictoryPointsToWin = gamePhase.VictoryPointsToWin;
+
+        if (gamePhase.PendingTradeResponses != null)
+        {
+            PendingTradeResponses = new();
+            
+            foreach(var request in gamePhase.PendingTradeResponses)
+                PendingTradeResponses.Add(new TradeResponse(request.Player, request.ResponseType, request.Offer, request.Request));
+        }
     }
     
     public void SetStateToReturnTo(GameStates state, Tile originalTile)

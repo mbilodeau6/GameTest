@@ -17,6 +17,7 @@ public class TradeResponseDTO
         PlayerId = playerId;
         Offer = offer;
         Request = request;
+        ResponseType = responseType;
     }
     
     public TradeResponseDTO(TradeResponse response)

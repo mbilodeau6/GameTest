@@ -1,5 +1,8 @@
+using Azure;
 using GameTest.DTOs;
 using GameTest.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 namespace GameTest.Services;
 
@@ -992,26 +995,282 @@ public static class GamePlayHelpers
 
         DiscardCards(gs, player, request.SelectedResources);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null!, gs);
+    }
+
+    public static void OpenTrade(GameState gs, Player player, Dictionary<ResourceType, int> offer,Dictionary<ResourceType, int> request)
+    {
+        if ((gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("Unexpected Error. Invalid GameState for Open Trade. State: {gs.Phase.PhaseState}");
+
+        if (gs.Phase.CurrentPlayer.Id != player.Id)
+            throw new InvalidOperationException($"Unexpected Error. It is not the identified player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}; ActingPlayer: {player}");
+
+        if (offer == null || offer.Count == 0)
+            throw new InvalidOperationException($"Unexpected Error. Trade requested with missing resources offered.");
+
+        if (request == null || request.Count == 0)
+            throw new InvalidOperationException($"Unexpected Error. Trade requested with missing requested resources.");
+
+        var offerAsList = AIHelpers.ConvertResourceDictToList(offer);
+        var requestAsList = AIHelpers.ConvertResourceDictToList(request);
+        if (offerAsList.Count == requestAsList.Count && AIHelpers.MultiSetSubtraction(offerAsList, requestAsList).Count == 0)
+            throw new InvalidOperationException($"Unexpected Error. Trade requested where offer matches request.");
+
+        var missingResources = AIHelpers.MultiSetSubtraction(offerAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
+        if (missingResources.Count > 0)
+            throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their offer. ResourceMissing: {missingResources[0].ToString()}");
+
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(player, TradeResponseType.Original, offer, request));
+        GameLoop(gs);
     }
 
     public static ResponseDTO OpenTradeFromUser(GameState gs, TradeRequestDTO request)
     {
-        throw new NotImplementedException();
+        if ((gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: OpenTrade; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        if (request.Offer == null || request.Offer.Count == 0)
+            return new ResponseDTO(false, 1048, $"GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; NoCardsOffered", null as GameStateDTO);
+
+        if (request.Request == null || request.Request.Count == 0)
+            return new ResponseDTO(false, 1048, $"GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; NoCardsRequested", null as GameStateDTO);
+
+        var offerAsList = AIHelpers.ConvertResourceDictToList(request.Offer);
+        var requestAsList = AIHelpers.ConvertResourceDictToList(request.Request);
+        if (offerAsList.Count == requestAsList.Count && AIHelpers.MultiSetSubtraction(offerAsList, requestAsList).Count == 0)
+            return new ResponseDTO(false, 1049,  $"GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}", null as GameStateDTO);
+
+        var missingResources = AIHelpers.MultiSetSubtraction(offerAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
+        if (missingResources.Count > 0)
+            return new ResponseDTO(false, 1006, $"GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; ResourceMissing: {missingResources[0].ToString()}", null as GameStateDTO);
+
+        OpenTrade(gs, player, request.Offer, request.Request);
+
+        return new ResponseDTO(true, 0, null!, gs);
     }
 
-    public static ResponseDTO RespondToTradeFromUser(GameState gs, TradeResponseDTO request)
+    public static void RespondToTrade(GameState gs, Player player, TradeResponseDTO response)
     {
-        throw new NotImplementedException();
+        if ((gs.Phase.PhaseState != GameStates.RespondToTrade) || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("Unexpected Error. Invalid GameState for Respond To Trade. State: {gs.Phase.PhaseState}");
+
+        if (gs.Phase.CurrentPlayer.Id == response.PlayerId)
+            throw new InvalidOperationException($"Unexpected Error. Player should not be responding to their own trade request. PlayerTurn: {gs.Phase.CurrentPlayer}; ActingPlayer: {player}");
+
+        if (response.ResponseType == TradeResponseType.Original)
+            throw new InvalidOperationException($"Unexpected Error. Trade responses should not have a type of Original");
+
+        if (response.ResponseType == TradeResponseType.Counter)
+        {
+            if (response.Offer == null || response.Offer.Count == 0)
+                throw new InvalidOperationException($"Unexpected Error. Trade response counter offer is missing resources offered.");
+
+            if (response.Request == null || response.Request.Count == 0)
+                throw new InvalidOperationException($"Unexpected Error. Trade response counter is missing requested resources.");
+
+            var offerAsList = AIHelpers.ConvertResourceDictToList(response.Offer);
+            var requestAsList = AIHelpers.ConvertResourceDictToList(response.Request);
+            if (offerAsList.Count == requestAsList.Count && AIHelpers.MultiSetSubtraction(offerAsList, requestAsList).Count == 0)
+                throw new InvalidOperationException($"Unexpected Error. Trade response counter offer where offer matches request.");
+
+            var missingResources = AIHelpers.MultiSetSubtraction(offerAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
+            if (missingResources.Count > 0)
+                throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their counter offer. ResourceMissing: {missingResources[0].ToString()}");
+        }
+
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(player, response.ResponseType, response.Offer, response.Request));
+        GameLoop(gs);
+    }
+
+
+    public static ResponseDTO RespondToTradeFromUser(GameState gs, TradeResponseDTO response)
+    {
+        if ((gs.Phase.PhaseState != GameStates.RespondToTrade) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: RespondToTrade; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == response.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {response.PlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id == response.PlayerId)
+            return new ResponseDTO(false, 1050, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; TradeResponsePlayer: {player}", null as GameStateDTO);
+
+        if (response.ResponseType == TradeResponseType.Original)
+            return new ResponseDTO(false, 1051, $"GameId: {gs.Id}; TradeResponsePlayer: {player}; ResponseType: {response.ResponseType.ToString()}", null as GameStateDTO);
+
+        if (response.ResponseType == TradeResponseType.Counter)
+        {
+            if (response.Offer == null || response.Offer.Count == 0)
+                return new ResponseDTO(false, 1052, $"GameId: {gs.Id}; TradeResponsePlayer: {player}; NoCardsOffered", null as GameStateDTO);
+
+            if (response.Request == null || response.Request.Count == 0)
+                return new ResponseDTO(false, 1052, $"GameId: {gs.Id}; TradeResponsePlayer: {player}; NoCardsRequested", null as GameStateDTO);
+
+            var offerAsList = AIHelpers.ConvertResourceDictToList(response.Offer);
+            var requestAsList = AIHelpers.ConvertResourceDictToList(response.Request);
+            if (offerAsList.Count == requestAsList.Count && AIHelpers.MultiSetSubtraction(offerAsList, requestAsList).Count == 0)
+                return new ResponseDTO(false, 1049,  $"GameId: {gs.Id}; TradeResponsePlayer: {player}", null as GameStateDTO);
+
+            var missingResources = AIHelpers.MultiSetSubtraction(offerAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
+            if (missingResources.Count > 0)
+                return new ResponseDTO(false, 1006, $"GameId: {gs.Id}; TradeResponsePlayer: {player}; ResourceMissing: {missingResources[0].ToString()}", null as GameStateDTO);
+        }
+
+        RespondToTrade(gs, player, response);
+
+        return new ResponseDTO(true, 0, null!, gs);
+    }
+
+    public static void AcceptTrade(GameState gs, Player player, Player acceptedPlayer)
+    {
+        if ((gs.Phase.PhaseState != GameStates.RespondToTrade) || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException($"Unexpected Error. Invalid state for AcceptTrade. Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}");
+
+        if (gs.Phase.CurrentPlayer.Id != player.Id)
+            throw new InvalidOperationException($"Unexpected Error. It isn't the player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}");
+
+        if (player.Id == acceptedPlayer.Id)
+            throw new InvalidOperationException($"Unexpected Error. Player trying to accept their own trade. PlayerTurn: {gs.Phase.CurrentPlayer}; AcceptedPlayer: {acceptedPlayer.Id}");
+
+        if (gs.Phase == null || gs.Phase.PendingTradeResponses == null)
+            throw new InvalidOperationException($"Unexpected Error. PendingTradeResponses missing.");
+
+        var response = gs.Phase.PendingTradeResponses.FirstOrDefault(t => t.Player.Id == acceptedPlayer.Id);
+        if (response == null)
+            throw new InvalidOperationException($"Unexpected Error. Trying to accept offer that wasn't made. AcceptedPlayer: {acceptedPlayer.Id}");
+
+        if (response.ResponseType == TradeResponseType.Reject)
+            throw new InvalidOperationException($"Unexpected Error. Trying to accept rejection to trade. AcceptedPlayer: {acceptedPlayer.Id}");
+
+        if (response.ResponseType == TradeResponseType.Counter && response.Request != null)
+        {
+            var requestAsList = AIHelpers.ConvertResourceDictToList(response.Request);
+            var missingResources = AIHelpers.MultiSetSubtraction(requestAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
+            if (missingResources.Count > 0)
+                throw new InvalidOperationException($"Unexpected Error. Trying to accept a counter offer that can't be met. Player: {player}; ResourceMissing: {missingResources[0].ToString()}");
+        }
+
+        var offer = new Dictionary<ResourceType, int>();
+        var request = new Dictionary<ResourceType, int>();
+
+        if (response.ResponseType == TradeResponseType.Accept)
+        {
+            var trade = gs.Phase.PendingTradeResponses.FirstOrDefault(t => t.Player.Id == player.Id && t.ResponseType == TradeResponseType.Original);
+            if (trade == null || trade.Offer == null || trade.Request == null)
+                throw new InvalidOperationException($"Unexpected Error. Couldn't locate original trade request details.");
+
+            foreach(var kvp in trade.Offer)
+                offer.Add(kvp.Key, kvp.Value);
+            
+            foreach(var kvp in trade.Request)
+                request.Add(kvp.Key, kvp.Value);
+        }
+        else if (response.ResponseType == TradeResponseType.Counter)
+        {
+            if (response.Offer == null || response.Request == null)
+                throw new InvalidOperationException($"Unexpected Error. Counter offer is incomplete.");
+
+            foreach(var kvp in response.Offer)
+                request.Add(kvp.Key, kvp.Value);
+            
+            foreach(var kvp in response.Request)
+                offer.Add(kvp.Key, kvp.Value);
+        }
+        else
+            throw new InvalidOperationException($"Unexpected Error. Accepted unsupported trade type ${response.ResponseType.ToString()}.");
+
+        foreach(var kvp in offer)
+        {
+            player.RemoveResources(kvp.Key, kvp.Value);
+            acceptedPlayer.AssignResources(kvp.Key, kvp.Value);
+        }
+
+        foreach(var kvp in request)
+        {
+            player.AssignResources(kvp.Key, kvp.Value);
+            acceptedPlayer.RemoveResources(kvp.Key, kvp.Value);
+        }
+
+        gs.Phase.ClearPendingTradeResponses();
+        GameLoop(gs);
     }
 
     public static ResponseDTO AcceptTradeFromUser(GameState gs, AcceptTradeDTO request)
     {
-        throw new NotImplementedException();
+        if ((gs.Phase.PhaseState != GameStates.RespondToTrade) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: AcceptTrade; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        if (request.PlayerId == request.AcceptedPlayerId)
+            return new ResponseDTO(false, 1053, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; AcceptedPlayer: {request.AcceptedPlayerId}", null as GameStateDTO);
+
+        var acceptedPlayer = gs.Players.FirstOrDefault(p => p.Id == request.AcceptedPlayerId);
+        if (acceptedPlayer == null)
+            return new ResponseDTO(false, 1056, $"GameId: {gs.Id}; Player: {request.PlayerId}; AcceptedPlayer: {request.AcceptedPlayerId}", null as GameStateDTO);
+
+        if (gs.Phase == null || gs.Phase.PendingTradeResponses == null)
+            return new ResponseDTO(false, 9999, "Action: AcceptTrade; GameId: {gs.Id}; PendingTradeResponses missing.", null as GameStateDTO);
+
+        var response = gs.Phase.PendingTradeResponses.FirstOrDefault(t => t.Player.Id == request.AcceptedPlayerId);
+        if (response == null)
+            return new ResponseDTO(false, 1054, $"GameId: {gs.Id}; Player: {request.PlayerId}; AcceptedPlayer: {request.AcceptedPlayerId}", null as GameStateDTO);
+
+        if (response.ResponseType == TradeResponseType.Reject)
+            return new ResponseDTO(false, 1055, $"GameId: {gs.Id}; Player: {request.PlayerId}; AcceptedPlayer: {request.AcceptedPlayerId}", null as GameStateDTO);
+
+        if (response.ResponseType == TradeResponseType.Counter && response.Request != null)
+        {
+            var requestAsList = AIHelpers.ConvertResourceDictToList(response.Request);
+            var missingResources = AIHelpers.MultiSetSubtraction(requestAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
+            if (missingResources.Count > 0)
+                return new ResponseDTO(false, 1017, $"GameId: {gs.Id}; TradeResponsePlayer: {player}; ResourceMissing: {missingResources[0].ToString()}", null as GameStateDTO);
+        }
+
+        AcceptTrade(gs, player, acceptedPlayer);
+
+        return new ResponseDTO(true, 0, null!, gs);
+    }
+
+    public static void RejectAllOffers(GameState gs, Player player)
+    {
+        if ((gs.Phase.PhaseState != GameStates.RespondToTrade) || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException($"Unexpected Error. Invalid state for RejectAllOffers. Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}");
+
+        if (gs.Phase.CurrentPlayer.Id != player.Id)
+            throw new InvalidOperationException($"Unexpected Error. It isn't the player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}");
+
+        gs.Phase.ClearPendingTradeResponses();
+        GameLoop(gs);
     }
 
     public static ResponseDTO RejectAllOffersFromUser(GameState gs, BaseRequest request)
     {
-        throw new NotImplementedException();
+        if ((gs.Phase.PhaseState != GameStates.RespondToTrade) || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: RejectAllOffers; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        RejectAllOffers(gs, player);
+
+        return new ResponseDTO(true, 0, null!, gs);
     }
 }

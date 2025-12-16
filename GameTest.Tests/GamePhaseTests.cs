@@ -55,6 +55,8 @@ public class GamePhaseTests
         var p1 = new Player("Tim", PlayerColor.Red);
         var p2 = new Player("Mary", PlayerColor.Blue);
         GamePhase originalGamePhase = new GamePhase(GameStates.PlaceSecondSettlement, p1, p2);
+        originalGamePhase.AddPendingTradeResponse(new TradeResponse(p1, TradeResponseType.Original, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}}));
 
         // Act
         var newGamePhase = new GamePhase(originalGamePhase);
@@ -70,6 +72,11 @@ public class GamePhaseTests
         Assert.Equal(originalGamePhase.RoadsPreRoadBuilding, newGamePhase.RoadsPreRoadBuilding);
         Assert.Equal(originalGamePhase.WaitingForRoll, newGamePhase.WaitingForRoll);
         Assert.Equal(originalGamePhase.DevCardPlayedThisRound, newGamePhase.DevCardPlayedThisRound);
+        Assert.NotNull(originalGamePhase.PendingTradeResponses);
+        Assert.Single(originalGamePhase.PendingTradeResponses);
+        Assert.NotNull(newGamePhase.PendingTradeResponses);
+        Assert.Single(newGamePhase.PendingTradeResponses);
+        Assert.Equal(originalGamePhase.PendingTradeResponses[0].Player.Id, newGamePhase.PendingTradeResponses[0].Player.Id);
 
         // Change original and make sure new not changed
         originalGamePhase.PhaseState = GameStates.PlaceSecondRoad;
