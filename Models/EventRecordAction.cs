@@ -16,6 +16,9 @@ public enum EventRecordAction
     PlayRoadBuilding,
     BuyDevelopmentCard,
     TradeWithBank,
-    TradeWithPlayer, 
-    TradeOfferAccepted // Used if multiple players accepted trade
+    OfferToTrade, 
+    AcceptTrade,
+    RejectTrade,
+    CounterOffer,
+    TradeWithPlayer
 }

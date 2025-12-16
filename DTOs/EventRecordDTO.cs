@@ -116,12 +116,13 @@ public class EventRecordDTO
         DevelopmentCard = devCard;
     }
 
-    public EventRecordDTO(Player player, EventRecordAction action, Player targetPlayer, Dictionary<ResourceType, int> resourcesGained, Dictionary<ResourceType, int> resourcesUsed) : this(player,action)
+    public EventRecordDTO(Player player, EventRecordAction action, Dictionary<ResourceType, int> resourcesGained, Dictionary<ResourceType, int> resourcesUsed, Player? targetPlayer = null) : this(player,action)
     {
-        if (action != EventRecordAction.TradeWithPlayer)
-            throw new InvalidOperationException("Unexpected Exception. Should only be used for TradeWithPlayer.");
+        if (action != EventRecordAction.TradeWithPlayer && action != EventRecordAction.OfferToTrade && action != EventRecordAction.CounterOffer)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for TradeWithPlayer, OfferToTrade, or CounterOffer.");
 
-        TargetPlayerId = targetPlayer.Id;
+        if (targetPlayer != null)
+            TargetPlayerId = targetPlayer.Id;
 
         ResourcesReceived = new Dictionary<ResourceType, int>();
 

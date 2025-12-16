@@ -962,7 +962,6 @@ public static class GamePlayHelpers
         }
 
         gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.DiscardCards, cardsToDiscard));
-        GameLoop(gs);
     }
 
     public static ResponseDTO DiscardCardRequestFromUser(GameState gs, DiscardRequest request)
@@ -994,6 +993,7 @@ public static class GamePlayHelpers
         }
 
         DiscardCards(gs, player, request.SelectedResources);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs);
     }
@@ -1022,7 +1022,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their offer. ResourceMissing: {missingResources[0].ToString()}");
 
         gs.Phase.AddPendingTradeResponse(new TradeResponse(player, TradeResponseType.Original, offer, request));
-        GameLoop(gs);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.OfferToTrade, request, offer, null!));
     }
 
     public static ResponseDTO OpenTradeFromUser(GameState gs, TradeRequestDTO request)
@@ -1053,6 +1053,7 @@ public static class GamePlayHelpers
             return new ResponseDTO(false, 1006, $"GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; ResourceMissing: {missingResources[0].ToString()}", null as GameStateDTO);
 
         OpenTrade(gs, player, request.Offer, request.Request);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs);
     }
@@ -1084,10 +1085,16 @@ public static class GamePlayHelpers
             var missingResources = AIHelpers.MultiSetSubtraction(offerAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
             if (missingResources.Count > 0)
                 throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their counter offer. ResourceMissing: {missingResources[0].ToString()}");
+
+            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.CounterOffer, response.Request, response.Offer, null!));
         }
+        else
+            if (response.ResponseType == TradeResponseType.Accept)
+                gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.AcceptTrade));
+            else
+                gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.RejectTrade));
 
         gs.Phase.AddPendingTradeResponse(new TradeResponse(player, response.ResponseType, response.Offer, response.Request));
-        GameLoop(gs);
     }
 
 
@@ -1125,6 +1132,7 @@ public static class GamePlayHelpers
         }
 
         RespondToTrade(gs, player, response);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs);
     }
@@ -1199,8 +1207,8 @@ public static class GamePlayHelpers
             acceptedPlayer.RemoveResources(kvp.Key, kvp.Value);
         }
 
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.TradeWithPlayer, request, offer, acceptedPlayer));
         gs.Phase.ClearPendingTradeResponses();
-        GameLoop(gs);
     }
 
     public static ResponseDTO AcceptTradeFromUser(GameState gs, AcceptTradeDTO request)
@@ -1241,6 +1249,7 @@ public static class GamePlayHelpers
         }
 
         AcceptTrade(gs, player, acceptedPlayer);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs);
     }
@@ -1253,8 +1262,8 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer.Id != player.Id)
             throw new InvalidOperationException($"Unexpected Error. It isn't the player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}");
 
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.RejectTrade));
         gs.Phase.ClearPendingTradeResponses();
-        GameLoop(gs);
     }
 
     public static ResponseDTO RejectAllOffersFromUser(GameState gs, BaseRequest request)
@@ -1270,6 +1279,7 @@ public static class GamePlayHelpers
             return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
 
         RejectAllOffers(gs, player);
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs);
     }
