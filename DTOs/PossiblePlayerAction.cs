@@ -17,5 +17,5 @@ public class PossiblePlayerAction
     
     // For SelectRobberTarget - valid player IDs to steal from
     // For AcceptTrade - player IDs who have accepted/countered the offer
-    public List<int>? PlayerIds { get; init; }
+    public List<string>? PlayerIds { get; init; }
 }
