@@ -10,13 +10,16 @@ public class ResponseDTO
     public int ErrorCode { get; init; }
     public string ErrorMessage { get; init; }
     public GameStateDTO? GameState { get; init; }
+    public List<PossiblePlayerAction> PossibleActions { get; init; }
 
-    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState) : 
-            this(success, errorCode, errorParmValues, gameState != null ? new GameStateDTO(gameState) : null)
+    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState) :
+            this(success, errorCode, errorParmValues, gameState != null ? new GameStateDTO(gameState) : null, 
+            new List<PossiblePlayerAction>())
     {
     }
 
-    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameStateDTO? gameStateDTO)
+    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameStateDTO? gameStateDTO,
+        List<PossiblePlayerAction>? possibleActions = null)
     {
         Success = success;
         if (success)
@@ -27,12 +30,14 @@ public class ResponseDTO
             GameState = gameStateDTO;
             ErrorCode = 0;
             ErrorMessage = string.Empty;
+            PossibleActions = possibleActions ?? new List<PossiblePlayerAction>();
         }
         else
         {
             GameState = null;
             ErrorCode = errorCode;
             ErrorMessage = GetErrorMessage(errorCode, errorParmValues);
+            PossibleActions = new List<PossiblePlayerAction>();
         }
     }
 

@@ -7,7 +7,7 @@ public enum EventRecordAction
     UpgradeSettlement,
     PlaceRoad,
     PlaceRobber,
-    StealResource,
+    StealResource, // Shouldn't ever be sent to UI as possible move (it happens automatically). Needed for EventRecord.
     SelectRobberTarget,
     DiscardCards,
     PlayMonoploy,
@@ -20,5 +20,6 @@ public enum EventRecordAction
     AcceptTrade,
     RejectTrade,
     CounterOffer,
-    TradeWithPlayer
+    TradeWithPlayer,
+    EndTurn // not used for eventRecord entries but could be
 }
