@@ -1284,14 +1284,26 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, null!, gs);
     }
 
+    private static bool StateRequiresCurrentPlayer(GameStates phase)
+    {
+        return phase != GameStates.GameOver && 
+                phase != GameStates.RespondToTrade && 
+                phase != GameStates.GameOver;
+    }
+
+    private static bool PlayerNotCurrentPlayer(GameState gs, Player player)
+    {
+        return gs.Phase.CurrentPlayer == null || gs.Phase.CurrentPlayer.Id != player.Id;
+    }
+
     public static List<PossiblePlayerAction> GetPossiblePlayerActions(GameState gs, Player player)
     {
         var actions = new List<PossiblePlayerAction>();
 
         // If it's not the player's turn or CurrentPlayer is null, return empty list
-        if (gs.Phase.CurrentPlayer == null || gs.Phase.CurrentPlayer.Id != player.Id)
+        if ((StateRequiresCurrentPlayer(gs.Phase.PhaseState) && PlayerNotCurrentPlayer(gs, player)) ||
+            player.IsBot)
             return actions;
-
         var state = gs.Phase.PhaseState;
 
         // Handle each game state
