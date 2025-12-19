@@ -99,7 +99,14 @@ public class GameService
             string json = download.Value.Content.ToString();
 
             var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, JsonOptions.Default);
-            return new ResponseDTO(true, 0, string.Empty, dto);
+            if (dto == null)
+            {
+                _logger.LogError("Failed to deserialize game state for {GameId}.", id);
+                return new ResponseDTO(false, 9999, $"GameId: {id}; Failed to deserialize", null as GameStateDTO);
+            }
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
+            return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer);
         }
         catch (Exception ex)
         {
@@ -303,7 +310,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
             }
 
-            var gs = new GameState(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
 
             if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.RollOrUseDevCard)
             {
@@ -324,7 +331,8 @@ public class GameService
 
             _logger.LogInformation("Rolled: {die1}, {die2}.", gs.Dice.Die1.Value, gs.Dice.Die2.Value);
 
-            return new ResponseDTO(true, 0, string.Empty, updatedDto);
+            // Return possible actions for the current player (after GameLoop, phase may have changed)
+            return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer);
         }
         catch (Exception ex)
         {
@@ -372,7 +380,8 @@ public class GameService
 
             _logger.LogInformation("Ended turn for Player {playerId}.", player);
 
-            return new ResponseDTO(true, 0, string.Empty, gs);
+            // Return possible actions for the new current player
+            return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer);
         }
         catch (Exception ex)
         {
@@ -422,7 +431,8 @@ public class GameService
 
             _logger.LogInformation("Started game.");
 
-            return new ResponseDTO(true, 0, string.Empty, updatedDto);
+            // Return possible actions for the current player (after bots have played)
+            return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer);
         }
         catch (Exception ex)
         {

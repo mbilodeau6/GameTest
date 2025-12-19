@@ -310,7 +310,7 @@ public static class GamePlayHelpers
 
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, string.Empty, gs);
+        return new ResponseDTO(true, 0, string.Empty, gs, player);
     }
 
     public static void BuildSettlement(GameState gs, Player player, Vertex vertex)
@@ -369,7 +369,7 @@ public static class GamePlayHelpers
 
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, string.Empty, gs);
+        return new ResponseDTO(true, 0, string.Empty, gs, player);
     }
 
     public static void UpgradeToCity(GameState gs, Player player, Vertex vertex)
@@ -419,7 +419,7 @@ public static class GamePlayHelpers
 
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, string.Empty, gs);
+        return new ResponseDTO(true, 0, string.Empty, gs, player);
     }
 
     public static void GameLoop(GameState gs)
@@ -681,7 +681,7 @@ public static class GamePlayHelpers
         PlaceRobber(gs, player, tile);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null, gs, player);
     }
 
     public static void BuyDevCard(GameState gs, Player player)
@@ -722,7 +722,7 @@ public static class GamePlayHelpers
         BuyDevCard(gs, player);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null, gs, player);
     }
 
     private static void StandardPlayDevCardValidation(GameState gs, Player player, DevelopmentCardType devCard)
@@ -773,7 +773,7 @@ public static class GamePlayHelpers
         if (gs.Phase.DevCardPlayedThisRound)
             return new ResponseDTO(false, 1043, $"Action: Play{targetType}DevCard; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null, gs, player);
     }
 
     public static void SharedPlayDevCard(GameState gs, Player player, DevelopmentCardType type)
@@ -822,7 +822,7 @@ public static class GamePlayHelpers
         PlayMonopolyDevCard(gs, player, requestedResource);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null, gs, player);
     }
 
     public static void PlayYearOfPlentyDevCard(GameState gs, Player player, List<ResourceType> requestedResources)
@@ -860,7 +860,7 @@ public static class GamePlayHelpers
         PlayYearOfPlentyDevCard(gs, player, request.SelectedResources);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null, gs, player);
     }
 
     public static void PlayRoadBuildingDevCard(GameState gs, Player player)
@@ -887,7 +887,7 @@ public static class GamePlayHelpers
         PlayRoadBuildingDevCard(gs, player);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null, gs, player);
     }
 
     public static void PlayKnightDevCard(GameState gs, Player player, Tile targetTile)
@@ -936,7 +936,7 @@ public static class GamePlayHelpers
         PlayKnightDevCard(gs, player, tile);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs);
+        return new ResponseDTO(true, 0, null, gs, player);
     }
 
     public static void DiscardCards(GameState gs, Player player, List<ResourceType> cardsToDiscard)
@@ -995,7 +995,8 @@ public static class GamePlayHelpers
         DiscardCards(gs, player, request.SelectedResources);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null!, gs);
+        // Return possible actions for the new current player (after GameLoop, current player may have changed)
+        return new ResponseDTO(true, 0, null!, gs, gs.Phase.CurrentPlayer);
     }
 
     public static void OpenTrade(GameState gs, Player player, Dictionary<ResourceType, int> offer,Dictionary<ResourceType, int> request)
@@ -1055,7 +1056,7 @@ public static class GamePlayHelpers
         OpenTrade(gs, player, request.Offer, request.Request);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null!, gs);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void RespondToTrade(GameState gs, Player player, TradeResponseDTO response)
@@ -1134,7 +1135,8 @@ public static class GamePlayHelpers
         RespondToTrade(gs, player, response);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null!, gs);
+        // Return possible actions for current player (the trade opener, not the responder)
+        return new ResponseDTO(true, 0, null!, gs, gs.Phase.CurrentPlayer);
     }
 
     public static void AcceptTrade(GameState gs, Player player, Player acceptedPlayer)
@@ -1251,7 +1253,7 @@ public static class GamePlayHelpers
         AcceptTrade(gs, player, acceptedPlayer);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null!, gs);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void RejectAllOffers(GameState gs, Player player)
@@ -1281,13 +1283,13 @@ public static class GamePlayHelpers
         RejectAllOffers(gs, player);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null!, gs);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     private static bool StateRequiresCurrentPlayer(GameStates phase)
     {
-        return phase != GameStates.GameOver && 
-                phase != GameStates.RespondToTrade && 
+        return phase != GameStates.SettingUpBoard &&
+                phase != GameStates.RespondToTrade &&
                 phase != GameStates.GameOver;
     }
 

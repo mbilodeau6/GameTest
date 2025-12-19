@@ -498,6 +498,8 @@ public class GamePlayHelpersTests
 
         Assert.False(response.Success);
         Assert.Equal(1012, response.ErrorCode);
+        Assert.Null(response.GameState);
+        Assert.Empty(response.PossibleActions);
     }
 
     [Fact]
@@ -562,6 +564,11 @@ public class GamePlayHelpersTests
         Assert.NotNull(e2.Owner);
         Assert.Equal(board.GetBluePlayer().Id, e2.Owner.Id);
         Assert.True(GamePhaseTests.IsNextPhaseAsExpected(board.GetGameState().Phase, GameStates.PlaceSecondSettlement, board.GetBluePlayer()));
+        Assert.NotNull(response.PossibleActions);
+        Assert.Single(response.PossibleActions);
+        Assert.Equal(PlayerAction.PlaceSettlement, response.PossibleActions[0].Action);
+        Assert.NotNull(response.PossibleActions[0].VertexIds);
+        Assert.NotEmpty(response.PossibleActions[0].VertexIds);
     }
 
     [Fact]
@@ -642,10 +649,10 @@ public class GamePlayHelpersTests
         board.GetEdge(TestEdge.E8).BuildRoad(board.GetRedPlayer());
 
         var vertex = board.GetVertex(TestVertex.V2);
-        board.GetRedPlayer().Resources[ResourceType.Brick] = 1;
-        board.GetRedPlayer().Resources[ResourceType.Wood] = 1;
-        board.GetRedPlayer().Resources[ResourceType.Wool] = 1;
-        board.GetRedPlayer().Resources[ResourceType.Grain] = 1;
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 1);
+        board.GetRedPlayer().AssignResources(ResourceType.Wool, 1);
+        board.GetRedPlayer().AssignResources(ResourceType.Grain, 2);
 
         // Act
         var response = GamePlayHelpers.BuildSettlementRequestFromUser(board.GetGameState(), board.GetRedPlayer().Id, vertex.Id);
@@ -656,6 +663,11 @@ public class GamePlayHelpersTests
         Assert.NotNull(vertex.Building);
         Assert.Equal(board.GetRedPlayer().Id, vertex.Owner.Id);
         Assert.Equal(BuildingType.Settlement, vertex.Building);
+        Assert.NotNull(response.PossibleActions);
+        Assert.Equal(3, response.PossibleActions.Count);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.TradeWithBank);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.TradeWithPlayers);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.EndTurn);
     }
 
     [Fact]
@@ -1240,6 +1252,8 @@ public class GamePlayHelpersTests
         Assert.True(response.Success);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Brick]);
+        Assert.NotNull(response.PossibleActions);
+        Assert.Equal(3, response.PossibleActions.Count);
     }
 
     [Fact]
@@ -1429,6 +1443,8 @@ public class GamePlayHelpersTests
         Assert.True(response.Success);
         Assert.Equal(gs.Tiles[1].Id, gs.RobberTile.Id);
         Assert.Null(gs.Phase.PreviousState);
+        Assert.NotNull(response.PossibleActions);
+        Assert.NotEmpty(response.PossibleActions);
     }
 
     [Fact]
@@ -1562,6 +1578,8 @@ public class GamePlayHelpersTests
         Assert.Equal(grainCount - 1, human.Resources[ResourceType.Grain]);
         Assert.Equal(woolCount - 1, human.Resources[ResourceType.Wool]);
         Assert.Equal(oreCount - 1, human.Resources[ResourceType.Ore]);
+        Assert.NotNull(response.PossibleActions);
+        Assert.NotEmpty(response.PossibleActions);
     }
 
     [Fact]
@@ -1818,6 +1836,8 @@ public class GamePlayHelpersTests
         Assert.Empty(human.DevCardsPlayed);
         Assert.Equal(woodCount + botWoodCount, human.Resources[ResourceType.Wood]);
         Assert.Equal(0, bot.Resources[ResourceType.Wood]);
+        Assert.NotNull(response.PossibleActions);
+        Assert.NotEmpty(response.PossibleActions);
     }
 
     [Fact]
@@ -2059,6 +2079,8 @@ public class GamePlayHelpersTests
         Assert.Equal(countWood + 1, human.Resources[ResourceType.Wood]);
         Assert.Equal(countBrick + 1, human.Resources[ResourceType.Brick]);
         Assert.Equal(countYearOfPlenty - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty));
+        Assert.NotNull(response.PossibleActions);
+        Assert.NotEmpty(response.PossibleActions);
     }
 
     [Fact]
@@ -2216,6 +2238,9 @@ public class GamePlayHelpersTests
         Assert.True(response.Success);
         Assert.Equal(roadBuildingCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
         Assert.Equal(GameStates.FirstDevCardRoad ,gs.Phase.PhaseState);
+        Assert.NotNull(response.PossibleActions);
+        Assert.Single(response.PossibleActions);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.PlaceRoad);
     }
 
     [Fact]
@@ -2382,6 +2407,8 @@ public class GamePlayHelpersTests
         Assert.Equal(readyKnightCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
         Assert.Equal(playedKnightCount + 1, human.DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight));
         Assert.Equal(GameStates.BuildOrTrade ,gs.Phase.PhaseState);
+        Assert.NotNull(response.PossibleActions);
+        Assert.NotEmpty(response.PossibleActions);
     }
 
     [Fact]
@@ -2796,6 +2823,9 @@ public class GamePlayHelpersTests
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
         Assert.Contains(ResourceType.Wood, board.GetRedPlayer().Resources);
         Assert.Equal(5, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.NotNull(response.PossibleActions);
+        Assert.Single(response.PossibleActions);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.PlaceRobber);
     }
 
     [Fact]
@@ -3045,6 +3075,9 @@ public class GamePlayHelpersTests
         Assert.Single(storedTrade.Request);
         Assert.Contains(ResourceType.Grain, storedTrade.Request);
         Assert.Equal(1, storedTrade.Request[ResourceType.Grain]);
+        Assert.NotNull(response.PossibleActions);
+        Assert.Single(response.PossibleActions);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.RejectAllOffers);
     }
 
     [Fact]
@@ -3253,6 +3286,9 @@ public class GamePlayHelpersTests
         Assert.Single(pendingTradeResponse.Request);
         Assert.True(pendingTradeResponse.Request.ContainsKey(ResourceType.Ore));
         Assert.Equal(1, pendingTradeResponse.Request[ResourceType.Ore]);
+        Assert.NotNull(response.PossibleActions);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.AcceptTrade);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.RejectAllOffers);
      }
 
     [Fact]
@@ -3443,6 +3479,8 @@ public class GamePlayHelpersTests
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(1, board.GetBluePlayer().Resources[ResourceType.Wool]);
         Assert.Equal(0, board.GetBluePlayer().Resources[ResourceType.Brick]);
+        Assert.NotNull(response.PossibleActions);
+        Assert.NotEmpty(response.PossibleActions);
     }
 
     [Fact]
@@ -3543,6 +3581,8 @@ public class GamePlayHelpersTests
         Assert.NotNull(response.GameState);
         Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
         Assert.Null(gs.Phase.PendingTradeResponses);
+        Assert.NotNull(response.PossibleActions);
+        Assert.NotEmpty(response.PossibleActions);
     }
 
     [Fact]

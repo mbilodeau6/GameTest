@@ -53,6 +53,6 @@ public class Bank
         foreach (var resource in request)
             player.AssignResources(resource.Key, resource.Value);
 
-        return new ResponseDTO(true, 0, string.Empty, gs);
+        return new ResponseDTO(true, 0, string.Empty, gs, player);
     }
 }

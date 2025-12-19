@@ -1,4 +1,5 @@
 using GameTest.Models;
+using GameTest.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -12,9 +13,10 @@ public class ResponseDTO
     public GameStateDTO? GameState { get; init; }
     public List<PossiblePlayerAction> PossibleActions { get; init; }
 
-    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState) :
-            this(success, errorCode, errorParmValues, gameState != null ? new GameStateDTO(gameState) : null, 
-            new List<PossiblePlayerAction>())
+    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState, Player? player = null)
+        : this(success, errorCode, errorParmValues,
+               success && gameState != null ? new GameStateDTO(gameState) : null,
+               success && gameState != null && player != null ? GamePlayHelpers.GetPossiblePlayerActions(gameState, player) : null)
     {
     }
 
@@ -25,7 +27,7 @@ public class ResponseDTO
         if (success)
         {
             if (gameStateDTO == null)
-                throw new ArgumentNullException("gameState");
+                throw new ArgumentNullException(nameof(gameStateDTO));
 
             GameState = gameStateDTO;
             ErrorCode = 0;
