@@ -3600,6 +3600,18 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void GetPossiblePlayerActions_PlaceFirstSettlement_BotMoveEmptyBoard()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetRedPlayer());
+
+        var actions = GamePlayHelpers.GetPossiblePlayerActions(board.GetGameState(), board.GetBluePlayer());
+
+        Assert.NotNull(actions);
+        Assert.Empty(actions);
+    }
+
+    [Fact]
     public void GetPossiblePlayerActions_PlaceFirstSettlement_OneVertexOccupied()
     {
         var board = TestHelpers.CreateOriginalTestBoard(true);
