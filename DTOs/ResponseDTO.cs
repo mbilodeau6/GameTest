@@ -1,3 +1,4 @@
+using Azure;
 using GameTest.Models;
 using GameTest.Services;
 using System.Text;
@@ -13,17 +14,25 @@ public class ResponseDTO
     public GameStateDTO? GameState { get; init; }
     public List<PossiblePlayerAction> PossibleActions { get; init; }
 
-    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState, Player? player = null)
+    /// <summary>
+    /// ETag for optimistic concurrency control. Used internally for blob storage updates.
+    /// </summary>
+    [JsonIgnore]
+    public ETag? ETag { get; init; }
+
+    public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState, Player? player = null, ETag? etag = null)
         : this(success, errorCode, errorParmValues,
                success && gameState != null ? new GameStateDTO(gameState) : null,
-               success && gameState != null && player != null ? GamePlayHelpers.GetPossiblePlayerActions(gameState, player) : null)
+               success && gameState != null && player != null ? GamePlayHelpers.GetPossiblePlayerActions(gameState, player) : null,
+               etag)
     {
     }
 
     public ResponseDTO(bool success, int errorCode, string errorParmValues, GameStateDTO? gameStateDTO,
-        List<PossiblePlayerAction>? possibleActions = null)
+        List<PossiblePlayerAction>? possibleActions = null, ETag? etag = null)
     {
         Success = success;
+        ETag = etag;
         if (success)
         {
             if (gameStateDTO == null)
@@ -118,6 +127,7 @@ public class ResponseDTO
         { 1054, "Can not accept a trade response for a player who did not respond."},
         { 1055, "Can not accept a rejected trade response."},
         { 1056, "Attempt to accept offer from player that doesn't exist in game."},
+        { 1057, "Concurrency conflict: game state was modified by another request. Please retry."},
         { 9999, "Unexpected error."},
     };
 }

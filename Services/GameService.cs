@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using GameTest.DTOs;
 using Azure;
+using Azure.Storage.Blobs.Models;
 
 namespace GameTest.Services;
 
@@ -97,6 +98,7 @@ public class GameService
 
             var download = await blob.DownloadContentAsync();
             string json = download.Value.Content.ToString();
+            var etag = download.Value.Details.ETag;
 
             var dto = JsonSerializer.Deserialize<DTOs.GameStateDTO>(json, JsonOptions.Default);
             if (dto == null)
@@ -106,7 +108,7 @@ public class GameService
             }
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer);
+            return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer, etag);
         }
         catch (Exception ex)
         {
@@ -120,6 +122,43 @@ public class GameService
         var response = await GetGameDTO(id.ToString());
 
         return response;
+    }
+
+    /// <summary>
+    /// Uploads game state to blob storage with optimistic concurrency control.
+    /// Returns a concurrency conflict error (1057) if the blob was modified since it was read.
+    /// </summary>
+    private async Task<ResponseDTO?> UploadWithConcurrencyCheckAsync(
+        BlobClient blob,
+        GameStateDTO gameState,
+        ETag? etag,
+        Guid gameId,
+        string actionName)
+    {
+        var json = JsonSerializer.Serialize(gameState, JsonOptions.Default);
+        using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+        try
+        {
+            if (etag.HasValue)
+            {
+                await blob.UploadAsync(ms, new BlobUploadOptions
+                {
+                    Conditions = new BlobRequestConditions { IfMatch = etag.Value }
+                });
+            }
+            else
+            {
+                // No ETag available, fall back to overwrite (shouldn't happen in normal flow)
+                await blob.UploadAsync(ms, overwrite: true);
+            }
+            return null; // Success - no error
+        }
+        catch (RequestFailedException ex) when (ex.Status == 412)
+        {
+            _logger.LogWarning("Concurrency conflict during {Action} for game {GameId}. The game state was modified by another request.", actionName, gameId);
+            return new ResponseDTO(false, 1057, $"Action: {actionName}; GameId: {gameId}", null as GameStateDTO);
+        }
     }
 
     public async Task<string?> GetGameSummaryAsync(Guid id)
@@ -201,12 +240,10 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var json = JsonSerializer.Serialize(buildResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, buildResponse.GameState!, response.ETag, gameId, "BuildRoad");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Built road on edge {EdgeId} for player {PlayerId} in game {GameId}.", edgeId, playerId, gameId);
             return buildResponse;
@@ -232,19 +269,16 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
             var buildResponse = GamePlayHelpers.BuildSettlementRequestFromUser(gs, playerId, vertexId);
 
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var json = JsonSerializer.Serialize(buildResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, buildResponse.GameState!, response.ETag, gameId, "BuildSettlement");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Built settlement on vertex {VertexId} for player {PlayerId} in game {GameId}.", vertexId, playerId, gameId);
             return buildResponse;
@@ -276,12 +310,10 @@ public class GameService
             if (!buildResponse.Success)
                 return buildResponse;
 
-            var json = JsonSerializer.Serialize(buildResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, buildResponse.GameState!, response.ETag, gameId, "BuildCity");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Built city on vertex {VertexId} for player {PlayerId} in game {GameId}.", vertexId, playerId, gameId);
             return buildResponse;
@@ -321,13 +353,10 @@ public class GameService
             GamePlayHelpers.RollDice(gs);
 
             var updatedDto = new DTOs.GameStateDTO(gs);
-
-            var json = JsonSerializer.Serialize(updatedDto, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, updatedDto, response.ETag, gameId, "RollDice");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Rolled: {die1}, {die2}.", gs.Dice.Die1.Value, gs.Dice.Die2.Value);
 
@@ -370,13 +399,10 @@ public class GameService
             GamePlayHelpers.EndTurn(player, gs);
 
             var updatedDto = new DTOs.GameStateDTO(gs);
-
-            var json = JsonSerializer.Serialize(updatedDto, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, updatedDto, response.ETag, gameId, "EndTurn");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Ended turn for Player {playerId}.", player);
 
@@ -421,13 +447,10 @@ public class GameService
             GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
 
             var updatedDto = new DTOs.GameStateDTO(gs);
-
-            var json = JsonSerializer.Serialize(updatedDto, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, updatedDto, response.ETag, gameId, "StartGame");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Started game.");
 
@@ -461,12 +484,10 @@ public class GameService
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, tradeResponse.GameState!, response.ETag, gameId, "BankTrade");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed bank trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
             return tradeResponse;
@@ -498,12 +519,10 @@ public class GameService
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, tradeResponse.GameState!, response.ETag, gameId, "OpenTrade");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed open trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
             return tradeResponse;
@@ -535,12 +554,10 @@ public class GameService
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, tradeResponse.GameState!, response.ETag, gameId, "RespondToTrade");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed respond to trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
             return tradeResponse;
@@ -552,7 +569,7 @@ public class GameService
         }
     }
 
-public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO request)
+    public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO request)
     {
         if (_container == null)
         {
@@ -572,12 +589,10 @@ public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO requ
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, tradeResponse.GameState!, response.ETag, gameId, "AcceptTrade");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed accept trade for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
             return tradeResponse;
@@ -609,12 +624,10 @@ public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO requ
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, tradeResponse.GameState!, response.ETag, gameId, "RejectAllOffers");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed reject all offers for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
             return tradeResponse;
@@ -646,12 +659,10 @@ public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO requ
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, tradeResponse.GameState!, response.ETag, gameId, "PlaceRobber");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed place robber for player {PlayerId} to tile {TileId} in game {GameId}.", request.PlayerId, request.TileId, gameId);
             return tradeResponse;
@@ -683,12 +694,10 @@ public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO requ
             if (!tradeResponse.Success)
                 return tradeResponse;
 
-            var json = JsonSerializer.Serialize(tradeResponse.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, tradeResponse.GameState!, response.ETag, gameId, "BuyDevCard");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed Buy Development Card for player {PlayerId} in game {GameId}.", playerId, gameId);
             return tradeResponse;
@@ -714,44 +723,43 @@ public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO requ
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
+            var etag = response.ETag;
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
 
-            response = null; //  = GamePlayHelpers.BuyDevCard(gs, playerId);
+            ResponseDTO? devCardResponse = null;
             switch(request.DevCardType)
             {
                 case DevelopmentCardType.Monopoly:
-                    response = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
+                    devCardResponse = GamePlayHelpers.PlayMonopolyDevCardFromUser(gs, request);
                     break;
                 case DevelopmentCardType.YearOfPlenty:
-                    response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+                    devCardResponse = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
                     break;
                 case DevelopmentCardType.Knight:
-                    response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
+                    devCardResponse = GamePlayHelpers.PlayKnightDevCardFromUser(gs, request);
                     break;
                 case DevelopmentCardType.RoadBuilding:
-                    response = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
+                    devCardResponse = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, request);
                     break;
-                default: 
+                default:
                     return new ResponseDTO(false, 1036, $"GameId: {gameId}; PlayerId: {request.PlayerId}; DevCardType: {request.DevCardType}", null as GameStateDTO);
             }
 
-            if (response == null)
+            if (devCardResponse == null)
             {
                 return new ResponseDTO(false, 9999, $"Action: PlayDevCard; GameId: {gameId}; PlayerId: {request.PlayerId}; DevCardType: {request.DevCardType}", null as GameStateDTO);
             }
 
-            if (!response.Success)
-                return response;
+            if (!devCardResponse.Success)
+                return devCardResponse;
 
-            var json = JsonSerializer.Serialize(response.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, devCardResponse.GameState!, etag, gameId, "PlayDevCard");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed Play Development Card {DevCardType} for player {PlayerId} in game {GameId}.", request.DevCardType, request.PlayerId, gameId);
-            return response;
+            return devCardResponse;
         }
         catch (Exception ex)
         {
@@ -774,26 +782,25 @@ public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO requ
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
+            var etag = response.ETag;
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
-            response = GamePlayHelpers.DiscardCardRequestFromUser(gs, request);
+            var discardResponse = GamePlayHelpers.DiscardCardRequestFromUser(gs, request);
 
-            if (response == null)
+            if (discardResponse == null)
             {
                 return new ResponseDTO(false, 9999, $"Action: DiscardCards; GameId: {gameId}; PlayerId: {request.PlayerId}", null as GameStateDTO);
             }
 
-            if (!response.Success)
-                return response;
+            if (!discardResponse.Success)
+                return discardResponse;
 
-            var json = JsonSerializer.Serialize(response.GameState, JsonOptions.Default);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            // synchronous wait on async upload to keep CreateGame signature unchanged
-            blob.Upload(ms, overwrite: true);
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, discardResponse.GameState!, etag, gameId, "DiscardCards");
+            if (concurrencyError != null)
+                return concurrencyError;
 
             _logger.LogInformation("Completed Discard Cards for player {PlayerId} in game {GameId}.", request.PlayerId, gameId);
-            return response;
+            return discardResponse;
         }
         catch (Exception ex)
         {
@@ -801,5 +808,4 @@ public async Task<ResponseDTO> AcceptTradeAsync(Guid gameId, AcceptTradeDTO requ
             return new ResponseDTO(false, 9999, $"Action: DiscardCards; GameId: {gameId}; PlayerId: {request.PlayerId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
-
 }
