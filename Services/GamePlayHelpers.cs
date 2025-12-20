@@ -1477,4 +1477,79 @@ public static class GamePlayHelpers
         if (player.DevCardsReadyToPlay.Contains(DevelopmentCardType.RoadBuilding))
             actions.Add(new PossiblePlayerAction { Action = PlayerAction.PlayRoadBuilding });
     }
+
+    private static readonly System.Text.RegularExpressions.Regex ValidNamePattern = new(@"^[a-zA-Z0-9 ]+$");
+
+    public static ResponseDTO AddPlayerToGame(GameState gs, AddPlayerRequest request)
+    {
+        // Validate game state
+        if (gs.Phase.PhaseState != GameStates.SettingUpBoard)
+            return new ResponseDTO(false, 1003, $"Action: AddPlayer; GameId: {gs.Id}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        // Validate max players
+        if (gs.Players.Count >= gs.Settings.MaxPlayers)
+            return new ResponseDTO(false, 1060, $"GameId: {gs.Id}; CurrentPlayers: {gs.Players.Count}; MaxPlayers: {gs.Settings.MaxPlayers}", null as GameStateDTO);
+
+        // Get used names and colors
+        var usedNames = gs.Players.Select(p => p.Name.ToLowerInvariant()).ToHashSet();
+        var usedColors = gs.Players.Select(p => p.Color).ToHashSet();
+
+        // Validate/generate name
+        string playerName;
+        if (request.IsBot && string.IsNullOrWhiteSpace(request.PlayerName))
+        {
+            // Auto-generate bot name
+            int botNumber = 1;
+            while (usedNames.Contains($"bot {botNumber}"))
+                botNumber++;
+            playerName = $"Bot {botNumber}";
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(request.PlayerName))
+                return new ResponseDTO(false, 1061, $"GameId: {gs.Id}; PlayerName: (empty)", null as GameStateDTO);
+
+            playerName = request.PlayerName.Trim();
+
+            if (playerName.Length == 0)
+                return new ResponseDTO(false, 1061, $"GameId: {gs.Id}; PlayerName: (empty after trim)", null as GameStateDTO);
+
+            if (playerName.Length > 15)
+                return new ResponseDTO(false, 1061, $"GameId: {gs.Id}; PlayerName: {playerName}; Must be 15 characters or less", null as GameStateDTO);
+
+            if (!ValidNamePattern.IsMatch(playerName))
+                return new ResponseDTO(false, 1061, $"GameId: {gs.Id}; PlayerName: {playerName}; Reason: invalid characters", null as GameStateDTO);
+
+            if (usedNames.Contains(playerName.ToLowerInvariant()))
+                return new ResponseDTO(false, 1058, $"GameId: {gs.Id}; PlayerName: {playerName}", null as GameStateDTO);
+        }
+
+        // Validate/generate color
+        PlayerColor playerColor;
+        if (request.PreferredColor.HasValue)
+        {
+            if (!Enum.IsDefined(typeof(PlayerColor), request.PreferredColor.Value))
+                return new ResponseDTO(false, 1062, $"GameId: {gs.Id}; Color: {request.PreferredColor.Value}", null as GameStateDTO);
+
+            if (usedColors.Contains(request.PreferredColor.Value))
+                return new ResponseDTO(false, 1059, $"GameId: {gs.Id}; Color: {request.PreferredColor.Value}", null as GameStateDTO);
+
+            playerColor = request.PreferredColor.Value;
+        }
+        else if (request.IsBot)
+        {
+            // Auto-assign first available color for bot
+            var availableColor = Enum.GetValues<PlayerColor>().FirstOrDefault(c => !usedColors.Contains(c));
+            playerColor = availableColor;
+        }
+        else
+        {
+            return new ResponseDTO(false, 1062, $"GameId: {gs.Id}; Color: (not specified for human player)", null as GameStateDTO);
+        }
+
+        // Create and add player
+        gs.Players.Add(new Player(playerName, playerColor, request.IsBot));
+
+        return new ResponseDTO(true, 0, string.Empty, gs);
+    }
 }

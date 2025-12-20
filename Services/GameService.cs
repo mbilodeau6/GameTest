@@ -808,4 +808,39 @@ public class GameService
             return new ResponseDTO(false, 9999, $"Action: DiscardCards; GameId: {gameId}; PlayerId: {request.PlayerId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
+
+    public async Task<ResponseDTO> AddPlayerAsync(Guid gameId, AddPlayerRequest request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success || response.GameState == null)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = new GameState(response.GameState);
+            var addPlayerResponse = GamePlayHelpers.AddPlayerToGame(gs, request);
+
+            if (!addPlayerResponse.Success)
+                return addPlayerResponse;
+
+            var blob = _container.GetBlobClient($"{gameId}.json");
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, addPlayerResponse.GameState!, response.ETag, gameId, "AddPlayer");
+            if (concurrencyError != null)
+                return concurrencyError;
+
+            _logger.LogInformation("Added player to game {GameId}.", gameId);
+            return addPlayerResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Add player for game {GameId} failed.", gameId);
+            return new ResponseDTO(false, 9999, $"Action: AddPlayer; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
 }

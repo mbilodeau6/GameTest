@@ -128,6 +128,11 @@ public class ResponseDTO
         { 1055, "Can not accept a rejected trade response."},
         { 1056, "Attempt to accept offer from player that doesn't exist in game."},
         { 1057, "Concurrency conflict: game state was modified by another request. Please retry."},
+        { 1058, "Player name is already taken."},
+        { 1059, "Player color is already taken."},
+        { 1060, "Game has reached maximum number of players."},
+        { 1061, "Invalid player name."},
+        { 1062, "Invalid player color."},
         { 9999, "Unexpected error."},
     };
 }

@@ -434,4 +434,25 @@ public class Games
         return await CreateSuccessResponse(req, response);
     }
 
+    [Function("AddPlayer")]
+    public async Task<HttpResponseData> AddPlayer(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/players")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("AddPlayer called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<AddPlayerRequest>(req);
+        if (request == null)
+            request = new AddPlayerRequest();
+
+        var response = await _gameService.AddPlayerAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
 }

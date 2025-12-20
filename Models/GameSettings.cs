@@ -4,6 +4,7 @@ using GameTest.Models;
 public class GameSettings
 {
     public const int DefaultBankTradeRate = 4;
+
     public GameType Type { get; }
     public int MaxPlayers { get; }
     public int VictoryPointsToWin { get; }
@@ -11,7 +12,7 @@ public class GameSettings
     public int SettlementsPerPlayer { get; }
     public int CitiesPerPlayer { get; }
 
-    public GameSettings(GameType type = GameType.Default, int maxPlayers = 2,
+    public GameSettings(GameType type = GameType.Default, int maxPlayers = 4,
         int victoryPointsToWin = 10, int roadsPerPlayer = 15,
         int settlementsPerPlayer = 5, int citiesPerPlayer = 4)
     {

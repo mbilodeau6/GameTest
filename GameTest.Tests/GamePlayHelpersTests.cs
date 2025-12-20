@@ -4,6 +4,7 @@ using GameTest.DTOs;
 using GameTest.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace GameTest.Tests;
 
@@ -4353,5 +4354,128 @@ public class GamePlayHelpersTests
         Assert.NotEmpty(actions);
         var buyDCAction = actions.FirstOrDefault(a => a.Action == PlayerAction.BuyDevelopmentCard);
         Assert.Null(buyDCAction);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_InvalidState()
+    {
+        var gs = new GameState(new Guid());
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement);
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", PreferredColor = PlayerColor.Orange});
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_AlreadyAtMaxPlayers()
+    {
+        var gs = new GameState(new Guid());
+        while (gs.Players.Count < gs.Settings.MaxPlayers)
+            gs.Players.Add(new Player("Test", PlayerColor.White));
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", PreferredColor = PlayerColor.Orange});
+
+        Assert.False(response.Success);
+        Assert.Equal(1060, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_EmptyName()
+    {
+        var gs = new GameState(new Guid());
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "  ", IsBot = false, PreferredColor = PlayerColor.Orange});
+
+        Assert.False(response.Success);
+        Assert.Equal(1061, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_InvalidCharInName()
+    {
+        var gs = new GameState(new Guid());
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "H<nry", IsBot = false, PreferredColor = PlayerColor.Orange});
+
+        Assert.False(response.Success);
+        Assert.Equal(1061, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_NameTooLong()
+    {
+        var gs = new GameState(new Guid());
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Michael Bilodeau", IsBot = false, PreferredColor = PlayerColor.Orange});
+
+        Assert.False(response.Success);
+        Assert.Equal(1061, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_NameAlreadyUsed()
+    {
+        var gs = new GameState(new Guid());
+        gs.Players.Add(new Player("Test", PlayerColor.White));
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Test", IsBot = false, PreferredColor = PlayerColor.Orange});
+
+        Assert.False(response.Success);
+        Assert.Equal(1058, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_ColorAlreadyUsed()
+    {
+        var gs = new GameState(new Guid());
+        gs.Players.Add(new Player("Test", PlayerColor.Orange));
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", IsBot = false, PreferredColor = PlayerColor.Orange});
+
+        Assert.False(response.Success);
+        Assert.Equal(1059, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_Bot()
+    {
+        var gs = new GameState(new Guid());
+        var countBefore = gs.Players.Count;
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PreferredColor = PlayerColor.Orange});
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(countBefore + 1, response.GameState.Players.Count);
+        var newBot = response.GameState.Players.FirstOrDefault(p => p.Color == PlayerColor.Orange);
+        Assert.NotNull(newBot);
+        Assert.True(newBot.IsBot);
+        Assert.NotEmpty(newBot.Name);
+    }
+
+    [Fact]
+    public void AddPlayerToGame_Human()
+    {
+        var gs = new GameState(new Guid());
+        var countBefore = gs.Players.Count;
+
+        var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", IsBot = false, PreferredColor = PlayerColor.Orange});
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(countBefore + 1, response.GameState.Players.Count);
+        var newPlayer = response.GameState.Players.FirstOrDefault(p => p.Name.ToLowerInvariant().Equals("henry"));
+        Assert.NotNull(newPlayer);
+        Assert.False(newPlayer.IsBot);
+        Assert.Equal(PlayerColor.Orange, newPlayer.Color);
     }
 }
