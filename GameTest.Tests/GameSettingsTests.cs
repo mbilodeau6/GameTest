@@ -14,7 +14,7 @@ public class GameSettingsTests
 
         // Assert
         Assert.Equal(GameType.Default, settings.Type);
-        Assert.Equal(2, settings.MaxPlayers);
+        Assert.Equal(4, settings.MaxPlayers);
         Assert.Equal(10, settings.VictoryPointsToWin);
         Assert.Equal(15, settings.RoadsPerPlayer);
         Assert.Equal(5, settings.SettlementsPerPlayer);

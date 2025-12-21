@@ -271,12 +271,15 @@ public static class AIHelpers
     // or to stop a player that may be trying to intercept the Bot's objectives.
     // Currently the routine is just looking for the most valuable tile for the Bot's
     // opponents that won't also impact the Bot.
-    public static Tile PickTargetForRobber(GameState gs, Player opponent)
+    public static Tile PickTargetForRobber(GameState gs, Player currentPlayer)
     {
-        double highestValue = -1.0;
-        Tile tileWithHighestValue = null;
+        double highestValue = -100.0;
+        Tile? tileWithHighestValue = null;
 
-        List<Vertex> currentPlayerVertices = gs.Vertices.Where(v => v.Owner != null && v.Owner.Id == gs.Phase.CurrentPlayer.Id).ToList();
+        // If opponents are close to winning, target them. Otherwise, look at all.
+        var playersOfInterest = gs.Players.Where(p => p.VictoryPoints >= gs.Settings.VictoryPointsToWin - 2 || p.Id == currentPlayer.Id);
+        if (playersOfInterest.Count() == 1)
+            playersOfInterest = gs.Players.ToList();
 
         foreach(var tile in gs.Tiles)
         {
@@ -284,12 +287,12 @@ public static class AIHelpers
             if (tile.Id == gs.RobberTile.Id)
                 continue;
 
-            // Skip tiles the current player is on
-            if (currentPlayerVertices.Any(v => v.Tiles.Contains(tile)))
-                continue;
+            var tileValue = 0.0;
+
+            foreach (var player in playersOfInterest)
+                tileValue += GetResourcePayoutValueForTile(gs, tile, player) * (player.Id == currentPlayer.Id ? -1 : 1);
 
             // Check if value to opponent is higher than current selected tile
-            var tileValue = GetResourcePayoutValueForTile(gs, tile, opponent);
             if (tileValue > highestValue)
             {
                 highestValue = tileValue;

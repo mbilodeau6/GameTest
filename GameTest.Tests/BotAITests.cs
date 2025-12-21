@@ -564,6 +564,101 @@ public class BotAITests
         Assert.False(move.RollDice);
     }
 
+    private TestGameBoard CreateBoardForMultiPlayerTest()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        board.GetVertex(TestVertex.V4).BuildSettlement(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V19).BuildSettlement(board.GetBluePlayer());
+        var thirdPlayer = new Player("Harry", PlayerColor.Orange, true);
+        board.GetGameState().Players.Add(thirdPlayer);
+        board.GetVertex(TestVertex.V2).BuildSettlement(thirdPlayer);
+        GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
+
+        foreach(var player in board.GetGameState().Players)
+            board.GetGameState().UpdatePlayerVictoryPoints(player);
+
+        return board;
+    }
+
+    [Fact]
+    public void GetRobberMove_TwoOpponents()
+    {
+        // Arrange
+        var board = CreateBoardForMultiPlayerTest();
+
+        board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
+        board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var move = bot.GetRobberMove();
+
+        // Assert
+        Assert.NotNull(move.TileMove);
+        Assert.Equal(board.GetTile(TestTile.T0).Id, move.TileMove.Id);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.False(move.RollDice);
+    }
+
+    [Fact]
+    public void GetRobberMove_TwoOpponentsOneWinning()
+    {
+        // Arrange
+        var board = CreateBoardForMultiPlayerTest();
+        var human = board.GetRedPlayer();
+        human.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        human.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        foreach(var player in board.GetGameState().Players)
+            board.GetGameState().UpdatePlayerVictoryPoints(player);
+
+        board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
+        board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var move = bot.GetRobberMove();
+
+        // Assert
+        Assert.NotNull(move.TileMove);
+        Assert.Equal(board.GetTile(TestTile.T3).Id, move.TileMove.Id);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.False(move.RollDice);
+    }
+
+    [Fact]
+    public void GetRobberMove_TwoOpponentsBothWinning()
+    {
+        // Arrange
+        var board = CreateBoardForMultiPlayerTest();
+        var human = board.GetRedPlayer();
+        human.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        human.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        var orangePlayer = board.GetGameState().Players.First(p => p.Color == PlayerColor.Orange);
+        orangePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        orangePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        foreach(var player in board.GetGameState().Players)
+            board.GetGameState().UpdatePlayerVictoryPoints(player);
+
+        board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
+        board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var move = bot.GetRobberMove();
+
+        // Assert
+        Assert.NotNull(move.TileMove);
+        Assert.Equal(board.GetTile(TestTile.T0).Id, move.TileMove.Id);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.False(move.RollDice);
+    }
+
     [Fact]
     public void GetDiscardMove_WrongState()
     {

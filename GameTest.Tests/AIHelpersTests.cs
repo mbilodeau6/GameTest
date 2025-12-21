@@ -581,9 +581,9 @@ public class AIHelpersTests
     public void PickTargetForRobber_OreBest()
     {
         var gs = CreateGameForPickRobberTargetTests();
-        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
 
-        var target = AIHelpers.PickTargetForRobber(gs, human);
+        var target = AIHelpers.PickTargetForRobber(gs, bot);
 
         var ore8Tile = gs.GetTileAt(4, 0);
 
@@ -596,6 +596,7 @@ public class AIHelpersTests
     {
         var gs = CreateGameForPickRobberTargetTests();
         var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
 
         var wood9Tile = gs.GetTileAt(2, -2);
         var brick10Tile = gs.GetTileAt(3, -1);
@@ -603,7 +604,7 @@ public class AIHelpersTests
         var v1 = gs.Vertices.First(v => v.Owner != null && v.Owner.Id == human.Id && v.Tiles.Contains(wood9Tile));
         v1.UpgradeToCity();
 
-        var target = AIHelpers.PickTargetForRobber(gs, human);
+        var target = AIHelpers.PickTargetForRobber(gs, bot);
 
         Assert.NotNull(target);
         Assert.Equal(brick10Tile.Id, target.Id);
@@ -623,7 +624,7 @@ public class AIHelpersTests
         var v1 = gs.GetVertexFromTileInfo(ore8Tile, null, null, VertexDirection.NE);
         v1.BuildSettlement(bot);
 
-        var target = AIHelpers.PickTargetForRobber(gs, human);
+        var target = AIHelpers.PickTargetForRobber(gs, bot);
 
         Assert.NotNull(target);
         Assert.Equal(brick10Tile.Id, target.Id);
@@ -646,7 +647,7 @@ public class AIHelpersTests
 
         var wood9Tile = gs.GetTileAt(2, -2);
 
-        var target = AIHelpers.PickTargetForRobber(gs, human);
+        var target = AIHelpers.PickTargetForRobber(gs, bot);
 
         Assert.NotNull(target);
         Assert.Equal(wood9Tile.Id, target.Id);

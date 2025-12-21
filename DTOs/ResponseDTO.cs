@@ -133,6 +133,7 @@ public class ResponseDTO
         { 1060, "Game has reached maximum number of players."},
         { 1061, "Invalid player name."},
         { 1062, "Invalid player color."},
+        { 1063, "You can not upgrade another player's settlement."},
         { 9999, "Unexpected error."},
     };
 }

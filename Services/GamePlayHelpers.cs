@@ -410,7 +410,7 @@ public static class GamePlayHelpers
             return new ResponseDTO(false, 1019, $"GameId: {gs.Id}; VertexId: {vertexId}", null as GameStateDTO);
 
         if (vertex.Owner.Id != playerId)
-            return new ResponseDTO(false, 1019, $"GameId: {gs.Id}; VertexId: {vertexId}; OwnerId: {vertex.Owner.Id}", null as GameStateDTO);
+            return new ResponseDTO(false, 1063, $"GameId: {gs.Id}; VertexId: {vertexId}; OwnerId: {vertex.Owner.Id}", null as GameStateDTO);
 
         if (!HasResourcesToBuildCity(player))
             return new ResponseDTO(false, 1017, $"Action: BuildCity; GameId: {gs.Id}; Player: {playerId}", null as GameStateDTO);

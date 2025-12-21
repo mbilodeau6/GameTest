@@ -231,11 +231,8 @@ public class BotAI
         if (State.Phase.PhaseState != GameStates.PlaceRobber)
             throw new InvalidOperationException($"GetRobberMove should only be called if phase is PlaceRobber. Current phase is {State.Phase.PhaseState.ToString()}");
 
-        if (State.Players.Count() > 2 || State.Players.Count(p => p.IsBot) >= 2 || State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
-            throw new InvalidOperationException("Unexpected Exception. The current implementation of GetRobberMove assumes that games are between a single human player and a bot.");
-
         var move = new BotMove();
-        move.TileMove = new TileDTO(AIHelpers.PickTargetForRobber(State, State.Players.First(p => !p.IsBot)));
+        move.TileMove = new TileDTO(AIHelpers.PickTargetForRobber(State, State.Phase.CurrentPlayer));
 
         return move;
     }
