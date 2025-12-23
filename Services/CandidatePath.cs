@@ -26,7 +26,7 @@ public class CandidatePath
     private void SafetyCheck(Edge next)
     {
          if (next.Owner != null && Owner != null && next.Owner.Id != Owner.Id)
-            throw new InvalidOperationException("Unexpected. Caller traversing across roads owned by different players.");
+            throw new InvalidOperationException("Unexpected Error. Caller traversing across roads owned by different players.");
     }
 
     public CandidatePath CreateBranchOfPath(Edge next)
