@@ -25,7 +25,7 @@ public class BotAI
     public BotMove GetSetUpMove()
     {
         if (!GamePlayHelpers.IsPlayerSetupPhase(State))
-            throw new InvalidOperationException($"GetSetUp should only be called if in one of the phases. Current phase is {State.Phase.PhaseState.ToString()}");
+            throw new InvalidOperationException($"GetSetUpMove should only be called if in one of the Place(First/Second)(Settlement/Road) phases. Current phase is {State.Phase.PhaseState.ToString()}");
 
         if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
@@ -33,9 +33,23 @@ public class BotAI
         var move = new BotMove();
 
         if (State.Phase.PhaseState == GameStates.PlaceFirstSettlement || State.Phase.PhaseState == GameStates.PlaceSecondSettlement)
-            move.VertexMove = new VertexDTO(new VertexPicker(State).PickVertex().Id, BuildingType.Settlement, State.Phase.CurrentPlayer.Id, null);
+        {
+            var vertex = new VertexPicker(State).PickVertex();
+
+            if (vertex == null)
+                throw new InvalidOperationException("VertexPicker didn't return a vertex.");
+
+            move.VertexMove = new VertexDTO(vertex.Id, BuildingType.Settlement, State.Phase.CurrentPlayer.Id, null);
+        }
         else if (State.Phase.PhaseState == GameStates.PlaceFirstRoad || State.Phase.PhaseState == GameStates.PlaceSecondRoad)
-            move.EdgeMove = new EdgeDTO(new VertexPicker(State).PickEdge().Id, State.Phase.CurrentPlayer.Id, null);
+        {
+            var edge = new VertexPicker(State).PickEdge();
+
+            if (edge == null)
+                throw new InvalidOperationException("VertexPicker didn't return an edge.");
+                
+            move.EdgeMove = new EdgeDTO(edge.Id, State.Phase.CurrentPlayer.Id, null);
+        }
 
         return move;
     }
@@ -149,7 +163,7 @@ public class BotAI
 
         // First look to see if we can upgrade settlements to a city
         var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(State);
-        if (settlementToUpgrade != null 
+        if (settlementToUpgrade != null && State.Phase.CurrentPlayer != null
             && State.UnusedCityAvailable(State.Phase.CurrentPlayer) 
             && (GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer) || !restrictToHeldResources))
         {
@@ -158,6 +172,9 @@ public class BotAI
         }
 
         // Determine if there are settlements or roads the bot should work towards
+        if (State.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("CurrentPlayer required.");
+            
         var candidateVertices = AIHelpers.GetRankedListOfVertexTargets(State, AIHelpers.GetAllOwnedBuildings(State, State.Phase.CurrentPlayer)).OrderByDescending(g => g.OverallScore);
         if (candidateVertices.Count() > 0)
         {
@@ -176,8 +193,12 @@ public class BotAI
                 && (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer) || !restrictToHeldResources) 
                 && candidateVertices.First().RoadsNeeded > 0)
             {
-                move.EdgeMove = new EdgeDTO(candidateVertices.First().NextEdgeToTarget.Id, State.Phase.CurrentPlayer.Id, null);
-                return move;
+                var candidateVertex = candidateVertices.FirstOrDefault();
+                if (candidateVertex != null && candidateVertex.NextEdgeToTarget != null)
+                {
+                    move.EdgeMove = new EdgeDTO(candidateVertex.NextEdgeToTarget.Id, State.Phase.CurrentPlayer.Id, null);
+                    return move;
+                }
             }
 
             // Notice: If the highest priority vertex is available and requires no roads but the Bot doesn't have the resources to 
@@ -230,6 +251,9 @@ public class BotAI
     {
         if (State.Phase.PhaseState != GameStates.PlaceRobber)
             throw new InvalidOperationException($"GetRobberMove should only be called if phase is PlaceRobber. Current phase is {State.Phase.PhaseState.ToString()}");
+
+        if (State.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("CurrentPlayer required.");
 
         var move = new BotMove();
         move.TileMove = new TileDTO(AIHelpers.PickTargetForRobber(State, State.Phase.CurrentPlayer));
@@ -329,6 +353,9 @@ public class BotAI
 
     public List<ResourceType> DetermineCardsToDiscard()
     {
+        if (State.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("CurrentPlayer required.");
+
         var discard = new List<ResourceType>();
         var resourcesHeld = AIHelpers.ConvertResourceDictToList(State.Phase.CurrentPlayer.Resources);
         int discardCount = (resourcesHeld.Count() / 2);

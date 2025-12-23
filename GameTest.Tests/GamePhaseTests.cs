@@ -35,8 +35,14 @@ public class GamePhaseTests
 
         // Assert
         Assert.Equal(gamePhase.PhaseState, newGamePhase.PhaseState);
+        Assert.NotNull(gamePhase.CurrentPlayer);
+        Assert.NotNull(newGamePhase.CurrentPlayer);
         Assert.Equal(gamePhase.CurrentPlayer.Id, newGamePhase.CurrentPlayer.Id);
+        Assert.NotNull(gamePhase.EndPlayer);
+        Assert.NotNull(newGamePhase.EndPlayer);
         Assert.Equal(gamePhase.EndPlayer.Id, newGamePhase.EndPlayer.Id);
+        Assert.NotNull(gamePhase.OriginalRobberTile);
+        Assert.NotNull(newGamePhase.OriginalRobberTile);
         Assert.Equal(gamePhase.OriginalRobberTile.Id, newGamePhase.OriginalRobberTile.Id);
         Assert.Equal(gamePhase.PreviousState, newGamePhase.PreviousState);
         Assert.Equal(3, newGamePhase.RoadsPreRoadBuilding);

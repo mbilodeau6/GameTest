@@ -16,7 +16,7 @@ public class PortTests
         var vertex = new Vertex(tile1, tile2);
 
         // Act & Assert
-         Assert.Throws<ArgumentNullException>(() => new Port(null, vertex, PortType.Wood));
+         Assert.Throws<ArgumentNullException>(() => new Port(null!, vertex, PortType.Wood));
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public class PortTests
         var vertex = new Vertex(tile1, tile2);
 
         // Act & Assert
-         Assert.Throws<ArgumentNullException>(() => new Port(vertex, null, PortType.Wood));
+         Assert.Throws<ArgumentNullException>(() => new Port(vertex, null!, PortType.Wood));
     }
 
     [Fact]

@@ -119,6 +119,8 @@ public class GameState
 
         if (dto.Phase != null)
             Phase = new GamePhase(this, dto.Phase);
+        else
+            Phase = new GamePhase(GameStates.SettingUpBoard);
 
         if (dto.HasLargestArmyPlayerId != null)
             PlayerWithLargestArmy = Players.First(p => p.Id == dto.HasLargestArmyPlayerId);
@@ -214,16 +216,25 @@ public class GameState
 
     public int CountSettlementsForPlayer(Player player)
     {
+        if (player == null) 
+            throw new InvalidOperationException("Player should not be null");
+
         return Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.Settlement);
     }
 
     public int CountCitiesForPlayer(Player player)
     {
+        if (player == null) 
+            throw new InvalidOperationException("Player should not be null");
+
         return Vertices.Count(v => v.Owner != null && v.Owner.Id == player.Id && v.Building == BuildingType.City);
     }
 
     public int CountRoadsForPlayer(Player player)
     {
+        if (player == null) 
+            throw new InvalidOperationException("Player should not be null");
+
         return Edges.Count(v => v.Owner != null && v.Owner.Id == player.Id);
     }
 

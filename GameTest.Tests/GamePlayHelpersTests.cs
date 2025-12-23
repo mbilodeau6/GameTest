@@ -3281,9 +3281,11 @@ public class GamePlayHelpersTests
         var pendingTradeResponse = gs.Phase.PendingTradeResponses.First(r => r.ResponseType != TradeResponseType.Original);
         Assert.Equal(board.GetBluePlayer().Id, pendingTradeResponse.Player.Id);
         Assert.Equal(TradeResponseType.Counter, pendingTradeResponse.ResponseType);
+        Assert.NotNull(pendingTradeResponse.Offer);
         Assert.Single(pendingTradeResponse.Offer);
         Assert.True(pendingTradeResponse.Offer.ContainsKey(ResourceType.Wool));
         Assert.Equal(1, pendingTradeResponse.Offer[ResourceType.Wool]);
+        Assert.NotNull(pendingTradeResponse.Request);
         Assert.Single(pendingTradeResponse.Request);
         Assert.True(pendingTradeResponse.Request.ContainsKey(ResourceType.Ore));
         Assert.Equal(1, pendingTradeResponse.Request[ResourceType.Ore]);

@@ -48,9 +48,16 @@ public class PlayerDTO
 
         ResourceCount = resourceCount;
         DevelopmentCardCount = developmentCardCount;
-        DevCardsPurchasedThisRound = devCardsPurchasedThisRound;
-        DevCardsPlayed = devCardsPlayed;
-        DevCardsReadyToPlay = devCardsReadyToPlay;
+
+        if (devCardsPurchasedThisRound != null)
+            DevCardsPurchasedThisRound = devCardsPurchasedThisRound;
+
+        if (devCardsPlayed != null)
+            DevCardsPlayed = devCardsPlayed;
+
+        if (devCardsReadyToPlay != null)
+            DevCardsReadyToPlay = devCardsReadyToPlay;
+            
         VictoryPoints = victoryPoints;
     }
 

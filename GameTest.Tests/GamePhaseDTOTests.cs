@@ -77,10 +77,12 @@ public class GamePhaseDTOTests
         GamePhaseDTO gamePhaseDTO = new GamePhaseDTO(gamePhase);
 
         Assert.Equal(gamePhase.PhaseState, gamePhaseDTO.PhaseState);
+        Assert.NotNull(gamePhase.CurrentPlayer);
         Assert.Equal(gamePhase.CurrentPlayer.Id, gamePhaseDTO.CurrentPlayerId);
+        Assert.NotNull(gamePhase.EndPlayer);
         Assert.Equal(gamePhase.EndPlayer.Id, gamePhaseDTO.EndPlayerId);
         Assert.Equal(gamePhase.PreviousState, gamePhaseDTO.PreviousState);
-        Assert.Equal(gamePhase.OriginalRobberTile.Id, gamePhaseDTO.OriginalRobberTileId);
+        Assert.NotNull(gamePhase.OriginalRobberTile);
         Assert.Equal(gamePhase.OriginalRobberTile.Id, gamePhaseDTO.OriginalRobberTileId);
         Assert.Equal(7, gamePhaseDTO.RoadsPreRoadBuilding);
         Assert.True(gamePhase.WaitingForRoll);

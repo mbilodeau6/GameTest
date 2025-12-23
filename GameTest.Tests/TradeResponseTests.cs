@@ -42,6 +42,7 @@ public class TradeResponseTests
         Assert.Empty(response.Request);
     }
 
+    [Fact]
     public void Constructor_OfferOnAccept_Invalid()
     {
         // Arrange
@@ -49,9 +50,10 @@ public class TradeResponseTests
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TradeResponse(player, TradeResponseType.Accept, offer, null));
+        Assert.Throws<ArgumentException>(() => new TradeResponse(player, TradeResponseType.Accept, offer, null));
     }
 
+    [Fact]
     public void Constructor_RequestOnAccept_Invalid()
     {
         // Arrange
@@ -59,7 +61,7 @@ public class TradeResponseTests
         var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TradeResponse(player, TradeResponseType.Accept, null, request));
+        Assert.Throws<ArgumentException>(() => new TradeResponse(player, TradeResponseType.Accept, null, request));
     }
 
     [Fact]

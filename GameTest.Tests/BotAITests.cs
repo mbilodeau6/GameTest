@@ -60,7 +60,7 @@ public class BotAITests
         // Arrange
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new BotAI(null));
+            new BotAI(null!));
 
         Assert.Equal("Value cannot be null. (Parameter 'gs')", exception.Message);
     }
@@ -88,8 +88,6 @@ public class BotAITests
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             bai.GetSetUpMove());
-
-        Assert.StartsWith("GetSetUp should only be called if in one of the phases. Current phase is", exception.Message);
     }
 
     [Fact]

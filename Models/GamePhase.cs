@@ -256,10 +256,10 @@ public class GamePhase
             else if (PhaseState == GameStates.DiscardCards)
             {
                 nextPhase.CurrentPlayer = GetNextPlayer(CurrentPlayer, players);
-                while (nextPhase.CurrentPlayer.Id != EndPlayer.Id && nextPhase.CurrentPlayer.Resources.Values.Sum() <= 7)
+                while (EndPlayer != null && nextPhase.CurrentPlayer.Id != EndPlayer.Id && nextPhase.CurrentPlayer.Resources.Values.Sum() <= 7)
                     nextPhase.CurrentPlayer = GetNextPlayer(nextPhase.CurrentPlayer, players);
 
-                if (nextPhase.CurrentPlayer.Id == EndPlayer.Id)
+                if (EndPlayer != null && nextPhase.CurrentPlayer.Id == EndPlayer.Id)
                     nextPhase.PhaseState = GameStates.PlaceRobber;
                 else
                     nextPhase.PhaseState = GameStates.DiscardCards;

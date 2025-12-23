@@ -21,7 +21,7 @@ public class TradeRequestTests
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new TradeRequest(null, offer, request));
+            new TradeRequest(null!, offer, request));
 
         // Assert
         Assert.Equal("Value cannot be null. (Parameter 'player')", exception.Message);
@@ -39,7 +39,7 @@ public class TradeRequestTests
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new TradeRequest(player, null, request));
+            new TradeRequest(player, null!, request));
 
         // Assert
         Assert.Equal("Value cannot be null. (Parameter 'offer')", exception.Message);
@@ -57,7 +57,7 @@ public class TradeRequestTests
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new TradeRequest(player, offer, null));
+            new TradeRequest(player, offer, null!));
 
         // Assert
         Assert.Equal("Value cannot be null. (Parameter 'request')", exception.Message);
@@ -98,7 +98,7 @@ public class TradeRequestTests
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new TradeRequest(gs, null));
+            new TradeRequest(gs, null!));
 
         // Assert
         Assert.Equal("Value cannot be null. (Parameter 'dto')", exception.Message);
@@ -118,7 +118,7 @@ public class TradeRequestTests
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new TradeRequest(null, dto));
+            new TradeRequest(null!, dto));
 
         // Assert
         Assert.Equal("Value cannot be null. (Parameter 'gs')", exception.Message);

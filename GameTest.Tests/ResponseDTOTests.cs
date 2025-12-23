@@ -21,7 +21,7 @@ public class ResponseDTOTests
     [Fact]
     public void Constructor_NoParams()
     {
-        var response = new ResponseDTO(false, 1, null, null as GameState);
+        var response = new ResponseDTO(false, 1, null!, null as GameState);
 
         Assert.NotNull(response);
         Assert.False(response.Success);

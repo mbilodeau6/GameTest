@@ -13,12 +13,12 @@ public class GoalStatsTests
     public void Constructor_NullVertex()
     {
         // Arrange
-        Vertex vertex = null;
+        Vertex vertex = null!;
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
         var player = new Player("Tim", PlayerColor.Red, false);
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, player, baseStats, 0, null));
+        Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex!, player, baseStats, 0, null));
     }
 
     [Fact]

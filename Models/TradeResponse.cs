@@ -15,6 +15,12 @@ public class TradeResponse
         Player = player ?? throw new ArgumentNullException(nameof(player));
         ResponseType = resposneType;
 
+        if (ResponseType == TradeResponseType.Accept || ResponseType == TradeResponseType.Reject)
+        {
+            if ((offer != null && offer.Count > 0) || (request != null && request.Count > 0))
+                throw new ArgumentException("Offer and request must be null or empty if accepting/rejecting offer.");
+        }
+
         if (resposneType == TradeResponseType.Counter || resposneType == TradeResponseType.Original)
         {
             if (offer == null || offer.Count == 0)

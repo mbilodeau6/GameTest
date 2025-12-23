@@ -427,7 +427,7 @@ public static class GamePlayHelpers
         int loopCounter = 0; // Failsafe to prevent infinite loops
 
         gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
-            gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer), 
+            gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!), 
             gs.Dice.GetCombinedValue(), gs.RobberTile);
 
         if (gs.Phase.CurrentPlayer == null)
@@ -437,7 +437,7 @@ public static class GamePlayHelpers
         {
             var bot = new BotAI(gs);
 
-            while (gs.Phase.CurrentPlayer.IsBot)
+            while (gs.Phase.CurrentPlayer != null && gs.Phase.CurrentPlayer.IsBot)
             {
                 if (loopCounter++ > 100)
                     throw new InvalidOperationException("GameLoop appears to be stuck in an infinite loop");
@@ -551,6 +551,9 @@ public static class GamePlayHelpers
 
     public static GameState LoadAndPrepareGameStateDTO(GameStateDTO dto)
     {
+        if (dto == null)
+            throw new ArgumentNullException("Unexpected Error. GameStateDTO should not be null.");
+
         var gs = new GameState(dto);
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
         MarkBlockedVertices(gs);
@@ -603,7 +606,10 @@ public static class GamePlayHelpers
         var response = bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
 
         if (response.Success)
-            response.GameState.EventRecord.Add(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
+            if (response.GameState == null)
+                throw new InvalidOperationException("GameState should not be null");
+            else
+                response.GameState.EventRecord.Add(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
 
         return response;
     }
@@ -675,13 +681,16 @@ public static class GamePlayHelpers
         if (tile == null)
             return new ResponseDTO(false, 1032, $"GameId: {gs.Id}; TileId: {tileId}", null as GameStateDTO);
         
-        if (gs.Phase.OriginalRobberTile == null || gs.Phase.OriginalRobberTile.Id == tile.Id)
+        if (gs.Phase.OriginalRobberTile == null)
+            return new ResponseDTO(false, 9999, "OriginalRobberTile shouldn't be null.", null as GameStateDTO);
+        
+        if (gs.Phase.OriginalRobberTile.Id == tile.Id)
             return new ResponseDTO(false, 1033, $"GameId: {gs.Id}; Player: {player.Id}; OriginalTile: {gs.Phase.OriginalRobberTile.Id}; NewTile: {tile.Id}", null as GameStateDTO);
 
         PlaceRobber(gs, player, tile);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs, player);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void BuyDevCard(GameState gs, Player player)
@@ -722,7 +731,7 @@ public static class GamePlayHelpers
         BuyDevCard(gs, player);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs, player);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     private static void StandardPlayDevCardValidation(GameState gs, Player player, DevelopmentCardType devCard)
@@ -773,7 +782,7 @@ public static class GamePlayHelpers
         if (gs.Phase.DevCardPlayedThisRound)
             return new ResponseDTO(false, 1043, $"Action: Play{targetType}DevCard; GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
 
-        return new ResponseDTO(true, 0, null, gs, player);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void SharedPlayDevCard(GameState gs, Player player, DevelopmentCardType type)
@@ -817,12 +826,15 @@ public static class GamePlayHelpers
             return response;
 
         var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"Player: {request.PlayerId}", null as GameState);
+
         var requestedResource = request.SelectedResources[0];
 
         PlayMonopolyDevCard(gs, player, requestedResource);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs, player);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void PlayYearOfPlentyDevCard(GameState gs, Player player, List<ResourceType> requestedResources)
@@ -857,10 +869,13 @@ public static class GamePlayHelpers
             return response;
 
         var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"Player: {request.PlayerId}", null as GameState);
+
         PlayYearOfPlentyDevCard(gs, player, request.SelectedResources);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs, player);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void PlayRoadBuildingDevCard(GameState gs, Player player)
@@ -887,7 +902,7 @@ public static class GamePlayHelpers
         PlayRoadBuildingDevCard(gs, player);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs, player);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void PlayKnightDevCard(GameState gs, Player player, Tile targetTile)
@@ -936,7 +951,7 @@ public static class GamePlayHelpers
         PlayKnightDevCard(gs, player, tile);
         GameLoop(gs);
 
-        return new ResponseDTO(true, 0, null, gs, player);
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 
     public static void DiscardCards(GameState gs, Player player, List<ResourceType> cardsToDiscard)

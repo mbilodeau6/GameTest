@@ -170,50 +170,57 @@ public class GameService
 
         var stringBuilder = new StringBuilder();
         
-        stringBuilder.Append($"Phase: {response.GameState.Phase.PhaseState} ## Current Player: {response.GameState.Phase.CurrentPlayerId} ## ");
-        stringBuilder.Append($"Dice: {response.GameState.Dice.Die1.Value}, {response.GameState.Dice.Die2.Value} ## ");
-
-        // Display current resources each player has
-        for (int i = 0; i < response.GameState.Players.Count; i++)
-            stringBuilder.Append($"{response.GameState.Players[i].Id}: Wood={response.GameState.Players[i].Resources[ResourceType.Wood]}, Brick={response.GameState.Players[i].Resources[ResourceType.Brick]}, Wool={response.GameState.Players[i].Resources[ResourceType.Wool]}, Grain={response.GameState.Players[i].Resources[ResourceType.Grain]}, Ore={response.GameState.Players[i].Resources[ResourceType.Ore]} ## ");
-
-        if (response.GameState.EventRecord != null && response.GameState.EventRecord.Count > 0)
+        if (response.GameState != null)
         {
-            int i = response.GameState.EventRecord.Count - 1;
-            var er = response.GameState.EventRecord[i];
-            
-            // Find actions performed by other players
-            while (response.GameState.Phase.CurrentPlayerId != null && er.PlayerId != response.GameState.Phase.CurrentPlayerId)
+            if (response.GameState.Phase != null)
+                stringBuilder.Append($"Phase: {response.GameState.Phase.PhaseState} ## Current Player: {response.GameState.Phase.CurrentPlayerId} ## ");
+            else
+                stringBuilder.Append("GameState.Phase Missing ## ");
+        
+            stringBuilder.Append($"Dice: {response.GameState.Dice.Die1.Value}, {response.GameState.Dice.Die2.Value} ## ");
+
+            // Display current resources each player has
+            for (int i = 0; i < response.GameState.Players.Count; i++)
+                stringBuilder.Append($"{response.GameState.Players[i].Id}: Wood={response.GameState.Players[i].Resources[ResourceType.Wood]}, Brick={response.GameState.Players[i].Resources[ResourceType.Brick]}, Wool={response.GameState.Players[i].Resources[ResourceType.Wool]}, Grain={response.GameState.Players[i].Resources[ResourceType.Grain]}, Ore={response.GameState.Players[i].Resources[ResourceType.Ore]} ## ");
+
+            if (response.GameState.EventRecord != null && response.GameState.EventRecord.Count > 0)
             {
-                if (i == 0)
-                    break;
-
-                er = response.GameState.EventRecord[--i];
-            }
-
-            // Disply actions by other players
-            for (; i < response.GameState.EventRecord.Count; i++)
-            {
-                er = response.GameState.EventRecord[i];
-
-                stringBuilder.Append($"{er.PlayerId} {er.Action} {er.VertexId ?? ""}{er.EdgeId ?? ""}{er.DevelopmentCard.ToString() ?? ""}{er.TileId ?? ""}{er.TargetPlayerId ?? ""}{er.DiceRoll.ToString() ?? "" }");
-                if (er.ResourcesUsed != null && er.ResourcesUsed.Count > 0)
+                int i = response.GameState.EventRecord.Count - 1;
+                var er = response.GameState.EventRecord[i];
+                
+                // Find actions performed by other players
+                while (response.GameState.Phase != null && response.GameState.Phase.CurrentPlayerId != null && er.PlayerId != response.GameState.Phase.CurrentPlayerId)
                 {
-                    stringBuilder.Append("{");
-                    foreach (var resource in er.ResourcesUsed)
-                        stringBuilder.Append($"{resource.Key}:{resource.Value},");
-                    stringBuilder.Append("} ");
+                    if (i == 0)
+                        break;
+
+                    er = response.GameState.EventRecord[--i];
                 }
 
-                if (er.ResourcesReceived != null && er.ResourcesReceived.Count > 0)
+                // Disply actions by other players
+                for (; i < response.GameState.EventRecord.Count; i++)
                 {
-                    stringBuilder.Append("{");
-                    foreach (var resource in er.ResourcesReceived)
-                        stringBuilder.Append($"{resource.Key}:{resource.Value},");
-                    stringBuilder.Append("} ");
-                }
+                    er = response.GameState.EventRecord[i];
 
-                stringBuilder.Append("; ");
+                    stringBuilder.Append($"{er.PlayerId} {er.Action} {er.VertexId ?? ""}{er.EdgeId ?? ""}{er.DevelopmentCard.ToString() ?? ""}{er.TileId ?? ""}{er.TargetPlayerId ?? ""}{er.DiceRoll.ToString() ?? "" }");
+                    if (er.ResourcesUsed != null && er.ResourcesUsed.Count > 0)
+                    {
+                        stringBuilder.Append("{");
+                        foreach (var resource in er.ResourcesUsed)
+                            stringBuilder.Append($"{resource.Key}:{resource.Value},");
+                        stringBuilder.Append("} ");
+                    }
+
+                    if (er.ResourcesReceived != null && er.ResourcesReceived.Count > 0)
+                    {
+                        stringBuilder.Append("{");
+                        foreach (var resource in er.ResourcesReceived)
+                            stringBuilder.Append($"{resource.Key}:{resource.Value},");
+                        stringBuilder.Append("} ");
+                    }
+
+                    stringBuilder.Append("; ");
+                }
             }
         }
             
@@ -234,7 +241,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState??throw new InvalidOperationException("GameState should not be null"));
             var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, playerId, edgeId);
 
             if (!buildResponse.Success)
@@ -269,7 +276,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var buildResponse = GamePlayHelpers.BuildSettlementRequestFromUser(gs, playerId, vertexId);
 
             if (!buildResponse.Success)
@@ -304,7 +311,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var buildResponse = GamePlayHelpers.UpgradeToCityRequestFromUser(gs, playerId, vertexId);
 
             if (!buildResponse.Success)
@@ -342,7 +349,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
             }
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
 
             if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.RollOrUseDevCard)
             {
@@ -387,7 +394,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
             }
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
 
             // TODO: Need to get player from authorization. Using CurrentPlayer for now.
             if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.BuildOrTrade)
@@ -433,7 +440,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
             }
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState??throw new InvalidOperationException("GameState shouldn't be null."));
 
             if (gs.Phase.PhaseState != GameStates.SettingUpBoard)
             {
@@ -478,7 +485,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var tradeResponse = GamePlayHelpers.BankTradeFromUser(gs, request);
 
             if (!tradeResponse.Success)
@@ -513,7 +520,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var tradeResponse = GamePlayHelpers.OpenTradeFromUser(gs, request);
 
             if (!tradeResponse.Success)
@@ -548,7 +555,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var tradeResponse = GamePlayHelpers.RespondToTradeFromUser(gs, request);
 
             if (!tradeResponse.Success)
@@ -583,7 +590,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var tradeResponse = GamePlayHelpers.AcceptTradeFromUser(gs, request);
 
             if (!tradeResponse.Success)
@@ -618,7 +625,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var tradeResponse = GamePlayHelpers.RejectAllOffersFromUser(gs, request);
 
             if (!tradeResponse.Success)
@@ -653,7 +660,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var tradeResponse = GamePlayHelpers.PlaceRobberForUser(gs, request.PlayerId, request.TileId);
 
             if (!tradeResponse.Success)
@@ -688,7 +695,7 @@ public class GameService
             if (!response.Success)
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var tradeResponse = GamePlayHelpers.BuyDevCardFromUser(gs, playerId);
 
             if (!tradeResponse.Success)
@@ -724,7 +731,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
             var etag = response.ETag;
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
 
             ResponseDTO? devCardResponse = null;
             switch(request.DevCardType)
@@ -783,7 +790,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
             var etag = response.ETag;
-            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState);
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
             var discardResponse = GamePlayHelpers.DiscardCardRequestFromUser(gs, request);
 
             if (discardResponse == null)
