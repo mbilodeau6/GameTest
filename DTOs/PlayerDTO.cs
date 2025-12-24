@@ -28,6 +28,7 @@ public class PlayerDTO
     public int DevelopmentCardCount { get; } = 0;
 
     public int VictoryPoints { get; }
+    public int? FullVictoryPoints { get; }
 
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
@@ -35,7 +36,7 @@ public class PlayerDTO
         Dictionary<ResourceType, int>? resources = null, int resourceCount = 0,
         int developmentCardCount = 0, List<DevelopmentCardType>? devCardsPurchasedThisRound = null,
         List<DevelopmentCardType>? devCardsPlayed = null, List<DevelopmentCardType>? devCardsReadyToPlay = null,
-        int victoryPoints = 0)
+        int victoryPoints = 0, int? fullVictoryPoints = 0)
     {
         Id = id ?? string.Empty;
         Name = name ?? string.Empty;
@@ -59,6 +60,9 @@ public class PlayerDTO
             DevCardsReadyToPlay = devCardsReadyToPlay;
             
         VictoryPoints = victoryPoints;
+
+        if (fullVictoryPoints != null)
+            FullVictoryPoints = fullVictoryPoints;
     }
 
     public PlayerDTO(Player player, bool countsOnly = true)
@@ -86,6 +90,7 @@ public class PlayerDTO
             Resources = new Dictionary<ResourceType, int>(player.Resources);
 
         ResourceCount = player.ResourceCount;
-        VictoryPoints = player.VictoryPoints;
+        VictoryPoints = player.VisibleVictoryPoints;
+        FullVictoryPoints = player.FullVictoryPoints;
     }
 }

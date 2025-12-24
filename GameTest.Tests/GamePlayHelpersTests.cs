@@ -2504,7 +2504,7 @@ public class GamePlayHelpersTests
         human.PlayDevelopmentCard(DevelopmentCardType.Knight);
         gs.UpdatePlayerVictoryPoints(human);
         Assert.Null(gs.PlayerWithLargestArmy);
-        Assert.Equal(1, human.VictoryPoints);
+        Assert.Equal(1, human.FullVictoryPoints);
 
         human.AssignDevelopmentCard(DevelopmentCardType.Knight);
         human.MakeNewDevelopmentCardsPlayable();
@@ -2512,7 +2512,7 @@ public class GamePlayHelpersTests
         
         Assert.NotNull(gs.PlayerWithLargestArmy);
         Assert.Equal(human.Id, gs.PlayerWithLargestArmy.Id);
-        Assert.Equal(3, human.VictoryPoints);
+        Assert.Equal(3, human.FullVictoryPoints);
     }
 
     private GameState CreateGameWhereBotLargestArmy()
@@ -2566,15 +2566,15 @@ public class GamePlayHelpersTests
         human.AssignDevelopmentCard(DevelopmentCardType.Knight);
         human.MakeNewDevelopmentCardsPlayable();
         human.PlayDevelopmentCard(DevelopmentCardType.Knight);
-        Assert.Equal(3, bot.VictoryPoints);
-        Assert.Equal(0, human.VictoryPoints);
+        Assert.Equal(3, bot.FullVictoryPoints);
+        Assert.Equal(0, human.FullVictoryPoints);
 
         GamePlayHelpers.PlayKnightDevCard(gs, human, gs.GetTileAt(0, 0));
 
         Assert.NotNull(gs.PlayerWithLargestArmy);
         Assert.Equal(gs.PlayerWithLargestArmy.Id, human.Id);
-        Assert.Equal(1, bot.VictoryPoints);
-        Assert.Equal(3, human.VictoryPoints);
+        Assert.Equal(1, bot.FullVictoryPoints);
+        Assert.Equal(3, human.FullVictoryPoints);
     }
 
     [Fact]
@@ -2692,14 +2692,14 @@ public class GamePlayHelpersTests
         var board = CreateBoardWithBlueHavingLength4Road();
         Assert.Null(board.GetGameState().PlayerWithLongestRoad);
         Assert.Equal(4, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));
-        Assert.Equal(1, board.GetBluePlayer().VictoryPoints);
+        Assert.Equal(1, board.GetBluePlayer().FullVictoryPoints);
 
         GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetBluePlayer(), board.GetEdge(TestEdge.E10));
 
         Assert.NotNull(board.GetGameState().PlayerWithLongestRoad);
         Assert.Equal(board.GetBluePlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
         Assert.Equal(5, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));
-        Assert.Equal(3, board.GetBluePlayer().VictoryPoints);
+        Assert.Equal(3, board.GetBluePlayer().FullVictoryPoints);
     }
 
     private TestGameBoard CreateBoardWithBlueLength5RoadRedLength4()
@@ -2734,8 +2734,8 @@ public class GamePlayHelpersTests
         var board = CreateBoardWithBlueLength5RoadRedLength4();
         Assert.NotNull(board.GetGameState().PlayerWithLongestRoad);
         Assert.Equal(board.GetBluePlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
-        Assert.Equal(3, board.GetBluePlayer().VictoryPoints);
-        Assert.Equal(1, board.GetRedPlayer().VictoryPoints);
+        Assert.Equal(3, board.GetBluePlayer().FullVictoryPoints);
+        Assert.Equal(1, board.GetRedPlayer().FullVictoryPoints);
         
 
         board.GetEdge(TestEdge.E24).BuildRoad(board.GetRedPlayer());
@@ -2744,8 +2744,8 @@ public class GamePlayHelpersTests
         Assert.Equal(6, board.GetGameState().GetLongestRoadLength(board.GetRedPlayer()));
         Assert.NotNull(board.GetGameState().PlayerWithLongestRoad);
         Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
-        Assert.Equal(1, board.GetBluePlayer().VictoryPoints);
-        Assert.Equal(3, board.GetRedPlayer().VictoryPoints);
+        Assert.Equal(1, board.GetBluePlayer().FullVictoryPoints);
+        Assert.Equal(3, board.GetRedPlayer().FullVictoryPoints);
     }
 
     [Fact]

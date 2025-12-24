@@ -277,7 +277,7 @@ public static class AIHelpers
         Tile? tileWithHighestValue = null;
 
         // If opponents are close to winning, target them. Otherwise, look at all.
-        var playersOfInterest = gs.Players.Where(p => p.VictoryPoints >= gs.Settings.VictoryPointsToWin - 2 || p.Id == currentPlayer.Id);
+        var playersOfInterest = gs.Players.Where(p => p.FullVictoryPoints >= gs.Settings.VictoryPointsToWin - 2 || p.Id == currentPlayer.Id);
         if (playersOfInterest.Count() == 1)
             playersOfInterest = gs.Players.ToList();
 

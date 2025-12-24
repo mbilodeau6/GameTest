@@ -281,8 +281,7 @@ public class GameState
 
     public void UpdatePlayerVictoryPoints(Player player)
     {
-        int victoryPoints = CountSettlementsForPlayer(player) + (CountCitiesForPlayer(player) * 2)
-            + GamePlayHelpers.CountVictoryPointDevCardsForPlayer(player);
+        int victoryPoints = CountSettlementsForPlayer(player) + (CountCitiesForPlayer(player) * 2);
 
         if (PlayerWithLargestArmy != null && PlayerWithLargestArmy.Id == player.Id)
             victoryPoints += 2;
@@ -290,7 +289,7 @@ public class GameState
         if (PlayerWithLongestRoad != null && PlayerWithLongestRoad.Id == player.Id)
             victoryPoints += 2;
 
-        player.SetVictoryPoints(victoryPoints);
+        player.SetVictoryPoints(victoryPoints, victoryPoints + GamePlayHelpers.CountVictoryPointDevCardsForPlayer(player));
     }
 
     public bool UnusedRoadAvailable(Player player)

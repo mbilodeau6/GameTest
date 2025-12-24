@@ -41,7 +41,8 @@ public class Player
     public List<DevelopmentCardType> DevCardsReadyToPlay { get; private set; } = new List<DevelopmentCardType>();
 
     public HashSet<PortType> Ports {get ; private set; } = new HashSet<PortType>();
-    public int VictoryPoints { get; private set; } = 0;
+    public int FullVictoryPoints { get; private set; } = 0; // Includes points from victory dev cards
+    public int VisibleVictoryPoints { get; private set; } = 0;
 
     // Parameterless ctor for serializers
     public Player()
@@ -93,7 +94,9 @@ public class Player
             Resources[kvp.Key] = kvp.Value;
 
         IsBot = dto.IsBot;
-        VictoryPoints = dto.VictoryPoints;
+        VisibleVictoryPoints = dto.VictoryPoints;
+
+        FullVictoryPoints = dto.FullVictoryPoints ?? 0;
     }
 
     public void AssignResources(ResourceType type, int count)
@@ -147,9 +150,10 @@ public class Player
         Ports.Add(port);
     }
 
-    public void SetVictoryPoints(int victoryPoints)
+    public void SetVictoryPoints(int visibleVictoryPoints, int fullVictoryPoints)
     {
-        VictoryPoints = victoryPoints;
+        FullVictoryPoints = fullVictoryPoints;
+        VisibleVictoryPoints = visibleVictoryPoints;
     }
 
     public int CountPlayedKnights()

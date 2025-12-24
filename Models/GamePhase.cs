@@ -153,7 +153,7 @@ public class GamePhase
     // TODO: Should be private but have public for testing
     public bool PlayerHasWon(Player player)
     {
-        return player.VictoryPoints >= VictoryPointsToWin;
+        return player.FullVictoryPoints >= VictoryPointsToWin;
     }
 
     // TODO: Should be private but have public for testing

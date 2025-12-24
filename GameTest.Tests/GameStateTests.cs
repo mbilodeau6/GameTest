@@ -482,16 +482,16 @@ public class GameStateTests
         var gs = CreateTestGameWithManyRoads();
         var bluePlayer = gs.Players.First(p => p.Color == PlayerColor.Blue);
         gs.UpdatePlayerVictoryPoints(bluePlayer);
-        Assert.Equal(5, bluePlayer.VictoryPoints);
+        Assert.Equal(5, bluePlayer.FullVictoryPoints);
 
         bluePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
         gs.UpdatePlayerVictoryPoints(bluePlayer);
-        Assert.Equal(6, bluePlayer.VictoryPoints);
+        Assert.Equal(6, bluePlayer.FullVictoryPoints);
 
         bluePlayer.MakeNewDevelopmentCardsPlayable();
         bluePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
         gs.UpdatePlayerVictoryPoints(bluePlayer);
-        Assert.Equal(7, bluePlayer.VictoryPoints);
+        Assert.Equal(7, bluePlayer.FullVictoryPoints);
     }
 
     // TODO: Add tests where victory points come from dev cards, longest road, and largest army
