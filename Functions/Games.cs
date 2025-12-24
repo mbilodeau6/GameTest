@@ -221,9 +221,8 @@ public class Games
         return await CreateSuccessResponse(req, response);
     }
 
-    // TODO: Need to get player from authorization. In other entry points I've been talking player
-    // as a paramter. Right now I'm just implementing a single human player against a bot. StartGameAsync
-    // will just start the game when it is called (regardless of which player is hitting start).
+    // TODO: Review whether other players need to have a say on starting the game. Right now I'm allowing
+    // any player to do it.
     [Function("StartGame")]
     public async Task<HttpResponseData> StartGame(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/start")] HttpRequestData req,

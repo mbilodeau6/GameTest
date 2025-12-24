@@ -50,7 +50,9 @@ public class GamePlayHelpersTests
     public void GetResourcesEarnedOnLastRoll_DontIncludeDesert()
     {
         // Arrage
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        // TODO: Should change to Test Board
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var desertTile = gs.GetTileAt(0, 0);
         Assert.NotNull(desertTile);
@@ -1027,7 +1029,9 @@ public class GamePlayHelpersTests
     public void MarkBlockedVertices_CitiesAndSettlements()
     {
         // Find tiles on vertices I will build or test
+        // TODO: Change to use a test board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
         var t9 = gs.GetTileAt(4, 0);
         var t10 = gs.GetTileAt(3, -1);
         var t17 = gs.GetTileAt(2, 0);
@@ -1093,7 +1097,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsEdgeAdjacentToPlayerBuild_AdjacentToRoad()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1109,7 +1115,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsEdgeAdjacentToPlayerBuild_AdjacentToSettlement()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1125,7 +1133,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsEdgeAdjacentToPlayerBuild_AdjacentToCity()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1142,7 +1152,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsEdgeAdjacentToPlayerBuild_NotAdjacentToAnything()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1158,7 +1170,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsEdgeAdjacentToPlayerBuild_NotAdjacentToRightPlayer()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1174,7 +1188,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsEdgeAdjacentToPlayerBuild_NotAdjacentIfRoadSplitByOtherPlayer()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1193,7 +1209,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsVertexAdjacentToPlayerRoad_NotAdjacentToAnything()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1209,7 +1227,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void IsVertexAdjacentToPlayerRoad_AdjacentToRoad()
     {
+        // TODO: Change to use a Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
         var oreTile = gs.GetTileAt(4, 0);
@@ -1241,7 +1261,10 @@ public class GamePlayHelpersTests
     [Fact]
     public void BankTradeFromUser_Accepted()
     {
+        // TODO: Should change to Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         gs.Phase.PhaseState = GameStates.BuildOrTrade;
         gs.Phase.CurrentPlayer = gs.Players[0];
 
@@ -1260,7 +1283,10 @@ public class GamePlayHelpersTests
     [Fact]
     public void BankTradeFromUser_Rejected_WrongState()
     {
+        // TODO: Should change to Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         gs.Phase.PhaseState = GameStates.RollOrUseDevCard;
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
@@ -1277,7 +1303,10 @@ public class GamePlayHelpersTests
     [Fact]
     public void BankTradeFromUser_Rejected_DoesNotHaveEnoughResources()
     {
+        // TODO: Should change to Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         gs.Phase.PhaseState = GameStates.BuildOrTrade;
         gs.Phase.CurrentPlayer = gs.Players[0];
 
@@ -1296,7 +1325,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void BankTrade_Accepted()
     {
+        // TODO: Should change to Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
         var tradeRequest = CreateTradeRequest(gs.Players[0], ResourceType.Wood, 4, ResourceType.Brick, 1);
@@ -1311,7 +1342,9 @@ public class GamePlayHelpersTests
     [Fact]
     public void BankTrade_Rejected()
     {
+        // TODO: Should change to Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
 
         gs.Players[0].AssignResources(ResourceType.Wood, 3);
         var tradeRequest = CreateTradeRequest(gs.Players[0], ResourceType.Wood, 2, ResourceType.Brick, 1);
@@ -1328,7 +1361,10 @@ public class GamePlayHelpersTests
     public void PopulatePlayerPorts_Valid()
     {
         // Arrange
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        // TODO: Should change to Test Board
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         var bot = gs.Players.First(p => p.IsBot);
         var human = gs.Players.First(p => !p.IsBot);
 
@@ -4479,5 +4515,31 @@ public class GamePlayHelpersTests
         Assert.NotNull(newPlayer);
         Assert.False(newPlayer.IsBot);
         Assert.Equal(PlayerColor.Orange, newPlayer.Color);
+    }
+
+    [Fact]
+    public void StartGame_NotEnoughPlayers()
+    {
+        GameState gs = new GameState(new Guid());
+        Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
+
+        gs.Players.Add(new Player("Tim", PlayerColor.Red));
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.StartGame(gs));
+    }
+
+    [Fact]
+    public void StartGame_CurrentPlayerSet()
+    {
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
+
+        gs.Players.Add(new Player("Tim", PlayerColor.Red));
+        gs.Players.Add(new Player("WallE", PlayerColor.Blue, true));
+
+        GamePlayHelpers.StartGame(gs);
+
+        Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
     }
 }

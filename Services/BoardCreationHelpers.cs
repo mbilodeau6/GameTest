@@ -203,7 +203,6 @@ public static class BoardCreationHelpers
         gameState.PlaceRobberOnDesert();
         CreateEdgesAndVerticesForBoard(gameState);
         LinkEdgesAndVertices(gameState);
-        BoardCreationHelpers.AddPlayers(gameState);
 
         switch(gameType)
         {
@@ -259,15 +258,6 @@ public static class BoardCreationHelpers
         }
     }
     
-    public static void AddPlayers(GameState gameState)
-    {
-        var p1 = new Player("Lisa", PlayerColor.Red);
-        var p2 = new Player("Hal", PlayerColor.Blue, true);
-
-        gameState.AddPlayer(p1);
-        gameState.AddPlayer(p2);
-    }
-
     public static void AddPortsWithStartIndex(GameState gs, List<PortType> randPorts, int startingIndex, int subIndexOverride)
     {
         var rnd = new Random();

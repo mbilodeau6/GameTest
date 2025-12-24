@@ -274,18 +274,12 @@ public class GamePhaseTests
     }
 
     [Fact]
-    public void GetNextPhase_SettingUpBoard_MoveToPlaceFirstSettlement()
+    public void GetNextPhase_SettingUpBoard_Invalid()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.SettingUpBoard);
 
-        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
-
-        Assert.NotNull(phase.CurrentPlayer);
-        if (phase.CurrentPlayer.Id == board.GetRedPlayer().Id)
-            Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetBluePlayer()));
-        else
-            Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetRedPlayer()));
+        Assert.Throws<InvalidOperationException>( () => board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile));
     }
 
     [Fact]

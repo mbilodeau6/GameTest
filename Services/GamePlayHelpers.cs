@@ -200,6 +200,19 @@ public static class GamePlayHelpers
 
     public static void StartGame(GameState gameState)
     {
+        if (gameState.Players.Count < 2)
+            throw new InvalidOperationException("Require at least 2 players to start a game.");
+
+        if (gameState.Phase != null && gameState.Phase.PhaseState != GameStates.SettingUpBoard)
+            throw new InvalidOperationException("Unexpected Error. Can not start a game that has already started.");
+
+        if (gameState.Phase == null)
+            throw new InvalidOperationException("Unexpected Error. The Phase in GameState isn't initialized.");
+
+        gameState.Phase.PhaseState = GameStates.PlaceFirstSettlement;
+        gameState.Phase.CurrentPlayer = gameState.Players[_random.Next(gameState.Players.Count)];
+        gameState.Phase.EndPlayer = gameState.Phase.GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+
         GameLoop(gameState);
     }
 
@@ -234,8 +247,6 @@ public static class GamePlayHelpers
         else
             throw new InvalidOperationException("Unexpected Error. FindSettlementWithNoRoads() could not find a vertex without a road.");
     }
-
-
 
     private static bool BuildCityPhase(GameState gs)
     {
@@ -382,7 +393,6 @@ public static class GamePlayHelpers
             gs.UpdatePlayerVictoryPoints(player);
         }
     }
-
 
     public static ResponseDTO UpgradeToCityRequestFromUser(GameState gs, string playerId, string vertexId)
     {

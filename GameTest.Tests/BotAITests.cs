@@ -11,7 +11,10 @@ public class BotAITests
 {
     private static GameState CreateBoardForSetupTest(GameStates state)
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        // TODO: Should change to Test Board
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
 
         gs.Phase = new GamePhase(state, gs.Players.First(p => p.IsBot == true));

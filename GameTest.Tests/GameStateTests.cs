@@ -369,7 +369,10 @@ public class GameStateTests
 
     private static GameState CreateTestGameWithManyRoads()
     {
+        // TODO: Should use Test Board
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         var player3 = new Player("Alex", PlayerColor.Orange);
         gs.AddPlayer(player3);
         gs.Edges[0].BuildRoad(gs.Players[0]);

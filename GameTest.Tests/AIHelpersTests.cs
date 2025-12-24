@@ -167,7 +167,10 @@ public class AIHelpersTests
     [Fact]
     public void GetRankedListOfVertexTargets_StartingFromAllOwned()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        // TODO: Should change to Test Board
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         gs.Players.Add(new Player("Player3", PlayerColor.Green, isBot: false));
         Assert.Equal(PlayerColor.Blue, gs.Players[1].Color);
         gs.Phase.CurrentPlayer = gs.Players[1];
@@ -556,7 +559,10 @@ public class AIHelpersTests
 
     private static GameState CreateGameForPickRobberTargetTests()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        // TODO: Should change to Test Board
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
 
         var wood9Tile = gs.GetTileAt(2, -2);
         var brick10Tile = gs.GetTileAt(3, -1);
@@ -656,7 +662,10 @@ public class AIHelpersTests
     [Fact]
     public void PickTargetForRobber_PickRandomIfNoOtherOption()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        // TODO: Should change to Test Board
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
         var originalRobberTile = gs.RobberTile;
 
         var wood9Tile = gs.GetTileAt(2, -2);

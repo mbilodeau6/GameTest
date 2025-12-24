@@ -72,8 +72,6 @@ public class GameService
             _logger.LogError(ex, "Failed to store GameState for GUID {GameId}.", gs.Id);
         }
 
-        // TODO: initialize tiles/players based on gameType
-
         return gs;
     }
 
@@ -83,7 +81,6 @@ public class GameService
         {
             _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", id);
             return new ResponseDTO(false, 1001, $"GameId: {id}", null as GameStateDTO);
-
         }
 
         try
@@ -448,10 +445,7 @@ public class GameService
                 return new ResponseDTO(false, 1003, $"Action: StartGame; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
             }
 
-            // TODO: In the future, will need every human player to hit start before a game starts.
-            // Current version only needs one start call and it starts the game for everyone.
             GamePlayHelpers.StartGame(gs);
-            GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
 
             var updatedDto = new DTOs.GameStateDTO(gs);
             var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");

@@ -116,21 +116,6 @@ public class BoardCreationHelpersTests
         Assert.Equal(VertexDirection.S, v1.Direction);
     }
 
-    [Fact]
-    public void AddPlayers_AddTwoPlayers()
-    {
-        // Arrange
-        var gameState = new GameState(Guid.NewGuid());
-
-        // Act
-        BoardCreationHelpers.AddPlayers(gameState);
-
-        // Assert
-        Assert.Equal(2, gameState.Players.Count);
-        Assert.Contains(gameState.Players, p => p.Name == "Lisa" && p.Color == PlayerColor.Red);
-        Assert.Contains(gameState.Players, p => p.Name == "Hal" && p.Color == PlayerColor.Blue);
-    }
-
     private void ValidatePortsForStandardBoard(GameState gs)
     {
         // Make sure each port type is included

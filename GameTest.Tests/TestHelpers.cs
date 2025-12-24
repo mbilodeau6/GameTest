@@ -156,4 +156,15 @@ public static class TestHelpers
         
         return board;
     }
+
+    // TODO: Should be able to get rid of this helper when all of the tests are refactored to use
+    // Test Boards.
+    public static void AddPlayers(GameState gameState)
+    {
+        var p1 = new Player("Lisa", PlayerColor.Red);
+        var p2 = new Player("Hal", PlayerColor.Blue, true);
+
+        gameState.AddPlayer(p1);
+        gameState.AddPlayer(p2);
+    }
 }
