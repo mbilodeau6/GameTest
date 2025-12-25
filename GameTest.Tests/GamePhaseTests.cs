@@ -778,17 +778,22 @@ public class GamePhaseTests
     public void GetNextPhase_BuildOrTrade_MoveToGameOverWin()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
-        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetGameState().Settings.VictoryPointsToWin, board.GetRedPlayer(), board.GetBluePlayer());
+        var gs = board.GetGameState();
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, gs.Settings.VictoryPointsToWin, board.GetRedPlayer(), board.GetBluePlayer());
         board.GetVertex(TestVertex.V3).BuildSettlement(board.GetRedPlayer());
         board.GetVertex(TestVertex.V3).UpgradeToCity();
         board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
-        board.GetVertex(TestVertex.V10).UpgradeToCity();
         board.GetVertex(TestVertex.V1).BuildSettlement(board.GetRedPlayer());
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
         board.GetGameState().UpdatePlayerVictoryPoints(board.GetRedPlayer());
+        Assert.Equal(4, board.GetRedPlayer().VisibleVictoryPoints);
+        Assert.Equal(5, board.GetRedPlayer().FullVictoryPoints);
 
-        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 1, 0, 0, board.GetGameState().RobberTile);
+        var phase = gs.Phase.GetNextPhase(gs.Players, 1, 0, 0, gs.RobberTile);
 
         Assert.True(IsNextPhaseAsExpected(phase, GameStates.GameOver, board.GetRedPlayer(), board.GetBluePlayer()));
+        GamePlayHelpers.GameLoop(gs);
+        Assert.Equal(5, board.GetRedPlayer().VisibleVictoryPoints); // VP dev card points become visible on game end
     }
 
     // TODO: Seems like moving from any state to GameOver due to the resignation

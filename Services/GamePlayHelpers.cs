@@ -432,6 +432,12 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, string.Empty, gs, player);
     }
 
+    private static void UpdateStatsOnGameOver(GameState gs)
+    {
+        foreach(var player in gs.Players)
+            player.SetVictoryPoints(player.FullVictoryPoints, player.FullVictoryPoints);
+    }
+
     public static void GameLoop(GameState gs)
     {
         int loopCounter = 0; // Failsafe to prevent infinite loops
@@ -439,6 +445,12 @@ public static class GamePlayHelpers
         gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
             gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!), 
             gs.Dice.GetCombinedValue(), gs.RobberTile);
+
+        if (gs.Phase.PhaseState == GameStates.GameOver)
+        {
+            UpdateStatsOnGameOver(gs);
+            return;
+        }
 
         if (gs.Phase.CurrentPlayer == null)
             throw new InvalidOperationException("Shouldn't call GameLoop before current player set.");
@@ -522,6 +534,12 @@ public static class GamePlayHelpers
                 gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
                     gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer), 
                     gs.Dice.GetCombinedValue(), gs.RobberTile);
+
+                if (gs.Phase.PhaseState == GameStates.GameOver)
+                {
+                    UpdateStatsOnGameOver(gs);
+                    return;
+                }
             }
         }
     }
@@ -565,12 +583,16 @@ public static class GamePlayHelpers
             throw new ArgumentNullException("Unexpected Error. GameStateDTO should not be null.");
 
         var gs = new GameState(dto);
-        BoardCreationHelpers.LinkEdgesAndVertices(gs);
-        MarkBlockedVertices(gs);
-        PopulatePlayerPorts(gs);
-        foreach(var player in gs.Players)
-            gs.UpdatePlayerVictoryPoints(player);
 
+        if (gs.Phase.PhaseState != GameStates.GameOver)
+        {
+            BoardCreationHelpers.LinkEdgesAndVertices(gs);
+            MarkBlockedVertices(gs);
+            PopulatePlayerPorts(gs);
+            foreach(var player in gs.Players)
+                gs.UpdatePlayerVictoryPoints(player);
+        }
+        
         return gs;
     }
 
