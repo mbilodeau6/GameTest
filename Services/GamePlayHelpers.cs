@@ -592,7 +592,7 @@ public static class GamePlayHelpers
             foreach(var player in gs.Players)
                 gs.UpdatePlayerVictoryPoints(player);
         }
-        
+
         return gs;
     }
 
@@ -1598,5 +1598,15 @@ public static class GamePlayHelpers
         gs.Players.Add(new Player(playerName, playerColor, request.IsBot));
 
         return new ResponseDTO(true, 0, string.Empty, gs);
+    }
+
+    public static List<Player> GetOpponentsOnTile(GameState gs, Tile tile)
+    {
+        HashSet<Player> players = new();
+
+        foreach(var vertex in gs.Vertices.Where(v => v.Owner != null && v.Owner.Id != gs.Phase.CurrentPlayer.Id && v.Tiles.Any(t => t.Id == tile.Id)))
+            players.Add(vertex.Owner);
+
+        return players.ToList();
     }
 }

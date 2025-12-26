@@ -12,6 +12,7 @@ public class GamePhaseDTO
     public string? EndPlayerId { get; }
     public GameStates? PreviousState { get; } = null;
     public string? OriginalRobberTileId { get; } = null;
+    public List<string> TargetPlayerIds { get; } = null;
     public int? RoadsPreRoadBuilding {get; } = null;
     public bool WaitingForRoll { get; } = false;
     public bool DevCardPlayedThisRound {get; } = false;
@@ -22,7 +23,7 @@ public class GamePhaseDTO
     public GamePhaseDTO(GameStates phaseState, string? currentPlayerId = null, string? endPlayerId = null, 
         GameStates? previousState = null, string? originalRobberTileId = null, int? roadsPreRoadBuilding = null,
         bool waitingForRoll = false, bool devCardPlayedThisRound = false, 
-        List<TradeResponseDTO>? pendingTradeResponses = null)
+        List<TradeResponseDTO>? pendingTradeResponses = null, List<string>? targetPlayerIds = null)
     {
         CurrentPlayerId = currentPlayerId;
         PhaseState = phaseState;
@@ -47,6 +48,14 @@ public class GamePhaseDTO
             PreviousState = gamePhase.PreviousState;
         if (gamePhase.OriginalRobberTile != null)
             OriginalRobberTileId = gamePhase.OriginalRobberTile.Id;
+        if (gamePhase.TargetPlayers != null)
+        {
+            TargetPlayerIds = new();
+            
+            foreach(var player in gamePhase.TargetPlayers)
+                TargetPlayerIds.Add(player.Id);
+        }
+
         RoadsPreRoadBuilding = gamePhase.RoadsPreRoadBuilding;
         WaitingForRoll = gamePhase.WaitingForRoll;
         DevCardPlayedThisRound = gamePhase.DevCardPlayedThisRound;

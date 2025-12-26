@@ -12,5 +12,6 @@ public enum GameStates
     DiscardCards,
     RespondToTrade,
     BuildOrTrade,
-    GameOver
+    GameOver,
+    SelectTarget
 }

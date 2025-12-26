@@ -911,4 +911,10 @@ public class BotAITests
         Assert.Equal(3, discard.Count(r => r == ResourceType.Wood));
         Assert.Equal(0, discard.Count(r => r == ResourceType.Wool));
     }
+
+    [Fact]
+    public void SelectTargetPlayer()
+    {
+        Assert.True(false);
+    }
 }

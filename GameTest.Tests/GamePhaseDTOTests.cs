@@ -67,7 +67,7 @@ public class GamePhaseDTOTests
         var p2 = new Player("Mary", PlayerColor.Blue);
         GamePhase gamePhase = new GamePhase(GameStates.RollOrUseDevCard, p1, p2);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
-        gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile);
+        gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile, new List<Player>() { p1, p2});
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 7);
         gamePhase.SetWaitingForRoll();
         gamePhase.SetDevCardPlayedThisRound();
@@ -91,5 +91,8 @@ public class GamePhaseDTOTests
         Assert.Single(gamePhaseDTO.PendingTradeResponses);  
         Assert.Equal(p2.Id, gamePhaseDTO.PendingTradeResponses[0].PlayerId);
         Assert.Equal(TradeResponseType.Original, gamePhaseDTO.PendingTradeResponses[0].ResponseType);
+        Assert.NotNull(gamePhaseDTO.TargetPlayerIds);
+        Assert.Contains(p1.Id, gamePhaseDTO.TargetPlayerIds);
+        Assert.Contains(p2.Id, gamePhaseDTO.TargetPlayerIds);
     }
 }

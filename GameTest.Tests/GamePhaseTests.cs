@@ -21,7 +21,7 @@ public class GamePhaseTests
         gs.Tiles.Add(t1);
 
         GamePhase gamePhase = new GamePhase(GameStates.PlaceSecondSettlement, p1, p2);
-        gamePhase.SetStateToReturnTo(GameStates.BuildOrTrade, t1);
+        gamePhase.SetStateToReturnTo(GameStates.BuildOrTrade, t1, new List<Player>() {p2});
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 3);
         gamePhase.SetWaitingForRoll();
         gamePhase.SetDevCardPlayedThisRound();
@@ -52,6 +52,8 @@ public class GamePhaseTests
         Assert.Single(newGamePhase.PendingTradeResponses);
         Assert.Equal(gamePhase.PendingTradeResponses[0].Player.Id, newGamePhase.PendingTradeResponses[0].Player.Id);
         Assert.Equal(gamePhase.PendingTradeResponses[0].ResponseType, newGamePhase.PendingTradeResponses[0].ResponseType);
+        Assert.NotNull(newGamePhase.TargetPlayers);
+        Assert.Single(newGamePhase.TargetPlayers);
     }
 
     [Fact]
@@ -100,38 +102,41 @@ public class GamePhaseTests
     public void SetStateToReturnTo_StateNullBefore()
     {
         // Arrage
-        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard, null, null);
+        var gamePhase = new GamePhase(GameStates.RollOrUseDevCard, null, null!);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
 
         // Act
-        gamePhase.SetStateToReturnTo(GameStates.BuildOrTrade, tile);
+        gamePhase.SetStateToReturnTo(GameStates.BuildOrTrade, tile, new List<Player>());
 
         // Assert
         Assert.NotNull(gamePhase.PreviousState);
         Assert.Equal(GameStates.BuildOrTrade, gamePhase.PreviousState);
+        Assert.NotNull(gamePhase.TargetPlayers);
+        Assert.Empty(gamePhase.TargetPlayers);
     }
 
     [Fact]
     public void SetStateToReturnTo_StateNotNullBefore_Exception()
     {
         // Arrage
-        var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
 
-        phaseState.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile);
+        phaseState.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile, new List<Player>());
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => phaseState.SetStateToReturnTo(GameStates.BuildOrTrade, tile));
+        Assert.Throws<InvalidOperationException>(() => phaseState.SetStateToReturnTo(GameStates.BuildOrTrade, tile, new List<Player>()));
     }
 
     [Fact]
     public void ClearStatePreRobberMove()
     {
         // Arrage
-        var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
+        var player = new Player("Tim", PlayerColor.Red);
 
-        phaseState.SetStateToReturnTo(GameStates.BuildOrTrade, tile);
+        phaseState.SetStateToReturnTo(GameStates.BuildOrTrade, tile, new List<Player>() {player});
 
         // Act
         phaseState.ClearRobberState();
@@ -139,12 +144,13 @@ public class GamePhaseTests
         // Assert
         Assert.Null(phaseState.PreviousState);
         Assert.Null(phaseState.OriginalRobberTile);
+        Assert.Null(phaseState.TargetPlayers);
     }
 
     [Fact]
     public void ClearRoadBuildingState()
     {
-        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null);
+        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null!);
         phaseState.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 6);
 
         // Act
@@ -157,7 +163,7 @@ public class GamePhaseTests
     [Fact]
     public void ClearDevCardPlayState()
     {
-        var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null!);
         phaseState.SetDevCardPlayedThisRound();
         Assert.True(phaseState.DevCardPlayedThisRound);
 
@@ -171,7 +177,7 @@ public class GamePhaseTests
     [Fact]
     public void SetWaitingForRoll()
     {
-        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null);
+        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null!);
         Assert.False(phaseState.WaitingForRoll);
 
         phaseState.SetWaitingForRoll();
@@ -181,7 +187,7 @@ public class GamePhaseTests
     [Fact]
     public void ClearWaitingForRoll()
     {
-        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null);
+        var phaseState = new GamePhase(GameStates.FirstDevCardRoad, null, null!);
         phaseState.SetWaitingForRoll();
         Assert.True(phaseState.WaitingForRoll);
 
@@ -537,6 +543,7 @@ public class GamePhaseTests
 
         Assert.True(IsNextPhaseAsExpected(phase, GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer()));
         Assert.Equal(GameStates.BuildOrTrade, phase.PreviousState);
+        Assert.Null(board.GetGameState().Phase.OriginalRobberTile);
     }
 
     [Fact]
@@ -544,7 +551,7 @@ public class GamePhaseTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
-        board.GetGameState().Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetGameState().RobberTile);
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetGameState().RobberTile, new List<Player>());
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
 
@@ -557,15 +564,15 @@ public class GamePhaseTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
-        board.GetGameState().Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetGameState().RobberTile);
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetGameState().RobberTile, new List<Player>());
         board.GetGameState().SetRobberTile(board.GetTile(TestTile.T5));
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
         board.GetGameState().Phase.ClearRobberState();
 
         Assert.True(IsNextPhaseAsExpected(phase, GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer()));
-        Assert.Null(board.GetGameState().Phase.PreviousState);
-        Assert.Null(board.GetGameState().Phase.OriginalRobberTile);
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.OriginalRobberTile);
         Assert.Equal(board.GetTile(TestTile.T5).Id, board.GetGameState().RobberTile.Id);
     }
 
@@ -574,16 +581,69 @@ public class GamePhaseTests
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
-        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetGameState().RobberTile);
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetGameState().RobberTile, new List<Player>());
         board.GetGameState().SetRobberTile(board.GetTile(TestTile.T5));
 
         var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
-        board.GetGameState().Phase.ClearRobberState();
 
         Assert.True(IsNextPhaseAsExpected(phase, GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer()));
-        Assert.Null(board.GetGameState().Phase.PreviousState);
-        Assert.Null(board.GetGameState().Phase.OriginalRobberTile);
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.OriginalRobberTile);
         Assert.Equal(board.GetTile(TestTile.T5).Id, board.GetGameState().RobberTile.Id);
+    }
+
+    private TestGameBoard CreateBoardForSelectTargetTesting(GameStates startingState, GameStates returnState)
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var orangePlayer = new Player("Winston", PlayerColor.Orange);
+        board.GetGameState().Players.Add(orangePlayer);
+        var targetList = new List<Player>() { board.GetBluePlayer(), orangePlayer };
+        board.GetGameState().Phase = new GamePhase(startingState, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(returnState, board.GetGameState().RobberTile, targetList);
+        board.GetGameState().SetRobberTile(board.GetTile(TestTile.T2));
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetGameState().Players.Add(orangePlayer);
+        board.GetVertex(TestVertex.V12).BuildSettlement(orangePlayer);
+
+        return board;
+    }
+
+    [Fact]
+    public void GetNextPhase_PlaceRobber_MoveToSelectTarget()
+    {
+        var board = CreateBoardForSelectTargetTesting(GameStates.PlaceRobber, GameStates.BuildOrTrade);
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.NotNull(phase.PreviousState);
+        Assert.NotNull(phase.OriginalRobberTile);
+    }
+
+    [Fact]
+    public void GetNextPhase_SelectTarget_MoveToRollOrUseDevCard()
+    {
+        var board = CreateBoardForSelectTargetTesting(GameStates.SelectTarget, GameStates.RollOrUseDevCard);
+        board.GetGameState().Phase.SetTargetPlayer(board.GetBluePlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.OriginalRobberTile);
+    }
+
+    [Fact]
+    public void GetNextPhase_SelectTarget_MoveToBuildOrTrade()
+    {
+        var board = CreateBoardForSelectTargetTesting(GameStates.SelectTarget, GameStates.BuildOrTrade);
+        board.GetGameState().Phase.SetTargetPlayer(board.GetBluePlayer());
+
+        var phase = board.GetGameState().Phase.GetNextPhase(board.GetGameState().Players, 0, 0, 0, board.GetGameState().RobberTile);
+
+        Assert.True(IsNextPhaseAsExpected(phase, GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer()));
+        Assert.Null(phase.PreviousState);
+        Assert.Null(phase.OriginalRobberTile);
     }
 
     private TradeResponse CreateOriginalWSingleResource(Player player, 
@@ -624,7 +684,7 @@ public class GamePhaseTests
         players.Add(p2);
         var gamePhase = new GamePhase(GameStates.RespondToTrade, p1, p2);
         gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
-        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null));
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null!));
 
         // Act
         var nextPhase = gamePhase.GetNextPhase(players, 2, 2, 8, null!);
@@ -646,7 +706,7 @@ public class GamePhaseTests
         players.Add(p2);
         var gamePhase = new GamePhase(GameStates.RespondToTrade, p1, p2);
         gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
-        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null));
+        gamePhase.AddPendingTradeResponse(new TradeResponse(p2, TradeResponseType.Accept, null, null!));
         gamePhase.ClearPendingTradeResponses();
 
         // Act
@@ -834,7 +894,7 @@ public class GamePhaseTests
     [Fact]
     public void AddPendingTradeResponse_NoOriginal_ThrowsException()
     {
-        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
 
         Assert.Throws<InvalidOperationException>(() => gamePhase.AddPendingTradeResponse(
             new TradeResponse(new Player("TestPlayer", PlayerColor.Green), TradeResponseType.Accept, null ,null)));
@@ -860,7 +920,7 @@ public class GamePhaseTests
     [Fact]
     public void AddPendingTradeResponse_NullTradeResponse_ThrowsException()
     {
-        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         AddOriginalTradeRequest(gamePhase);
 
         Assert.Throws<ArgumentNullException>(() => gamePhase.AddPendingTradeResponse(null!));
@@ -871,7 +931,7 @@ public class GamePhaseTests
     {
         // Arrange
         var player = new Player("TestPlayer", PlayerColor.Green); 
-        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
         AddOriginalTradeRequest(gamePhase);
 
@@ -890,7 +950,7 @@ public class GamePhaseTests
         // Arrange
         var player1 = new Player("TestPlayer", PlayerColor.Green); 
         var player2 = new Player("AnotherPlayer", PlayerColor.Blue);
-        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tradeResponse = new TradeResponse(player1, TradeResponseType.Accept, null ,null);
         AddOriginalTradeRequest(gamePhase);
         gamePhase.AddPendingTradeResponse(tradeResponse);
@@ -912,7 +972,7 @@ public class GamePhaseTests
     public void AddPendingTradeResponse_SendSecondOriginal_ThrowsException()
     {
         // Arrange
-        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         AddOriginalTradeRequest(gamePhase);
 
         // Act & Assert
@@ -928,7 +988,7 @@ public class GamePhaseTests
     {
         // Arrange
         var player = new Player("TestPlayer", PlayerColor.Green); 
-        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null);
+        var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
         AddOriginalTradeRequest(gamePhase);
         gamePhase.AddPendingTradeResponse(tradeResponse);
@@ -939,4 +999,53 @@ public class GamePhaseTests
         // Assert
         Assert.Null(gamePhase.PendingTradeResponses);
     }
+
+    [Fact]
+    public void SelectTargetPlayer_NullList()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6), null!);
+        
+        Assert.Throws<InvalidOperationException>(() => board.GetGameState().Phase.SetTargetPlayer(board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void SelectTargetPlayer_EmptyList()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6), new List<Player>());
+        
+        Assert.Throws<InvalidOperationException>(() => board.GetGameState().Phase.SetTargetPlayer(board.GetRedPlayer()));
+    }
+
+    [Fact]
+    public void SelectTargetPlayer_OneListed()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6), new List<Player>() {board.GetRedPlayer()});
+        
+        board.GetGameState().Phase.SetTargetPlayer(board.GetRedPlayer());
+
+        Assert.NotNull(board.GetGameState().Phase.TargetPlayers);
+        Assert.Single(board.GetGameState().Phase.TargetPlayers);
+    }
+
+    [Fact]
+    public void SelectTargetPlayer_OneSelected()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6), new List<Player>() {board.GetBluePlayer(), board.GetRedPlayer()});
+        
+        board.GetGameState().Phase.SetTargetPlayer(board.GetRedPlayer());
+
+        Assert.NotNull(board.GetGameState().Phase.TargetPlayers);
+        Assert.Single(board.GetGameState().Phase.TargetPlayers);
+        Assert.Contains(board.GetGameState().Phase.TargetPlayers, x => x.Id == board.GetRedPlayer().Id);
+
+    }
+
 }

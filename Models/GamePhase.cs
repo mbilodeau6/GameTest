@@ -13,6 +13,7 @@ public class GamePhase
     public Player? EndPlayer { get; set; }
     public GameStates? PreviousState {get; private set; } = null;
     public Tile? OriginalRobberTile { get; private set; } = null;
+    public List<Player>? TargetPlayers { get; private set; } = null;
     public int? RoadsPreRoadBuilding { get; private set; } = null;
     public bool WaitingForRoll { get; private set; } = false;
     private int VictoryPointsToWin { get; init; }
@@ -45,6 +46,14 @@ public class GamePhase
 
         if (dto.OriginalRobberTileId != null)
             OriginalRobberTile = gs.Tiles.First(t => t.Id == dto.OriginalRobberTileId);
+
+        if (dto.TargetPlayerIds != null)
+        {
+            TargetPlayers = new();
+
+            foreach(var playerId in dto.TargetPlayerIds)
+                TargetPlayers.Add(gs.Players.First(p => p.Id == playerId));
+        }
 
         RoadsPreRoadBuilding = dto.RoadsPreRoadBuilding;
         WaitingForRoll = dto.WaitingForRoll;
@@ -85,19 +94,31 @@ public class GamePhase
         }
     }
     
-    public void SetStateToReturnTo(GameStates state, Tile originalTile)
+    public void SetStateToReturnTo(GameStates state, Tile originalTile, List<Player> targetPlayers)
     {
         if (PreviousState != null)
             throw new InvalidOperationException("Unexpected Error. Call to SetPreRobberState when it is already set.");
             
         PreviousState = state;
         OriginalRobberTile = originalTile;
+
+        if (targetPlayers != null)
+            TargetPlayers = targetPlayers.ToList();
+    }
+
+    public void SetTargetPlayer(Player player)
+    {
+        if (TargetPlayers == null || TargetPlayers.Count == 0)        
+            throw new InvalidOperationException("TargetPlayers is null or empty.");
+
+        TargetPlayers.RemoveAll(p => p.Id != player.Id);
     }
 
     public void ClearRobberState()
     {
         PreviousState = null;
         OriginalRobberTile = null;
+        TargetPlayers = null;
     }
 
     public void ClearRoadBuildingState()
@@ -160,6 +181,7 @@ public class GamePhase
     // TODO: Now that I've moved SettingUpBoard out of the game loop, we can
     // change to pass List<Player> in the constructor and not have to pass it in
     // with each call to GetNextPhase.
+    // TODO: Need to redesign in a way that doesn't require 
     public GamePhase GetNextPhase(List<Player> players, int playerSettlementCount, int playerRoadCount, int diceValue, Tile robberTile)
     {
         var nextPhase = new GamePhase(this);
@@ -222,7 +244,7 @@ public class GamePhase
         {
             if (diceValue == 7)
             {
-                nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, robberTile);
+                nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, robberTile, TargetPlayers!);
                 nextPhase.EndPlayer = CurrentPlayer;
 
                 if (CurrentPlayer.Resources.Values.Sum() > 7)
@@ -260,8 +282,21 @@ public class GamePhase
             && PreviousState != null 
             && OriginalRobberTile != null && robberTile.Id != OriginalRobberTile.Id)
         {
-            nextPhase.PhaseState = (GameStates)PreviousState;
-            nextPhase.ClearRobberState();
+            if (TargetPlayers != null && TargetPlayers.Count > 1)
+                nextPhase.PhaseState = GameStates.SelectTarget;
+            else
+            {
+                nextPhase.PhaseState = (GameStates)PreviousState;
+                nextPhase.ClearRobberState();
+            }
+        }
+        else if (PhaseState == GameStates.SelectTarget)
+        {
+            if (TargetPlayers != null && TargetPlayers.Count == 1 && PreviousState != null)
+            {
+                nextPhase.PhaseState = (GameStates)PreviousState;
+                nextPhase.ClearRobberState();
+            }
         }
         else if (PhaseState == GameStates.FirstDevCardRoad
             && playerRoadCount > RoadsPreRoadBuilding)
