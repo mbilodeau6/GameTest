@@ -264,7 +264,7 @@ public static class GamePlayHelpers
         }
 
         edge.BuildRoad(player);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
 
         if (gs.PlayerWithLongestRoad == null && gs.GetLongestRoadLength(player) > 4)
             gs.AssignLongestRoadToPlayer(player);
@@ -332,7 +332,7 @@ public static class GamePlayHelpers
                     player.AssignResources(tile.Resource, 1);
 
         vertex.BuildSettlement(player);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
         MarkBlockedVertices(gs, vertex);
         PopulatePlayerPorts(gs);
         gs.UpdatePlayerVictoryPoints(player);
@@ -387,7 +387,7 @@ public static class GamePlayHelpers
         {
             WithdrawResourcesToBuildCity(player);
             vertex.UpgradeToCity();
-            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
             gs.UpdatePlayerVictoryPoints(player);
         }
     }
@@ -560,7 +560,7 @@ public static class GamePlayHelpers
         gs.Dice.Roll();
         gs.Phase.ClearWaitingForRoll();
         GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
-        gs.EventRecord.Add(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.RollDice, gs.Dice));
+        gs.AddEventRecord(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.RollDice, gs.Dice));
 
         if (!skipGameLoop)
             GameLoop(gs);
@@ -646,10 +646,7 @@ public static class GamePlayHelpers
         var response = bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
 
         if (response.Success)
-            if (response.GameState == null)
-                throw new InvalidOperationException("GameState should not be null");
-            else
-                response.GameState.EventRecord.Add(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
+            gs.AddEventRecord(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
 
         return response;
     }
@@ -699,7 +696,7 @@ public static class GamePlayHelpers
                     vertex.Owner.RemoveResources(resourceToSteal, 1);
                     player.AssignResources(resourceToSteal, 1);
 
-                    gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.StealResource, vertex.Owner, resourceToSteal));
+                    gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.StealResource, vertex.Owner, resourceToSteal));
                     break;
                 }
             }
@@ -722,7 +719,7 @@ public static class GamePlayHelpers
         // Move Robber
         gs.Phase.SetTargetPlayers(GetOpponentsOnTile(gs, player, tile));
         gs.SetRobberTile(tile);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
 
         if (gs.Phase.TargetPlayers == null || gs.Phase.TargetPlayers.Count == 1)
             StealResource(gs, player, tile);
@@ -771,7 +768,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException("Unexpected Error. Player doesn't have resources to buy dev card.");
 
         player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.BuyDevelopmentCard, gs.DevelopmentCards[0]));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.BuyDevelopmentCard, gs.DevelopmentCards[0]));
         gs.DevelopmentCards.RemoveAt(0);
         WithdrawResourcesToBuyDevCard(player);
         gs.UpdatePlayerVictoryPoints(player);
@@ -875,7 +872,7 @@ public static class GamePlayHelpers
         }
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.Monopoly);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayMonoploy, new Dictionary<ResourceType, int>() { {requestedResource, resourcesReceived} }));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayMonoploy, new Dictionary<ResourceType, int>() { {requestedResource, resourcesReceived} }));
     }
 
     public static ResponseDTO PlayMonopolyDevCardFromUser(GameState gs, PlayDevCardRequest request)
@@ -916,9 +913,9 @@ public static class GamePlayHelpers
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.YearOfPlenty);
         if (requestedResources[0] == requestedResources[1])
-            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 2} }));
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 2} }));
         else
-            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
     }
 
     public static ResponseDTO PlayYearOfPlentyDevCardFromUser(GameState gs, PlayDevCardRequest request)
@@ -949,7 +946,7 @@ public static class GamePlayHelpers
         gs.Phase.PhaseState = GameStates.FirstDevCardRoad;
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.RoadBuilding);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayRoadBuilding));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayRoadBuilding));
 
     }
 
@@ -976,7 +973,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException("Unexpected Error. The robber can not be moved to the tile it is already on.");
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.Knight);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
 
         if (gs.PlayerWithLargestArmy == null && player.CountPlayedKnights() > 2)
@@ -1039,7 +1036,7 @@ public static class GamePlayHelpers
             player.RemoveResources(resource, 1);
         }
 
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.DiscardCards, cardsToDiscard));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.DiscardCards, cardsToDiscard));
     }
 
     public static ResponseDTO DiscardCardRequestFromUser(GameState gs, DiscardRequest request)
@@ -1101,7 +1098,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their offer. ResourceMissing: {missingResources[0].ToString()}");
 
         gs.Phase.AddPendingTradeResponse(new TradeResponse(player, TradeResponseType.Original, offer, request));
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.OfferToTrade, request, offer, null!));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.OfferToTrade, request, offer, null!));
     }
 
     public static ResponseDTO OpenTradeFromUser(GameState gs, TradeRequestDTO request)
@@ -1165,13 +1162,13 @@ public static class GamePlayHelpers
             if (missingResources.Count > 0)
                 throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their counter offer. ResourceMissing: {missingResources[0].ToString()}");
 
-            gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.CounterOffer, response.Request, response.Offer, null!));
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.CounterOffer, response.Request, response.Offer, null!));
         }
         else
             if (response.ResponseType == TradeResponseType.Accept)
-                gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.AcceptTrade));
+                gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.AcceptTrade));
             else
-                gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.RejectTrade));
+                gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.RejectTrade));
 
         gs.Phase.AddPendingTradeResponse(new TradeResponse(player, response.ResponseType, response.Offer, response.Request));
     }
@@ -1287,7 +1284,7 @@ public static class GamePlayHelpers
             acceptedPlayer.RemoveResources(kvp.Key, kvp.Value);
         }
 
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.TradeWithPlayer, request, offer, acceptedPlayer));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.TradeWithPlayer, request, offer, acceptedPlayer));
         gs.Phase.ClearPendingTradeResponses();
     }
 
@@ -1342,7 +1339,7 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer.Id != player.Id)
             throw new InvalidOperationException($"Unexpected Error. It isn't the player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}");
 
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.RejectTrade));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.RejectTrade));
         gs.Phase.ClearPendingTradeResponses();
     }
 

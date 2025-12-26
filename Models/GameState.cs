@@ -20,6 +20,7 @@ public class GameState
     public Player? PlayerWithLargestArmy { get; private set; } = null!;
     public GameDice Dice { get; private set; } = new GameDice(true);
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
+    public int NextEventId { get; private set; } = 0;
 
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
@@ -111,6 +112,8 @@ public class GameState
 
         foreach (var er in dto.EventRecord)
             EventRecord.Add(er);
+
+        NextEventId = dto.NextEventId;
 
         foreach (var dc in dto.DevelopmentCards)
             DevelopmentCards.Add(dc);
@@ -311,5 +314,11 @@ public class GameState
     public bool UnusedCityAvailable(Player player)
     {
         return CountCitiesForPlayer(player) < Settings.CitiesPerPlayer;
+    }
+
+    public void AddEventRecord(EventRecordDTO eventRecord)
+    {
+        eventRecord.Id = NextEventId++;
+        EventRecord.Add(eventRecord);
     }
 }

@@ -22,6 +22,7 @@ public class GameStateDTO
     public List<PortDTO> Ports {get; } = new();
     public List<DevelopmentCardType> DevelopmentCards { get; } = new();
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
+    public int NextEventId { get; private set; } = 0;
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
@@ -31,7 +32,8 @@ public class GameStateDTO
         List<PlayerDTO>? players = null, List<TileDTO>? tiles = null,
         List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null,
         List<PortDTO>? ports = null, List<EventRecordDTO>? eventRecord = null,
-        List<DevelopmentCardType>? developmentCards = null)
+        List<DevelopmentCardType>? developmentCards = null,
+        int nextEventId = 0)
     {
         Id = id ?? string.Empty;
         Settings = settings;
@@ -62,6 +64,7 @@ public class GameStateDTO
         Phase = phase;
         HasLongestRoadPlayerId = hasLongestRoadPlayerId;
         HasLargestArmyPlayerId = hasLargestArmyPlayerId;
+        NextEventId = nextEventId;
     }
 
     private GameStateDTO(GameStateDTO dto)
@@ -96,6 +99,7 @@ public class GameStateDTO
             DevelopmentCards.Add(dc);
 
         Dice = dto.Dice;
+        NextEventId = dto.NextEventId;
     }
 
     public GameStateDTO(GameState gameState)
@@ -136,6 +140,7 @@ public class GameStateDTO
             HasLargestArmyPlayerId = gameState.PlayerWithLargestArmy.Id;
 
         Dice = gameState.Dice;
+        NextEventId = gameState.NextEventId;
     }
 
     public GameStateDTO GetStateForPlayer(Player player)

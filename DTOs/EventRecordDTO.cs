@@ -3,6 +3,7 @@ using GameTest.Models;
 
 public class EventRecordDTO
 {
+    public int Id { get; set; }
     public string PlayerId { get; init; }
     public EventRecordAction Action { get; private set; }
     public string? VertexId { get; private set; }
@@ -16,11 +17,12 @@ public class EventRecordDTO
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public EventRecordDTO(string playerId, EventRecordAction action, 
+    public EventRecordDTO(int id, string playerId, EventRecordAction action,
             string? vertexId, string? edgeId,
-            Dictionary<ResourceType, int>? resourcesUsed, Dictionary<ResourceType, int>? resourcesReceived, 
+            Dictionary<ResourceType, int>? resourcesUsed, Dictionary<ResourceType, int>? resourcesReceived,
             int? diceRoll, DevelopmentCardType? developmentCard, string? targetPlayerId, string? tileId)
     {
+        Id = id;
         PlayerId = playerId;
         Action = action;
         VertexId = vertexId;
