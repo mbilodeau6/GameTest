@@ -89,8 +89,8 @@ public class EventRecordDTO
 
     public EventRecordDTO(Player player, EventRecordAction action, Player targetPlayer, ResourceType resourceGained) : this(player,action)
     {
-        if (action != EventRecordAction.SelectRobberTarget && action != EventRecordAction.StealResource)
-            throw new InvalidOperationException("Unexpected Exception. Should only be used for SelectRobberTarget or StealResource.");
+        if (action != EventRecordAction.SelectTarget && action != EventRecordAction.StealResource)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for SelectTarget or StealResource.");
 
         TargetPlayerId = targetPlayer.Id;
 

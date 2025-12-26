@@ -15,7 +15,7 @@ public class PossiblePlayerAction
     // For PlaceRobber, PlayKnight - valid tile locations
     public List<string>? TileIds { get; init; }
     
-    // For SelectRobberTarget - valid player IDs to steal from
+    // For SelectTarget - valid player IDs to steal from
     // For AcceptTrade - player IDs who have accepted/countered the offer
     public List<string>? PlayerIds { get; init; }
 }

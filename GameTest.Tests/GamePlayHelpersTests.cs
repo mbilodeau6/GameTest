@@ -3974,7 +3974,7 @@ public class GamePlayHelpersTests
         Assert.NotNull(actions);
         Assert.Single(actions);
         var action = actions.First();
-        Assert.Equal(PlayerAction.SelectRobberTarget, action.Action);
+        Assert.Equal(PlayerAction.SelectTarget, action.Action);
         Assert.Null(action.TileIds);
         Assert.Null(action.VertexIds);
         Assert.NotNull(action.PlayerIds);

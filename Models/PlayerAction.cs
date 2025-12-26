@@ -7,7 +7,7 @@ public enum PlayerAction
     UpgradeSettlement,
     PlaceRoad,
     PlaceRobber,
-    SelectRobberTarget,
+    SelectTarget,
     DiscardCards,
     PlayMonopoly,
     PlayKnight,

@@ -1416,7 +1416,7 @@ public static class GamePlayHelpers
             case GameStates.SelectTarget:
                 if (gs.Phase.TargetPlayers == null)
                     throw new InvalidOperationException("Unexpected Error: TargetPlayers can not be null if GameState is SelectTarget");
-                actions.Add(new PossiblePlayerAction { Action = PlayerAction.SelectRobberTarget, PlayerIds = gs.Phase.TargetPlayers.Select(p => p.Id).ToList()});
+                actions.Add(new PossiblePlayerAction { Action = PlayerAction.SelectTarget, PlayerIds = gs.Phase.TargetPlayers.Select(p => p.Id).ToList()});
                 break;
 
             case GameStates.DiscardCards:
