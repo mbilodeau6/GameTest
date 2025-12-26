@@ -487,6 +487,10 @@ public static class GamePlayHelpers
                 {
                     move = bot.GetRobberMove();
                 }
+                else if (gs.Phase.PhaseState == GameStates.SelectTarget)
+                {
+                    move = bot.SelectTargetMove();
+                }
                 else
                 {
                     // TODO: Other states not implemented yet.
@@ -529,6 +533,12 @@ public static class GamePlayHelpers
                 if (move.DiscardResources != null && move.DiscardResources.Count > 0)
                 {
                     GamePlayHelpers.DiscardCards(gs, gs.Phase.CurrentPlayer, move.DiscardResources);
+                }
+
+                if (move.SelectedPlayer != null && gs.Phase.PhaseState == GameStates.SelectTarget)
+                {
+                    GamePlayHelpers.SelectTarget(gs, gs.Phase.CurrentPlayer, move.SelectedPlayer);
+                    GamePlayHelpers.StealResource(gs, gs.Phase.CurrentPlayer, gs.RobberTile);
                 }
 
                 gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
@@ -666,18 +676,19 @@ public static class GamePlayHelpers
                     vertex.Owner.AddPort(port.Type);
     }
 
-    public static void PlaceRobber(GameState gs, Player player, Tile tile)
+    private static void StealResource(GameState gs, Player player, Tile tile)
     {
-        // Move Robber
-        gs.SetRobberTile(tile);
-        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
+        if (gs.Phase.TargetPlayers != null && gs.Phase.TargetPlayers.Count != 1)
+            throw new InvalidOperationException("StealResources should only be called after a target player has been selected");
 
-        // Steal resource from player with building on the target tile
-        // TODO: If there are multiple players on the tile, need to ask the user which player to steal from
-        // if more than one player has resources
+        // Look through all vertices and locate the ones that are on the specified tile
         foreach(var vertex in gs.Vertices)
         {
-            if (vertex.Tiles.Any(t => t.Id == tile.Id) && vertex.Owner != null && vertex.Owner.Id != player.Id)
+            // If TargetPlayers is null, steal from a building not owned by the player. If
+            // TargetPlayers is set, steal from that player.
+            if (vertex.Tiles.Any(t => t.Id == tile.Id) && vertex.Owner != null &&
+                ((gs.Phase.TargetPlayers == null && vertex.Owner.Id != player.Id) ||
+                (gs.Phase.TargetPlayers != null && vertex.Owner.Id == gs.Phase.TargetPlayers.First().Id)))
             {
                 List<ResourceType> targetResources = new List<ResourceType>();
                 foreach (var pair in vertex.Owner.Resources)
@@ -695,6 +706,28 @@ public static class GamePlayHelpers
                 }
             }
         }
+    }
+
+    private static List<Player> GetOpponentsOnTile(GameState gs, Player player, Tile tile)
+    {
+        HashSet<Player> opponents = new();
+
+        foreach(var vertex in gs.Vertices)
+            if (vertex.Tiles.Any(t => t.Id == tile.Id) && vertex.Owner != null && vertex.Owner.Id != player.Id)
+                opponents.Add(vertex.Owner);
+
+        return opponents.ToList();
+    }
+
+    public static void PlaceRobber(GameState gs, Player player, Tile tile)
+    {
+        // Move Robber
+        gs.Phase.SetTargetPlayers(GetOpponentsOnTile(gs, player, tile));
+        gs.SetRobberTile(tile);
+        gs.EventRecord.Add(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
+
+        if (gs.Phase.TargetPlayers == null || gs.Phase.TargetPlayers.Count == 1)
+            StealResource(gs, player, tile);
     }
 
     public static ResponseDTO PlaceRobberForUser(GameState gs, string playerId, string tileId)
@@ -1380,6 +1413,12 @@ public static class GamePlayHelpers
                 actions.Add(new PossiblePlayerAction { Action = PlayerAction.PlaceRobber, TileIds = robberTileIds });
                 break;
 
+            case GameStates.SelectTarget:
+                if (gs.Phase.TargetPlayers == null)
+                    throw new InvalidOperationException("Unexpected Error: TargetPlayers can not be null if GameState is SelectTarget");
+                actions.Add(new PossiblePlayerAction { Action = PlayerAction.SelectRobberTarget, PlayerIds = gs.Phase.TargetPlayers.Select(p => p.Id).ToList()});
+                break;
+
             case GameStates.DiscardCards:
                 actions.Add(new PossiblePlayerAction { Action = PlayerAction.DiscardCards });
                 break;
@@ -1608,5 +1647,46 @@ public static class GamePlayHelpers
             players.Add(vertex.Owner);
 
         return players.ToList();
+    }
+
+    public static void SelectTarget(GameState gs, Player player, Player targetPlayer)
+    {
+        if (gs.Phase.PhaseState != GameStates.SelectTarget || gs.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException($"Unexpected Error. SelectTarget not valid in {gs.Phase.PhaseState} state.");
+
+        if (gs.Phase.CurrentPlayer.Id != player.Id)
+            throw new InvalidOperationException($"Unexpected Error. It is not player {player.Id}'s turn.");
+
+        if (gs.Phase.TargetPlayers == null || !gs.Phase.TargetPlayers.Any(p => p.Id == targetPlayer.Id))
+            throw new InvalidOperationException($"Unexpected Error. Player {targetPlayer.Id} is not a valid target.");
+
+        gs.Phase.SetTargetPlayer(targetPlayer);
+        StealResource(gs, player, gs.RobberTile);
+    }
+
+    public static ResponseDTO SelectTargetFromUser(GameState gs, SelectTargetRequest request)
+    {
+
+        if (gs.Phase.PhaseState != GameStates.SelectTarget || gs.Phase.CurrentPlayer == null)
+            return new ResponseDTO(false, 1003, $"Action: SelectTarget; GameId: {gs.Id}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
+        if (player == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.CurrentPlayer.Id != request.PlayerId)
+            return new ResponseDTO(false, 1011, $"GameId: {gs.Id}; PlayerTurn: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+
+        var targetPlayer = gs.Players.FirstOrDefault(p => p.Id == request.TargetPlayerId);
+        if (targetPlayer == null)
+            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; TargetPlayer: {request.TargetPlayerId}", null as GameStateDTO);
+
+        if (gs.Phase.TargetPlayers == null || !gs.Phase.TargetPlayers.Any(p => p.Id == request.TargetPlayerId))
+            return new ResponseDTO(false, 1064, $"GameId: {gs.Id}; Player: {request.PlayerId}; TargetPlayer: {request.TargetPlayerId}", null as GameStateDTO);
+
+        SelectTarget(gs, player, targetPlayer);
+        GameLoop(gs);
+
+        return new ResponseDTO(true, 0, null!, gs, player);
     }
 }

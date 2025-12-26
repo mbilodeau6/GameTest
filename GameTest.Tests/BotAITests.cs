@@ -108,6 +108,7 @@ public class BotAITests
         Assert.NotNull(move.VertexMove);
         Assert.Equal(BuildingType.Settlement, move.VertexMove.Building);
         Assert.Null(move.EdgeMove);
+        Assert.Null(move.SelectedPlayer);
     }
 
     [Fact]
@@ -136,6 +137,7 @@ public class BotAITests
         Assert.NotNull(edge);
         Assert.NotEmpty(edge.Vertices);
         Assert.Contains(edge.Vertices, v => GamePlayHelpers.HasBuilding(v) && v.Owner != null && v.Owner.Id == move.EdgeMove.PlayerId);
+        Assert.Null(move.SelectedPlayer);
     }
 
     [Fact]
@@ -228,6 +230,7 @@ public class BotAITests
         Assert.Null(move.VertexMove);
         Assert.False(move.BuyDevelopmentCard);
         Assert.True(move.RollDice);
+        Assert.Null(move.SelectedPlayer);
     }
 
     [Fact]
@@ -281,6 +284,7 @@ public class BotAITests
         Assert.Null(move.VertexMove);
         Assert.False(move.BuyDevelopmentCard);
         Assert.False(move.RollDice);
+        Assert.Null(move.SelectedPlayer);
     }
 
     [Fact]
@@ -366,6 +370,7 @@ public class BotAITests
         Assert.Null(move.EdgeMove);
         Assert.False(move.BuyDevelopmentCard);
         Assert.False(move.RollDice);
+        Assert.Null(move.SelectedPlayer);
     }
 
     // TODO: Need to add
@@ -563,6 +568,7 @@ public class BotAITests
         Assert.Null(move.EdgeMove);
         Assert.Null(move.VertexMove);
         Assert.False(move.RollDice);
+        Assert.Null(move.SelectedPlayer);
     }
 
     private TestGameBoard CreateBoardForMultiPlayerTest()
@@ -574,9 +580,7 @@ public class BotAITests
         board.GetGameState().Players.Add(thirdPlayer);
         board.GetVertex(TestVertex.V2).BuildSettlement(thirdPlayer);
         GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
-
-        foreach(var player in board.GetGameState().Players)
-            board.GetGameState().UpdatePlayerVictoryPoints(player);
+        board.GetGameState().UpdatePlayerVictoryPoints();
 
         return board;
     }
@@ -601,6 +605,7 @@ public class BotAITests
         Assert.Null(move.EdgeMove);
         Assert.Null(move.VertexMove);
         Assert.False(move.RollDice);
+        Assert.Null(move.SelectedPlayer);
     }
 
     [Fact]
@@ -611,8 +616,7 @@ public class BotAITests
         var human = board.GetRedPlayer();
         human.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
         human.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
-        foreach(var player in board.GetGameState().Players)
-            board.GetGameState().UpdatePlayerVictoryPoints(player);
+        board.GetGameState().UpdatePlayerVictoryPoints();
 
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
@@ -628,7 +632,8 @@ public class BotAITests
         Assert.Null(move.EdgeMove);
         Assert.Null(move.VertexMove);
         Assert.False(move.RollDice);
-    }
+        Assert.Null(move.SelectedPlayer);
+   }
 
     [Fact]
     public void GetRobberMove_TwoOpponentsBothWinning()
@@ -641,8 +646,7 @@ public class BotAITests
         var orangePlayer = board.GetGameState().Players.First(p => p.Color == PlayerColor.Orange);
         orangePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
         orangePlayer.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
-        foreach(var player in board.GetGameState().Players)
-            board.GetGameState().UpdatePlayerVictoryPoints(player);
+        board.GetGameState().UpdatePlayerVictoryPoints();
 
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
@@ -658,6 +662,7 @@ public class BotAITests
         Assert.Null(move.EdgeMove);
         Assert.Null(move.VertexMove);
         Assert.False(move.RollDice);
+        Assert.Null(move.SelectedPlayer);
     }
 
     [Fact]
@@ -913,8 +918,76 @@ public class BotAITests
     }
 
     [Fact]
-    public void SelectTargetPlayer()
+    public void SelectTargetPlayer_InvalidState()
     {
-        Assert.True(false);
+        // Arrange
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetBluePlayer(), board.GetRedPlayer());
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        Assert.Throws<InvalidOperationException>( () => bot.SelectTargetMove());
+    }
+
+    private TestGameBoard CreateTestBoardForSelectTarget()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        board.GetGameState().Phase = new GamePhase(GameStates.SelectTarget, board.GetBluePlayer(), board.GetRedPlayer());
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
+        board.GetGameState().SetRobberTile(board.GetTile(TestTile.T0));
+        board.GetGameState().Phase.SetTargetPlayers(new List<Player>() { orangePlayer, board.GetRedPlayer()});
+
+        return board;        
+    }
+
+    [Fact]
+    public void SelectTargetPlayer_SelectWiningPlayer()
+    {
+        // Arrange
+        var board = CreateTestBoardForSelectTarget();
+        board.GetVertex(TestVertex.V16).BuildSettlement(board.GetRedPlayer());
+        board.GetGameState().UpdatePlayerVictoryPoints();
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var move = bot.SelectTargetMove();
+
+        Assert.NotNull(move.SelectedPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, move.SelectedPlayer.Id);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.Null(move.TileMove);
+        Assert.False(move.EndTurn);
+        Assert.Null(move.BankTrade);
+        Assert.False(move.BuyDevelopmentCard);
+        Assert.False(move.RollDice);
+        Assert.Null(move.PlayDevelopmentCard);
+    }
+
+    [Fact]
+    public void SelectTargetPlayer_RandomPlayer()
+    {
+        // Arrange
+        var board = CreateTestBoardForSelectTarget();
+        board.GetGameState().UpdatePlayerVictoryPoints();
+
+        var bot = new BotAI(board.GetGameState());
+
+        // Act
+        var move = bot.SelectTargetMove();
+
+        Assert.NotNull(move.SelectedPlayer);
+        Assert.NotEqual(board.GetBluePlayer().Id, move.SelectedPlayer.Id);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+        Assert.Null(move.TileMove);
+        Assert.False(move.EndTurn);
+        Assert.Null(move.BankTrade);
+        Assert.False(move.BuyDevelopmentCard);
+        Assert.False(move.RollDice);
+        Assert.Null(move.PlayDevelopmentCard);
     }
 }

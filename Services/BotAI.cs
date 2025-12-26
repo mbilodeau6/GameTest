@@ -400,4 +400,26 @@ public class BotAI
 
         return move;
     }
+
+    public BotMove SelectTargetMove()
+    {
+        if (State.Phase.PhaseState != GameStates.SelectTarget)
+            throw new InvalidOperationException($"Unexpected Error. SelectPlayerMove should only be called if phase is SelectTarget. Current phase is {State.Phase.PhaseState.ToString()}");
+
+        var maxVictoryPoints = 0;
+        foreach (var player in State.Phase.TargetPlayers)
+            if (player.VisibleVictoryPoints > maxVictoryPoints)
+                maxVictoryPoints = player.VisibleVictoryPoints;
+
+        var playersWithMax = State.Phase.TargetPlayers.Where(p => p.VisibleVictoryPoints == maxVictoryPoints);
+        var selectedPlayer = playersWithMax.First();
+
+        if (playersWithMax.Count() > 1)
+            selectedPlayer = State.Phase.TargetPlayers[SharedHelpers.NextRandom(State.Phase.TargetPlayers.Count)];
+
+        var move = new BotMove();
+        move.SelectedPlayer = selectedPlayer;
+
+        return move;
+    }
 }

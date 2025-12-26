@@ -134,6 +134,7 @@ public class ResponseDTO
         { 1061, "Invalid player name."},
         { 1062, "Invalid player color."},
         { 1063, "You can not upgrade another player's settlement."},
+        { 1064, "Selected player is not a valid target."},
         { 9999, "Unexpected error."},
     };
 }

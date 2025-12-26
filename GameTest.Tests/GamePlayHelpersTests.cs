@@ -1419,7 +1419,7 @@ public class GamePlayHelpersTests
 
         gs.Phase.CurrentPlayer = player1;
         gs.Phase.PhaseState = GameStates.PlaceRobber;
-        gs.Phase.SetStateToReturnTo(previousState, tile1, new List<Player>());
+        gs.Phase.SetStateToReturnTo(previousState, tile1);
 
         return gs;        
     }
@@ -1496,7 +1496,8 @@ public class GamePlayHelpersTests
 
         board.GetGameState().Phase.CurrentPlayer = human;
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
-        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetGameState().RobberTile, new List<Player>());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetGameState().RobberTile);
+        board.GetGameState().Phase.SetTargetPlayers(new List<Player>() {board.GetBluePlayer()});
 
         Assert.Contains(ResourceType.Ore, human.Resources);
         Assert.Equal(0, human.Resources[ResourceType.Ore]);
@@ -3635,34 +3636,133 @@ public class GamePlayHelpersTests
         Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.RejectAllOffers(gs, board.GetRedPlayer()));
     }
 
-    [Fact] void SelectTargetFromUser_InvalidState()
+    [Fact] 
+    public void SelectTargetFromUser_InvalidState()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new SelectTargetRequest(board.GetRedPlayer().Id, board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.SelectTargetFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
-    [Fact] void SelectTargetFromUser_NotPlayersTurn()
+    [Fact] 
+    public void SelectTargetFromUser_NotPlayersTurn()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new SelectTargetRequest(board.GetBluePlayer().Id, board.GetBluePlayer().Id);
+
+        var response = GamePlayHelpers.SelectTargetFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1011, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
-    [Fact] void SelectTargetFromUser_NotValidTarget()
+    [Fact]
+    public void SelectTargetFromUser_NotValidPlayer()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new SelectTargetRequest(board.GetRedPlayer().Id, orangePlayer.Id);
+
+        var response = GamePlayHelpers.SelectTargetFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1012, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
-    [Fact] void SelectTargetFromUser_Valid()
+    [Fact] 
+    public void SelectTargetFromUser_NotValidTarget()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        gs.Players.Add(orangePlayer);
+        gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new SelectTargetRequest(board.GetRedPlayer().Id, orangePlayer.Id);
+
+        var response = GamePlayHelpers.SelectTargetFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1064, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
-    [Fact] void SelectTarget_NotValidTarget()
+    [Fact] 
+    public void SelectTargetFromUser_Valid()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
+        gs.Players.Add(orangePlayer);
+        board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
+        orangePlayer.AssignResources(ResourceType.Brick, 2);
+        gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.SetRobberTile(board.GetTile(TestTile.T0));
+        gs.Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6));
+        gs.Phase.SetTargetPlayers(new List<Player>() {board.GetBluePlayer(), orangePlayer});
+
+        var request = new SelectTargetRequest(board.GetRedPlayer().Id, orangePlayer.Id);
+
+        var response = GamePlayHelpers.SelectTargetFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.NotNull(response.GameState.Phase);
+        Assert.Equal(GameStates.BuildOrTrade, response.GameState.Phase.PhaseState);
+        Assert.Null(response.GameState.Phase.TargetPlayerIds);
+        Assert.Contains(ResourceType.Brick, board.GetRedPlayer().Resources);
+        Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Contains(ResourceType.Brick, orangePlayer.Resources);
+        Assert.Equal(1, orangePlayer.Resources[ResourceType.Brick]);
     }
 
-    [Fact] void SelectTarget_Valid()
+    [Fact] 
+    public void SelectTarget_NotValidTarget()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        gs.Players.Add(orangePlayer);
+        gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new SelectTargetRequest(board.GetRedPlayer().Id, orangePlayer.Id);
+
+        Assert.Throws<InvalidOperationException>( () => GamePlayHelpers.SelectTarget(gs, board.GetRedPlayer(), orangePlayer));
+    }
+
+    [Fact] 
+    public void SelectTarget_Valid()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
+        gs.Players.Add(orangePlayer);
+        board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
+        orangePlayer.AssignResources(ResourceType.Brick, 2);
+        gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.SetRobberTile(board.GetTile(TestTile.T0));
+        gs.Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6));
+        gs.Phase.SetTargetPlayers(new List<Player>() {board.GetBluePlayer(), orangePlayer});
+
+        GamePlayHelpers.SelectTarget(gs, board.GetRedPlayer(), orangePlayer);
+
+        Assert.Contains(ResourceType.Brick, board.GetRedPlayer().Resources);
+        Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Contains(ResourceType.Brick, orangePlayer.Resources);
+        Assert.Equal(1, orangePlayer.Resources[ResourceType.Brick]);
     }
 
     [Fact]
@@ -3857,6 +3957,31 @@ public class GamePlayHelpersTests
 
         Assert.NotNull(actions);
         Assert.Empty(actions);
+    }
+
+    [Fact]
+    public void GetPossiblePlayerActions_StealRobber()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
+        board.GetGameState().Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6));
+        board.GetGameState().Phase.SetTargetPlayers(new List<Player>() {orangePlayer, board.GetBluePlayer()});
+
+        var actions = GamePlayHelpers.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.NotNull(actions);
+        Assert.Single(actions);
+        var action = actions.First();
+        Assert.Equal(PlayerAction.SelectRobberTarget, action.Action);
+        Assert.Null(action.TileIds);
+        Assert.Null(action.VertexIds);
+        Assert.NotNull(action.PlayerIds);
+        Assert.Equal(2, action.PlayerIds.Count);
+        Assert.Contains(orangePlayer.Id, action.PlayerIds);
+        Assert.Contains(board.GetBluePlayer().Id, action.PlayerIds);
+        Assert.Null(action.EdgeIds);
     }
 
     [Fact]

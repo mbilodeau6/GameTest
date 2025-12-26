@@ -67,7 +67,8 @@ public class GamePhaseDTOTests
         var p2 = new Player("Mary", PlayerColor.Blue);
         GamePhase gamePhase = new GamePhase(GameStates.RollOrUseDevCard, p1, p2);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
-        gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile, new List<Player>() { p1, p2});
+        gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile);
+        gamePhase.SetTargetPlayers(new List<Player>() { p1, p2});
         gamePhase.StoreStateDevCardRoadBuilding(GameStates.RollOrUseDevCard, 7);
         gamePhase.SetWaitingForRoll();
         gamePhase.SetDevCardPlayedThisRound();

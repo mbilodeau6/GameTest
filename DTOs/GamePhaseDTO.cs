@@ -12,7 +12,7 @@ public class GamePhaseDTO
     public string? EndPlayerId { get; }
     public GameStates? PreviousState { get; } = null;
     public string? OriginalRobberTileId { get; } = null;
-    public List<string> TargetPlayerIds { get; } = null;
+    public List<string>? TargetPlayerIds { get; } = null;
     public int? RoadsPreRoadBuilding {get; } = null;
     public bool WaitingForRoll { get; } = false;
     public bool DevCardPlayedThisRound {get; } = false;
@@ -34,6 +34,7 @@ public class GamePhaseDTO
         WaitingForRoll = waitingForRoll;
         DevCardPlayedThisRound = devCardPlayedThisRound;
         PendingTradeResponses = pendingTradeResponses;
+        TargetPlayerIds = targetPlayerIds;
     }
 
     public GamePhaseDTO(GamePhase gamePhase)

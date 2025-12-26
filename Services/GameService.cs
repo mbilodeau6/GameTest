@@ -844,4 +844,39 @@ public class GameService
             return new ResponseDTO(false, 9999, $"Action: AddPlayer; GameId: {gameId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
+
+    public async Task<ResponseDTO> SelectTargetAsync(Guid gameId, SelectTargetRequest request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
+            var selectTargetResponse = GamePlayHelpers.SelectTargetFromUser(gs, request);
+
+            if (!selectTargetResponse.Success)
+                return selectTargetResponse;
+
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, selectTargetResponse.GameState!, response.ETag, gameId, "SelectTarget");
+            if (concurrencyError != null)
+                return concurrencyError;
+
+            _logger.LogInformation("Completed select target for player {PlayerId} targeting {TargetPlayerId} in game {GameId}.", request.PlayerId, request.TargetPlayerId, gameId);
+            return selectTargetResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Select target for player {playerId} targeting {targetPlayerId} for game {GameId} failed.", request.PlayerId, request.TargetPlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: SelectTarget; GameId: {gameId}; PlayerId: {request.PlayerId}; TargetPlayerId: {request.TargetPlayerId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
 }

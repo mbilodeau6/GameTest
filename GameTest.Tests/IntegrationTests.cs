@@ -149,6 +149,23 @@ public class IntegrationTests
         Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().Phase.CurrentPlayer.Id);
     }
 
+    [Fact]
+    public void SelectTargetAfterPlaceRobber()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var gs = board.GetGameState();
+        gs.Players.Add(orangePlayer);
+        board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
+        gs.Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), orangePlayer);
+        gs.Phase.SetStateToReturnTo(GameStates.BuildOrTrade, gs.RobberTile);
+
+        GamePlayHelpers.PlaceRobberForUser(gs, gs.Phase.CurrentPlayer.Id, board.GetTile(TestTile.T0).Id);
+        Assert.NotNull(gs.Phase.TargetPlayers);
+        Assert.Equal(2, gs.Phase.TargetPlayers.Count);
+        Assert.Equal(GameStates.SelectTarget, gs.Phase.PhaseState);
+    }
+
 
     [Fact]
     public async Task FullGameThroughInterfacesExposedToUser()

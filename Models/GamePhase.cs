@@ -92,16 +92,22 @@ public class GamePhase
             foreach(var request in gamePhase.PendingTradeResponses)
                 PendingTradeResponses.Add(new TradeResponse(request.Player, request.ResponseType, request.Offer, request.Request));
         }
+
+        if (gamePhase.TargetPlayers != null)
+            TargetPlayers = gamePhase.TargetPlayers.ToList();
     }
     
-    public void SetStateToReturnTo(GameStates state, Tile originalTile, List<Player> targetPlayers)
+    public void SetStateToReturnTo(GameStates state, Tile originalTile)
     {
         if (PreviousState != null)
             throw new InvalidOperationException("Unexpected Error. Call to SetPreRobberState when it is already set.");
             
         PreviousState = state;
         OriginalRobberTile = originalTile;
+    }
 
+    public void SetTargetPlayers(List<Player> targetPlayers)
+    {
         if (targetPlayers != null)
             TargetPlayers = targetPlayers.ToList();
     }
@@ -244,7 +250,7 @@ public class GamePhase
         {
             if (diceValue == 7)
             {
-                nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, robberTile, TargetPlayers!);
+                nextPhase.SetStateToReturnTo(GameStates.BuildOrTrade, robberTile);
                 nextPhase.EndPlayer = CurrentPlayer;
 
                 if (CurrentPlayer.Resources.Values.Sum() > 7)

@@ -454,4 +454,25 @@ public class Games
         return await CreateSuccessResponse(req, response);
     }
 
+    [Function("SelectTarget")]
+    public async Task<HttpResponseData> SelectTarget(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/select-target")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("SelectTarget called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<SelectTargetRequest>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.TargetPlayerId))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1065, $"GameId: {id}");
+
+        var response = await _gameService.SelectTargetAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
 }

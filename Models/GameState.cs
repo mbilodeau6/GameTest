@@ -279,6 +279,12 @@ public class GameState
         return longestSoFar;
     }
 
+    public void UpdatePlayerVictoryPoints()
+    {
+        foreach(var player in Players)
+            UpdatePlayerVictoryPoints(player);
+    }
+
     public void UpdatePlayerVictoryPoints(Player player)
     {
         int victoryPoints = CountSettlementsForPlayer(player) + (CountCitiesForPlayer(player) * 2);
