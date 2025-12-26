@@ -5,9 +5,6 @@ using GameTest.Services;
 
 public class GamePhase
 {
-    // TODO: Would like to remove this but currently need to set up player order in SettingUpBoard phase.
-    private static readonly Random _random = new();
-
     public GameStates PhaseState { get; set; } = GameStates.SettingUpBoard;
     public Player? CurrentPlayer { get; set; }
     public Player? EndPlayer { get; set; }

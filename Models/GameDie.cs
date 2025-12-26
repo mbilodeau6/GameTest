@@ -1,13 +1,11 @@
 namespace GameTest.Models;
 using System.Text.Json.Serialization;
-
+using GameTest.Services;
 
 public class GameDie
 {
     public int Value { get; private set; } = 0;
     public bool Random { get; }
-
-    private static readonly Random _random = new();
 
     public GameDie(bool random = true)
     {
@@ -27,7 +25,7 @@ public class GameDie
     {
         if (Random)
         {
-            Value = _random.Next(1, 7);
+            Value = SharedHelpers.NextRandom(1, 7);
         }
         else
         {

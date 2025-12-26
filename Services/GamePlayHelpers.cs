@@ -8,8 +8,6 @@ namespace GameTest.Services;
 
 public static class GamePlayHelpers
 {
-    private static readonly Random _random = new();
-
     public static int GetVictoryPointsForBuild(BuildingType? type)
     {
         if (type == BuildingType.Settlement)
@@ -210,7 +208,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException("Unexpected Error. The Phase in GameState isn't initialized.");
 
         gameState.Phase.PhaseState = GameStates.PlaceFirstSettlement;
-        gameState.Phase.CurrentPlayer = gameState.Players[_random.Next(gameState.Players.Count)];
+        gameState.Phase.CurrentPlayer = gameState.Players[SharedHelpers.NextRandom(gameState.Players.Count)];
         gameState.Phase.EndPlayer = gameState.Phase.GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
 
         GameLoop(gameState);
@@ -697,7 +695,7 @@ public static class GamePlayHelpers
 
                 if (targetResources.Count > 0)
                 {
-                    var resourceToSteal = targetResources[_random.Next(targetResources.Count)];
+                    var resourceToSteal = targetResources[SharedHelpers.NextRandom(targetResources.Count)];
                     vertex.Owner.RemoveResources(resourceToSteal, 1);
                     player.AssignResources(resourceToSteal, 1);
 
