@@ -54,10 +54,14 @@ public static class GamePlayHelpers
     {
         foreach (var kvpPlayer in resources)
         {
+            var gained = new Dictionary<ResourceType, int>();
             foreach (var kvpResource in kvpPlayer.Value)
             {
                 kvpPlayer.Key.AssignResources(kvpResource.Key, kvpResource.Value);
+                gained.Add(kvpResource.Key, kvpResource.Value);
             }
+
+            gameState.AddEventRecord(new EventRecordDTO(kvpPlayer.Key, EventRecordAction.ReceivedResources, gained));
         }
     }
 
@@ -324,15 +328,27 @@ public static class GamePlayHelpers
 
     public static void BuildSettlement(GameState gs, Player player, Vertex vertex)
     {
+        var resourcesGained = new Dictionary<ResourceType, int>();
+
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
             WithdrawResourcesToBuildSettlement(player);
-        else if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement)
+        else if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement) 
             foreach (var tile in vertex.Tiles)
                 if (tile.Resource != ResourceType.Desert)
+                {
                     player.AssignResources(tile.Resource, 1);
+                    if (!resourcesGained.ContainsKey(tile.Resource))
+                        resourcesGained.Add(tile.Resource, 1);
+                    else
+                        resourcesGained[tile.Resource]++;
+                }
 
         vertex.BuildSettlement(player);
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
+
+        if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement && resourcesGained.Count > 0)
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.ReceivedResources, resourcesGained));
+
         MarkBlockedVertices(gs, vertex);
         PopulatePlayerPorts(gs);
         gs.UpdatePlayerVictoryPoints(player);
@@ -559,8 +575,8 @@ public static class GamePlayHelpers
 
         gs.Dice.Roll();
         gs.Phase.ClearWaitingForRoll();
-        GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
         gs.AddEventRecord(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.RollDice, gs.Dice));
+        GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
 
         if (!skipGameLoop)
             GameLoop(gs);

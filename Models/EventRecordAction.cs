@@ -21,5 +21,6 @@ public enum EventRecordAction
     RejectTrade,
     CounterOffer,
     TradeWithPlayer,
-    EndTurn // not used for eventRecord entries but could be
+    EndTurn, // not used for eventRecord entries but could be
+    ReceivedResources
 }

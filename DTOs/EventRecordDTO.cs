@@ -101,8 +101,8 @@ public class EventRecordDTO
 
     public EventRecordDTO(Player player, EventRecordAction action, Dictionary<ResourceType, int> resourcesGained) : this(player,action)
     {
-        if (action != EventRecordAction.PlayMonoploy && action != EventRecordAction.PlayYearOfPlenty)
-            throw new InvalidOperationException("Unexpected Exception. Should only be used for PlayMonopoly or PlayYearOfPlenty.");
+        if (action != EventRecordAction.PlayMonoploy && action != EventRecordAction.PlayYearOfPlenty && action != EventRecordAction.ReceivedResources)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for PlayMonopoly, PlayYearOfPlenty or ReceivedResources.");
 
         ResourcesReceived = new Dictionary<ResourceType, int>();
 
