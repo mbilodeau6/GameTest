@@ -333,8 +333,38 @@ public class AIHelpersTests
             Assert.NotNull(goal.NextEdgeToTarget);
             Assert.Equal(expectedEdge.Id, goal.NextEdgeToTarget.Id);
         }
-        
     }
+
+    [Fact]
+    public void GetRankedListOfVertexTargets_PlayerRoadsIntersect()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var orangePlayer = new Player("WallE", PlayerColor.Orange, true);
+        var gs = board.GetGameState();
+        gs.Players.Add(orangePlayer);
+        board.GetVertex(TestVertex.V16).BuildSettlement(orangePlayer);
+        board.GetEdge(TestEdge.E10).BuildRoad(orangePlayer);
+        board.GetEdge(TestEdge.E4).BuildRoad(orangePlayer);
+        board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
+        board.GetEdge(TestEdge.E1).BuildRoad(orangePlayer);
+        board.GetEdge(TestEdge.E2).BuildRoad(board.GetBluePlayer());
+        board.GetVertex(TestVertex.V18).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E24).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E25).BuildRoad(board.GetRedPlayer());
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E16).BuildRoad(board.GetRedPlayer());
+
+        GamePlayHelpers.MarkBlockedVertices(gs);
+        gs.Phase.CurrentPlayer = board.GetBluePlayer();
+        gs.Phase.PhaseState = GameStates.BuildOrTrade;
+
+        var rankedGoals = AIHelpers.GetRankedListOfVertexTargets(gs, new List<Vertex> { board.GetVertex(TestVertex.V3), board.GetVertex(TestVertex.V18) });
+
+        Assert.Equal(2, rankedGoals.Count);
+        Assert.Contains(rankedGoals, g => g.TargetVertex == board.GetVertex(TestVertex.V12));
+        Assert.Contains(rankedGoals, g => g.TargetVertex == board.GetVertex(TestVertex.V14));
+    }
+
 
     [Fact]
     public void CalculateResourcesNeededForRoad_NeedAll()

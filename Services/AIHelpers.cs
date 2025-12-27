@@ -139,7 +139,7 @@ public static class AIHelpers
                 visitedVertexIds.Add(vertex.Id);
                 foreach(var edge in vertex.Edges)
                 {
-                    if (!visitedEdgeIds.Contains(edge.Id))
+                    if ((edge.Owner == null || edge.Owner.Id == gs.Phase.CurrentPlayer.Id) && !visitedEdgeIds.Contains(edge.Id))
                     {
                         visitedEdgeIds.Add(edge.Id);
                         var newCandidatePath = new CandidatePath(edge);
