@@ -1174,6 +1174,22 @@ public static class GamePlayHelpers
         if (response.ResponseType == TradeResponseType.Original)
             throw new InvalidOperationException($"Unexpected Error. Trade responses should not have a type of Original");
 
+        if (response.ResponseType == TradeResponseType.Accept)
+        {
+            if (gs.Phase.PendingTradeResponses == null)
+                throw new InvalidOperationException("Unexpected Error. Trade response received when pending trade responses is null.");
+
+            var pendingResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(p => p.ResponseType == TradeResponseType.Original);
+
+            if (pendingResponse == null || pendingResponse.Offer == null)
+                throw new InvalidOperationException("Unexpected Error. Trade response received when no original offers present.");
+
+            var requestAsList = AIHelpers.ConvertResourceDictToList(pendingResponse.Offer);
+            var playerResources = AIHelpers.ConvertResourceDictToList(gs.Phase.CurrentPlayer.Resources);
+            if (AIHelpers.MultiSetSubtraction(requestAsList, playerResources).Count > 0)
+                throw new InvalidOperationException("Unexpected Error. Player accepting a trade they don't have the resources to fulfill.");
+        }
+
         if (response.ResponseType == TradeResponseType.Counter)
         {
             if (response.Offer == null || response.Offer.Count == 0)
@@ -1217,6 +1233,19 @@ public static class GamePlayHelpers
 
         if (response.ResponseType == TradeResponseType.Original)
             return new ResponseDTO(false, 1051, $"GameId: {gs.Id}; TradeResponsePlayer: {player}; ResponseType: {response.ResponseType.ToString()}", null as GameStateDTO);
+
+        if (response.ResponseType == TradeResponseType.Accept)
+        {
+            var pendingResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(p => p.ResponseType == TradeResponseType.Original);
+
+            if (pendingResponse == null || pendingResponse.Offer == null)
+                return new ResponseDTO(false, 9999, $"Original trade not found.", null as GameStateDTO);
+
+            var requestAsList = AIHelpers.ConvertResourceDictToList(pendingResponse.Offer);
+            var playerResources = AIHelpers.ConvertResourceDictToList(gs.Phase.CurrentPlayer.Resources);
+            if (AIHelpers.MultiSetSubtraction(requestAsList, playerResources).Count > 0)
+                return new ResponseDTO(false, 1017, $"GameId: {gs.Id}; TradeResponsePlayer: {player}", null as GameStateDTO);
+        }
 
         if (response.ResponseType == TradeResponseType.Counter)
         {

@@ -3278,7 +3278,7 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void RespondToTradeFromUser_DoesntHaveOfferedCards()
+    public void RespondToTradeFromUser_CounterDoesntHaveOfferedCards()
     {
         var board = TestHelpers.CreateOriginalTestBoard();
         var gs = board.GetGameState();
@@ -3292,6 +3292,27 @@ public class GamePlayHelpersTests
 
         Assert.False(response.Success);
         Assert.Equal(1006, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void RespondToTradeFromUser_DoesntHaveOfferedCards()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(board.GetRedPlayer(), TradeResponseType.Original, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}}, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}}));
+        board.GetBluePlayer().AssignResources(ResourceType.Wool, 1);
+        board.GetBluePlayer().AssignResources(ResourceType.Wood, 1);
+
+        var tradeResponse = new TradeResponseDTO(board.GetBluePlayer().Id, TradeResponseType.Accept, new Dictionary<ResourceType, int>(), new Dictionary<ResourceType, int>());
+
+        var response = GamePlayHelpers.RespondToTradeFromUser(gs, tradeResponse);
+
+        Assert.False(response.Success);
+        Assert.Equal(1017, response.ErrorCode);
         Assert.Null(response.GameState);
     }
 
