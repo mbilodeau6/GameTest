@@ -891,7 +891,7 @@ public static class GamePlayHelpers
         }
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.Monopoly);
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayMonoploy, new Dictionary<ResourceType, int>() { {requestedResource, resourcesReceived} }));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayMonopoly, new Dictionary<ResourceType, int>() { {requestedResource, resourcesReceived} }));
     }
 
     public static ResponseDTO PlayMonopolyDevCardFromUser(GameState gs, PlayDevCardRequest request)

@@ -12,7 +12,7 @@ public enum EventRecordAction
     StealResource, // Shouldn't ever be sent to UI as possible move (it happens automatically). Needed for EventRecord.
     SelectTarget,
     DiscardCards,
-    PlayMonoploy,
+    PlayMonopoly,
     PlayKnight,
     PlayYearOfPlenty,
     PlayRoadBuilding,
