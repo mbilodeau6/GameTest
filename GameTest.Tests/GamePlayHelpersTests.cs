@@ -5,6 +5,7 @@ using GameTest.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
+using System.Data.SqlTypes;
 
 namespace GameTest.Tests;
 
@@ -4755,4 +4756,353 @@ public class GamePlayHelpersTests
         Assert.NotEmpty(players);
         Assert.Equal(2, players.Count);
     }
+
+    [Fact]
+    public void UndoFromUser_InvalidStateSettingUpBoard()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.SettingUpBoard, board.GetRedPlayer(), board.GetBluePlayer());
+        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
+
+        var response = GamePlayHelpers.UndoFromUser(gs, request);
+        
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_InvalidStatePlaceRobber()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RollDice));
+        Assert.NotNull(gs.EventRecord);
+        Assert.Single(gs.EventRecord);
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response = GamePlayHelpers.UndoFromUser(gs, request);
+        
+        Assert.False(response.Success);
+        Assert.Equal(1003, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_InvalidEventRecordId()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement));
+        Assert.NotNull(gs.EventRecord);
+        Assert.Equal(2, gs.EventRecord.Count);
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 2);
+
+        var response = GamePlayHelpers.UndoFromUser(gs, request);
+        
+        Assert.False(response.Success);
+        Assert.Equal(1070, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionNotRequestingPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceSettlement));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response = GamePlayHelpers.UndoFromUser(gs, request);
+        
+        Assert.False(response.Success);
+        Assert.Equal(1071, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    private static ResponseDTO TryUndo(EventRecordAction action, Tile? tile)
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), action, tile!));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        return GamePlayHelpers.UndoFromUser(gs, request);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionPlaceRobber()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRobber, 
+            board.GetTile(TestTile.T0)));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionRoll()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RollDice));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionBuyDevCard()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.BuyDevelopmentCard));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionPlayKnight()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlayKnight, 
+            board.GetTile(TestTile.T0)));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionMonopoly()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlayMonopoly, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionOfferToTrade()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.OfferToTrade, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}},
+            null
+            ));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionTradeWithPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.TradeWithPlayer, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}, 
+            new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}},
+            board.GetBluePlayer()
+            ));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionAcceptTrade()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.AcceptTrade));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionRejectTrade()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RejectTrade));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1072, response.ErrorCode);
+        Assert.Null(response.GameState);
+    }
+
+    [Fact]
+    public void UndoFromUser_LastActionAlreadyUndone()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_PreUndoneActionCantBeUndone()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_PlaceFirstSettlement()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_PlaceFirstRoad()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_PlaceSecondSettlement()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_PlaceSecondRoad()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_BuildRoad()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_BuildSettlement()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_BuildCity()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_BankTrade4to1()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_BankTrade2to1()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_YearOfPlenty()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_RoadBuilding()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_EndTurn()
+    {
+        Assert.True(false);
+    }
+
+    [Fact]
+    public void UndoFromUser_Discard()
+    {
+        Assert.True(false);
+    }
+
 }
