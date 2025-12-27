@@ -988,6 +988,8 @@ public static class GamePlayHelpers
     {
         StandardPlayDevCardValidation(gs, player, DevelopmentCardType.Knight);
 
+        var origRobberLocation = gs.RobberTile;
+
         if (targetTile.Id == gs.RobberTile.Id)
             throw new InvalidOperationException("Unexpected Error. The robber can not be moved to the tile it is already on.");
 
@@ -1006,6 +1008,14 @@ public static class GamePlayHelpers
         }
 
         gs.UpdatePlayerVictoryPoints(player);
+
+        // TODO: I don't like setting the state outside of GetNextState. Is there
+        // a cleaner way to do this?
+        if (gs.Phase.TargetPlayers != null && gs.Phase.TargetPlayers.Count > 1)
+        {
+            gs.Phase.SetStateToReturnTo(gs.Phase.PhaseState, origRobberLocation);
+            gs.Phase.PhaseState = GameStates.PlaceRobber;
+        }
     }
 
     public static ResponseDTO PlayKnightDevCardFromUser(GameState gs, PlayDevCardRequest request)

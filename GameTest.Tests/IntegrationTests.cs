@@ -8,6 +8,7 @@ using GameTest.Functions;
 using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using System.Drawing.Printing;
 using System.Runtime.CompilerServices;
+using Azure;
 
 namespace GameTest.Tests;
 
@@ -164,6 +165,28 @@ public class IntegrationTests
         Assert.NotNull(gs.Phase.TargetPlayers);
         Assert.Equal(2, gs.Phase.TargetPlayers.Count);
         Assert.Equal(GameStates.SelectTarget, gs.Phase.PhaseState);
+    }
+
+    [Fact]
+    public void SelectTargetAfterPlayKnight()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var gs = board.GetGameState();
+        gs.Players.Add(orangePlayer);
+        board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.Knight);
+        board.GetRedPlayer().MakeNewDevelopmentCardsPlayable();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), orangePlayer);
+
+        var devCardRequest = new PlayDevCardRequest(board.GetRedPlayer().Id, DevelopmentCardType.Knight, null, board.GetTile(TestTile.T0).Id);
+        var response = GamePlayHelpers.PlayKnightDevCardFromUser(gs, devCardRequest);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.SelectTarget, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.TargetPlayers);
+        Assert.Equal(2, gs.Phase.TargetPlayers.Count);
     }
 
 
