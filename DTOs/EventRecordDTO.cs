@@ -14,13 +14,15 @@ public class EventRecordDTO
     public DevelopmentCardType? DevelopmentCard { get; private set; }
     public string? TargetPlayerId { get; private set; }
     public string? TileId { get; private set; }
+    public int? EventReversed { get; private set; } // for undo
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public EventRecordDTO(int id, string playerId, EventRecordAction action,
             string? vertexId, string? edgeId,
             Dictionary<ResourceType, int>? resourcesUsed, Dictionary<ResourceType, int>? resourcesReceived,
-            int? diceRoll, DevelopmentCardType? developmentCard, string? targetPlayerId, string? tileId)
+            int? diceRoll, DevelopmentCardType? developmentCard, string? targetPlayerId, string? tileId,
+            int? eventReversed)
     {
         Id = id;
         PlayerId = playerId;
@@ -33,7 +35,7 @@ public class EventRecordDTO
         TileId = tileId;
         ResourcesUsed = resourcesUsed;
         ResourcesReceived = resourcesReceived;
-
+        EventReversed = eventReversed;
     }
 
     public EventRecordDTO(Player player, EventRecordAction action)
@@ -164,5 +166,13 @@ public class EventRecordDTO
 
         foreach (var resource in resourcesUsed)
             ResourcesUsed.Add(resource.Key, resource.Value);    
+    }
+
+    public EventRecordDTO(Player player, EventRecordAction action, int eventReversed) : this(player,action)
+    {
+        if (action != EventRecordAction.Undo)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for Undo.");
+
+        EventReversed = eventReversed;
     }
 }

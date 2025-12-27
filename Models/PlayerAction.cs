@@ -19,5 +19,6 @@ public enum PlayerAction
     RespondToTrade,
     AcceptTrade,
     RejectAllOffers,
-    EndTurn
+    EndTurn,
+    Undo // TODO: Will the BE always know when Undo is possible (or not)?
 }

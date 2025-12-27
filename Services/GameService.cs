@@ -879,4 +879,39 @@ public class GameService
             return new ResponseDTO(false, 9999, $"Action: SelectTarget; GameId: {gameId}; PlayerId: {request.PlayerId}; TargetPlayerId: {request.TargetPlayerId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
+
+    public async Task<ResponseDTO> UndoAsync(Guid gameId, UndoRequest request)
+    {
+        if (_container == null)
+        {
+            _logger.LogInformation("Blob container not configured; cannot retrieve game {GameId}.", gameId);
+            return new ResponseDTO(false, 1001, $"GameId: {gameId}", null as GameStateDTO);
+        }
+
+        try
+        {
+            var response = await GetGameDTO(gameId.ToString());
+            if (!response.Success)
+                return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
+
+            var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
+            var undoResponse = GamePlayHelpers.UndoFromUser(gs, request);
+
+            if (!undoResponse.Success)
+                return undoResponse;
+
+            var blob = _container.GetBlobClient($"{gs.Id.ToString()}.json");
+            var concurrencyError = await UploadWithConcurrencyCheckAsync(blob, undoResponse.GameState!, response.ETag, gameId, "Undo");
+            if (concurrencyError != null)
+                return concurrencyError;
+
+            _logger.LogInformation("Completed undo for player {PlayerId} undoing event {EventId} in game {GameId}.", request.PlayerId, request.EventId, gameId);
+            return undoResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Undo for player {playerId} undoing event {eventId} for game {GameId} failed.", request.PlayerId, request.EventId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: Undo; GameId: {gameId}; PlayerId: {request.PlayerId}; EventId: {request.EventId}; Exception: {ex.Message}", null as GameStateDTO);
+        }
+    }
 }

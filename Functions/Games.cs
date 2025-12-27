@@ -475,4 +475,25 @@ public class Games
         return await CreateSuccessResponse(req, response);
     }
 
+    [Function("Undo")]
+    public async Task<HttpResponseData> Undo(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}/undo")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("Undo called for game {GameId}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<UndoRequest>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1075, $"GameId: {id}");
+
+        var response = await _gameService.UndoAsync(guid, request);
+        if (!response.Success)
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, response);
+
+        return await CreateSuccessResponse(req, response);
+    }
+
 }

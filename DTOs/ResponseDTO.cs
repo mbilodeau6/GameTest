@@ -135,6 +135,13 @@ public class ResponseDTO
         { 1062, "Invalid player color."},
         { 1063, "You can not upgrade another player's settlement."},
         { 1064, "Selected player is not a valid target."},
+        { 1065, "SelectTarget request must specify player id and target player id."},
+        { 1070, "Event not found in event record."},
+        { 1071, "Event does not belong to the requesting player."},
+        { 1072, "Event action is not undoable."},
+        { 1073, "Event has already been undone."},
+        { 1074, "Cannot undo: another player has acted since this event."},
+        { 1075, "Undo request must specify player id and event id."},
         { 9999, "Unexpected error."},
     };
 }
