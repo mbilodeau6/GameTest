@@ -344,10 +344,13 @@ public static class GamePlayHelpers
                 }
 
         vertex.BuildSettlement(player);
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
 
-        if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement && resourcesGained.Count > 0)
-            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.ReceivedResources, resourcesGained));
+        if (gs.Phase.PhaseState == GameStates.PlaceFirstSettlement)
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceFirstSettlement, vertex));
+        else if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement)
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSecondSettlement, vertex, resourcesGained));
+        else
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
 
         MarkBlockedVertices(gs, vertex);
         PopulatePlayerPorts(gs);

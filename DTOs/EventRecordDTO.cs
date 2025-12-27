@@ -52,10 +52,23 @@ public class EventRecordDTO
 
     public EventRecordDTO(Player player, EventRecordAction action, Vertex vertex) : this(player,action)
     {
-        if (action != EventRecordAction.PlaceSettlement && action != EventRecordAction.UpgradeSettlement)
-            throw new InvalidOperationException("Unexpected Exception. Should only be used for PlaceSettlement or UpgradeSettlement.");
+        if (action != EventRecordAction.PlaceSettlement && action != EventRecordAction.PlaceFirstSettlement && 
+                action != EventRecordAction.UpgradeSettlement)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for PlaceSettlement, PlaceFirstSettlement, or UpgradeSettlement.");
 
         VertexId = vertex.Id;
+    }
+
+    public EventRecordDTO(Player player, EventRecordAction action, Vertex vertex, Dictionary<ResourceType, int> resourcesGained) : this(player,action)
+    {
+        if (action != EventRecordAction.PlaceSecondSettlement)
+            throw new InvalidOperationException("Unexpected Exception. Should only be used for PlaceSecondSettlement.");
+
+        VertexId = vertex.Id;
+
+        ResourcesReceived = new();
+        foreach (var resource in resourcesGained)
+            ResourcesReceived.Add(resource.Key, resource.Value);
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, Edge edge) : this(player,action)
