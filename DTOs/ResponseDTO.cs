@@ -140,7 +140,7 @@ public class ResponseDTO
         { 1071, "Event does not belong to the requesting player."},
         { 1072, "Event action is not undoable."},
         { 1073, "Event has already been undone."},
-        { 1074, "Cannot undo: another player has acted since this event."},
+        { 1074, "Cannot undo earlier event if later events not undone first."},
         { 1075, "Undo request must specify player id and event id."},
         { 9999, "Unexpected error."},
     };

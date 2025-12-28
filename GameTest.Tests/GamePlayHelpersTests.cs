@@ -4773,6 +4773,14 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void UndoFromUser_REMINDER()
+    {
+        // TODO: Need to go through all tests and make sure road/settlement EventRecords provide the
+        // edge/vertex ids that correspond to the text board.
+        Assert.True(false);
+    }
+
+    [Fact]
     public void UndoFromUser_InvalidStatePlaceRobber()
     {
         var board = TestHelpers.CreateOriginalTestBoard(true);
@@ -5016,93 +5024,129 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void UndoFromUser_LastActionAlreadyUndone()
+    public void UndoFromUser_AttempToUndoEarlyWithoutUndoingLater()
     {
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1074, response.ErrorCode);
+        Assert.Null(response.GameState);
     }
 
-    [Fact]
-    public void UndoFromUser_PreUndoneActionCantBeUndone()
-    {
-        Assert.True(false);
-    }
+    // TODO: Continue working on tests
 
-    [Fact]
-    public void UndoFromUser_PlaceFirstSettlement()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_CantUndoUndo()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_PlaceFirstRoad()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_PlaceFirstSettlement()
+    // {
+    //     var board = TestHelpers.CreateOriginalTestBoard(true);
+    //     var gs = board.GetGameState();
+    //     gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
+    //     gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement));
+    //     gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad));
+    //     gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement));
 
-    [Fact]
-    public void UndoFromUser_PlaceSecondSettlement()
-    {
-        Assert.True(false);
-    }
+    //     var request = new UndoRequest(board.GetRedPlayer().Id, 2);
 
-    [Fact]
-    public void UndoFromUser_PlaceSecondRoad()
-    {
-        Assert.True(false);
-    }
+    //     var response =  GamePlayHelpers.UndoFromUser(gs, request);
 
-    [Fact]
-    public void UndoFromUser_BuildRoad()
-    {
-        Assert.True(false);
-    }
+    //     Assert.True(response.Success);
+    //     Assert.NotNull(response.GameState);
+    //     Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
+    //     Assert.NotNull(gs.Phase.CurrentPlayer);
+    //     Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+    //     Assert.Equal(0, gs.CountSettlementsForPlayer(board.GetRedPlayer()));
+    // }
 
-    [Fact]
-    public void UndoFromUser_BuildSettlement()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_PlaceFirstRoad()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_BuildCity()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_PlaceSecondSettlement()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_BankTrade4to1()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_PlaceSecondRoad()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_BankTrade2to1()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_BuildRoad()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_YearOfPlenty()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_BuildSettlement()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_RoadBuilding()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_BuildCity()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_EndTurn()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_BankTrade4to1()
+    // {
+    //     Assert.True(false);
+    // }
 
-    [Fact]
-    public void UndoFromUser_Discard()
-    {
-        Assert.True(false);
-    }
+    // [Fact]
+    // public void UndoFromUser_BankTrade2to1()
+    // {
+    //     Assert.True(false);
+    // }
+
+    // [Fact]
+    // public void UndoFromUser_YearOfPlenty()
+    // {
+    //     Assert.True(false);
+    // }
+
+    // [Fact]
+    // public void UndoFromUser_RoadBuilding()
+    // {
+    //     Assert.True(false);
+    // }
+
+    // [Fact]
+    // public void UndoFromUser_EndTurn()
+    // {
+    //     Assert.True(false);
+    // }
+
+    // [Fact]
+    // public void UndoFromUser_Discard()
+    // {
+    //     Assert.True(false);
+    // }
+
+    // [Fact]
+    // public void UndoFromUser_LastActionAlreadyUndone()
+    // {
+    //     Assert.True(false);
+    // }
 
 }
