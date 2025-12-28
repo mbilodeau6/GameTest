@@ -4773,20 +4773,12 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void UndoFromUser_REMINDER()
-    {
-        // TODO: Need to go through all tests and make sure road/settlement EventRecords provide the
-        // edge/vertex ids that correspond to the text board.
-        Assert.True(false);
-    }
-
-    [Fact]
     public void UndoFromUser_InvalidStatePlaceRobber()
     {
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.PlaceRobber, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RollDice));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RollDice, new GameDice(1, 5)));
         Assert.NotNull(gs.EventRecord);
         Assert.Single(gs.EventRecord);
 
@@ -4805,8 +4797,8 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V5)));
         Assert.NotNull(gs.EventRecord);
         Assert.Equal(2, gs.EventRecord.Count);
 
@@ -4825,8 +4817,8 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceSettlement));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V3)));
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 1);
 
@@ -4842,7 +4834,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), action, tile!));
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 1);
@@ -4856,7 +4848,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRobber, 
             board.GetTile(TestTile.T0)));
 
@@ -4875,8 +4867,8 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RollDice));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RollDice, new GameDice(2, 6)));
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 1);
 
@@ -4893,8 +4885,8 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.BuyDevelopmentCard));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.BuyDevelopmentCard, DevelopmentCardType.VictoryPoint));
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 1);
 
@@ -4911,7 +4903,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlayKnight, 
             board.GetTile(TestTile.T0)));
 
@@ -4930,7 +4922,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlayMonopoly, 
             new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}));
 
@@ -4949,7 +4941,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.OfferToTrade, 
             new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}, 
             new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}},
@@ -4971,7 +4963,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.TradeWithPlayer, 
             new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}, 
             new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}},
@@ -4993,7 +4985,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.AcceptTrade));
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 1);
@@ -5011,7 +5003,7 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RejectTrade));
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 1);
@@ -5029,8 +5021,8 @@ public class GamePlayHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V5)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 0);
 
