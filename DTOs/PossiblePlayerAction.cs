@@ -18,4 +18,7 @@ public class PossiblePlayerAction
     // For SelectTarget - valid player IDs to steal from
     // For AcceptTrade - player IDs who have accepted/countered the offer
     public List<string>? PlayerIds { get; init; }
+
+    // For Undo - The EventRecord Id that can be undone
+    public int? EventId { get; init; }
 }

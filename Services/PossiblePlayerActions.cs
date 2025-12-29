@@ -133,9 +133,12 @@ public static class PossiblePlayerActions
                 break;
         }
 
-        if (gs.Phase.CurrentPlayer != null && gs.EventRecord.Count > 0 && 
-                UndoHelpers.ValidateUndoRequest(gs, new UndoRequest(gs.Phase.CurrentPlayer.Id, gs.EventRecord.Last().Id)).UndoPossible)
-            actions.Add(new PossiblePlayerAction { Action = PlayerAction.Undo });
+        if (gs.Phase.CurrentPlayer != null && gs.EventRecord.Count > 0)
+        {
+            var eventRecordId = gs.EventRecord.Last().Id;          
+            if (UndoHelpers.ValidateUndoRequest(gs, new UndoRequest(gs.Phase.CurrentPlayer.Id, gs.EventRecord.Last().Id)).UndoPossible)
+                actions.Add(new PossiblePlayerAction { Action = PlayerAction.Undo, EventId = eventRecordId });
+        }
 
         return actions;
     }
