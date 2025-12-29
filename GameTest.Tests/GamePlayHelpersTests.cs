@@ -565,10 +565,12 @@ public class GamePlayHelpersTests
         Assert.Equal(board.GetBluePlayer().Id, e2.Owner.Id);
         Assert.True(GamePhaseTests.IsNextPhaseAsExpected(board.GetGameState().Phase, GameStates.PlaceSecondSettlement, board.GetBluePlayer()));
         Assert.NotNull(response.PossibleActions);
-        Assert.Single(response.PossibleActions);
-        Assert.Equal(PlayerAction.PlaceSettlement, response.PossibleActions[0].Action);
-        Assert.NotNull(response.PossibleActions[0].VertexIds);
-        Assert.NotEmpty(response.PossibleActions[0].VertexIds);
+        Assert.Equal(2, response.PossibleActions.Count);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.PlaceSettlement);
+        var placeSettlementAction = response.PossibleActions.First(a => a.Action == PlayerAction.PlaceSettlement);
+        Assert.NotNull(placeSettlementAction.VertexIds);
+        Assert.NotEmpty(placeSettlementAction.VertexIds);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.Undo);
     }
 
     [Fact]
@@ -664,10 +666,11 @@ public class GamePlayHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, vertex.Owner.Id);
         Assert.Equal(BuildingType.Settlement, vertex.Building);
         Assert.NotNull(response.PossibleActions);
-        Assert.Equal(3, response.PossibleActions.Count);
+        Assert.Equal(4, response.PossibleActions.Count);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.TradeWithBank);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.TradeWithPlayers);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.EndTurn);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.Undo);
     }
 
     [Fact]
@@ -2274,8 +2277,9 @@ public class GamePlayHelpersTests
         Assert.Equal(roadBuildingCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
         Assert.Equal(GameStates.FirstDevCardRoad ,gs.Phase.PhaseState);
         Assert.NotNull(response.PossibleActions);
-        Assert.Single(response.PossibleActions);
+        Assert.Equal(2, response.PossibleActions.Count);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.PlaceRoad);
+        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.Undo);
     }
 
     [Fact]
@@ -4039,19 +4043,6 @@ public class GamePlayHelpersTests
         Assert.False(response.Success);
         Assert.Equal(1071, response.ErrorCode);
         Assert.Null(response.GameState);
-    }
-
-    private static ResponseDTO TryUndo(EventRecordAction action, Tile? tile)
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), action, tile!));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        return GamePlayHelpers.UndoFromUser(gs, request);
     }
 
     [Fact]

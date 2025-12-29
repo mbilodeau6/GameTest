@@ -34,7 +34,6 @@ public static class UndoHelpers
         EventRecordAction.TradeWithBank
     };
 
-
     public static UndoValidationResponse ValidateUndoRequest(GameState gs, UndoRequest request)
     {
                 // Validate game state allows undo

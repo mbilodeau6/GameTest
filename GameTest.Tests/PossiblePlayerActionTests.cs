@@ -792,10 +792,54 @@ public class PossiblePlayerActionTests
     }
 
     [Fact]
-    public void GetPossiblePlayerActions_Undo_TODO_COMPLETE()
+    public void GetPossiblePlayerActions_Undo_InvalidDuringRespondToTrade()
     {
-        // TODO: Rember to use UndoHelpers.ValidateUndoRequest
-        // TODO: Check to see if it makes sense to move GetPossiblePlayerActions into a separate helper
-        Assert.True(false);
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.DoesNotContain(actions, a => a.Action == PlayerAction.Undo);
     }
+
+    [Fact]
+    public void GetPossiblePlayerActions_Undo_AvailableFirstSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
+        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetRedPlayer());
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
+    }
+
+    [Fact]
+    public void GetPossiblePlayerActions_Undo_AvailableFirstRoad()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
+        board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
+        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
+    }
+
 }
