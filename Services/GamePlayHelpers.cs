@@ -1,9 +1,5 @@
-using System.Diagnostics.Eventing.Reader;
-using Azure;
 using GameTest.DTOs;
 using GameTest.Models;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 namespace GameTest.Services;
 
@@ -1796,10 +1792,6 @@ public static class GamePlayHelpers
         if (!UndoValidEventActions.Contains(eventToUndo.Action))
             return new ResponseDTO(false, 1072, $"GameId: {gs.Id}; EventId: {request.EventId}; Action: {eventToUndo.Action}", null as GameStateDTO);
 
-        // // Validate the event hasn't already been undone
-        // if (gs.EventRecord.Any(e => e.Action == EventRecordAction.Undo && e.EventReversed == request.EventId))
-        //     return new ResponseDTO(false, 1073, $"GameId: {gs.Id}; EventId: {request.EventId}", null as GameStateDTO);
-
         // Validate no player has acted since this event
         List<EventRecordDTO> copyOfEventRecords = gs.EventRecord.Where(e => e.Id > request.EventId).ToList();
         foreach(var undoEvent in gs.EventRecord.Where(e => e.Id > request.EventId && e.Action == EventRecordAction.Undo))
@@ -1811,10 +1803,11 @@ public static class GamePlayHelpers
         if (copyOfEventRecords.Any())
             return new ResponseDTO(false, 1074, $"GameId: {gs.Id}; EventId: {request.EventId}; EventBlockingUndo: {copyOfEventRecords.First().Id}", null as GameStateDTO);
 
-        // // TODO: Implement the actual undo logic here
-        // // For now, just record the undo event
-        // gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.Undo, request.EventId));
+        UndoHelpers.ReverseAction(gs, player, eventToUndo);
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.Undo, request.EventId));
+        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
 
         return new ResponseDTO(true, 0, null!, gs, null); // TODO: player);
     }
+
 }

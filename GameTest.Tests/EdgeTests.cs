@@ -1,6 +1,7 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
+using System.Buffers;
 
 namespace GameTest.Tests;
 
@@ -173,5 +174,19 @@ public class EdgeTests
         Assert.False(result);
 
         Assert.Contains(gs.Vertices[0], gs.Edges[0].Vertices);
+    }
+
+    [Fact]
+    public void ClearEdge_NoRoad()
+    {
+        var t1 = new Tile(ResourceType.Wood, 10, 0, 0);
+        var t2 = new Tile(ResourceType.Brick, 8, 2, 0);
+        var player = new Player("Tim", PlayerColor.Red);
+        var edge = new Edge(t1, t2);
+        edge.BuildRoad(player);
+
+        edge.ClearEdge();
+
+        Assert.Null(edge.Owner);
     }
 }

@@ -97,4 +97,10 @@ public class Edge
 
         return false;
     }
+
+    // Added to support Undo but may also be needed for future variations
+    public void ClearEdge()
+    {
+        Owner = null;
+    }
 }
