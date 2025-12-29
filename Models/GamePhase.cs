@@ -347,4 +347,57 @@ public class GamePhase
     {
         PendingTradeResponses = null;
     }
+
+    // NOTE: This routine has been specifically created to support Undo. It assumes
+    // it is valid to move to the previous state. If the transition is unexpected,
+    // it may throw. But, just as important, it doesn't attempt to handle/limit 
+    // transitions. The caller is expected to ensure the transition is valid.
+    public void MoveToPreviousPhase(List<Player> players, int playerSettlementCount)
+    {
+        if (EndPlayer != null && CurrentPlayer != null)
+        {
+            var previousPlayer = GetPreviousPlayer(CurrentPlayer, players);
+
+            if (PhaseState == GameStates.PlaceFirstRoad)
+            {
+                PhaseState = GameStates.PlaceFirstSettlement;
+                return;
+            }
+            else if (PhaseState == GameStates.PlaceFirstSettlement && previousPlayer.Id != EndPlayer.Id)
+            {
+                PhaseState = GameStates.PlaceFirstRoad;
+                CurrentPlayer = previousPlayer;
+                return;
+            }
+            else if (PhaseState == GameStates.PlaceSecondSettlement)
+            {
+                if (previousPlayer.Id == EndPlayer.Id)
+                    PhaseState = GameStates.PlaceFirstRoad;
+                else
+                {
+                    PhaseState = GameStates.PlaceSecondRoad;
+                    CurrentPlayer = previousPlayer;
+                }
+
+                return;
+            }
+            else if (PhaseState == GameStates.PlaceSecondRoad)
+            {
+                PhaseState = GameStates.PlaceSecondSettlement;
+                return;
+            }
+            else if (PhaseState == GameStates.RollOrUseDevCard)
+            {
+                if (playerSettlementCount < 2)
+                {
+                    PhaseState = GameStates.PlaceSecondRoad;
+                    return;
+                }
+
+                // TODO: Need to complete implementation of all cases.
+            }
+        }
+
+        throw new InvalidOperationException($"Unexpected Exception. Unable to move to previous phase given the current state. PhaseState: {PhaseState}");
+    }
 }
