@@ -84,7 +84,7 @@ public class IntegrationTests
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
 
         GamePlayHelpers.RollDice(board.GetGameState());
-        var possibleActions = GamePlayHelpers.GetPossiblePlayerActions(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer);
+        var possibleActions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer);
         Assert.NotNull(possibleActions);
         Assert.NotEmpty(possibleActions);
         Assert.Contains(possibleActions, a => a.Action == PlayerAction.PlaceRoad);

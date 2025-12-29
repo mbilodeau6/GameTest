@@ -23,7 +23,7 @@ public class ResponseDTO
     public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState, Player? player = null, ETag? etag = null)
         : this(success, errorCode, errorParmValues,
                success && gameState != null ? new GameStateDTO(gameState) : null,
-               success && gameState != null && player != null ? GamePlayHelpers.GetPossiblePlayerActions(gameState, player) : null,
+               success && gameState != null && player != null ? PossiblePlayerActions.GetPossiblePlayerActions(gameState, player) : null,
                etag)
     {
     }
