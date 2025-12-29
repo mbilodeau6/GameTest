@@ -1740,74 +1740,41 @@ public static class GamePlayHelpers
         return new ResponseDTO(true, 0, null!, gs, player);
     }
 
-    // Valid game states for undo
-    private static readonly HashSet<GameStates> UndoValidGameStates = new()
-    {
-        GameStates.PlaceFirstSettlement,
-        GameStates.PlaceFirstRoad,
-        GameStates.PlaceSecondSettlement,
-        GameStates.PlaceSecondRoad,
-        GameStates.RollOrUseDevCard,
-        GameStates.FirstDevCardRoad,
-        GameStates.SecondDevCardRoad,
-        GameStates.DiscardCards,
-        GameStates.BuildOrTrade
-    };
-
-    // Valid event actions that can be undone
-    private static readonly HashSet<EventRecordAction> UndoValidEventActions = new()
-    {
-        EventRecordAction.PlaceFirstSettlement,
-        EventRecordAction.PlaceSecondSettlement,
-        EventRecordAction.PlaceSettlement,
-        EventRecordAction.UpgradeSettlement,
-        EventRecordAction.PlaceRoad,
-        EventRecordAction.DiscardCards,
-        EventRecordAction.PlayYearOfPlenty,
-        EventRecordAction.PlayRoadBuilding,
-        EventRecordAction.TradeWithBank
-    };
-
     public static ResponseDTO UndoFromUser(GameState gs, UndoRequest request)
     {
-        // Validate game state allows undo
-        if (!UndoValidGameStates.Contains(gs.Phase.PhaseState))
-            return new ResponseDTO(false, 1003, $"Action: Undo; GameId: {gs.Id}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+        var validationResponse = UndoHelpers.ValidateUndoRequest(gs, request);
 
-        // Validate player exists
-        var player = gs.Players.FirstOrDefault(p => p.Id == request.PlayerId);
-        if (player == null)
-            return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+        if (!validationResponse.UndoPossible)
+            switch (validationResponse.ErrorCode)
+            {
+                case 1003:
+                    return new ResponseDTO(false, 1003, $"Action: Undo; GameId: {gs.Id}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+                case 1013:
+                    return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+                case 1070:
+                    return new ResponseDTO(false, 1070, $"GameId: {gs.Id}; EventId: {request.EventId}", null as GameStateDTO);
+                case 1071:
+                    if (validationResponse.Event == null)
+                        throw new InvalidOperationException("UnexpectedError. Undo error 1071 missing event information.");
+                    else
+                        return new ResponseDTO(false, 1071, $"GameId: {gs.Id}; EventId: {request.EventId}; EventPlayer: {validationResponse.Event.PlayerId}; RequestingPlayer: {request.PlayerId}", null as GameStateDTO);
+                case 1072:
+                    if (validationResponse.Event == null)
+                        throw new InvalidOperationException("UnexpectedError. Undo error 1072 missing event information.");
+                    else
+                        return new ResponseDTO(false, 1072, $"GameId: {gs.Id}; EventId: {request.EventId}; Action: {validationResponse.Event.Action}", null as GameStateDTO);
+                case 1074:
+                    return new ResponseDTO(false, 1074, $"GameId: {gs.Id}; EventId: {request.EventId}; EventBlockingUndo: {validationResponse.EventBlockingUndo}", null as GameStateDTO);
+            }
+        
+        if (validationResponse.Player == null || validationResponse.Event == null)
+            throw new InvalidOperationException("UnexpectedError. PossibleUndo response missing player or event.");
 
-        // Validate event exists
-        var eventToUndo = gs.EventRecord.FirstOrDefault(e => e.Id == request.EventId);
-        if (eventToUndo == null)
-            return new ResponseDTO(false, 1070, $"GameId: {gs.Id}; EventId: {request.EventId}", null as GameStateDTO);
-
-        // Validate the event belongs to the requesting player
-        if (eventToUndo.PlayerId != request.PlayerId)
-            return new ResponseDTO(false, 1071, $"GameId: {gs.Id}; EventId: {request.EventId}; EventPlayer: {eventToUndo.PlayerId}; RequestingPlayer: {request.PlayerId}", null as GameStateDTO);
-
-        // Validate the event action is undoable
-        if (!UndoValidEventActions.Contains(eventToUndo.Action))
-            return new ResponseDTO(false, 1072, $"GameId: {gs.Id}; EventId: {request.EventId}; Action: {eventToUndo.Action}", null as GameStateDTO);
-
-        // Validate no player has acted since this event
-        List<EventRecordDTO> copyOfEventRecords = gs.EventRecord.Where(e => e.Id > request.EventId).ToList();
-        foreach(var undoEvent in gs.EventRecord.Where(e => e.Id > request.EventId && e.Action == EventRecordAction.Undo))
-        {
-            copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.Id);
-            copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.EventReversed);
-        }
-
-        if (copyOfEventRecords.Any())
-            return new ResponseDTO(false, 1074, $"GameId: {gs.Id}; EventId: {request.EventId}; EventBlockingUndo: {copyOfEventRecords.First().Id}", null as GameStateDTO);
-
-        UndoHelpers.ReverseAction(gs, player, eventToUndo);
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.Undo, request.EventId));
+        UndoHelpers.ReverseAction(gs, validationResponse.Player, validationResponse.Event);
+        gs.AddEventRecord(new EventRecordDTO(validationResponse.Player, EventRecordAction.Undo, request.EventId));
         gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
 
-        return new ResponseDTO(true, 0, null!, gs, null); // TODO: player);
+        return new ResponseDTO(true, 0, null!, gs, validationResponse.Player);
     }
 
 }

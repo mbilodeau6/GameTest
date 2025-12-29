@@ -1,7 +1,7 @@
-namespace GameTest.Models;
-using System.Text.Json.Serialization;
 using GameTest.DTOs;
 using GameTest.Services;
+
+namespace GameTest.Models;
 
 public class GamePhase
 {
