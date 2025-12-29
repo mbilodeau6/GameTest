@@ -81,14 +81,20 @@ public class VertexTests
         Assert.Equal(VertexDirection.S, vertex.Direction);
     }
 
+    private Vertex CreateTestVertex()
+    {
+        var tile1 = new Tile(ResourceType.Wood, 10, 0, 0);
+        var tile2 = new Tile(ResourceType.Ore, 3, -2, 0);
+
+        return new Vertex(tile1, tile2);      
+    }
+
     [Fact]
     public void BuildSettlement_EmptyVertex_SetsOwnerAndBuilding()
     {
         // Arrange
         var player = new Player("Alice", PlayerColor.Blue);
-        var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
-        var t2 = new Tile(ResourceType.Grain, 8, -1, -1);
-        var vertex = new Vertex(t1, t2);
+        var vertex = CreateTestVertex();
 
         // Act
         vertex.BuildSettlement(player);
@@ -105,9 +111,7 @@ public class VertexTests
         var p1 = new Player("Alice", PlayerColor.Blue);
         var p2 = new Player("Bob", PlayerColor.Red);
 
-        var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
-        var t2 = new Tile(ResourceType.Grain, 8, -1, -1);
-        var vertex = new Vertex(t1, t2);
+        var vertex = CreateTestVertex();
         vertex.BuildSettlement(p1);
 
         // Act
@@ -322,10 +326,7 @@ public class VertexTests
     [Fact]
     public void MarkBlocked_Valid()
     {
-        var tile1 = new Tile(ResourceType.Wood, 10, 0, 0);
-        var tile2 = new Tile(ResourceType.Ore, 3, -2, 0);
-
-        var vertex = new Vertex(tile1, tile2);
+        var vertex = CreateTestVertex();
 
         vertex.MarkBlocked();
 
@@ -335,10 +336,7 @@ public class VertexTests
     [Fact]
     public void MarkBlocked_SettlementExists()
     {
-        var tile1 = new Tile(ResourceType.Wood, 10, 0, 0);
-        var tile2 = new Tile(ResourceType.Ore, 3, -2, 0);
-
-        var vertex = new Vertex(tile1, tile2);
+        var vertex = CreateTestVertex();
         vertex.BuildSettlement(new Player("Mary", PlayerColor.Blue));
 
         var exception = Assert.Throws<InvalidOperationException>(() => vertex.MarkBlocked());
@@ -350,10 +348,7 @@ public class VertexTests
     [Fact]
     public void MarkBlocked_CityExists()
     {
-        var tile1 = new Tile(ResourceType.Wood, 10, 0, 0);
-        var tile2 = new Tile(ResourceType.Ore, 3, -2, 0);
-
-        var vertex = new Vertex(tile1, tile2);
+        var vertex = CreateTestVertex();
         vertex.BuildSettlement(new Player("Mary", PlayerColor.Blue));
         vertex.UpgradeToCity();
 
@@ -363,4 +358,32 @@ public class VertexTests
         Assert.Equal(BuildingType.City, vertex.Building);
     }
 
+    [Fact]
+    public void ClearBuilding_NullBuilding()
+    {
+        var vertex = CreateTestVertex();
+
+        Assert.Throws<InvalidOperationException>(() => vertex.ClearBuilding());
+    }
+
+    [Fact]
+    public void ClearBuilding_Blocked()
+    {
+        var vertex = CreateTestVertex();
+        vertex.MarkBlocked();
+
+        Assert.Throws<InvalidOperationException>(() => vertex.ClearBuilding());
+    }
+
+    [Fact]
+    public void ClearBuilding()
+    {
+        var vertex = CreateTestVertex();
+        vertex.BuildSettlement(new Player("Tim", PlayerColor.Red));
+
+        vertex.ClearBuilding();
+
+        Assert.Null(vertex.Owner);
+        Assert.Null(vertex.Building);
+    }
 }
