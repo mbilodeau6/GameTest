@@ -4291,6 +4291,11 @@ public class GamePlayHelpersTests
         gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
         board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
+        GamePlayHelpers.MarkBlockedVertices(gs);
+        Assert.Equal(BuildingType.Blocked, board.GetVertex(TestVertex.V6).Building);
+        Assert.Equal(BuildingType.Blocked, board.GetVertex(TestVertex.V19).Building);
+        Assert.Equal(BuildingType.Blocked, board.GetVertex(TestVertex.V4).Building);
+
         gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetRedPlayer());
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 2);
@@ -4311,6 +4316,9 @@ public class GamePlayHelpersTests
         Assert.Contains(gs.EventRecord, e => e.Id == 3 && 
             e.Action == EventRecordAction.Undo 
             && e.EventReversed != null && e.EventReversed == 2);
+        Assert.Null(board.GetVertex(TestVertex.V6).Building);
+        Assert.Null(board.GetVertex(TestVertex.V19).Building);
+        Assert.Null(board.GetVertex(TestVertex.V4).Building);
     }
 
     // TODO: Continue working on tests

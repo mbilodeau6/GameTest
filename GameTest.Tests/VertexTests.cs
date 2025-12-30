@@ -359,29 +359,35 @@ public class VertexTests
     }
 
     [Fact]
-    public void ClearBuilding_NullBuilding()
+    public void ClearVertex_NullValues()
     {
         var vertex = CreateTestVertex();
 
-        Assert.Throws<InvalidOperationException>(() => vertex.ClearBuilding());
+        vertex.ClearVertex();
+
+        Assert.Null(vertex.Owner);
+        Assert.Null(vertex.Building);
     }
 
     [Fact]
-    public void ClearBuilding_Blocked()
+    public void ClearVertex_Blocked()
     {
         var vertex = CreateTestVertex();
         vertex.MarkBlocked();
 
-        Assert.Throws<InvalidOperationException>(() => vertex.ClearBuilding());
+        vertex.ClearVertex();
+
+        Assert.Null(vertex.Owner);
+        Assert.Null(vertex.Building);
     }
 
     [Fact]
-    public void ClearBuilding()
+    public void ClearVertex_Settlement()
     {
         var vertex = CreateTestVertex();
         vertex.BuildSettlement(new Player("Tim", PlayerColor.Red));
 
-        vertex.ClearBuilding();
+        vertex.ClearVertex();
 
         Assert.Null(vertex.Owner);
         Assert.Null(vertex.Building);

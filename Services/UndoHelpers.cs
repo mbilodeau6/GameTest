@@ -1,4 +1,5 @@
 using System.Diagnostics.Eventing.Reader;
+using System.Numerics;
 using GameTest.DTOs;
 using GameTest.Models;
 
@@ -105,7 +106,15 @@ public static class UndoHelpers
         if (vertex.Owner == null || vertex.Building != BuildingType.Settlement || vertex.Owner.Id != player.Id)
             throw new InvalidOperationException($"Unexpected Error. Vertex {vertexId} not in expected state.");
 
-        vertex.ClearBuilding();
+        // Remove settlement itself
+        vertex.ClearVertex();
+
+        // Remove Blocked status from neighboring
+        foreach(var edge in vertex.Edges)
+            foreach(var v2 in edge.Vertices.Where(v => v.Id != vertex.Id))
+                v2.ClearVertex();
+
+        GamePlayHelpers.MarkBlockedVertices(gs);
     }
 
     private static void UndoPlaceRoad(GameState gs, Player player, string edgeId)

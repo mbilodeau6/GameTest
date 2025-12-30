@@ -129,11 +129,8 @@ public class Vertex
     }
 
     // Added to support Undo. Can't think of another valid reason for this routine.
-    public void ClearBuilding()
+    public void ClearVertex()
     {
-        if (Owner == null || Building == null || Building == BuildingType.Blocked)
-            throw new InvalidOperationException("Vertex doesn't have a building.");
-
         Owner = null;
         Building = null;        
     }
