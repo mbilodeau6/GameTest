@@ -2,6 +2,7 @@ using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
+using Microsoft.AspNetCore.SignalR;
 
 namespace GameTest.Tests;
 
@@ -492,7 +493,7 @@ public class PossiblePlayerActionTests
         board.GetEdge(TestEdge.E24).BuildRoad(human);
         human.AssignResources(ResourceType.Wood, 1);
         human.AssignResources(ResourceType.Brick, 1);
-        human.AssignResources(ResourceType.Ore, 3);
+        human.AssignResources(ResourceType.Ore, 4);
         human.AssignResources(ResourceType.Grain, 2);
         human.AssignResources(ResourceType.Wool, 1);
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, human, board.GetBluePlayer());
@@ -506,13 +507,10 @@ public class PossiblePlayerActionTests
         Assert.NotNull(knightAction.TileIds);
         Assert.Equal(6, knightAction.TileIds.Count);
         Assert.DoesNotContain(t1.Id, knightAction.TileIds);
-        var yopAction = actions.FirstOrDefault(a => a.Action == PlayerAction.PlayYearOfPlenty);
-        Assert.NotNull(yopAction);
+        Assert.Contains(actions, a => a.Action == PlayerAction.PlayYearOfPlenty);
         Assert.DoesNotContain(actions, a => a.Action == PlayerAction.PlayMonopoly);
-        var roadDCAction = actions.FirstOrDefault(a => a.Action == PlayerAction.PlayRoadBuilding);
-        Assert.NotNull(roadDCAction);
-        var endTurnAction = actions.FirstOrDefault(a => a.Action == PlayerAction.EndTurn);
-        Assert.NotNull(endTurnAction);
+        Assert.Contains(actions, a => a.Action == PlayerAction.PlayRoadBuilding);
+        Assert.Contains(actions, a => a.Action == PlayerAction.EndTurn);
         var roadAction = actions.FirstOrDefault(a => a.Action == PlayerAction.PlaceRoad);
         Assert.NotNull(roadAction);
         Assert.NotNull(roadAction.EdgeIds);
@@ -532,12 +530,9 @@ public class PossiblePlayerActionTests
         Assert.Equal(2, cityAction.VertexIds.Count);
         Assert.Contains(board.GetVertex(TestVertex.V5).Id, cityAction.VertexIds);
         Assert.Contains(board.GetVertex(TestVertex.V20).Id, cityAction.VertexIds);
-        var buyDCAction = actions.FirstOrDefault(a => a.Action == PlayerAction.BuyDevelopmentCard);
-        Assert.NotNull(buyDCAction);
-        var tradeBankAction = actions.FirstOrDefault(a => a.Action == PlayerAction.TradeWithBank);
-        Assert.NotNull(tradeBankAction);
-        var tradePlayerAction = actions.FirstOrDefault(a => a.Action == PlayerAction.TradeWithPlayers);
-        Assert.NotNull(tradePlayerAction);
+        Assert.Contains(actions, a => a.Action == PlayerAction.BuyDevelopmentCard);
+        Assert.Contains(actions, a => a.Action == PlayerAction.TradeWithBank);
+        Assert.Contains(actions, a => a.Action == PlayerAction.TradeWithPlayers);
     }
 
     [Fact]
@@ -765,10 +760,98 @@ public class PossiblePlayerActionTests
 
         Assert.NotNull(actions);
         Assert.NotEmpty(actions);
-        var bankTradeAction = actions.FirstOrDefault(a => a.Action == PlayerAction.TradeWithBank);
-        Assert.Null(bankTradeAction);
-        var playerTradeAction = actions.FirstOrDefault(a => a.Action == PlayerAction.TradeWithPlayers);
-        Assert.Null(playerTradeAction);
+        Assert.DoesNotContain(actions, a => a.Action == PlayerAction.TradeWithBank);
+        Assert.DoesNotContain(actions, a => a.Action == PlayerAction.TradeWithPlayers);
+    }
+
+    [Fact]
+    public void GetPossiblePlayerActions_BuildOrTrade_NoBankTradeNoPorts()
+    {
+        var board = CreatePlayerActionTestBoard1();
+        var gs = board.GetGameState();
+        var human = board.GetRedPlayer();
+        human.AssignResources(ResourceType.Wood, 3);
+        human.AssignResources(ResourceType.Brick, 3);
+        human.AssignResources(ResourceType.Grain, 3);
+        human.AssignResources(ResourceType.Wool, 3);
+        human.AssignResources(ResourceType.Ore, 3);
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, human, board.GetBluePlayer());
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), human);
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.DoesNotContain(actions, a => a.Action == PlayerAction.TradeWithBank);
+    }
+
+    [Fact]
+    public void GetPossiblePlayerActions_BuildOrTrade_NoBankTradeOnly31Port()
+    {
+        var board = CreatePlayerActionTestBoard1();
+        var gs = board.GetGameState();
+        var human = board.GetRedPlayer();
+        board.GetVertex(TestVertex.V14).BuildSettlement(human);
+        GamePlayHelpers.PopulatePlayerPorts(gs);
+        human.AssignResources(ResourceType.Wood, 2);
+        human.AssignResources(ResourceType.Brick, 2);
+        human.AssignResources(ResourceType.Grain, 2);
+        human.AssignResources(ResourceType.Wool, 2);
+        human.AssignResources(ResourceType.Ore, 2);
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, human, board.GetBluePlayer());
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), human);
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.DoesNotContain(actions, a => a.Action == PlayerAction.TradeWithBank);
+    }
+
+    [Fact]
+    public void GetPossiblePlayerActions_BuildOrTrade_NoBankTradeOnlyBrick21Port()
+    {
+        var board = CreatePlayerActionTestBoard1();
+        var gs = board.GetGameState();
+        var human = board.GetRedPlayer();
+        board.GetVertex(TestVertex.V10).BuildSettlement(human);
+        GamePlayHelpers.PopulatePlayerPorts(gs);
+        human.AssignResources(ResourceType.Wood, 3);
+        human.AssignResources(ResourceType.Brick, 1);
+        human.AssignResources(ResourceType.Grain, 3);
+        human.AssignResources(ResourceType.Wool, 3);
+        human.AssignResources(ResourceType.Ore, 3);
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, human, board.GetBluePlayer());
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), human);
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.DoesNotContain(actions, a => a.Action == PlayerAction.TradeWithBank);
+    }
+
+    [Fact]
+    public void GetPossiblePlayerActions_BuildOrTrade_BankTradeBrick21Port()
+    {
+        var board = CreatePlayerActionTestBoard1();
+        var gs = board.GetGameState();
+        var human = board.GetRedPlayer();
+        board.GetVertex(TestVertex.V10).BuildSettlement(human);
+        GamePlayHelpers.PopulatePlayerPorts(gs);
+        human.AssignResources(ResourceType.Wood, 3);
+        human.AssignResources(ResourceType.Brick, 2);
+        human.AssignResources(ResourceType.Grain, 3);
+        human.AssignResources(ResourceType.Wool, 3);
+        human.AssignResources(ResourceType.Ore, 3);
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, human, board.GetBluePlayer());
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), human);
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.Contains(actions, a => a.Action == PlayerAction.TradeWithBank);
     }
 
     [Fact]

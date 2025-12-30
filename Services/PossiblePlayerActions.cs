@@ -116,12 +116,21 @@ public static class PossiblePlayerActions
 
                 AddPlayableDevCardActions(gs, player, actions);
 
-                // Trading actions
+                // Player trade
                 if (player.ResourceCount > 0)
-                {
-                    actions.Add(new PossiblePlayerAction { Action = PlayerAction.TradeWithBank });
                     actions.Add(new PossiblePlayerAction { Action = PlayerAction.TradeWithPlayers });
-                }
+
+                // Bank trade
+                bool haveBankRate = false;
+                foreach(var resourceToTrade in player.Resources)
+                    if (Bank.GetTradeRate(player, resourceToTrade.Key) <= resourceToTrade.Value)
+                    {
+                        haveBankRate = true;
+                        break;
+                    }
+
+                if (haveBankRate)
+                    actions.Add(new PossiblePlayerAction { Action = PlayerAction.TradeWithBank });
 
                 // Can always end turn in BuildOrTrade
                 actions.Add(new PossiblePlayerAction { Action = PlayerAction.EndTurn });

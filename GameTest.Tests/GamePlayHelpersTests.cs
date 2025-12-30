@@ -666,8 +666,7 @@ public class GamePlayHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, vertex.Owner.Id);
         Assert.Equal(BuildingType.Settlement, vertex.Building);
         Assert.NotNull(response.PossibleActions);
-        Assert.Equal(4, response.PossibleActions.Count);
-        Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.TradeWithBank);
+        Assert.Equal(3, response.PossibleActions.Count);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.TradeWithPlayers);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.EndTurn);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.Undo);
@@ -1277,7 +1276,7 @@ public class GamePlayHelpersTests
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Brick]);
         Assert.NotNull(response.PossibleActions);
-        Assert.Equal(3, response.PossibleActions.Count);
+        Assert.Equal(2, response.PossibleActions.Count);
     }
 
     [Fact]
