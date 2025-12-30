@@ -1575,6 +1575,7 @@ public static class GamePlayHelpers
         UndoHelpers.ReverseAction(gs, validationResponse.Player, validationResponse.Event);
         gs.AddEventRecord(new EventRecordDTO(validationResponse.Player, EventRecordAction.Undo, request.EventId));
         gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
+        GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs, validationResponse.Player);
     }

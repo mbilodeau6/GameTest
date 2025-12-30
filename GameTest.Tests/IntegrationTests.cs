@@ -189,6 +189,52 @@ public class IntegrationTests
         Assert.Equal(2, gs.Phase.TargetPlayers.Count);
     }
 
+    [Fact]
+    public void LastPlayer_UndoRedoFirstRoad_ShouldStayOnPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V5).Id);
+        Assert.True(response.Success);
+        response = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E11).Id);
+        Assert.True(response.Success);
+
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
+
+        response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, board.GetBluePlayer().Id, board.GetVertex(TestVertex.V3).Id);
+        Assert.True(response.Success);
+
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        
+        response = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetBluePlayer().Id, board.GetEdge(TestEdge.E2).Id);
+        Assert.True(response.Success);
+        var roadBuildEventId = gs.EventRecord.Last().Id;
+
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
+
+        response = GamePlayHelpers.UndoFromUser(gs, new UndoRequest(board.GetBluePlayer().Id, roadBuildEventId));
+
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+    }
+
 
     [Fact]
     public async Task FullGameThroughInterfacesExposedToUser()

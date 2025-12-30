@@ -357,6 +357,7 @@ public class GamePhase
         if (EndPlayer != null && CurrentPlayer != null)
         {
             var previousPlayer = GetPreviousPlayer(CurrentPlayer, players);
+            var nextPlayer = GetNextPlayer(CurrentPlayer, players);
 
             if (PhaseState == GameStates.PlaceFirstRoad)
             {
@@ -371,8 +372,11 @@ public class GamePhase
             }
             else if (PhaseState == GameStates.PlaceSecondSettlement)
             {
-                if (previousPlayer.Id == EndPlayer.Id)
+                if (nextPlayer.Id == EndPlayer.Id)
+                {
                     PhaseState = GameStates.PlaceFirstRoad;
+                    EndPlayer = CurrentPlayer;
+                }
                 else
                 {
                     PhaseState = GameStates.PlaceSecondRoad;
