@@ -545,15 +545,10 @@ public static class GamePlayHelpers
                 }
 
                 if (move.DiscardResources != null && move.DiscardResources.Count > 0)
-                {
                     GamePlayHelpers.DiscardCards(gs, gs.Phase.CurrentPlayer, move.DiscardResources);
-                }
 
                 if (move.SelectedPlayer != null && gs.Phase.PhaseState == GameStates.SelectTarget)
-                {
                     GamePlayHelpers.SelectTarget(gs, gs.Phase.CurrentPlayer, move.SelectedPlayer);
-                    GamePlayHelpers.StealResource(gs, gs.Phase.CurrentPlayer, gs.RobberTile);
-                }
 
                 gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
                     gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer), 

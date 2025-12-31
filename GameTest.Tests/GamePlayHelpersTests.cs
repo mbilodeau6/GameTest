@@ -2,6 +2,7 @@ using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameTest.Tests;
 
@@ -726,6 +727,27 @@ public class GamePlayHelpersTests
         Assert.Equal(settlementCountBefore + 1, gs.CountSettlementsForPlayer(botPlayer));
     }
 
+    [Fact]
+    public void GameLoop_BotPlacingRobberOnTileWith2Opponents()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(false);
+        var gs = board.GetGameState();
+        var orangePlayer = new Player("WallE", PlayerColor.Orange, true);
+        gs.Players.Add(orangePlayer);
+        board.GetVertex(TestVertex.V5).UpgradeToCity();
+        board.GetRedPlayer().AssignResources(ResourceType.Ore, 4);
+        board.GetBluePlayer().AssignResources(ResourceType.Grain, 3);
+        gs.Phase = new GamePhase(GameStates.PlaceRobber, orangePlayer, board.GetRedPlayer());
+        gs.Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetTile(TestTile.T6));
+
+        GamePlayHelpers.GameLoop(gs);
+
+        Assert.NotNull(gs.EventRecord);
+        Assert.Single(gs.EventRecord, e => e.Action == EventRecordAction.StealResource);
+        var orangeResources = AIHelpers.ConvertResourceDictToList(orangePlayer.Resources);
+        Assert.Single(orangeResources);
+        Assert.True(orangeResources[0] == ResourceType.Grain || orangeResources[0] == ResourceType.Ore);
+    }
 
     [Fact]
     public void LinkEdgesAndVertices_AroundCenter()
@@ -4253,36 +4275,9 @@ public class GamePlayHelpersTests
         Assert.Null(response.GameState);
     }
 
-    [Fact]
-    public void UndoFromUser_PlaceFirstRoad()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
-        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetRedPlayer(), board.GetBluePlayer());
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 3);
-
-        var response =  GamePlayHelpers.UndoFromUser(gs, request);
-
-        Assert.True(response.Success);
-        Assert.NotNull(response.GameState);
-        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
-        Assert.NotNull(gs.Phase.CurrentPlayer);
-        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
-        Assert.Equal(0, gs.CountRoadsForPlayer(board.GetRedPlayer()));
-        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
-        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
-        Assert.Null(board.GetEdge(TestEdge.E11).Owner);
-        Assert.Contains(gs.EventRecord, e => e.Id == 4 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 3);
-    }
 
     [Fact]
-    public void UndoFromUser_PlaceFirstSettlement()
+    public void UndoFromUser_PlaceFirstSettlement_LastPlayer()
     {
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
@@ -4319,6 +4314,35 @@ public class GamePlayHelpersTests
         Assert.Null(board.GetVertex(TestVertex.V19).Building);
         Assert.Null(board.GetVertex(TestVertex.V4).Building);
     }
+
+    [Fact]
+    public void UndoFromUser_PlaceSecondSettlement_FirstPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var gs = board.GetGameState();
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
+        board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
+        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 3);
+
+        var response =  GamePlayHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(0, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Null(board.GetEdge(TestEdge.E11).Owner);
+        Assert.Contains(gs.EventRecord, e => e.Id == 4 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 3);
+    }
+
 
     // TODO: Continue working on tests
 
