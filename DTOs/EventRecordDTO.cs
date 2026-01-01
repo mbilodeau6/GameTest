@@ -10,7 +10,11 @@ public class EventRecordDTO
     public string? EdgeId {get; private set; }
     public Dictionary<ResourceType, int>? ResourcesUsed {get; private set; }
     public Dictionary<ResourceType, int>? ResourcesReceived {get; private set; }
-    public int? DiceRoll {get; private set; }
+    public int? Die1 {get; private set; }
+    public int? Die2 {get; private set; }
+    // TODO: deprecated from game play but keeping so that all gameState JSONs
+    // can still be parsed.
+    public int? DiceRoll { get; private set; }
     public DevelopmentCardType? DevelopmentCard { get; private set; }
     public string? TargetPlayerId { get; private set; }
     public string? TileId { get; private set; }
@@ -20,16 +24,18 @@ public class EventRecordDTO
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
     public EventRecordDTO(int id, string playerId, EventRecordAction action,
-            string? vertexId, string? edgeId,
+            string? vertexId, string? edgeId, int? diceRoll,
             Dictionary<ResourceType, int>? resourcesUsed, Dictionary<ResourceType, int>? resourcesReceived,
-            int? diceRoll, DevelopmentCardType? developmentCard, string? targetPlayerId, string? tileId,
-            int? eventReversed, List<string>? playerLineup)
+            int? die1, int? die2, DevelopmentCardType? developmentCard, string? targetPlayerId, 
+            string? tileId, int? eventReversed, List<string>? playerLineup)
     {
         Id = id;
         PlayerId = playerId;
         Action = action;
         VertexId = vertexId;
         EdgeId = edgeId;
+        Die1 = die1;
+        Die2 = die2;
         DiceRoll = diceRoll;
         DevelopmentCard = developmentCard;
         TargetPlayerId = targetPlayerId;
@@ -52,7 +58,8 @@ public class EventRecordDTO
         if (action != EventRecordAction.RollDice)
             throw new InvalidOperationException("Unexpected Exception. Should only be used for RollDice.");
 
-        DiceRoll = dice.Die1.Value + dice.Die2.Value;
+        Die1 = dice.Die1.Value;
+        Die2 = dice.Die2.Value;
     }
 
     public EventRecordDTO(Player player, EventRecordAction action, Vertex vertex) : this(player,action)

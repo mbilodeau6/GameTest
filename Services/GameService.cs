@@ -199,7 +199,12 @@ public class GameService
                 {
                     er = response.GameState.EventRecord[i];
 
-                    stringBuilder.Append($"{er.PlayerId} {er.Action} {er.VertexId ?? ""}{er.EdgeId ?? ""}{er.DevelopmentCard.ToString() ?? ""}{er.TileId ?? ""}{er.TargetPlayerId ?? ""}{er.DiceRoll.ToString() ?? "" }");
+                    string? diceValue = null;
+
+                    if (er.Die1 != null && er.Die2 != null)
+                        diceValue = (er.Die1 + er.Die2).ToString();
+
+                    stringBuilder.Append($"{er.PlayerId} {er.Action} {er.VertexId ?? ""}{er.EdgeId ?? ""}{er.DevelopmentCard.ToString() ?? ""}{er.TileId ?? ""}{er.TargetPlayerId ?? ""}{diceValue ??  "" }");
                     if (er.ResourcesUsed != null && er.ResourcesUsed.Count > 0)
                     {
                         stringBuilder.Append("{");
