@@ -226,7 +226,7 @@ public class IntegrationTests
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.EndPlayer.Id);
         Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
 
-        response = GamePlayHelpers.UndoFromUser(gs, new UndoRequest(board.GetBluePlayer().Id, roadBuildEventId));
+        response = UndoHelpers.UndoFromUser(gs, new UndoRequest(board.GetBluePlayer().Id, roadBuildEventId));
 
         Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);

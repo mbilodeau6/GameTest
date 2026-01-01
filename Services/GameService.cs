@@ -900,7 +900,7 @@ public class GameService
                 return new ResponseDTO(false, 1002, $"GameId: {gameId}", null as GameStateDTO);
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(response.GameState!);
-            var undoResponse = GamePlayHelpers.UndoFromUser(gs, request);
+            var undoResponse = UndoHelpers.UndoFromUser(gs, request);
 
             if (!undoResponse.Success)
                 return undoResponse;

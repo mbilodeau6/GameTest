@@ -1557,43 +1557,4 @@ public static class GamePlayHelpers
 
         return new ResponseDTO(true, 0, null!, gs, player);
     }
-
-    public static ResponseDTO UndoFromUser(GameState gs, UndoRequest request)
-    {
-        var validationResponse = UndoHelpers.ValidateUndoRequest(gs, request);
-
-        if (!validationResponse.UndoPossible)
-            switch (validationResponse.ErrorCode)
-            {
-                case 1003:
-                    return new ResponseDTO(false, 1003, $"Action: Undo; GameId: {gs.Id}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
-                case 1013:
-                    return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
-                case 1070:
-                    return new ResponseDTO(false, 1070, $"GameId: {gs.Id}; EventId: {request.EventId}", null as GameStateDTO);
-                case 1071:
-                    if (validationResponse.Event == null)
-                        throw new InvalidOperationException("UnexpectedError. Undo error 1071 missing event information.");
-                    else
-                        return new ResponseDTO(false, 1071, $"GameId: {gs.Id}; EventId: {request.EventId}; EventPlayer: {validationResponse.Event.PlayerId}; RequestingPlayer: {request.PlayerId}", null as GameStateDTO);
-                case 1072:
-                    if (validationResponse.Event == null)
-                        throw new InvalidOperationException("UnexpectedError. Undo error 1072 missing event information.");
-                    else
-                        return new ResponseDTO(false, 1072, $"GameId: {gs.Id}; EventId: {request.EventId}; Action: {validationResponse.Event.Action}", null as GameStateDTO);
-                case 1074:
-                    return new ResponseDTO(false, 1074, $"GameId: {gs.Id}; EventId: {request.EventId}; EventBlockingUndo: {validationResponse.EventBlockingUndo}", null as GameStateDTO);
-            }
-        
-        if (validationResponse.Player == null || validationResponse.Event == null)
-            throw new InvalidOperationException("UnexpectedError. PossibleUndo response missing player or event.");
-
-        UndoHelpers.ReverseAction(gs, validationResponse.Player, validationResponse.Event);
-        gs.AddEventRecord(new EventRecordDTO(validationResponse.Player, EventRecordAction.Undo, request.EventId));
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
-        GameLoop(gs);
-
-        return new ResponseDTO(true, 0, null!, gs, validationResponse.Player);
-    }
-
 }
