@@ -2,6 +2,7 @@ namespace GameTest.Models;
 
 public enum EventRecordAction
 {
+    InitialSetUp,
     RollDice,
     PlaceFirstSettlement, // special version because it doesn't require resources
     PlaceSecondSettlement, // special version because placement provides resources

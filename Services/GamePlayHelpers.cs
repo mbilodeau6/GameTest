@@ -212,6 +212,19 @@ public static class GamePlayHelpers
         gameState.Phase.CurrentPlayer = gameState.Players[SharedHelpers.NextRandom(gameState.Players.Count)];
         gameState.Phase.EndPlayer = gameState.Phase.GetPreviousPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
 
+        // Log events to store current state
+        gameState.AddEventRecord(new EventRecordDTO(gameState.Phase.CurrentPlayer, EventRecordAction.PlaceRobber, gameState.RobberTile));
+
+        List<string> playerLineup = new();
+        playerLineup.Add(gameState.Phase.CurrentPlayer.Id);
+        var nextPlayer = gameState.Phase.GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);
+        while (nextPlayer.Id != gameState.Phase.CurrentPlayer.Id)
+        {
+            playerLineup.Add(nextPlayer.Id);
+            nextPlayer = gameState.Phase.GetNextPlayer(nextPlayer, gameState.Players);
+        }
+        gameState.AddEventRecord(new EventRecordDTO(gameState.Phase.CurrentPlayer, EventRecordAction.InitialSetUp, playerLineup));
+
         GameLoop(gameState);
     }
 

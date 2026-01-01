@@ -3955,6 +3955,13 @@ public class GamePlayHelpersTests
 
         Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.NotNull(gs.RobberTile);
+        Assert.NotEmpty(gs.EventRecord);
+        Assert.Single(gs.EventRecord, e => e.Action == EventRecordAction.PlaceRobber);
+        var initialSetup = gs.EventRecord.FirstOrDefault(e => e.Action == EventRecordAction.InitialSetUp);
+        Assert.NotNull(initialSetup);
+        Assert.NotNull(initialSetup.PlayerLineup);
+        Assert.True(initialSetup.PlayerLineup.Count >= 2);
     }
 
     [Fact]
