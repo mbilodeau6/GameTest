@@ -26,5 +26,7 @@ public enum EventRecordAction
     TradeWithPlayer,
     EndTurn, // not used for eventRecord entries but could be
     ReceivedResources,
-    Undo
+    Undo,
+    GainedLongestRoad,
+    GainedLargestArmy
 }

@@ -281,12 +281,16 @@ public static class GamePlayHelpers
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
 
         if (gs.PlayerWithLongestRoad == null && gs.GetLongestRoadLength(player) > 4)
+        {
             gs.AssignLongestRoadToPlayer(player);
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.GainedLongestRoad));
+        }
 
         if (gs.PlayerWithLongestRoad != null && player.Id != gs.PlayerWithLongestRoad.Id && gs.GetLongestRoadLength(player) > gs.GetLongestRoadLength(gs.PlayerWithLongestRoad))
         {
             var previousPlayer = gs.PlayerWithLongestRoad;
             gs.AssignLongestRoadToPlayer(player);
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.GainedLongestRoad));
             gs.UpdatePlayerVictoryPoints(previousPlayer);
         }
 
@@ -1002,13 +1006,17 @@ public static class GamePlayHelpers
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
 
-        if (gs.PlayerWithLargestArmy == null && player.CountPlayedKnights() > 2)
+        if (gs.PlayerWithLargestArmy == null && player.CountPlayedKnights() > 2) 
+        {
             gs.AssignLargestArmyToPlayer(player);
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.GainedLargestArmy));
+        }
 
         if (gs.PlayerWithLargestArmy != null && player.CountPlayedKnights() > gs.PlayerWithLargestArmy.CountPlayedKnights())
         {
             var otherPlayer = gs.PlayerWithLargestArmy;
             gs.AssignLargestArmyToPlayer(player);
+            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.GainedLargestArmy));
             gs.UpdatePlayerVictoryPoints(otherPlayer);
         }
 

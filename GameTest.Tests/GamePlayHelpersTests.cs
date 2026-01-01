@@ -2536,6 +2536,10 @@ public class GamePlayHelpersTests
         Assert.NotNull(gs.PlayerWithLargestArmy);
         Assert.Equal(human.Id, gs.PlayerWithLargestArmy.Id);
         Assert.Equal(3, human.FullVictoryPoints);
+
+        var largestArmyEvent = gs.EventRecord.FirstOrDefault(e => e.Action == EventRecordAction.GainedLargestArmy);
+        Assert.NotNull(largestArmyEvent);
+        Assert.Equal(largestArmyEvent.PlayerId, human.Id);
     }
 
     private GameState CreateGameWhereBotLargestArmy()
@@ -2598,6 +2602,11 @@ public class GamePlayHelpersTests
         Assert.Equal(gs.PlayerWithLargestArmy.Id, human.Id);
         Assert.Equal(1, bot.FullVictoryPoints);
         Assert.Equal(3, human.FullVictoryPoints);
+
+        Assert.True(gs.EventRecord.Count(e => e.Action == EventRecordAction.GainedLargestArmy) >= 2);
+        var largestArmyEvent = gs.EventRecord.LastOrDefault(e => e.Action == EventRecordAction.GainedLargestArmy);
+        Assert.NotNull(largestArmyEvent);
+        Assert.Equal(largestArmyEvent.PlayerId, human.Id);
     }
 
     [Fact]
@@ -2723,6 +2732,10 @@ public class GamePlayHelpersTests
         Assert.Equal(board.GetBluePlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
         Assert.Equal(5, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));
         Assert.Equal(3, board.GetBluePlayer().FullVictoryPoints);
+
+        var longestRoadEvent = board.GetGameState().EventRecord.FirstOrDefault(e => e.Action == EventRecordAction.GainedLongestRoad);
+        Assert.NotNull(longestRoadEvent);
+        Assert.Equal(board.GetBluePlayer().Id, longestRoadEvent.PlayerId);
     }
 
     private TestGameBoard CreateBoardWithBlueLength5RoadRedLength4()
@@ -2769,6 +2782,12 @@ public class GamePlayHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
         Assert.Equal(1, board.GetBluePlayer().FullVictoryPoints);
         Assert.Equal(3, board.GetRedPlayer().FullVictoryPoints);
+
+        Assert.True(board.GetGameState().EventRecord.Count(e => e.Action == EventRecordAction.GainedLongestRoad) >= 2);
+        var longestRoadEvent = board.GetGameState().EventRecord.LastOrDefault(e => e.Action == EventRecordAction.GainedLongestRoad);
+        Assert.NotNull(longestRoadEvent);
+        Assert.Equal(board.GetRedPlayer().Id, longestRoadEvent.PlayerId);
+
     }
 
     [Fact]
