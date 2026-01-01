@@ -1062,7 +1062,7 @@ public class GamePhaseTests
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
 
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
+        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
 
         Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -1077,7 +1077,7 @@ public class GamePhaseTests
         gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetBluePlayer());
 
         Assert.Throws<InvalidOperationException>(() 
-            => gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!)));
+            => gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!)));
     }
 
     [Fact]
@@ -1087,7 +1087,7 @@ public class GamePhaseTests
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetBluePlayer(), board.GetBluePlayer());
 
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
+        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
 
         Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -1101,7 +1101,7 @@ public class GamePhaseTests
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetBluePlayer(), board.GetRedPlayer());
 
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
+        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
 
         Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -1115,7 +1115,7 @@ public class GamePhaseTests
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetRedPlayer(), board.GetRedPlayer());
 
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
+        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
 
         Assert.Equal(GameStates.PlaceSecondRoad, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -1129,7 +1129,7 @@ public class GamePhaseTests
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.PlaceSecondRoad, board.GetRedPlayer(), board.GetRedPlayer());
 
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
+        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
 
         Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -1143,7 +1143,7 @@ public class GamePhaseTests
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
 
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!));
+        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
 
         Assert.Equal(GameStates.PlaceSecondRoad, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);

@@ -352,7 +352,7 @@ public class GamePhase
     // it is valid to move to the previous state. If the transition is unexpected,
     // it may throw. But, just as important, it doesn't attempt to handle/limit 
     // transitions. The caller is expected to ensure the transition is valid.
-    public void MoveToPreviousPhase(List<Player> players, int playerSettlementCount)
+    public void MoveToPreviousPhase(List<Player> players, int playerSettlementCount, int playerRoadCount)
     {
         if (EndPlayer != null && CurrentPlayer != null)
         {
@@ -392,7 +392,7 @@ public class GamePhase
             }
             else if (PhaseState == GameStates.RollOrUseDevCard)
             {
-                if (playerSettlementCount < 2)
+                if (playerRoadCount < 2)
                 {
                     PhaseState = GameStates.PlaceSecondRoad;
                     return;

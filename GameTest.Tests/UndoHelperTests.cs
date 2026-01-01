@@ -291,7 +291,7 @@ public class UndoHelpersTests
 
 
     [Fact]
-    public void UndoFromUser_PlaceFirstSettlement_LastPlayer()
+    public void UndoFromUser_UndoFirstRoad_LastPlayer()
     {
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
@@ -330,7 +330,7 @@ public class UndoHelpersTests
     }
 
     [Fact]
-    public void UndoFromUser_PlaceSecondSettlement_FirstPlayer()
+    public void UndoFromUser_UndoSecondSettlement_FirstPlayer()
     {
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
@@ -357,15 +357,44 @@ public class UndoHelpersTests
         Assert.Contains(gs.EventRecord, e => e.Id == 4 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 3);
     }
 
+    [Fact]
+    public void UndoFromUser_UndoSecondRoad_FirstPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceSecondSettlement, board.GetVertex(TestVertex.V10), 
+            new Dictionary<ResourceType, int>() { {ResourceType.Wool, 1}, {ResourceType.Ore, 1}}));
+        board.GetEdge(TestEdge.E15).BuildRoad(board.GetBluePlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E15)));
+        board.GetVertex(TestVertex.V16).BuildSettlement(board.GetRedPlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSecondSettlement, board.GetVertex(TestVertex.V16),
+            new Dictionary<ResourceType, int>() { {ResourceType.Wood, 1}, {ResourceType.Wool, 1}}));
+        board.GetEdge(TestEdge.E22).BuildRoad(board.GetRedPlayer());
+        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E22)));
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 3);
+
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.PlaceSecondRoad, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(1, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Null(board.GetEdge(TestEdge.E22).Owner);
+        Assert.Contains(gs.EventRecord, e => e.Id == 4 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 3);
+    }
 
     // TODO: Continue working on tests
 
-
-    // [Fact]
-    // public void UndoFromUser_PlaceSecondSettlement()
-    // {
-    //     Assert.True(false);
-    // }
 
     // [Fact]
     // public void UndoFromUser_PlaceSecondRoad()
