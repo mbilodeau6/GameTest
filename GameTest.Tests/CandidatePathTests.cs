@@ -15,7 +15,7 @@ public class CandidatePathTests
     public void Constructor_EdgeOwned_NotFirstEdge()
     {
         Edge edge = new Edge(t19, t18);
-        edge.BuildRoad(new Player("Tim", PlayerColor.Red));
+        edge.BuildRoad(Player.CreateTestPlayer("Tim", PlayerColor.Red));
 
         var candidate = new CandidatePath(edge);
 
@@ -42,7 +42,7 @@ public class CandidatePathTests
     {
         // Arrange
         var e1 = new Edge(t19, t18);
-        e1.BuildRoad(new Player("Time", PlayerColor.Red));
+        e1.BuildRoad(Player.CreateTestPlayer("Time", PlayerColor.Red));
         var candidate = new CandidatePath(e1);
 
         var e2 = new Edge(t18, t13);
@@ -84,7 +84,7 @@ public class CandidatePathTests
         var candidate = new CandidatePath(e1);
 
         var e2 = new Edge(t18, t13);
-        e2.BuildRoad(new Player("Tim", PlayerColor.Red));
+        e2.BuildRoad(Player.CreateTestPlayer("Tim", PlayerColor.Red));
 
         // Act
         candidate.SetNextEdge(e2);
@@ -100,7 +100,7 @@ public class CandidatePathTests
     public void SetNextEdge_EdgeOwned_FirstEdgeNotSet()
     {
         // Arrange
-        var player1 = new Player("Tim", PlayerColor.Red);
+        var player1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var e1 = new Edge(t19, t18);
         e1.BuildRoad(player1);
         var candidate = new CandidatePath(e1);
@@ -122,11 +122,11 @@ public class CandidatePathTests
     {
         // Arrange
         var e1 = new Edge(t19, t18);
-        e1.BuildRoad(new Player("Tim", PlayerColor.Red));
+        e1.BuildRoad(Player.CreateTestPlayer("Tim", PlayerColor.Red));
         var candidate = new CandidatePath(e1);
 
         var e2 = new Edge(t18, t13);
-        e2.BuildRoad(new Player("Jill", PlayerColor.Blue));
+        e2.BuildRoad(Player.CreateTestPlayer("Jill", PlayerColor.Blue));
 
         // Act
         Assert.Throws<InvalidOperationException>(() => candidate.SetNextEdge(e2));
@@ -136,7 +136,7 @@ public class CandidatePathTests
     public void CreateBranchOfPath_EdgeOwned_NoFirstEdge()
     {
         // Arrange
-        var player1 = new Player("Tim", PlayerColor.Red);
+        var player1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var e1 = new Edge(t19, t18);
         e1.BuildRoad(player1);
         var candidate = new CandidatePath(e1);
@@ -165,7 +165,7 @@ public class CandidatePathTests
         var candidate = new CandidatePath(e1);
 
         var e2 = new Edge(t18, t13);
-        e2.BuildRoad(new Player("Tim", PlayerColor.Red));
+        e2.BuildRoad(Player.CreateTestPlayer("Tim", PlayerColor.Red));
 
         // Act
         var candidate2 = candidate.CreateBranchOfPath(e2);
@@ -187,7 +187,7 @@ public class CandidatePathTests
     {
         // Arrange
         var e1 = new Edge(t19, t18);
-        e1.BuildRoad(new Player("Tim", PlayerColor.Red));
+        e1.BuildRoad(Player.CreateTestPlayer("Tim", PlayerColor.Red));
         var candidate = new CandidatePath(e1);
 
         var e2 = new Edge(t18, t13);
@@ -235,11 +235,11 @@ public class CandidatePathTests
     {
         // Arrange
         var e1 = new Edge(t19, t18);
-        e1.BuildRoad(new Player("Tim", PlayerColor.Red));
+        e1.BuildRoad(Player.CreateTestPlayer("Tim", PlayerColor.Red));
         var candidate = new CandidatePath(e1);
 
         var e2 = new Edge(t18, t13);
-        e2.BuildRoad(new Player("Jill", PlayerColor.Blue));
+        e2.BuildRoad(Player.CreateTestPlayer("Jill", PlayerColor.Blue));
 
         // Act
         Assert.Throws<InvalidOperationException>(() => candidate.CreateBranchOfPath(e2));

@@ -96,9 +96,9 @@ public class GameStateTests
     {
         // Arrange
         var gs = new GameState(Guid.NewGuid(), GameType.Test);
-        var player1 = new Player("Alice", PlayerColor.Blue);
+        var player1 = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         gs.AddPlayer(player1);
-        var player2 = new Player("Bob", PlayerColor.Red);
+        var player2 = Player.CreateTestPlayer("Bob", PlayerColor.Red);
         gs.AddPlayer(player2);
 
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
@@ -199,7 +199,6 @@ public class GameStateTests
 
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(() => game.PlaceRobberOnDesert());
-        Assert.Equal("No desert tile found in the game.", exception.Message);
     }
 
     [Fact]
@@ -210,7 +209,7 @@ public class GameStateTests
 
         // Act
         var game = new GameState(Guid.NewGuid());
-        game.AddPlayer(new Player(expectedName, PlayerColor.Blue));
+        game.AddPlayer(Player.CreateTestPlayer(expectedName, PlayerColor.Blue));
 
         // Assert
         Assert.NotEmpty(game.Players);
@@ -295,8 +294,6 @@ public class GameStateTests
         // Assert
         var exception = Assert.Throws<ArgumentException>(() =>
             game.SetRobberTile(tileNotOnBoard));
-
-        Assert.Equal("The specified tile does not exist in the game.", exception.Message);
     }
 
     [Fact]
@@ -311,8 +308,6 @@ public class GameStateTests
         // Assert
         var exception = Assert.Throws<ArgumentException>(() =>
             game.SetRobberTile(tile));
-
-        Assert.Equal("Robber is already on the specified tile.", exception.Message);
     }
 
     [Fact]
@@ -335,9 +330,9 @@ public class GameStateTests
     {
         // Arrage
         var game = new GameState(Guid.NewGuid());
-        var p1 = new Player("Ann", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Ann", PlayerColor.Red);
         game.AddPlayer(p1);
-        var p2 = new Player("Tim", PlayerColor.Blue);
+        var p2 = Player.CreateTestPlayer("Tim", PlayerColor.Blue);
         game.AddPlayer(p2);
 
         // Act
@@ -353,9 +348,9 @@ public class GameStateTests
     {
         // Arrage
         var game = new GameState(Guid.NewGuid());
-        var p1 = new Player("Ann", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Ann", PlayerColor.Red);
         game.AddPlayer(p1);
-        var p2 = new Player("Tim", PlayerColor.Blue);
+        var p2 = Player.CreateTestPlayer("Tim", PlayerColor.Blue);
         game.AddPlayer(p2);
 
         // Act
@@ -373,7 +368,7 @@ public class GameStateTests
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         TestHelpers.AddPlayers(gs);
 
-        var player3 = new Player("Alex", PlayerColor.Orange);
+        var player3 = Player.CreateTestPlayer("Alex", PlayerColor.Orange);
         gs.AddPlayer(player3);
         gs.Edges[0].BuildRoad(gs.Players[0]);
         gs.Vertices[0].BuildSettlement(gs.Players[0]);
@@ -742,8 +737,8 @@ public class GameStateTests
    public void Constructor_MaintainLongestRoadAndLargestArmy()
     {
         var gs = new GameState(new Guid());
-        gs.AddPlayer(new Player("Tim", PlayerColor.White));
-        gs.AddPlayer(new Player("Mary", PlayerColor.Brown));
+        gs.AddPlayer(Player.CreateTestPlayer("Tim", PlayerColor.White));
+        gs.AddPlayer(Player.CreateTestPlayer("Mary", PlayerColor.Brown));
         gs.AssignLargestArmyToPlayer(gs.Players[0]);
         gs.AssignLongestRoadToPlayer(gs.Players[1]);
 

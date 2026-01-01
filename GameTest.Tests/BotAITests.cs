@@ -576,7 +576,7 @@ public class BotAITests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         board.GetVertex(TestVertex.V4).BuildSettlement(board.GetRedPlayer());
         board.GetVertex(TestVertex.V19).BuildSettlement(board.GetBluePlayer());
-        var thirdPlayer = new Player("Harry", PlayerColor.Orange, true);
+        var thirdPlayer = Player.CreateTestPlayer("Harry", PlayerColor.Orange, true);
         board.GetGameState().Players.Add(thirdPlayer);
         board.GetVertex(TestVertex.V2).BuildSettlement(thirdPlayer);
         GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
@@ -934,7 +934,7 @@ public class BotAITests
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
         board.GetGameState().Phase = new GamePhase(GameStates.SelectTarget, board.GetBluePlayer(), board.GetRedPlayer());
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
         board.GetGameState().SetRobberTile(board.GetTile(TestTile.T0));
         board.GetGameState().Phase.SetTargetPlayers(new List<Player>() { orangePlayer, board.GetRedPlayer()});

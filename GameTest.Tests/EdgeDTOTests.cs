@@ -34,7 +34,7 @@ public class EdgeDTOTests
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var tile2 = new Tile(ResourceType.Wool, 5, 1, -1);
         var edge = new Edge(tile1, tile2);
-        var owner = new Player("Alice", PlayerColor.Red);
+        var owner = Player.CreateTestPlayer("Alice", PlayerColor.Red);
         var result = edge.BuildRoad(owner);
         Assert.True(result);
 
@@ -56,7 +56,7 @@ public class EdgeDTOTests
         // Arrange
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var edge = new Edge(tile1, HexDirection.NE);
-        var owner = new Player("Alice", PlayerColor.Red);
+        var owner = Player.CreateTestPlayer("Alice", PlayerColor.Red);
         var result = edge.BuildRoad(owner);
         Assert.True(result);
 

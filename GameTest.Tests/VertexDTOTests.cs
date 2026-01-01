@@ -81,7 +81,7 @@ public class VertexDTOTests
         var tile3 = new Tile(ResourceType.Ore, 10, 2, 0);
 
         var vertex = new Vertex(tile1, tile2, tile3);
-        var owner = new Player("Alice", PlayerColor.Red);
+        var owner = Player.CreateTestPlayer("Alice", PlayerColor.Red);
         vertex.BuildSettlement(owner);
 
         // Act
@@ -106,7 +106,7 @@ public class VertexDTOTests
         var tile2 = new Tile(ResourceType.Wool, 5, 1, -1);
 
         var vertex = new Vertex(tile1, tile2);
-        var owner = new Player("Alice", PlayerColor.Red);
+        var owner = Player.CreateTestPlayer("Alice", PlayerColor.Red);
         vertex.BuildSettlement(owner);
         vertex.UpgradeToCity();
 
@@ -130,7 +130,7 @@ public class VertexDTOTests
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
 
         var vertex = new Vertex(tile1, VertexDirection.N);
-        var owner = new Player("Alice", PlayerColor.Red);
+        var owner = Player.CreateTestPlayer("Alice", PlayerColor.Red);
         vertex.BuildSettlement(owner);
 
         // Act

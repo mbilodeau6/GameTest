@@ -36,7 +36,7 @@ public class AIHelpersTests
     public void GetBaseResourceAcquisitionRates_NoOwnedVertices_AllZero()
     {
         var gs = TestHelpers.CreateOriginalTestBoardWithSettlements().GetGameState();
-        gs.AddPlayer(new Player("Player3", PlayerColor.Red, isBot: false));
+        gs.AddPlayer(Player.CreateTestPlayer("Player3", PlayerColor.Red, isBot: false));
         
         Dictionary<ResourceType, double> baseRates = AIHelpers.GetBaseResourceAcquisitionRates(gs, gs.Players[2]);
 
@@ -171,7 +171,7 @@ public class AIHelpersTests
         GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         TestHelpers.AddPlayers(gs);
 
-        gs.Players.Add(new Player("Player3", PlayerColor.Green, isBot: false));
+        gs.Players.Add(Player.CreateTestPlayer("Player3", PlayerColor.Green, isBot: false));
         Assert.Equal(PlayerColor.Blue, gs.Players[1].Color);
         gs.Phase.CurrentPlayer = gs.Players[1];
 
@@ -339,7 +339,7 @@ public class AIHelpersTests
     public void GetRankedListOfVertexTargets_PlayerRoadsIntersect()
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
-        var orangePlayer = new Player("WallE", PlayerColor.Orange, true);
+        var orangePlayer = Player.CreateTestPlayer("WallE", PlayerColor.Orange, true);
         var gs = board.GetGameState();
         gs.Players.Add(orangePlayer);
         board.GetVertex(TestVertex.V16).BuildSettlement(orangePlayer);

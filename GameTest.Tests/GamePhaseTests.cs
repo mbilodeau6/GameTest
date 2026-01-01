@@ -13,9 +13,9 @@ public class GamePhaseTests
     {
         // Arrange
         GameState gs = new GameState(new Guid());
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         gs.Players.Add(p1);
-        var p2 = new Player("Mary", PlayerColor.Blue);
+        var p2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue);
         gs.Players.Add(p2);
         var t1 = new Tile(ResourceType.Grain, 8, 0, 0);
         gs.Tiles.Add(t1);
@@ -61,8 +61,8 @@ public class GamePhaseTests
     public void Constructor_Copy()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
-        var p2 = new Player("Mary", PlayerColor.Blue);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
+        var p2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue);
         GamePhase originalGamePhase = new GamePhase(GameStates.PlaceSecondSettlement, p1, p2);
         originalGamePhase.AddPendingTradeResponse(new TradeResponse(p1, TradeResponseType.Original, 
             new Dictionary<ResourceType, int>() {{ResourceType.Brick, 1}}, new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}}));
@@ -141,7 +141,7 @@ public class GamePhaseTests
         // Arrage
         var phaseState = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
-        var player = new Player("Tim", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red);
 
         phaseState.SetStateToReturnTo(GameStates.BuildOrTrade, tile);
 
@@ -219,9 +219,9 @@ public class GamePhaseTests
     private static List<Player> CreateListOfPlayersForGetNextPlayerTests()
     {
         List<Player> players = new List<Player>();
-        players.Add(new Player("Michael", PlayerColor.Red));
-        players.Add(new Player("Jason", PlayerColor.Blue));
-        players.Add(new Player("Jeff", PlayerColor.White));
+        players.Add(Player.CreateTestPlayer("Michael", PlayerColor.Red));
+        players.Add(Player.CreateTestPlayer("Jason", PlayerColor.Blue));
+        players.Add(Player.CreateTestPlayer("Jeff", PlayerColor.White));
 
         return players;
     }
@@ -602,7 +602,7 @@ public class GamePhaseTests
     private TestGameBoard CreateBoardForSelectTargetTesting(GameStates startingState, GameStates returnState)
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
-        var orangePlayer = new Player("Winston", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Winston", PlayerColor.Orange);
         board.GetGameState().Players.Add(orangePlayer);
         board.GetGameState().Phase = new GamePhase(startingState, board.GetRedPlayer(), board.GetBluePlayer());
         board.GetGameState().Phase.SetStateToReturnTo(returnState, board.GetGameState().RobberTile);
@@ -666,7 +666,7 @@ public class GamePhaseTests
     {
         // Arrange
         var players = new List<Player>();
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         players.Add(p1);
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, p1, p1);
         gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
@@ -685,9 +685,9 @@ public class GamePhaseTests
     {
         // Arrange
         var players = new List<Player>();
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         players.Add(p1);
-        var p2 = new Player("Tony", PlayerColor.White);
+        var p2 = Player.CreateTestPlayer("Tony", PlayerColor.White);
         players.Add(p2);
         var gamePhase = new GamePhase(GameStates.RespondToTrade, p1, p2);
         gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
@@ -707,9 +707,9 @@ public class GamePhaseTests
     {
         // Arrange
         var players = new List<Player>();
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         players.Add(p1);
-        var p2 = new Player("Tony", PlayerColor.White);
+        var p2 = Player.CreateTestPlayer("Tony", PlayerColor.White);
         players.Add(p2);
         var gamePhase = new GamePhase(GameStates.RespondToTrade, p1, p2);
         gamePhase.AddPendingTradeResponse(CreateOriginalWSingleResource(p1, ResourceType.Wood, 1, ResourceType.Brick, 1));
@@ -904,7 +904,7 @@ public class GamePhaseTests
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
 
         Assert.Throws<InvalidOperationException>(() => gamePhase.AddPendingTradeResponse(
-            new TradeResponse(new Player("TestPlayer", PlayerColor.Green), TradeResponseType.Accept, null ,null)));
+            new TradeResponse(Player.CreateTestPlayer("TestPlayer", PlayerColor.Green), TradeResponseType.Accept, null ,null)));
     }
 
     private void AddOriginalTradeRequest(GamePhase gamePhase)
@@ -920,7 +920,7 @@ public class GamePhaseTests
             { ResourceType.Ore, 2 }
         };
         
-        var originalTrade = new TradeResponse(new Player("CurrentPlayer", PlayerColor.Orange), TradeResponseType.Original, offer, request);
+        var originalTrade = new TradeResponse(Player.CreateTestPlayer("CurrentPlayer", PlayerColor.Orange), TradeResponseType.Original, offer, request);
         gamePhase.AddPendingTradeResponse(originalTrade);
     }
 
@@ -937,7 +937,7 @@ public class GamePhaseTests
     public void AddPendingTradeResponse_FirstForPlayer()
     {
         // Arrange
-        var player = new Player("TestPlayer", PlayerColor.Green); 
+        var player = Player.CreateTestPlayer("TestPlayer", PlayerColor.Green); 
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
         AddOriginalTradeRequest(gamePhase);
@@ -955,8 +955,8 @@ public class GamePhaseTests
     public void AddPendingTradeResponse_SecondForPlayer()
     {
         // Arrange
-        var player1 = new Player("TestPlayer", PlayerColor.Green); 
-        var player2 = new Player("AnotherPlayer", PlayerColor.Blue);
+        var player1 = Player.CreateTestPlayer("TestPlayer", PlayerColor.Green); 
+        var player2 = Player.CreateTestPlayer("AnotherPlayer", PlayerColor.Blue);
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tradeResponse = new TradeResponse(player1, TradeResponseType.Accept, null ,null);
         AddOriginalTradeRequest(gamePhase);
@@ -985,7 +985,7 @@ public class GamePhaseTests
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => 
             gamePhase.AddPendingTradeResponse(
-                new TradeResponse(new Player("AnotherPlayer", PlayerColor.Blue), 
+                new TradeResponse(Player.CreateTestPlayer("AnotherPlayer", PlayerColor.Blue), 
                 TradeResponseType.Original, new Dictionary<ResourceType, int>() {{ResourceType.Wool, 1}}, 
                     new Dictionary<ResourceType, int>() {{ResourceType.Grain, 1}})));
     }
@@ -994,7 +994,7 @@ public class GamePhaseTests
     public void ClearPendingTradeResponses()
     {
         // Arrange
-        var player = new Player("TestPlayer", PlayerColor.Green); 
+        var player = Player.CreateTestPlayer("TestPlayer", PlayerColor.Green); 
         var gamePhase = new GamePhase(GameStates.BuildOrTrade, null, null!);
         var tradeResponse = new TradeResponse(player, TradeResponseType.Accept, null ,null);
         AddOriginalTradeRequest(gamePhase);

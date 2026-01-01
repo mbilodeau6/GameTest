@@ -11,8 +11,8 @@ public class GameStateDTOTests
     {
         Guid guid = Guid.NewGuid();
         var gameState = new GameState(guid);
-        var player1 = new Player("Alice", PlayerColor.Blue);
-        var player2 = new Player("Bob", PlayerColor.Red, true);
+        var player1 = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
+        var player2 = Player.CreateTestPlayer("Bob", PlayerColor.Red, true);
         gameState.Players.Add(player1);
         gameState.Players.Add(player2);
 

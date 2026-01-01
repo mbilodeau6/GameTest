@@ -13,7 +13,7 @@ public class BankTests
     public void TradeWithBank_EmptyOffer_TradeRejected()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
 
         var bank = new Bank();
         var offer = new Dictionary<ResourceType, int>();
@@ -35,7 +35,7 @@ public class BankTests
     public void TradeWithBank_EmptyRequest_TradeRejected()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 4);
 
         var bank = new Bank();
@@ -58,7 +58,7 @@ public class BankTests
     public void TradeWithBank_OfferZero_TradeRejected()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 4);
 
         var bank = new Bank();
@@ -80,7 +80,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_RequestZero_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 4);
 
         var bank = new Bank();
@@ -102,7 +102,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_PlayerDoesNotHaveResources_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 3);
 
         var bank = new Bank();
@@ -124,7 +124,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_PlayerOfferingTooFew_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 4);
 
         var bank = new Bank();
@@ -150,7 +150,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_PlayerOfferingTooMany_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 5);
 
         var bank = new Bank();
@@ -175,7 +175,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_PlayerRequestingMultiple_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 4);
 
         var bank = new Bank();
@@ -201,7 +201,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_PlayerOfferingMultiple_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 3);
         player.AssignResources(ResourceType.Wood, 3);
 
@@ -230,7 +230,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_PlayerRequestingTwoResources_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 4);
 
         var bank = new Bank();
@@ -257,7 +257,7 @@ public class BankTests
     [Fact]
     public void TradeWithBank_PlayerTradingForSame_TradeRejected()
     {
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Ore, 4);
 
         var bank = new Bank();
@@ -283,7 +283,7 @@ public class BankTests
     public void TradeWithBank_PlayerHasOfferedResources_TradeSuccessful()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         player.AssignResources(ResourceType.Wood, 4);
         player.AssignResources(ResourceType.Grain, 2);
         player.AssignResources(ResourceType.Ore, 2);
@@ -314,7 +314,7 @@ public class BankTests
     [Fact]
     public void GetTradeRate_OrePort()
     {
-        var player = new Player("Tim", PlayerColor.Red, false);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
         player.AddPort(PortType.Ore);
         var bank = new Bank();
 
@@ -328,7 +328,7 @@ public class BankTests
     [Fact]
     public void GetTradeRate_ThreeToOneWorksForAll()
     {
-        var player = new Player("Tim", PlayerColor.Red, false);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
         player.AddPort(PortType.ThreeToOne);
         var bank = new Bank();
 
@@ -342,7 +342,7 @@ public class BankTests
     [Fact]
     public void GetTradeRate_ResourcePortTrumpsThreeToOne()
     {
-         var player = new Player("Tim", PlayerColor.Red, false);
+         var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
         player.AddPort(PortType.ThreeToOne);
         player.AddPort(PortType.Brick);
         player.AddPort(PortType.Wool);

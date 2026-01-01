@@ -74,8 +74,8 @@ public class BoardCreationHelpersTests
         // Act
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
 
-        gs.Players.Add(new Player("Alice", PlayerColor.Red));
-        gs.Players.Add(new Player("Bob", PlayerColor.Blue));
+        gs.Players.Add(Player.CreateTestPlayer("Alice", PlayerColor.Red));
+        gs.Players.Add(Player.CreateTestPlayer("Bob", PlayerColor.Blue));
 
         // Assert
         Assert.Equal(72, gs.Edges.Count);
@@ -98,8 +98,8 @@ public class BoardCreationHelpersTests
         // Act
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Default);
 
-        gs.Players.Add(new Player("Alice", PlayerColor.Red));
-        gs.Players.Add(new Player("Bob", PlayerColor.Blue));
+        gs.Players.Add(Player.CreateTestPlayer("Alice", PlayerColor.Red));
+        gs.Players.Add(Player.CreateTestPlayer("Bob", PlayerColor.Blue));
 
         // Assert
         Assert.Equal(72, gs.Edges.Count);

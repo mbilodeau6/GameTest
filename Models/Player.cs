@@ -20,9 +20,9 @@ public class Player
     private static int s_nextId = 0;
 
     public string Id { get; init; }
-    public string Name { get; set;  }
-    public PlayerColor Color { get; set; }
-    public bool IsBot { get; }
+    public string Name { get; init;  }
+    public PlayerColor Color { get; init; }
+    public bool IsBot { get; init; } = false;
     
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
@@ -44,26 +44,21 @@ public class Player
     public int FullVictoryPoints { get; private set; } = 0; // Includes points from victory dev cards
     public int VisibleVictoryPoints { get; private set; } = 0;
 
-    // Parameterless ctor for serializers
-    public Player()
+    public static Player CreateTestPlayer(string name, PlayerColor color, bool isBot = false)
     {
-        Id = $"P{Interlocked.Increment(ref s_nextId)}";
-
-        // TODO: Need to assign a unique name
-        Name = string.Empty;
-
-        // TODO: Need to assign a color that is not already taken
-        Color = PlayerColor.Red;
+        var id = $"P{Interlocked.Increment(ref s_nextId)}";
+        return new Player(id, name, color, isBot);
     }
 
-    public Player(string name, PlayerColor color, bool isBot = false)
+    public Player(string id, string name, PlayerColor color, bool isBot = false)
     {
-        Id = $"P{Interlocked.Increment(ref s_nextId)}";
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("Id cannot be empty", nameof(id));
 
-        // TODO: Need to ensure name and color are unique
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name cannot be empty", nameof(name));
 
+        Id = id;
         Name = name;
         Color = color;
         IsBot = isBot;

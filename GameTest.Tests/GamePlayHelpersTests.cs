@@ -104,8 +104,8 @@ public class GamePlayHelpersTests
         // Arrange
         GameState gameState = new GameState(new Guid());
 
-        var player1 = new Player("Fred", PlayerColor.Blue);
-        var player2 = new Player("Marge", PlayerColor.Orange);
+        var player1 = Player.CreateTestPlayer("Fred", PlayerColor.Blue);
+        var player2 = Player.CreateTestPlayer("Marge", PlayerColor.Orange);
         gameState.AddPlayer(player1);
         gameState.AddPlayer(player2);
 
@@ -132,7 +132,7 @@ public class GamePlayHelpersTests
 
     private Player CreatePlayerWithSufficientResources()
     {
-        var player = new Player("Mary", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
 
         player.Resources[ResourceType.Wood] = 1;
         player.Resources[ResourceType.Brick] = 1;
@@ -145,7 +145,7 @@ public class GamePlayHelpersTests
 
     private Player CreatePlayerWithInsufficientResources()
     {
-        var player = new Player("Mary", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
 
         player.Resources[ResourceType.Wood] = 1;
         player.Resources[ResourceType.Brick] = 0;
@@ -398,7 +398,7 @@ public class GamePlayHelpersTests
     public void CountVictoryPointsForPlayer_IncludeAllDevCardBuckets()
     {
         // Arrage
-        var player = new Player("Allen", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Allen", PlayerColor.Red);
         player.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
         player.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
         player.MakeNewDevelopmentCardsPlayable();
@@ -732,7 +732,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(false);
         var gs = board.GetGameState();
-        var orangePlayer = new Player("WallE", PlayerColor.Orange, true);
+        var orangePlayer = Player.CreateTestPlayer("WallE", PlayerColor.Orange, true);
         gs.Players.Add(orangePlayer);
         board.GetVertex(TestVertex.V5).UpgradeToCity();
         board.GetRedPlayer().AssignResources(ResourceType.Ore, 4);
@@ -1428,9 +1428,9 @@ public class GamePlayHelpersTests
     private static GameState CreateGameForRobberTesting(GameStates previousState)
     {
         var gs = new GameState(new Guid());
-        var player1 = new Player("Time", PlayerColor.Red);
+        var player1 = Player.CreateTestPlayer("Time", PlayerColor.Red);
         gs.Players.Add(player1);
-        var player2 = new Player("Mary", PlayerColor.Blue);
+        var player2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue);
         gs.Players.Add(player2);
 
         var tile1 = new Tile(ResourceType.Wood, 3, 0, 0);
@@ -1542,12 +1542,12 @@ public class GamePlayHelpersTests
     private static GameState CreateGameForBuyDevCardTesting(GameStates currentState)
     {
         var gs = new GameState(new Guid());
-        var player1 = new Player("Tim", PlayerColor.Red);
+        var player1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         gs.Players.Add(player1);
         player1.AssignResources(ResourceType.Ore, 1);
         player1.AssignResources(ResourceType.Grain, 2);
         player1.AssignResources(ResourceType.Wool, 1);
-        var player2 = new Player("Mary", PlayerColor.Blue, true);
+        var player2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue, true);
         gs.Players.Add(player2);
 
         var tile1 = new Tile(ResourceType.Wood, 3, 0, 0);
@@ -1712,9 +1712,9 @@ public class GamePlayHelpersTests
     private static GameState CreateGameForPlayDevCardTesting(GameStates currentState, DevelopmentCardType desiredType)
     {
         var gs = new GameState(new Guid());
-        var player1 = new Player("Tim", PlayerColor.Red);
+        var player1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         gs.Players.Add(player1);
-        var player2 = new Player("Mary", PlayerColor.Blue, true);
+        var player2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue, true);
         gs.Players.Add(player2);
         var tile1 = new Tile(ResourceType.Wood, 3, 0, 0);
         gs.Tiles.Add(tile1);
@@ -3733,7 +3733,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
         var gs = board.GetGameState();
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
         var request = new SelectTargetRequest(board.GetRedPlayer().Id, orangePlayer.Id);
 
@@ -3749,7 +3749,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
         var gs = board.GetGameState();
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         gs.Players.Add(orangePlayer);
         gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
         var request = new SelectTargetRequest(board.GetRedPlayer().Id, orangePlayer.Id);
@@ -3766,7 +3766,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
         var gs = board.GetGameState();
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
         gs.Players.Add(orangePlayer);
         board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
@@ -3796,7 +3796,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
         var gs = board.GetGameState();
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         gs.Players.Add(orangePlayer);
         gs.Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
         var request = new SelectTargetRequest(board.GetRedPlayer().Id, orangePlayer.Id);
@@ -3809,7 +3809,7 @@ public class GamePlayHelpersTests
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
         var gs = board.GetGameState();
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         board.GetRedPlayer().AssignResources(ResourceType.Brick, 1);
         gs.Players.Add(orangePlayer);
         board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
@@ -3845,7 +3845,7 @@ public class GamePlayHelpersTests
     {
         var gs = new GameState(new Guid());
         while (gs.Players.Count < gs.Settings.MaxPlayers)
-            gs.Players.Add(new Player("Test", PlayerColor.White));
+            gs.Players.Add(Player.CreateTestPlayer("Test", PlayerColor.White));
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", PreferredColor = PlayerColor.Orange});
 
@@ -3894,7 +3894,7 @@ public class GamePlayHelpersTests
     public void AddPlayerToGame_NameAlreadyUsed()
     {
         var gs = new GameState(new Guid());
-        gs.Players.Add(new Player("Test", PlayerColor.White));
+        gs.Players.Add(Player.CreateTestPlayer("Test", PlayerColor.White));
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Test", IsBot = false, PreferredColor = PlayerColor.Orange});
 
@@ -3907,7 +3907,7 @@ public class GamePlayHelpersTests
     public void AddPlayerToGame_ColorAlreadyUsed()
     {
         var gs = new GameState(new Guid());
-        gs.Players.Add(new Player("Test", PlayerColor.Orange));
+        gs.Players.Add(Player.CreateTestPlayer("Test", PlayerColor.Orange));
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", IsBot = false, PreferredColor = PlayerColor.Orange});
 
@@ -3956,7 +3956,7 @@ public class GamePlayHelpersTests
         GameState gs = new GameState(new Guid());
         Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
 
-        gs.Players.Add(new Player("Tim", PlayerColor.Red));
+        gs.Players.Add(Player.CreateTestPlayer("Tim", PlayerColor.Red));
 
         Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.StartGame(gs));
     }
@@ -3967,8 +3967,8 @@ public class GamePlayHelpersTests
         var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
         Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
 
-        gs.Players.Add(new Player("Tim", PlayerColor.Red));
-        gs.Players.Add(new Player("WallE", PlayerColor.Blue, true));
+        gs.Players.Add(Player.CreateTestPlayer("Tim", PlayerColor.Red));
+        gs.Players.Add(Player.CreateTestPlayer("WallE", PlayerColor.Blue, true));
 
         GamePlayHelpers.StartGame(gs);
 
@@ -4009,7 +4009,7 @@ public class GamePlayHelpersTests
     public void GetOpponentsOnTile_TwoOpponents()
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
-        var orangePlayer = new Player("Winston", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Winston", PlayerColor.Orange);
         board.GetGameState().Players.Add(orangePlayer);
         board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
         board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());

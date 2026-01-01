@@ -15,7 +15,7 @@ public class GoalStatsTests
         // Arrange
         Vertex vertex = null!;
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
-        var player = new Player("Tim", PlayerColor.Red, false);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex!, player, baseStats, 0, null));
@@ -29,7 +29,7 @@ public class GoalStatsTests
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
-        var player = new Player("Tim", PlayerColor.Red, false);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
 
         // Act
         var goalStats = new GoalStats(vertex, player, baseStats, 0, null);
@@ -64,7 +64,7 @@ public class GoalStatsTests
         var vertex = new Vertex(t1, t2, null);
         var neededEdge = new Edge(t1, t2);
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
-        var player = new Player("Tim", PlayerColor.Red, false);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
 
 
         // Act
@@ -100,7 +100,7 @@ public class GoalStatsTests
         var t1 = new Tile(ResourceType.Wood, 8, 0, 0);
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
-        var player = new Player("Tim", PlayerColor.Red, false);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
 
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
         baseStats[ResourceType.Wood] = 4.0 / 36.0;
@@ -142,7 +142,7 @@ public class GoalStatsTests
         var t2 = new Tile(ResourceType.Brick, 6, 2, 0);
         var vertex = new Vertex(t1, t2, null);
         Dictionary<ResourceType, double> baseStats = new Dictionary<ResourceType, double>();
-        var player = new Player("Tim", PlayerColor.Red, false);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red, false);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new GoalStats(vertex, player, baseStats, 1, null));

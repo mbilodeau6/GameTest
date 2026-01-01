@@ -154,7 +154,7 @@ public class IntegrationTests
     public void SelectTargetAfterPlaceRobber()
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         var gs = board.GetGameState();
         gs.Players.Add(orangePlayer);
         board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
@@ -171,7 +171,7 @@ public class IntegrationTests
     public void SelectTargetAfterPlayKnight()
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         var gs = board.GetGameState();
         gs.Players.Add(orangePlayer);
         board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);

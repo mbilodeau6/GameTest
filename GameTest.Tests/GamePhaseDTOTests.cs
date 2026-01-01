@@ -10,8 +10,8 @@ public class GamePhaseDTOTests
     public void Constructor_WithFullGamePhase()
     {
         // Arrange
-        var player1 = new Player("Mary", PlayerColor.Red);
-        var player2 = new Player("Bill", PlayerColor.Blue);
+        var player1 = Player.CreateTestPlayer("Mary", PlayerColor.Red);
+        var player2 = Player.CreateTestPlayer("Bill", PlayerColor.Blue);
         GamePhase gamePhase = new GamePhase(GameStates.PlaceFirstRoad, player1, player2);
 
         // Act
@@ -33,7 +33,7 @@ public class GamePhaseDTOTests
     public void Constructor_WithoutEndPlayer()
     {
         // Arrange
-        var player1 = new Player("Mary", PlayerColor.Red);
+        var player1 = Player.CreateTestPlayer("Mary", PlayerColor.Red);
         GamePhase gamePhase = new GamePhase(GameStates.PlaceFirstRoad, player1);
 
         // Act
@@ -63,8 +63,8 @@ public class GamePhaseDTOTests
     [Fact]
     public void Constructor_FromDTO()
     {
-        var p1 = new Player("Tim", PlayerColor.Red);
-        var p2 = new Player("Mary", PlayerColor.Blue);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
+        var p2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue);
         GamePhase gamePhase = new GamePhase(GameStates.RollOrUseDevCard, p1, p2);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
         gamePhase.SetStateToReturnTo(GameStates.RollOrUseDevCard, tile);

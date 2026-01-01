@@ -8,7 +8,7 @@ public class PlayerDTOTests
 {
     private Player createTestPlayer()
     {
-        var player = new Player("Henry", PlayerColor.White);
+        var player = Player.CreateTestPlayer("Henry", PlayerColor.White);
         player.AssignDevelopmentCard(DevelopmentCardType.Monopoly);
         player.AssignDevelopmentCard(DevelopmentCardType.Knight);
         player.MakeNewDevelopmentCardsPlayable();

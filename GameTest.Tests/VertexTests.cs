@@ -60,8 +60,8 @@ public class VertexTests
         // Arrange
         var t1 = new Tile(ResourceType.Brick, 3, -3, -1);
         var expectedVertex = new Vertex(t1, VertexDirection.S);
-        var p1 = new Player("Alice", PlayerColor.Blue);
-        var p2 = new Player("Bob", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
+        var p2 = Player.CreateTestPlayer("Bob", PlayerColor.Red);
         expectedVertex.BuildSettlement(p2);
 
         var vertexDto = new VertexDTO(expectedVertex);
@@ -93,7 +93,7 @@ public class VertexTests
     public void BuildSettlement_EmptyVertex_SetsOwnerAndBuilding()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Blue);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         var vertex = CreateTestVertex();
 
         // Act
@@ -108,8 +108,8 @@ public class VertexTests
     public void BuildSettlement_VertexHasSettlement_ThrowsException()
     {
         // Arrange
-        var p1 = new Player("Alice", PlayerColor.Blue);
-        var p2 = new Player("Bob", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
+        var p2 = Player.CreateTestPlayer("Bob", PlayerColor.Red);
 
         var vertex = CreateTestVertex();
         vertex.BuildSettlement(p1);
@@ -127,7 +127,7 @@ public class VertexTests
     public void BuildSettlement_VertexHasCity_ThrowsException()
     {
         // Arrange
-        var p1 = new Player("Alice", PlayerColor.Blue);
+        var p1 = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
 
         var t1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var vertex = new Vertex(t1, VertexDirection.N);
@@ -147,7 +147,7 @@ public class VertexTests
     public void UpgradeToCity_ExistingSettlement_UpgradesBuildingToCity()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Blue);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
         var vertex = new Vertex(tile, VertexDirection.S);
         vertex.BuildSettlement(player);
@@ -163,7 +163,7 @@ public class VertexTests
     public void UpgradeToCity_ExistingCity_ThrowsInvalidOperationException()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Blue);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
         var vertex = new Vertex(tile, VertexDirection.SW);
         vertex.BuildSettlement(player);
@@ -178,7 +178,7 @@ public class VertexTests
     public void DowngradeToSettlement_ExistingSettlement_ThrowsException()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Blue);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
         var vertex = new Vertex(tile, VertexDirection.SE);
         vertex.BuildSettlement(player);
@@ -192,7 +192,7 @@ public class VertexTests
     public void DowngradeToSettlement_ExistingCity_SetsBuildingToSettlement()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Blue);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
         var vertex = new Vertex(tile, VertexDirection.S);
         vertex.BuildSettlement(player);
@@ -209,7 +209,7 @@ public class VertexTests
     public void ToString_NoParameters_ReturnsNonEmptyString()
     {
         // Arrange
-        var player = new Player("Bob", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Bob", PlayerColor.Green);
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
         var vertex = new Vertex(tile, VertexDirection.N);
         vertex.BuildSettlement(player);
@@ -337,7 +337,7 @@ public class VertexTests
     public void MarkBlocked_SettlementExists()
     {
         var vertex = CreateTestVertex();
-        vertex.BuildSettlement(new Player("Mary", PlayerColor.Blue));
+        vertex.BuildSettlement(Player.CreateTestPlayer("Mary", PlayerColor.Blue));
 
         var exception = Assert.Throws<InvalidOperationException>(() => vertex.MarkBlocked());
 
@@ -349,7 +349,7 @@ public class VertexTests
     public void MarkBlocked_CityExists()
     {
         var vertex = CreateTestVertex();
-        vertex.BuildSettlement(new Player("Mary", PlayerColor.Blue));
+        vertex.BuildSettlement(Player.CreateTestPlayer("Mary", PlayerColor.Blue));
         vertex.UpgradeToCity();
 
         var exception = Assert.Throws<InvalidOperationException>(() => vertex.MarkBlocked());
@@ -385,7 +385,7 @@ public class VertexTests
     public void ClearVertex_Settlement()
     {
         var vertex = CreateTestVertex();
-        vertex.BuildSettlement(new Player("Tim", PlayerColor.Red));
+        vertex.BuildSettlement(Player.CreateTestPlayer("Tim", PlayerColor.Red));
 
         vertex.ClearVertex();
 

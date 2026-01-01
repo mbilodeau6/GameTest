@@ -50,8 +50,8 @@ public class EdgeTests
 
         var expectedEdge = new Edge(t1, HexDirection.W);
 
-        var p1 = new Player("Alice", PlayerColor.Red);
-        var p2 = new Player("Bob", PlayerColor.Blue);
+        var p1 = Player.CreateTestPlayer("Alice", PlayerColor.Red);
+        var p2 = Player.CreateTestPlayer("Bob", PlayerColor.Blue);
         expectedEdge.BuildRoad(p1);
 
         var dto = new EdgeDTO(expectedEdge);
@@ -73,7 +73,7 @@ public class EdgeTests
     public void ToString_ReturnsNonEmptyString()
     {
         // Arrange
-        var owner = new Player("Alice", PlayerColor.Red);
+        var owner = Player.CreateTestPlayer("Alice", PlayerColor.Red);
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var tile2 = new Tile(ResourceType.Wool, 5, 1, -1);
         var edge = new Edge(tile1, tile2);
@@ -94,7 +94,7 @@ public class EdgeTests
     public void BuildRoad_SetsOwnerWhenNone()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Red);
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var tile2 = new Tile(ResourceType.Wool, 5, 1, -1);
         var edge = new Edge(tile1, tile2);
@@ -112,8 +112,8 @@ public class EdgeTests
     public void BuildRoad_FailsWhenOwnerAlreadySet()
     {
         // Arrange
-        var player1 = new Player("Alice", PlayerColor.Red);
-        var player2 = new Player("Bob", PlayerColor.Blue);
+        var player1 = Player.CreateTestPlayer("Alice", PlayerColor.Red);
+        var player2 = Player.CreateTestPlayer("Bob", PlayerColor.Blue);
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var tile2 = new Tile(ResourceType.Wool, 5, 1, -1);
         var edge = new Edge(tile1, tile2);
@@ -181,7 +181,7 @@ public class EdgeTests
     {
         var t1 = new Tile(ResourceType.Wood, 10, 0, 0);
         var t2 = new Tile(ResourceType.Brick, 8, 2, 0);
-        var player = new Player("Tim", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var edge = new Edge(t1, t2);
         edge.BuildRoad(player);
 

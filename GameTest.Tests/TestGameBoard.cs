@@ -206,8 +206,8 @@ public class TestGameBoard
          GS = new GameState(new Guid(), GameType.Test);
          CreateBoardInGameState(resources, diceValues);
 
-         GS.Players.Add(new Player("PlayerA", PlayerColor.Red));
-         GS.Players.Add(new Player("PlayerB", PlayerColor.Blue, bluePlayerBot));
+         GS.Players.Add(Player.CreateTestPlayer("PlayerA", PlayerColor.Red));
+         GS.Players.Add(Player.CreateTestPlayer("PlayerB", PlayerColor.Blue, bluePlayerBot));
     }
 
     public GameState GetGameState()

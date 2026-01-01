@@ -10,7 +10,7 @@ public class TradeResponseTests
     public void Constructor_Valid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
 
         // Act
         var response = new TradeResponse(player, TradeResponseType.Reject, null, null);
@@ -26,7 +26,7 @@ public class TradeResponseTests
     public void Constructor_EmptyOfferRequest_Valid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var offer = new Dictionary<ResourceType, int>();
         var request = new Dictionary<ResourceType, int>();
 
@@ -46,7 +46,7 @@ public class TradeResponseTests
     public void Constructor_OfferOnAccept_Invalid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
         // Act & Assert
@@ -57,7 +57,7 @@ public class TradeResponseTests
     public void Constructor_RequestOnAccept_Invalid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
         // Act & Assert
@@ -68,7 +68,7 @@ public class TradeResponseTests
     public void Constructor_Counter_MissingOffer()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
         // Act & Assert
@@ -79,7 +79,7 @@ public class TradeResponseTests
     public void Constructor_Counter_MissingRequest()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
         // Act & Assert
@@ -90,7 +90,7 @@ public class TradeResponseTests
     public void Constructor_Counter_OfferEmpty()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var offer = new Dictionary<ResourceType, int>();
         var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
@@ -102,7 +102,7 @@ public class TradeResponseTests
     public void Constructor_Counter_RequestEmpty()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var request = new Dictionary<ResourceType, int>();
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
 
@@ -114,7 +114,7 @@ public class TradeResponseTests
     public void Constructor_Counter_RequestEqualsOffer()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var request = new Dictionary<ResourceType, int>() { { ResourceType.Wood, 1 } };
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
 
@@ -126,7 +126,7 @@ public class TradeResponseTests
     public void Constructor_Counter_Valid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var request = new Dictionary<ResourceType, int>() { { ResourceType.Wood, 2 } };
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 }, {ResourceType.Wool, 1 } };
 
@@ -151,7 +151,7 @@ public class TradeResponseTests
     {
         // Arrange
         var gs = new GameState(new Guid());
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         gs.AddPlayer(player);
         var request = new Dictionary<ResourceType, int>() { { ResourceType.Wood, 2 } };
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 }, {ResourceType.Wool, 1 } };
@@ -177,7 +177,7 @@ public class TradeResponseTests
     public void Constructor_Original_Valid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
         var request = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
 
@@ -199,7 +199,7 @@ public class TradeResponseTests
     public void Constructor_Original_CantGiveSomethingForNothing()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 2 } };
         var request = new Dictionary<ResourceType, int>();
 

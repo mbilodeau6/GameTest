@@ -31,7 +31,7 @@ public class TradeRequestTests
     public void Constructor_MissingOffer()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         var request = new Dictionary<ResourceType, int>
         {
             { ResourceType.Wood, 1 }
@@ -49,7 +49,7 @@ public class TradeRequestTests
     public void Constructor_MissingRequest()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         var offer = new Dictionary<ResourceType, int>
         {
             { ResourceType.Wood, 1 }
@@ -67,7 +67,7 @@ public class TradeRequestTests
     public void Constructor_Valid()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         var offer = new Dictionary<ResourceType, int>
         {
             { ResourceType.Wood, 2 }
@@ -151,7 +151,7 @@ public class TradeRequestTests
     {
         // Arrange
         var gs = new GameState(new Guid());
-        gs.Players.Add(new Player("Bob", PlayerColor.Red));
+        gs.Players.Add(Player.CreateTestPlayer("Bob", PlayerColor.Red));
         var dto = new TradeRequestDTO(gs.Players[0].Id, new Dictionary<ResourceType, int>
         {
             { ResourceType.Wood, 2 }

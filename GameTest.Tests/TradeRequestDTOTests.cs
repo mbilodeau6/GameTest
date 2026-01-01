@@ -13,7 +13,7 @@ public class TradeRequestDTOTests
     public void Constructor_TradeRequestToDTO()
     {
         // Arrange
-        var player = new Player("Alice", PlayerColor.Green);
+        var player = Player.CreateTestPlayer("Alice", PlayerColor.Green);
         var offer = new Dictionary<ResourceType, int>
         {
             { ResourceType.Wood, 2 },

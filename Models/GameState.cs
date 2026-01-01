@@ -159,11 +159,11 @@ public class GameState
 
     public void SetRobberTile(Tile tile)
     {
-        if (tile.Equals(RobberTile))
-            throw new ArgumentException("Robber is already on the specified tile.");
+        if (RobberTile != null && tile.Id.Equals(RobberTile.Id))
+            throw new ArgumentException("Unexpected Exception. Robber is already on the specified tile.");
 
-        if (!Tiles.Contains(tile))
-            throw new ArgumentException("The specified tile does not exist in the game.");
+        if (!Tiles.Any(t => t.Id == tile.Id))
+            throw new ArgumentException("Unexpected Exception. The specified tile does not exist in the game.");
 
         RobberTile = tile;
     }
@@ -172,7 +172,7 @@ public class GameState
     {
         var desertTile = Tiles.FirstOrDefault(t => t.Resource == ResourceType.Desert);
         if (desertTile == null)
-            throw new InvalidOperationException("No desert tile found in the game.");
+            throw new InvalidOperationException("Unexpected Exception. No desert tile found in the game.");
 
         RobberTile = desertTile;
     }

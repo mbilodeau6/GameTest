@@ -10,7 +10,7 @@ public class TradeResponseDTOTests
     public void Constructor_Counter_Valid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 }, { ResourceType.Wool, 1 } };
         var request = new Dictionary<ResourceType, int> { { ResourceType.Brick, 3 } };
         var response = new TradeResponse(player, TradeResponseType.Counter, offer, request);
@@ -34,7 +34,7 @@ public class TradeResponseDTOTests
     public void Constructor_Reject_Valid()
     {
         // Arrange
-        var player = new Player("player1", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         var response = new TradeResponse(player, TradeResponseType.Reject, null, null);
 
         // Act

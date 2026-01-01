@@ -10,11 +10,11 @@ public class PlayerTests
     public void Constructor_Default_CreatesExpectedPlayer()
     {
         // Act
-        var player = new Player();
+        var player = new Player("P103", "Tim", PlayerColor.Red);
 
         // Assert
-        Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
-        Assert.Equal(string.Empty, player.Name);
+        Assert.Equal("P103", player.Id);
+        Assert.Equal("Tim", player.Name);
         Assert.Equal(PlayerColor.Red, player.Color);
         Assert.All(player.Resources.Values, v => Assert.Equal(0, v));
         Assert.Equal(0, player.DevelopmentCardCount);
@@ -28,23 +28,6 @@ public class PlayerTests
     }
 
     [Fact]
-    public void Constructor_SetAll_ValidValues()
-    {
-        // Arrange
-        PlayerColor expectedColor = PlayerColor.Green;
-        string expectedName = "Robert";
-
-        // Act
-        var player = new Player(expectedName, expectedColor, true);
-
-        // Assert
-        Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
-        Assert.Equal(expectedName, player.Name);
-        Assert.Equal(expectedColor, player.Color);
-        Assert.True(player.IsBot);
-    }
-
-    [Fact]
     public void Constructor_EmptyName()
     {
         // Arrange
@@ -53,16 +36,26 @@ public class PlayerTests
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(() =>
-            new Player(expectedName, expectedColor));
+            new Player("P103", expectedName, expectedColor));
+    }
 
-        Assert.Equal("Name cannot be empty (Parameter 'name')", exception.Message);
+    [Fact]
+    public void Constructor_EmptyId()
+    {
+        // Arrange
+        PlayerColor expectedColor = PlayerColor.Green;
+        string expectedName = "Tim";
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() =>
+            new Player(" ", expectedName, expectedColor));
     }
 
     [Fact]
     public void Constructor_FromDTO_ValidData()
     {
         // Arrange
-        var orig_player = new Player("Mary", PlayerColor.White, true);
+        var orig_player = Player.CreateTestPlayer("Mary", PlayerColor.White, true);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
         orig_player.AssignDevelopmentCard(DevelopmentCardType.Knight);
         orig_player.MakeNewDevelopmentCardsPlayable();
@@ -107,9 +100,7 @@ public class PlayerTests
         string expectedName = "Alice";
 
         // Act
-        var player = new Player();
-        player.Name = expectedName;
-        player.Color = expectedColor;
+        var player = Player.CreateTestPlayer(expectedName, expectedColor);
 
         // Assert
         Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
@@ -125,7 +116,7 @@ public class PlayerTests
         string expectedName = "Mary";
 
         // Act
-        var player = new Player(expectedName, expectedColor);
+        var player = Player.CreateTestPlayer(expectedName, expectedColor);
 
         // Assert
         Assert.Equal("Mary (" + player.Id + ") - White", player.ToString());
@@ -135,7 +126,7 @@ public class PlayerTests
     public void AssignResource_Single()
     {
         // Arrange
-        var player = new Player("Mary", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
 
         // Act
         player.AssignResources(ResourceType.Grain, 1);
@@ -149,7 +140,7 @@ public class PlayerTests
     public void AssignResource_Multiple()
     {
         // Arrange
-        var player = new Player("Mary", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
         player.AssignResources(ResourceType.Brick, 1);
         player.AssignResources(ResourceType.Ore, 1);
 
@@ -165,7 +156,7 @@ public class PlayerTests
     public void AssignResource_Desert_ThrowsException()
     {
         // Arrange
-        var player = new Player("Mary", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
 
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
@@ -176,7 +167,7 @@ public class PlayerTests
 
     private Player CreatePlayerWithResources()
     {
-        var player = new Player("Mary", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
         player.AssignResources(ResourceType.Brick, 2);
         player.AssignResources(ResourceType.Ore, 3);
 
@@ -233,7 +224,7 @@ public class PlayerTests
     public void AssignDevelopmentCard_First()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
 
         // Act
@@ -251,7 +242,7 @@ public class PlayerTests
     public void AssignDevelopmentCard_Multiple()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
         var dc2 = DevelopmentCardType.Monopoly;
 
@@ -276,7 +267,7 @@ public class PlayerTests
     public void AssignDevelopmentCard_PlayedNotInCount()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
         var dc2 = DevelopmentCardType.Monopoly;
 
@@ -305,7 +296,7 @@ public class PlayerTests
     public void PlayDevelopmentCard_PlayerDoesntHave()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
         p1.AssignDevelopmentCard(dc1);
 
@@ -317,7 +308,7 @@ public class PlayerTests
     public void PlayDevelopmentCard_NotPlayableYet()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
         p1.AssignDevelopmentCard(dc1);
 
@@ -329,7 +320,7 @@ public class PlayerTests
     public void PlayDevelopmentCard_Knight()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
         p1.AssignDevelopmentCard(dc1);
         p1.MakeNewDevelopmentCardsPlayable();
@@ -350,7 +341,7 @@ public class PlayerTests
     public void PlayDevelopmentCard_Monopoly()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
         p1.AssignDevelopmentCard(dc1);
         var dc2 = DevelopmentCardType.Monopoly;
@@ -372,7 +363,7 @@ public class PlayerTests
     public void PlayDevelopmentCard_RoadBuilding()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.RoadBuilding;
         p1.AssignDevelopmentCard(dc1);
         p1.MakeNewDevelopmentCardsPlayable();
@@ -391,7 +382,7 @@ public class PlayerTests
     public void PlayDevelopmentCard_YearOfPlenty()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.YearOfPlenty;
         p1.AssignDevelopmentCard(dc1);
         p1.MakeNewDevelopmentCardsPlayable();
@@ -410,7 +401,7 @@ public class PlayerTests
     public void PlayDevelopmentCard_VictoryPoint()
     {
         // Arrange
-        var p1 = new Player("Tim", PlayerColor.Red);
+        var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         var dc1 = DevelopmentCardType.Knight;
         p1.AssignDevelopmentCard(dc1);
         var dc2 = DevelopmentCardType.VictoryPoint;
@@ -424,7 +415,7 @@ public class PlayerTests
     [Fact]
     public void SetVictoryPoints()
     {
-        var player = new Player("Tim", PlayerColor.Red);
+        var player = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         player.SetVictoryPoints(4, 5);
         Assert.Equal(5, player.FullVictoryPoints);
         Assert.Equal(4, player.VisibleVictoryPoints);

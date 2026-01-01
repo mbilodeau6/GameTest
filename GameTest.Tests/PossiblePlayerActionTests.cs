@@ -206,7 +206,7 @@ public class PossiblePlayerActionTests
     public void GetPossiblePlayerActions_StealRobber()
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
-        var orangePlayer = new Player("Tim", PlayerColor.Orange);
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
         board.GetVertex(TestVertex.V1).BuildSettlement(orangePlayer);
         board.GetGameState().Phase = new GamePhase(GameStates.SelectTarget, board.GetRedPlayer(), board.GetBluePlayer());
         board.GetGameState().Phase.SetStateToReturnTo(GameStates.BuildOrTrade, board.GetTile(TestTile.T6));

@@ -102,8 +102,8 @@ public static class TestHelpers
         public static Tile Wool5Tile = new Tile(ResourceType.Wool, 5, 1, 1);
         public static Tile GrainTile = new Tile(ResourceType.Grain, 6, -1, 1);
         public static Tile DesertTile = new Tile(ResourceType.Desert, 0, -2, 0);
-        public static Player HumanPlayer = new Player("Player1", PlayerColor.Red, isBot: false);
-        public static Player BotPlayer = new Player("Player2", PlayerColor.Blue, isBot: true);
+        public static Player HumanPlayer = Player.CreateTestPlayer("Player1", PlayerColor.Red, isBot: false);
+        public static Player BotPlayer = Player.CreateTestPlayer("Player2", PlayerColor.Blue, isBot: true);
     }
 
     public static GameState CreateGameStateForSetUpPhase()
@@ -161,8 +161,8 @@ public static class TestHelpers
     // Test Boards.
     public static void AddPlayers(GameState gameState)
     {
-        var p1 = new Player("Lisa", PlayerColor.Red);
-        var p2 = new Player("Hal", PlayerColor.Blue, true);
+        var p1 = Player.CreateTestPlayer("Lisa", PlayerColor.Red);
+        var p2 = Player.CreateTestPlayer("Hal", PlayerColor.Blue, true);
 
         gameState.AddPlayer(p1);
         gameState.AddPlayer(p2);
