@@ -1502,8 +1502,7 @@ public static class GamePlayHelpers
         }
 
         // Create and add player
-        // TODO: Need to create real player where the ID doesn't collide with Ids already used
-        gs.Players.Add(Player.CreateTestPlayer(playerName, playerColor, request.IsBot));
+        gs.Players.Add(new Player(gs.GetNewPlayerId(), playerName, playerColor, request.IsBot));
 
         return new ResponseDTO(true, 0, string.Empty, gs);
     }

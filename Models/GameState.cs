@@ -21,6 +21,7 @@ public class GameState
     public GameDice Dice { get; private set; } = new GameDice(true);
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
     public int NextEventId { get; private set; } = 0;
+    private int NextPlayerId { get; set; } = 1;
 
     public Dictionary<ResourceType, int> Resources { get; } = new()
     {
@@ -72,6 +73,39 @@ public class GameState
         InitializeDevelopmentCards();
     }
 
+    // ATTENTION: Right now I'm using PlayerId's that are simply the letter "P"
+    // with a unique (to the single game instance) integer. This is easier to use
+    // for debugging and testing. We may not need anything better as I plan to 
+    // switch to a PlayerToken to identify players outside of individual games.
+    private int GetIntPortionOfPlayerId(string playerId)
+    {
+        var cleanedId = playerId.Trim().ToUpper();
+        
+        if (!cleanedId.StartsWith("P"))
+            throw new ArgumentException("Unexpected Error. All PlayerIds are assumed to start with a P.");
+
+        var withoutLeadingP = cleanedId.Substring(1);
+
+        return int.Parse(withoutLeadingP);
+    }
+
+    private int GetNextPlayerNumber()
+    {
+        if (Players == null)
+            return 1;
+
+        var largestPlayerNumber = 0;
+
+        foreach(var player in Players)
+        {
+            var playerIdNumber = GetIntPortionOfPlayerId(player.Id);
+            if ( playerIdNumber > largestPlayerNumber)
+                largestPlayerNumber = playerIdNumber;
+        }
+
+        return ++largestPlayerNumber;
+    }
+
     public GameState(GameStateDTO dto)
     {
         Id = Guid.Parse(dto.Id);
@@ -90,6 +124,8 @@ public class GameState
             if (dto.Phase != null && player.Id == dto.Phase.EndPlayerId)
                 endPlayer = player;
         }
+
+        NextPlayerId = GetNextPlayerNumber();
 
         foreach (var tileDto in dto.Tiles)
         {
@@ -130,6 +166,14 @@ public class GameState
 
         if (dto.HasLongestRoadPlayerId != null)
             PlayerWithLongestRoad = Players.First(p => p.Id == dto.HasLongestRoadPlayerId);
+    }
+
+    public string GetNewPlayerId()
+    {
+        string playerId = $"P{NextPlayerId}";
+        NextPlayerId++;
+
+        return playerId;
     }
 
     public void AddPlayer(Player player)

@@ -50,6 +50,7 @@ public class GameStateTests
         Assert.Empty(game.Tiles);
         Assert.Equal(GameType.Starter, game.Settings.Type);
         Assert.Equal(GameStates.SettingUpBoard, game.Phase.PhaseState);
+        Assert.Equal("P1", game.GetNewPlayerId());
     }
 
     [Fact]
@@ -70,6 +71,7 @@ public class GameStateTests
         Assert.Empty(game.Edges);
         Assert.Empty(game.Vertices);
         Assert.Empty(game.Ports);
+        Assert.Equal("P1", game.GetNewPlayerId());
     }
 
     [Fact]
@@ -89,6 +91,7 @@ public class GameStateTests
         Assert.Equal(gs.Phase.PhaseState, game.Phase.PhaseState);
         Assert.Null(game.Phase.CurrentPlayer);
         Assert.Null(game.Phase.EndPlayer);
+        Assert.Equal("P1", game.GetNewPlayerId());
     }
 
     [Fact]
@@ -156,6 +159,9 @@ public class GameStateTests
         Assert.Equal(PortType.ThreeToOne, game.Ports[0].Type);
         Assert.Null(game.PlayerWithLargestArmy);
         Assert.Null(game.PlayerWithLongestRoad);
+        var nextPlayerId = game.GetNewPlayerId();
+        Assert.True(nextPlayerId != "P1" && nextPlayerId != "P2");
+        Assert.StartsWith("P", nextPlayerId);
     }
 
     [Fact]
