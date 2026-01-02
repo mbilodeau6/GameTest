@@ -21,6 +21,7 @@ public class GameStateDTO
     public List<VertexDTO> Vertices { get; } = new();
     public List<PortDTO> Ports {get; } = new();
     public List<DevelopmentCardType> DevelopmentCards { get; } = new();
+    public Stack<PreActionState> UndoState {get; } = new Stack<PreActionState>();
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
     public int NextEventId { get; private set; } = 0;
 
@@ -92,6 +93,8 @@ public class GameStateDTO
         foreach (var port in dto.Ports)
             Ports.Add(port);
 
+        UndoState = new Stack<PreActionState>(dto.UndoState);
+
         foreach (var er in dto.EventRecord)
             EventRecord.Add(er);
 
@@ -141,6 +144,7 @@ public class GameStateDTO
 
         Dice = gameState.Dice;
         NextEventId = gameState.NextEventId;
+        UndoState = new Stack<PreActionState>(gameState.UndoState);
     }
 
     public GameStateDTO GetStateForPlayer(Player player)

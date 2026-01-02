@@ -20,6 +20,7 @@ public class GameState
     public Player? PlayerWithLargestArmy { get; private set; } = null!;
     public GameDice Dice { get; private set; } = new GameDice(true);
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
+    public Stack<PreActionState> UndoState { get; private set; } = new Stack<PreActionState>();
     public int NextEventId { get; private set; } = 0;
     private int NextPlayerId { get; set; } = 1;
 
@@ -166,6 +167,8 @@ public class GameState
 
         if (dto.HasLongestRoadPlayerId != null)
             PlayerWithLongestRoad = Players.First(p => p.Id == dto.HasLongestRoadPlayerId);
+
+        UndoState = new Stack<PreActionState>(dto.UndoState);
     }
 
     public string GetNewPlayerId()
@@ -364,5 +367,21 @@ public class GameState
     {
         eventRecord.Id = NextEventId++;
         EventRecord.Add(eventRecord);
+    }
+
+    public PreActionState GetPreActionStat()
+    {
+        return new PreActionState(-1, Phase.PhaseState, Phase.CurrentPlayer!, Phase.EndPlayer!, PlayerWithLargestArmy, PlayerWithLargestArmy);
+    }
+    public void PushUndoState(PreActionState preActionState)
+    {
+        if (preActionState.EventRecordId < 0)
+            throw new InvalidOperationException("Unexpected Error. The EventRecordId must be set to a valid value.");
+        UndoState.Push(preActionState);
+    }
+
+    public void ClearUndoState()
+    {
+        UndoState.Clear();
     }
 }
