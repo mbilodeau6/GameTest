@@ -175,7 +175,14 @@ public static class UndoHelpers
                 edge.ClearEdge();
                 break;
             default:
-                throw new NotImplementedException("Haven't implemented UndoPlaceRoad beyond initial set up.");
+                edge.ClearEdge();
+
+                if (gs.Phase.PhaseState != GameStates.FirstDevCardRoad && gs.Phase.PhaseState != GameStates.SecondDevCardRoad)
+                {
+                    player.AssignResources(ResourceType.Wood, 1);
+                    player.AssignResources(ResourceType.Brick, 1);
+                }
+                break;
         }
     }
 }

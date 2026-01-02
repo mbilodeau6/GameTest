@@ -1,5 +1,6 @@
 using GameTest.DTOs;
 using GameTest.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GameTest.Models;
 
@@ -400,6 +401,22 @@ public class GamePhase
                 }
 
                 // TODO: Need to complete implementation of all cases.
+            }
+            else if (PhaseState == GameStates.BuildOrTrade)
+                return; // No undo scenario that let's you move from BuildOrTrade back to RollDice
+            else if (PhaseState == GameStates.SecondDevCardRoad)
+            {
+                PhaseState = GameStates.FirstDevCardRoad;
+                return;
+            }
+            else if (PhaseState == GameStates.FirstDevCardRoad)
+            {
+                if (PreviousState == null)
+                    throw new InvalidOperationException("Unexpected Error: PreviousState shouldn't be null during SecondDevCardRoad.");
+                else
+                    PhaseState = (GameStates) PreviousState;
+                
+                return;
             }
         }
 
