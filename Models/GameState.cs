@@ -363,20 +363,29 @@ public class GameState
         return CountCitiesForPlayer(player) < Settings.CitiesPerPlayer;
     }
 
-    public void AddEventRecord(EventRecordDTO eventRecord)
+    public int AddEventRecord(EventRecordDTO eventRecord)
     {
         eventRecord.Id = NextEventId++;
         EventRecord.Add(eventRecord);
+
+        return eventRecord.Id;
     }
 
     public PreActionState GetPreActionStat()
     {
-        return new PreActionState(-1, Phase.PhaseState, Phase.CurrentPlayer!, Phase.EndPlayer!, PlayerWithLargestArmy, PlayerWithLargestArmy);
+        return new PreActionState(-1, Phase, PlayerWithLargestArmy, PlayerWithLargestArmy);
     }
-    public void PushUndoState(PreActionState preActionState)
+
+    // Accept optional eventRecordId override because many caller won't have the eventRecordId
+    // before the action is preformed (which is too late to store/create the preActionState)
+    public void PushUndoState(PreActionState preActionState, int? eventRecordId = null)
     {
-        if (preActionState.EventRecordId < 0)
+        if (preActionState.EventRecordId < 0 && (eventRecordId == null || eventRecordId < 0))
             throw new InvalidOperationException("Unexpected Error. The EventRecordId must be set to a valid value.");
+        
+        if (eventRecordId != null && eventRecordId >= 0)
+            preActionState.SetEventRecordId((int) eventRecordId);
+
         UndoState.Push(preActionState);
     }
 

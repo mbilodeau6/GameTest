@@ -1,6 +1,5 @@
 using GameTest.DTOs;
 using GameTest.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace GameTest.Models;
 

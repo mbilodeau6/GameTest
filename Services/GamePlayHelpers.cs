@@ -267,6 +267,7 @@ public static class GamePlayHelpers
 
     public static void BuildRoad(GameState gs, Player player, Edge edge)
     {
+        var preActionState = gs.GetPreActionStat();
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
             WithdrawResourcesToBuildRoad(player);
 
@@ -278,7 +279,8 @@ public static class GamePlayHelpers
         }
 
         edge.BuildRoad(player);
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
+        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
+        gs.PushUndoState(preActionState, eventRecordId);
 
         if (gs.PlayerWithLongestRoad == null && gs.GetLongestRoadLength(player) > 4)
         {
@@ -342,6 +344,7 @@ public static class GamePlayHelpers
 
     public static void BuildSettlement(GameState gs, Player player, Vertex vertex)
     {
+        var preActionState = gs.GetPreActionStat();
         var resourcesGained = new Dictionary<ResourceType, int>();
 
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
@@ -359,13 +362,15 @@ public static class GamePlayHelpers
 
         vertex.BuildSettlement(player);
 
+        var eventRecordId = -1;
         if (gs.Phase.PhaseState == GameStates.PlaceFirstSettlement)
-            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceFirstSettlement, vertex));
+            eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceFirstSettlement, vertex));
         else if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement)
-            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSecondSettlement, vertex, resourcesGained));
+            eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSecondSettlement, vertex, resourcesGained));
         else
-            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
+            eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceSettlement, vertex));
 
+        gs.PushUndoState(preActionState, eventRecordId);
         MarkBlockedVertices(gs, vertex);
         PopulatePlayerPorts(gs);
         gs.UpdatePlayerVictoryPoints(player);
@@ -418,10 +423,12 @@ public static class GamePlayHelpers
     {
         if (BuildCityPhase(gs))
         {
+            var preActionState = gs.GetPreActionStat();
             WithdrawResourcesToBuildCity(player);
             vertex.UpgradeToCity();
-            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
+            var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
             gs.UpdatePlayerVictoryPoints(player);
+            gs.PushUndoState(preActionState, eventRecordId);
         }
     }
 
@@ -465,6 +472,7 @@ public static class GamePlayHelpers
 
     private static void UpdateStatsOnGameOver(GameState gs)
     {
+        gs.ClearUndoState();
         foreach(var player in gs.Players)
             player.SetVictoryPoints(player.FullVictoryPoints, player.FullVictoryPoints);
     }
@@ -585,6 +593,7 @@ public static class GamePlayHelpers
         if (gs.Phase.PhaseState != GameStates.RollOrUseDevCard || gs.Phase.CurrentPlayer == null)
             throw new InvalidOperationException($"Unexpected Exception. Roll called when game in {gs.Phase.PhaseState}. Player: {gs.Phase.CurrentPlayer}.");
 
+        gs.ClearUndoState();
         gs.Dice.Roll();
         gs.Phase.ClearWaitingForRoll();
         gs.AddEventRecord(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.RollDice, gs.Dice));
@@ -670,11 +679,15 @@ public static class GamePlayHelpers
 
     public static ResponseDTO BankTrade(GameState gs, TradeRequest request)
     {
+        var preActionState = gs.GetPreActionStat();
         Bank bank = new Bank();
         var response = bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
 
         if (response.Success)
-            gs.AddEventRecord(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
+        {
+            var eventRecordId = gs.AddEventRecord(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
+            gs.PushUndoState(preActionState, eventRecordId);
+        }
 
         return response;
     }
@@ -701,6 +714,7 @@ public static class GamePlayHelpers
 
     private static void StealResource(GameState gs, Player player, Tile tile)
     {
+        gs.ClearUndoState();
         if (gs.Phase.TargetPlayers != null && gs.Phase.TargetPlayers.Count != 1)
             throw new InvalidOperationException("StealResources should only be called after a target player has been selected");
 
@@ -744,10 +758,11 @@ public static class GamePlayHelpers
 
     public static void PlaceRobber(GameState gs, Player player, Tile tile)
     {
-        // Move Robber
+        var preActionState = gs.GetPreActionStat();
         gs.Phase.SetTargetPlayers(GetOpponentsOnTile(gs, player, tile));
         gs.SetRobberTile(tile);
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
+        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
+        gs.PushUndoState(preActionState, eventRecordId);
 
         if (gs.Phase.TargetPlayers == null || gs.Phase.TargetPlayers.Count == 1)
             StealResource(gs, player, tile);
@@ -795,6 +810,7 @@ public static class GamePlayHelpers
         if (!HasResourcesToBuyDevCard(player))
             throw new InvalidOperationException("Unexpected Error. Player doesn't have resources to buy dev card.");
 
+        gs.ClearUndoState();
         player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.BuyDevelopmentCard, gs.DevelopmentCards[0]));
         gs.DevelopmentCards.RemoveAt(0);
@@ -881,6 +897,7 @@ public static class GamePlayHelpers
 
     public static void PlayMonopolyDevCard(GameState gs, Player player, ResourceType requestedResource)
     {
+        gs.ClearUndoState();
         StandardPlayDevCardValidation(gs, player, DevelopmentCardType.Monopoly);
 
         if (requestedResource == ResourceType.Desert)
@@ -936,14 +953,19 @@ public static class GamePlayHelpers
             if (resource == ResourceType.Desert)
                 throw new InvalidOperationException($"Unexpected Error. Desert is not a valid resource to request in PlayYearOfPlentyDevCard.");
 
+        var preActionState = gs.GetPreActionStat();
+
         foreach(var resource in requestedResources)
             player.AssignResources(resource, 1);
 
+        var eventRecordId = -1;
         SharedPlayDevCard(gs, player, DevelopmentCardType.YearOfPlenty);
         if (requestedResources[0] == requestedResources[1])
-            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 2} }));
+            eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 2} }));
         else
-            gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
+            eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayYearOfPlenty, new Dictionary<ResourceType, int>() { {requestedResources[0], 1}, {requestedResources[1], 1} }));
+
+        gs.PushUndoState(preActionState, eventRecordId);
     }
 
     public static ResponseDTO PlayYearOfPlentyDevCardFromUser(GameState gs, PlayDevCardRequest request)
@@ -970,12 +992,14 @@ public static class GamePlayHelpers
     {
         StandardPlayDevCardValidation(gs, player, DevelopmentCardType.RoadBuilding);
 
+        var preActionState = gs.GetPreActionStat();
+
         gs.Phase.StoreStateDevCardRoadBuilding(gs.Phase.PhaseState, gs.Edges.Count(e => e.Owner != null && e.Owner.Id == player.Id));
         gs.Phase.PhaseState = GameStates.FirstDevCardRoad;
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.RoadBuilding);
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayRoadBuilding));
-
+        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayRoadBuilding));
+        gs.PushUndoState(preActionState, eventRecordId);
     }
 
     public static ResponseDTO PlayRoadBuildingDevCardFromUser(GameState gs, PlayDevCardRequest request)
@@ -997,14 +1021,16 @@ public static class GamePlayHelpers
     {
         StandardPlayDevCardValidation(gs, player, DevelopmentCardType.Knight);
 
+        var preActionState = gs.GetPreActionStat();
         var origRobberLocation = gs.RobberTile;
 
         if (targetTile.Id == gs.RobberTile.Id)
             throw new InvalidOperationException("Unexpected Error. The robber can not be moved to the tile it is already on.");
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.Knight);
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
+        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
+        gs.PushUndoState(preActionState, eventRecordId);
 
         if (gs.PlayerWithLargestArmy == null && player.CountPlayedKnights() > 2) 
         {
@@ -1070,6 +1096,8 @@ public static class GamePlayHelpers
         if (cardsToDiscard.Count != player.ResourceCount / 2)
             throw new InvalidOperationException($"Unexpected Error. The calling is trying to discard the wrong number of cards. GameId: {gs.Id}; Player: {player.Id}; TotalCards: {player.ResourceCount}; DiscardCount: {cardsToDiscard.Count}");
 
+        var preActionState = gs.GetPreActionStat();
+
         foreach (var resource in cardsToDiscard)
         {
             if (player.Resources[resource] <= 0)
@@ -1078,7 +1106,8 @@ public static class GamePlayHelpers
             player.RemoveResources(resource, 1);
         }
 
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.DiscardCards, cardsToDiscard));
+        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.DiscardCards, cardsToDiscard));
+        gs.PushUndoState(preActionState, eventRecordId);
     }
 
     public static ResponseDTO DiscardCardRequestFromUser(GameState gs, DiscardRequest request)
@@ -1130,6 +1159,7 @@ public static class GamePlayHelpers
         if (request == null || request.Count == 0)
             throw new InvalidOperationException($"Unexpected Error. Trade requested with missing requested resources.");
 
+        gs.ClearUndoState();
         var offerAsList = AIHelpers.ConvertResourceDictToList(offer);
         var requestAsList = AIHelpers.ConvertResourceDictToList(request);
         if (offerAsList.Count == requestAsList.Count && AIHelpers.MultiSetSubtraction(offerAsList, requestAsList).Count == 0)
@@ -1211,6 +1241,7 @@ public static class GamePlayHelpers
             if (response.Request == null || response.Request.Count == 0)
                 throw new InvalidOperationException($"Unexpected Error. Trade response counter is missing requested resources.");
 
+            gs.ClearUndoState();
             var offerAsList = AIHelpers.ConvertResourceDictToList(response.Offer);
             var requestAsList = AIHelpers.ConvertResourceDictToList(response.Request);
             if (offerAsList.Count == requestAsList.Count && AIHelpers.MultiSetSubtraction(offerAsList, requestAsList).Count == 0)
@@ -1314,6 +1345,7 @@ public static class GamePlayHelpers
                 throw new InvalidOperationException($"Unexpected Error. Trying to accept a counter offer that can't be met. Player: {player}; ResourceMissing: {missingResources[0].ToString()}");
         }
 
+        gs.ClearUndoState();
         var offer = new Dictionary<ResourceType, int>();
         var request = new Dictionary<ResourceType, int>();
 
@@ -1410,6 +1442,7 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer.Id != player.Id)
             throw new InvalidOperationException($"Unexpected Error. It isn't the player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}");
 
+        gs.ClearUndoState();
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.RejectTrade));
         gs.Phase.ClearPendingTradeResponses();
     }
@@ -1528,6 +1561,7 @@ public static class GamePlayHelpers
         if (gs.Phase.TargetPlayers == null || !gs.Phase.TargetPlayers.Any(p => p.Id == targetPlayer.Id))
             throw new InvalidOperationException($"Unexpected Error. Player {targetPlayer.Id} is not a valid target.");
 
+        gs.ClearUndoState();
         gs.Phase.SetTargetPlayer(targetPlayer);
         StealResource(gs, player, gs.RobberTile);
     }

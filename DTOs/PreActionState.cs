@@ -4,19 +4,15 @@ using GameTest.Models;
 public class PreActionState
 {
     public int EventRecordId {get; private set; }
-    public GameStates State {get; init; }
-    public string CurrentPlayerId {get; init; }
-    public string EndPlayerId {get; init; }
+    public GamePhase Phase {get; init; }
     public string? HasLongestRoadPlayerId { get; init; } = null;
     public string? HasLargestArmyPlayerId { get; init; } = null;
 
-    public PreActionState(int eventRecordId, GameStates state, Player currentPlayer, 
-        Player endPlayer, Player? longestRoadPlayer, Player? largestArmyPlayer )
+    public PreActionState(int eventRecordId, GamePhase phase, Player? longestRoadPlayer, Player? largestArmyPlayer )
     {
         EventRecordId = eventRecordId;
-        State = state;
-        CurrentPlayerId = currentPlayer.Id;
-        EndPlayerId = endPlayer.Id;
+
+        Phase = new GamePhase(phase);
 
         if (largestArmyPlayer != null)
             HasLargestArmyPlayerId = largestArmyPlayer.Id;
@@ -26,13 +22,10 @@ public class PreActionState
     }
     
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
-    public PreActionState(int eventRecordId, GameStates state, string currentPlayerId, 
-        string endPlayerId, string? longestRoadPlayerId, string? largestArmyPlayerId )
+    public PreActionState(int eventRecordId, GamePhase phase, string? longestRoadPlayerId, string? largestArmyPlayerId )
     {
         EventRecordId = eventRecordId;
-        State = state;
-        CurrentPlayerId = currentPlayerId;
-        EndPlayerId = endPlayerId;
+        Phase = new GamePhase(phase);
         HasLargestArmyPlayerId = largestArmyPlayerId;
         HasLongestRoadPlayerId = longestRoadPlayerId;
     }
