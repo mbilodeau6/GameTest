@@ -383,6 +383,8 @@ public class UndoHelpersTests
         Assert.Equal(GameStates.PlaceSecondRoad, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.EndPlayer.Id);
         Assert.Equal(1, gs.CountRoadsForPlayer(board.GetRedPlayer()));
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);

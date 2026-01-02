@@ -395,6 +395,7 @@ public class GamePhase
                 if (playerRoadCount < 2)
                 {
                     PhaseState = GameStates.PlaceSecondRoad;
+                    EndPlayer = CurrentPlayer;
                     return;
                 }
 
