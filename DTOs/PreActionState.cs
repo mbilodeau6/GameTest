@@ -1,10 +1,12 @@
 using System.Text.Json.Serialization;
 using GameTest.Models;
 
+namespace GameTest.DTOs;
+
 public class PreActionState
 {
     public int EventRecordId {get; private set; }
-    public GamePhase Phase {get; init; }
+    public GamePhaseDTO Phase {get; init; }
     public string? HasLongestRoadPlayerId { get; init; } = null;
     public string? HasLargestArmyPlayerId { get; init; } = null;
 
@@ -12,7 +14,7 @@ public class PreActionState
     {
         EventRecordId = eventRecordId;
 
-        Phase = new GamePhase(phase);
+        Phase = new GamePhaseDTO(phase);
 
         if (largestArmyPlayer != null)
             HasLargestArmyPlayerId = largestArmyPlayer.Id;
@@ -22,12 +24,13 @@ public class PreActionState
     }
     
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
-    public PreActionState(int eventRecordId, GamePhase phase, string? longestRoadPlayerId, string? largestArmyPlayerId )
+    [JsonConstructor]
+    public PreActionState(int eventRecordId, GamePhaseDTO phase, string? hasLongestRoadPlayerId, string? hasLargestArmyPlayerId )
     {
         EventRecordId = eventRecordId;
-        Phase = new GamePhase(phase);
-        HasLargestArmyPlayerId = largestArmyPlayerId;
-        HasLongestRoadPlayerId = longestRoadPlayerId;
+        Phase = phase;
+        HasLargestArmyPlayerId = hasLargestArmyPlayerId;
+        HasLongestRoadPlayerId = hasLongestRoadPlayerId;
     }
 
     public void SetEventRecordId(int eventRecordId)

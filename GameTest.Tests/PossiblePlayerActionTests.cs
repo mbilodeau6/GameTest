@@ -3,6 +3,8 @@ using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
 using Microsoft.AspNetCore.SignalR;
+using System.Runtime.ExceptionServices;
+using Azure;
 
 namespace GameTest.Tests;
 
@@ -434,8 +436,10 @@ public class PossiblePlayerActionTests
         var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), human);
 
         Assert.NotNull(actions);
-        Assert.Single(actions);
-        var action = actions.First();
+        Assert.Equal(2, actions.Count);
+        Assert.Contains(actions, a => a.Action == PlayerAction.RollDice);
+        Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
+        var action = actions.First(a => a.Action == PlayerAction.RollDice);
         Assert.Equal(PlayerAction.RollDice, action.Action);
         Assert.Null(action.EdgeIds);
         Assert.Null(action.VertexIds);
@@ -895,10 +899,11 @@ public class PossiblePlayerActionTests
         var gs = board.GetGameState();
         gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
         gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
-        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
-        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetRedPlayer());
-
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetRedPlayer());
+        var response = GamePlayHelpers.BuildSettlementRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V5).Id);
+        Assert.True(response.Success);
+        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        
         var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
 
         Assert.NotNull(actions);
@@ -909,14 +914,16 @@ public class PossiblePlayerActionTests
     [Fact]
     public void GetPossiblePlayerActions_Undo_AvailableFirstRoad()
     {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var board = TestHelpers.CreateOriginalTestBoard(false);
         var gs = board.GetGameState();
         gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
         gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
+        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
-        gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetRedPlayer());
+        var response = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E11).Id);
+        Assert.True(response.Success);
+        Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
 
         var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
 

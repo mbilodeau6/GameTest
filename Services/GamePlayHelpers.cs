@@ -16,6 +16,24 @@ public static class GamePlayHelpers
         return 0;
     }
 
+    public static Dictionary<ResourceType, int> GetResourcesEarnedOnVertex(GameState gs, Vertex vertex)
+    {
+        var resources = new Dictionary<ResourceType, int>();
+
+        foreach (var tile in vertex.Tiles)
+        {
+            if (tile.Resource == ResourceType.Desert)
+                continue;
+
+            if (!resources.ContainsKey(tile.Resource))
+                resources.Add(tile.Resource, 1);
+            else
+                resources[tile.Resource]++;    
+        }
+
+        return resources;
+    }
+
     public static Dictionary<Player, Dictionary<ResourceType, int>> GetResourcesEarnedOnLastRoll(GameState gs)
     {
         var resourcesEarned = new Dictionary<Player, Dictionary<ResourceType, int>>();
@@ -60,6 +78,12 @@ public static class GamePlayHelpers
 
             gameState.AddEventRecord(new EventRecordDTO(kvpPlayer.Key, EventRecordAction.ReceivedResources, gained));
         }
+    }
+
+    public static void RemoveResourcesFromPlayer(GameState gs, Player player, Dictionary<ResourceType, int> resources)
+    {
+        foreach (var kvp in resources)
+            player.RemoveResources(kvp.Key, kvp.Value);
     }
 
     public static void AssignResourcesBasedOnLastDiceRoll(GameState gameState)
@@ -481,9 +505,11 @@ public static class GamePlayHelpers
     {
         int loopCounter = 0; // Failsafe to prevent infinite loops
 
-        gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
-            gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!), 
-            gs.Dice.GetCombinedValue(), gs.RobberTile);
+        var settlementCount =  gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!);
+        var playerRoadCount = gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!);
+        var diceValue = gs.Dice.GetCombinedValue();
+
+        gs.Phase = gs.Phase.GetNextPhase(gs.Players, settlementCount, playerRoadCount, diceValue, gs.RobberTile);
 
         if (gs.Phase.PhaseState == GameStates.GameOver)
         {
@@ -575,9 +601,11 @@ public static class GamePlayHelpers
                 if (move.SelectedPlayer != null && gs.Phase.PhaseState == GameStates.SelectTarget)
                     GamePlayHelpers.SelectTarget(gs, gs.Phase.CurrentPlayer, move.SelectedPlayer);
 
-                gs.Phase = gs.Phase.GetNextPhase(gs.Players, 
-                    gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer), 
-                    gs.Dice.GetCombinedValue(), gs.RobberTile);
+                settlementCount =  gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!);
+                playerRoadCount = gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!);
+                diceValue = gs.Dice.GetCombinedValue();
+
+                gs.Phase = gs.Phase.GetNextPhase(gs.Players, settlementCount, playerRoadCount, diceValue, gs.RobberTile);
 
                 if (gs.Phase.PhaseState == GameStates.GameOver)
                 {

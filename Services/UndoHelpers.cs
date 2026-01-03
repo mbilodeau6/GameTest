@@ -2,6 +2,7 @@ using System.Diagnostics.Eventing.Reader;
 using System.Numerics;
 using GameTest.DTOs;
 using GameTest.Models;
+using Microsoft.Identity.Client;
 
 namespace GameTest.Services;
 
@@ -37,7 +38,7 @@ public static class UndoHelpers
 
     public static UndoValidationResponse ValidateUndoRequest(GameState gs, UndoRequest request)
     {
-                // Validate game state allows undo
+        // Validate game state allows undo
         if (!UndoValidGameStates.Contains(gs.Phase.PhaseState))
             return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1003};
 
@@ -55,25 +56,30 @@ public static class UndoHelpers
         if (eventToUndo.PlayerId != request.PlayerId)
             return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1071, Player = player, Event = eventToUndo };
 
-        // Validate the event action is undoable
-        if (!UndoValidEventActions.Contains(eventToUndo.Action))
+        // TODO: Improve error text for 1072 in ResponseDTO if sticking with this logic
+        if (gs.UndoState.Count() == 0)
             return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1072, Player = player, Event = eventToUndo };
 
-        // Validate no player has acted since this event
-        List<EventRecordDTO> copyOfEventRecords = gs.EventRecord.Where(e => e.Id > request.EventId).ToList();
-        foreach(var undoEvent in gs.EventRecord.Where(e => e.Id > request.EventId && e.Action == EventRecordAction.Undo))
-        {
-            copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.Id);
-            copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.EventReversed);
-        }
+        // TODO: Remove if above works
+        // // Validate the event action is undoable
+        // if (!UndoValidEventActions.Contains(eventToUndo.Action))
+        //     return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1072, Player = player, Event = eventToUndo };
 
-        if (copyOfEventRecords.Any())
-            return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1074, Player = player, Event = eventToUndo };
+        // // Validate no player has acted since this event
+        // List<EventRecordDTO> copyOfEventRecords = gs.EventRecord.Where(e => e.Id > request.EventId).ToList();
+        // foreach(var undoEvent in gs.EventRecord.Where(e => e.Id > request.EventId && e.Action == EventRecordAction.Undo))
+        // {
+        //     copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.Id);
+        //     copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.EventReversed);
+        // }
+
+        // if (copyOfEventRecords.Any())
+        //     return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1074, Player = player, Event = eventToUndo };
 
         return new UndoValidationResponse { UndoPossible = true, Player = player, Event = eventToUndo };
     }
 
-        public static ResponseDTO UndoFromUser(GameState gs, UndoRequest request)
+    public static ResponseDTO UndoFromUser(GameState gs, UndoRequest request, bool stateAlreadyChanged = false)
     {
         var validationResponse = UndoHelpers.ValidateUndoRequest(gs, request);
 
@@ -103,24 +109,29 @@ public static class UndoHelpers
         if (validationResponse.Player == null || validationResponse.Event == null)
             throw new InvalidOperationException("UnexpectedError. PossibleUndo response missing player or event.");
 
-        UndoHelpers.ReverseAction(gs, validationResponse.Player, validationResponse.Event);
+        ReverseAction(gs, validationResponse.Player, validationResponse.Event, stateAlreadyChanged);
         gs.AddEventRecord(new EventRecordDTO(validationResponse.Player, EventRecordAction.Undo, request.EventId));
-        gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
+        // TODO: Remove if experiment with UndoState works
+        // gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
         GamePlayHelpers.GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs, validationResponse.Player);
     }
 
 
-    public static void ReverseAction(GameState gs, Player player, EventRecordDTO er)
+    public static void ReverseAction(GameState gs, Player player, EventRecordDTO er, bool stateAlreadyChanged = false)
     {
         if (player.Id != er.PlayerId)
             throw new InvalidOperationException("Unexpected Error. Player doesn't match event player.");
 
-        if (gs.Phase.CurrentPlayer != null && 
-                player.Id != gs.Phase.CurrentPlayer.Id && 
-                player.Id != gs.Phase.GetPreviousPlayer(gs.Phase.CurrentPlayer, gs.Players).Id)
-            throw new InvalidOperationException("Unexpected Error. Player doesn't match current or previous player.");
+        if (gs.UndoState.Count() == 0)
+            throw new InvalidOperationException("Unexpected Error. ReverseAction called when UndoState empty.");
+
+        // TODO: Remove if experiment with UndoState works.
+        // if (gs.Phase.CurrentPlayer != null && 
+        //         player.Id != gs.Phase.CurrentPlayer.Id && 
+        //         player.Id != gs.Phase.GetPreviousPlayer(gs.Phase.CurrentPlayer, gs.Players).Id)
+        //     throw new InvalidOperationException("Unexpected Error. Player doesn't match current or previous player.");
 
         switch(er.Action)
         {
@@ -130,8 +141,42 @@ public static class UndoHelpers
             case EventRecordAction.PlaceRoad:
                 UndoPlaceRoad(gs, player, er.EdgeId!);
                 break;
+            case EventRecordAction.PlaceSecondSettlement:
+                UndoPlaceSecondSettlement(gs, player, er.VertexId!);
+                break;
+            case EventRecordAction.GainedLongestRoad:
+                UndoFromUser(gs, new UndoRequest(player.Id, er.Id -1), true);
+                break;
             default:
                 throw new NotImplementedException("Unexpected Error. Haven't implemented ReverseAction yet.");
+        }
+
+        if (!stateAlreadyChanged)
+        {
+            var preActionState = gs.UndoState.Pop();
+            gs.Phase = new GamePhase(gs, preActionState.Phase);
+
+            if (preActionState.HasLargestArmyPlayerId == null)
+                gs.ClearLargestArmyPlayer();
+            else
+            {
+                var largestArmyPlayer = gs.Players.FirstOrDefault(p => p.Id == preActionState.HasLargestArmyPlayerId);
+                if (largestArmyPlayer == null)
+                    throw new InvalidOperationException("Unexpected Error. Couldn't find player who use to have largest army.");
+
+                gs.AssignLargestArmyToPlayer(largestArmyPlayer);
+            }
+
+            if (preActionState.HasLongestRoadPlayerId == null)
+                gs.ClearLongestRoadPlayer();
+            else
+            {
+                var longestRoadPlayer = gs.Players.FirstOrDefault(p => p.Id == preActionState.HasLongestRoadPlayerId);
+                if (longestRoadPlayer == null)
+                    throw new InvalidOperationException("Unexpected Error. Couldn't find player who use to have longest raod.");
+                    
+                gs.AssignLongestRoadToPlayer(longestRoadPlayer);
+            }
         }
     }
 
@@ -156,6 +201,20 @@ public static class UndoHelpers
         GamePlayHelpers.MarkBlockedVertices(gs);
     }
 
+    private static void UndoPlaceSecondSettlement(GameState gs, Player player, string vertexId)
+    {
+        var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
+
+        if (vertex == null)
+            throw new InvalidOperationException("Unexpected Error. Event vertex not found.");
+        
+        var resources = GamePlayHelpers.GetResourcesEarnedOnVertex(gs, vertex);
+
+        UndoPlaceFirstSettlement(gs, player, vertexId);
+
+        GamePlayHelpers.RemoveResourcesFromPlayer(gs, player, resources);
+    }
+
     private static void UndoPlaceRoad(GameState gs, Player player, string edgeId)
     {
         var edge = gs.Edges.FirstOrDefault(e => e.Id == edgeId);
@@ -177,7 +236,7 @@ public static class UndoHelpers
             default:
                 edge.ClearEdge();
 
-                if (gs.Phase.PhaseState != GameStates.FirstDevCardRoad && gs.Phase.PhaseState != GameStates.SecondDevCardRoad)
+                if (gs.Phase.PhaseState != GameStates.SecondDevCardRoad && gs.UndoState.Peek().Phase.PhaseState != GameStates.SecondDevCardRoad)
                 {
                     player.AssignResources(ResourceType.Wood, 1);
                     player.AssignResources(ResourceType.Brick, 1);

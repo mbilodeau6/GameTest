@@ -234,9 +234,19 @@ public class GameState
         PlayerWithLongestRoad = player;
     }
 
+    public void ClearLongestRoadPlayer()
+    {
+        PlayerWithLongestRoad = null;      
+    }
+
     public void AssignLargestArmyToPlayer(Player player)
     {
         PlayerWithLargestArmy = player;
+    }
+
+    public void ClearLargestArmyPlayer()
+    {
+        PlayerWithLargestArmy = null;      
     }
 
     public Tile GetTileAt(int x, int y)
@@ -373,7 +383,7 @@ public class GameState
 
     public PreActionState GetPreActionStat()
     {
-        return new PreActionState(-1, Phase, PlayerWithLargestArmy, PlayerWithLargestArmy);
+        return new PreActionState(-1, Phase, PlayerWithLongestRoad, PlayerWithLargestArmy);
     }
 
     // Accept optional eventRecordId override because many caller won't have the eventRecordId

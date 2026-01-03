@@ -150,7 +150,7 @@ public class TestGameBoard
         Edges.Add(TestEdge.E18, GS.GetEdgeFromTileInfo(Tiles[TestTile.T2], null, HexDirection.SE));
         Edges.Add(TestEdge.E19, GS.GetEdgeFromTileInfo(Tiles[TestTile.T3], null, HexDirection.E));
         Edges.Add(TestEdge.E20, GS.GetEdgeFromTileInfo(Tiles[TestTile.T3], null, HexDirection.SE));
-        Edges.Add(TestEdge.E21, GS.GetEdgeFromTileInfo(Tiles[TestTile.T3], null, HexDirection.SE));
+        Edges.Add(TestEdge.E21, GS.GetEdgeFromTileInfo(Tiles[TestTile.T3], null, HexDirection.SW));
         Edges.Add(TestEdge.E22, GS.GetEdgeFromTileInfo(Tiles[TestTile.T4], null, HexDirection.SE));
         Edges.Add(TestEdge.E23, GS.GetEdgeFromTileInfo(Tiles[TestTile.T4], null, HexDirection.SW));
         Edges.Add(TestEdge.E24, GS.GetEdgeFromTileInfo(Tiles[TestTile.T4], null, HexDirection.W));

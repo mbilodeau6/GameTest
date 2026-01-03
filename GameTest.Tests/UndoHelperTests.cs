@@ -267,7 +267,7 @@ public class UndoHelpersTests
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.False(response.Success);
-        Assert.Equal(1074, response.ErrorCode);
+        Assert.Equal(1072, response.ErrorCode);
         Assert.Null(response.GameState);
     }
 
@@ -297,14 +297,14 @@ public class UndoHelpersTests
         var gs = board.GetGameState();
         gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
         gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
-        board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
         GamePlayHelpers.MarkBlockedVertices(gs);
+        gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement, board.GetRedPlayer(), board.GetRedPlayer());
+        var buildResponse = GamePlayHelpers.BuildSettlementRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V5).Id);
+        Assert.True(buildResponse.Success);
         Assert.Equal(BuildingType.Blocked, board.GetVertex(TestVertex.V6).Building);
         Assert.Equal(BuildingType.Blocked, board.GetVertex(TestVertex.V19).Building);
         Assert.Equal(BuildingType.Blocked, board.GetVertex(TestVertex.V4).Building);
-
-        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetRedPlayer());
+        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
 
         var request = new UndoRequest(board.GetRedPlayer().Id, 2);
 
@@ -330,51 +330,54 @@ public class UndoHelpersTests
     }
 
     [Fact]
-    public void UndoFromUser_UndoSecondSettlement_FirstPlayer()
+    public void UndoFromUser_UndoSecondSettlement_LastPlayer()
     {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
         var gs = board.GetGameState();
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V3)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E3)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceFirstSettlement, board.GetVertex(TestVertex.V5)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
         gs.Phase = new GamePhase(GameStates.PlaceSecondSettlement, board.GetRedPlayer(), board.GetBluePlayer());
+        var buildResponse = GamePlayHelpers.BuildSettlementRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V10).Id);
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.PlaceSecondRoad, gs.Phase.PhaseState);
+        Assert.Equal(2, gs.CountSettlementsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Ore]);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 3);
+        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
 
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
         Assert.NotNull(response.GameState);
-        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
-        Assert.Equal(0, gs.CountRoadsForPlayer(board.GetRedPlayer()));
-        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
-        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
-        Assert.Null(board.GetEdge(TestEdge.E11).Owner);
-        Assert.Contains(gs.EventRecord, e => e.Id == 4 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 3);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(1, gs.CountSettlementsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
+        Assert.Null(board.GetVertex(TestVertex.V10).Owner);
+        Assert.Null(board.GetVertex(TestVertex.V10).Building);
+        Assert.Contains(gs.EventRecord, e => e.Id == 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 0);
     }
 
     [Fact]
-    public void UndoFromUser_UndoSecondRoad_FirstPlayer()
+    public void UndoFromUser_UndoSecondRoad_LastPlayer()
     {
-        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
         var gs = board.GetGameState();
-        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceSecondSettlement, board.GetVertex(TestVertex.V10), 
-            new Dictionary<ResourceType, int>() { {ResourceType.Wool, 1}, {ResourceType.Ore, 1}}));
-        board.GetEdge(TestEdge.E15).BuildRoad(board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E15)));
-        board.GetVertex(TestVertex.V16).BuildSettlement(board.GetRedPlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSecondSettlement, board.GetVertex(TestVertex.V16),
-            new Dictionary<ResourceType, int>() { {ResourceType.Wood, 1}, {ResourceType.Wool, 1}}));
-        board.GetEdge(TestEdge.E22).BuildRoad(board.GetRedPlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E22)));
-        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, board.GetRedPlayer(), board.GetBluePlayer());
+        board.GetVertex(TestVertex.V10).BuildSettlement(board.GetRedPlayer());
+        gs.Phase = new GamePhase(GameStates.PlaceSecondRoad, board.GetRedPlayer(), board.GetBluePlayer());
+        var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E16).Id);
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(2, gs.CountRoadsForPlayer(board.GetRedPlayer()));
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 3);
+        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
 
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
@@ -384,26 +387,27 @@ public class UndoHelpersTests
         Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
         Assert.NotNull(gs.Phase.EndPlayer);
-        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
         Assert.Equal(1, gs.CountRoadsForPlayer(board.GetRedPlayer()));
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Grain]);
-        Assert.Null(board.GetEdge(TestEdge.E22).Owner);
-        Assert.Contains(gs.EventRecord, e => e.Id == 4 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 3);
+        Assert.Null(board.GetEdge(TestEdge.E16).Owner);
+        Assert.Contains(gs.EventRecord, e => e.Id == 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 0);
     }
 
     private TestGameBoard CreateBoardThatIsPastSetUpPhase(GameStates startingPhase)
     {
-        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
         var gs = board.GetGameState();
         board.GetVertex(TestVertex.V10).BuildSettlement(board.GetBluePlayer());
         board.GetEdge(TestEdge.E15).BuildRoad(board.GetBluePlayer());
         board.GetVertex(TestVertex.V16).BuildSettlement(board.GetRedPlayer());
         board.GetEdge(TestEdge.E22).BuildRoad(board.GetRedPlayer());
         gs.Phase = new GamePhase(startingPhase, board.GetRedPlayer(), board.GetBluePlayer());
+        GamePlayHelpers.MarkBlockedVertices(gs);
 
         board.GetRedPlayer().AssignResources(ResourceType.Wood, 1);
         board.GetRedPlayer().AssignResources(ResourceType.Wool, 1);
@@ -422,9 +426,11 @@ public class UndoHelpersTests
     {
         var board = CreateBoardThatIsPastSetUpPhase(GameStates.BuildOrTrade);
         var gs = board.GetGameState();
-        board.GetEdge(TestEdge.E25).BuildRoad(board.GetRedPlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E25)));
+        var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E25).Id);
         var eventIdToUndo = gs.EventRecord.Last().Id;
+        Assert.True(buildResponse.Success);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
 
         var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
         var response =  UndoHelpers.UndoFromUser(gs, request);
@@ -437,8 +443,8 @@ public class UndoHelpersTests
         Assert.NotNull(gs.Phase.EndPlayer);
         Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
         Assert.Equal(2, gs.CountRoadsForPlayer(board.GetRedPlayer()));
-        Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Wood]);
-        Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
@@ -485,9 +491,9 @@ public class UndoHelpersTests
         board.GetEdge(TestEdge.E25).BuildRoad(board.GetRedPlayer());
         var gs = board.GetGameState();
         gs.Phase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 2);
-        GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E26).Id);
+        var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E26).Id);
+        Assert.True(buildResponse.Success);
         var eventIdToUndo = gs.EventRecord.Last().Id;
-        GamePlayHelpers.GameLoop(gs);
         Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
 
         var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
@@ -500,7 +506,7 @@ public class UndoHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
         Assert.NotNull(gs.Phase.EndPlayer);
         Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
-        Assert.Equal(2, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(3, gs.CountRoadsForPlayer(board.GetRedPlayer()));
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
@@ -513,13 +519,86 @@ public class UndoHelpersTests
     [Fact]
     public void UndoFromUser_Undo5thRoadBuild_TakeAwayLongestRoad()
     {
-        Assert.True(false);
+        var board = CreateBoardThatIsPastSetUpPhase(GameStates.BuildOrTrade);
+        board.GetEdge(TestEdge.E23).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E24).BuildRoad(board.GetRedPlayer());
+        var gs = board.GetGameState();
+        var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E21).Id);
+        Assert.True(buildResponse.Success);
+        var eventIdLongRoadGained = gs.EventRecord.Last().Id;
+        var eventIdRoadBuilding = eventIdLongRoadGained -1 ;
+        Assert.Equal(5, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.NotNull(gs.PlayerWithLongestRoad);
+        Assert.Equal(board.GetRedPlayer().Id, gs.PlayerWithLongestRoad.Id);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdLongRoadGained);
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.Null(gs.PlayerWithLongestRoad);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(4, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
+        Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
+        Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Null(board.GetEdge(TestEdge.E21).Owner);
+        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 2 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdLongRoadGained);
+        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdRoadBuilding);
     }
 
     [Fact]
     public void UndoFromUser_Undo5thRoadBuild_GiveLongestRoadToPrevious()
     {
-        Assert.True(false);
+        var board = CreateBoardThatIsPastSetUpPhase(GameStates.BuildOrTrade);
+        board.GetEdge(TestEdge.E2).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E8).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E14).BuildRoad(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E23).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E24).BuildRoad(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E21).BuildRoad(board.GetRedPlayer());
+        var gs = board.GetGameState();
+        gs.AssignLongestRoadToPlayer(board.GetBluePlayer());
+        var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E20).Id);
+        Assert.True(buildResponse.Success);
+        var eventIdLongRoadGained = gs.EventRecord.Last().Id;
+        var eventIdRoadBuilding = eventIdLongRoadGained -1 ;
+        Assert.Equal(5, gs.CountRoadsForPlayer(board.GetBluePlayer()));
+        Assert.Equal(6, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.NotNull(gs.PlayerWithLongestRoad);
+        Assert.Equal(board.GetRedPlayer().Id, gs.PlayerWithLongestRoad.Id);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdLongRoadGained);
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.PlayerWithLongestRoad);
+        Assert.Equal(board.GetBluePlayer().Id, gs.PlayerWithLongestRoad.Id);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(5, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
+        Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
+        Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Null(board.GetEdge(TestEdge.E20).Owner);
+        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 2 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdLongRoadGained);
+        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdRoadBuilding);
     }
 
     // TODO: Continue working on tests

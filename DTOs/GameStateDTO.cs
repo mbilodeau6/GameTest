@@ -34,7 +34,7 @@ public class GameStateDTO
         List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null,
         List<PortDTO>? ports = null, List<EventRecordDTO>? eventRecord = null,
         List<DevelopmentCardType>? developmentCards = null,
-        int nextEventId = 0)
+        int nextEventId = 0, Stack<PreActionState>? undoState = null)
     {
         Id = id ?? string.Empty;
         Settings = settings;
@@ -66,6 +66,11 @@ public class GameStateDTO
         HasLongestRoadPlayerId = hasLongestRoadPlayerId;
         HasLargestArmyPlayerId = hasLargestArmyPlayerId;
         NextEventId = nextEventId;
+
+        if (undoState != null)
+            UndoState = new Stack<PreActionState>(undoState);
+        else
+            UndoState = new Stack<PreActionState>();
     }
 
     private GameStateDTO(GameStateDTO dto)
