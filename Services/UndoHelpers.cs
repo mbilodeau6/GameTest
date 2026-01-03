@@ -22,20 +22,6 @@ public static class UndoHelpers
         GameStates.BuildOrTrade
     };
 
-    // Valid event actions that can be undone
-    private static readonly HashSet<EventRecordAction> UndoValidEventActions = new()
-    {
-        EventRecordAction.PlaceFirstSettlement,
-        EventRecordAction.PlaceSecondSettlement,
-        EventRecordAction.PlaceSettlement,
-        EventRecordAction.UpgradeSettlement,
-        EventRecordAction.PlaceRoad,
-        EventRecordAction.DiscardCards,
-        EventRecordAction.PlayYearOfPlenty,
-        EventRecordAction.PlayRoadBuilding,
-        EventRecordAction.TradeWithBank
-    };
-
     public static UndoValidationResponse ValidateUndoRequest(GameState gs, UndoRequest request)
     {
         // Validate game state allows undo
@@ -56,25 +42,9 @@ public static class UndoHelpers
         if (eventToUndo.PlayerId != request.PlayerId)
             return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1071, Player = player, Event = eventToUndo };
 
-        // TODO: Improve error text for 1072 in ResponseDTO if sticking with this logic
+        // Validate that there is an undoable action (i.e. there is state in the Undo stack)
         if (gs.UndoState.Count() == 0)
             return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1072, Player = player, Event = eventToUndo };
-
-        // TODO: Remove if above works
-        // // Validate the event action is undoable
-        // if (!UndoValidEventActions.Contains(eventToUndo.Action))
-        //     return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1072, Player = player, Event = eventToUndo };
-
-        // // Validate no player has acted since this event
-        // List<EventRecordDTO> copyOfEventRecords = gs.EventRecord.Where(e => e.Id > request.EventId).ToList();
-        // foreach(var undoEvent in gs.EventRecord.Where(e => e.Id > request.EventId && e.Action == EventRecordAction.Undo))
-        // {
-        //     copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.Id);
-        //     copyOfEventRecords.RemoveAll(e => e.Id == undoEvent.EventReversed);
-        // }
-
-        // if (copyOfEventRecords.Any())
-        //     return new UndoValidationResponse { UndoPossible = false, ErrorCode = 1074, Player = player, Event = eventToUndo };
 
         return new UndoValidationResponse { UndoPossible = true, Player = player, Event = eventToUndo };
     }
@@ -111,8 +81,6 @@ public static class UndoHelpers
 
         ReverseAction(gs, validationResponse.Player, validationResponse.Event, stateAlreadyChanged);
         gs.AddEventRecord(new EventRecordDTO(validationResponse.Player, EventRecordAction.Undo, request.EventId));
-        // TODO: Remove if experiment with UndoState works
-        // gs.Phase.MoveToPreviousPhase(gs.Players, gs.CountSettlementsForPlayer(gs.Phase.CurrentPlayer!), gs.CountRoadsForPlayer(gs.Phase.CurrentPlayer!));
         GamePlayHelpers.GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs, validationResponse.Player);
@@ -126,12 +94,6 @@ public static class UndoHelpers
 
         if (gs.UndoState.Count() == 0)
             throw new InvalidOperationException("Unexpected Error. ReverseAction called when UndoState empty.");
-
-        // TODO: Remove if experiment with UndoState works.
-        // if (gs.Phase.CurrentPlayer != null && 
-        //         player.Id != gs.Phase.CurrentPlayer.Id && 
-        //         player.Id != gs.Phase.GetPreviousPlayer(gs.Phase.CurrentPlayer, gs.Players).Id)
-        //     throw new InvalidOperationException("Unexpected Error. Player doesn't match current or previous player.");
 
         switch(er.Action)
         {

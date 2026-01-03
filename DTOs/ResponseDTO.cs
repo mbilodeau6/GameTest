@@ -138,7 +138,7 @@ public class ResponseDTO
         { 1065, "SelectTarget request must specify player id and target player id."},
         { 1070, "Event not found in event record."},
         { 1071, "Event does not belong to the requesting player."},
-        { 1072, "Event action is not undoable."},
+        { 1072, "Can not undo the previous action."},
         { 1073, "Event has already been undone."},
         { 1074, "Cannot undo earlier event if later events not undone first."},
         { 1075, "Undo request must specify player id and event id."},

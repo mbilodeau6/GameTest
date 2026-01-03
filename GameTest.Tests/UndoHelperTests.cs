@@ -289,7 +289,6 @@ public class UndoHelpersTests
         Assert.Null(response.GameState);
     }
 
-
     [Fact]
     public void UndoFromUser_UndoFirstRoad_LastPlayer()
     {
