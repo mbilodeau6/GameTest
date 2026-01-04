@@ -949,4 +949,31 @@ public class PossiblePlayerActionTests
         Assert.NotEmpty(actions);
         Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
     }
+
+    [Fact]
+    public void GetPossiblePlayerActions_Undo_SecondRoadSecondPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+         board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
+         board.GetEdge(TestEdge.E11).BuildRoad(board.GetRedPlayer());
+         board.GetVertex(TestVertex.V3).BuildSettlement(board.GetBluePlayer());
+         board.GetEdge(TestEdge.E3).BuildRoad(board.GetBluePlayer());
+         board.GetVertex(TestVertex.V10).BuildSettlement(board.GetBluePlayer());
+        gs.Phase = new GamePhase(GameStates.PlaceSecondRoad, board.GetBluePlayer(), board.GetRedPlayer());
+        var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetBluePlayer().Id, board.GetEdge(TestEdge.E15).Id);
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.EndPlayer.Id);
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetBluePlayer());
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
+    }
+
 }

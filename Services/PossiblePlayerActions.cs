@@ -20,8 +20,8 @@ public static class PossiblePlayerActions
     private static bool PlayerWasLastPlayerAndUndoPossible(GameState gs, Player player)
     {
         return gs.UndoState.Count > 0 && 
-        gs.UndoState.Last().Phase.CurrentPlayerId != null &&
-        gs.UndoState.Last().Phase.CurrentPlayerId == player.Id;
+        gs.UndoState.Peek().Phase.CurrentPlayerId != null &&
+        gs.UndoState.Peek().Phase.CurrentPlayerId == player.Id;
     }
 
     public static List<PossiblePlayerAction> GetPossiblePlayerActions(GameState gs, Player player)
