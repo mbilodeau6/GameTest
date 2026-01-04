@@ -329,6 +329,42 @@ public class UndoHelpersTests
     }
 
     [Fact]
+    public void UndoFromUser_UndoFirstRoad_FirstPlayer()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+         board.GetVertex(TestVertex.V5).BuildSettlement(board.GetRedPlayer());
+        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
+        var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E11).Id);
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.PlaceFirstSettlement, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+
+        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.NotNull(gs.Phase.EndPlayer);
+        Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
+        Assert.Equal(0, gs.CountRoadsForPlayer(board.GetRedPlayer()));
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
+        Assert.Null(board.GetEdge(TestEdge.E11).Owner);
+        Assert.Contains(gs.EventRecord, e => e.Id == 1 && 
+            e.Action == EventRecordAction.Undo 
+            && e.EventReversed != null && e.EventReversed == 0);
+    }
+
+    [Fact]
     public void UndoFromUser_UndoSecondSettlement_LastPlayer()
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);

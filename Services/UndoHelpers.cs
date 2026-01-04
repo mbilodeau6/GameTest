@@ -110,7 +110,7 @@ public static class UndoHelpers
                 UndoFromUser(gs, new UndoRequest(player.Id, er.Id -1), true);
                 break;
             default:
-                throw new NotImplementedException("Unexpected Error. Haven't implemented ReverseAction yet.");
+                throw new NotImplementedException($"Unexpected Error. Haven't implemented ReverseAction yet for {er.Action}.");
         }
 
         if (!stateAlreadyChanged)
@@ -124,7 +124,7 @@ public static class UndoHelpers
             {
                 var largestArmyPlayer = gs.Players.FirstOrDefault(p => p.Id == preActionState.HasLargestArmyPlayerId);
                 if (largestArmyPlayer == null)
-                    throw new InvalidOperationException("Unexpected Error. Couldn't find player who use to have largest army.");
+                    throw new InvalidOperationException($"Unexpected Error. Couldn't find player who use to have largest army. LargestArmyPlayer: {preActionState.HasLargestArmyPlayerId}");
 
                 gs.AssignLargestArmyToPlayer(largestArmyPlayer);
             }
@@ -135,7 +135,7 @@ public static class UndoHelpers
             {
                 var longestRoadPlayer = gs.Players.FirstOrDefault(p => p.Id == preActionState.HasLongestRoadPlayerId);
                 if (longestRoadPlayer == null)
-                    throw new InvalidOperationException("Unexpected Error. Couldn't find player who use to have longest raod.");
+                    throw new InvalidOperationException($"Unexpected Error. Couldn't find player who use to have longest raod.LongestRoadPlayer: {preActionState.HasLongestRoadPlayerId}");
                     
                 gs.AssignLongestRoadToPlayer(longestRoadPlayer);
             }
@@ -147,7 +147,7 @@ public static class UndoHelpers
         var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
 
         if (vertex == null)
-            throw new InvalidOperationException("Unexpected Error. Event vertex not found.");
+            throw new InvalidOperationException($"Unexpected Error. Event vertex not found. Vertex: {vertexId}");
 
         if (vertex.Owner == null || vertex.Building != BuildingType.Settlement || vertex.Owner.Id != player.Id)
             throw new InvalidOperationException($"Unexpected Error. Vertex {vertexId} not in expected state.");

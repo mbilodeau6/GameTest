@@ -75,7 +75,9 @@ public class GameService
         return gs;
     }
 
-    private async Task<ResponseDTO> GetGameDTO(string id)
+    // TODO: Eventually, playerId (or playerToken) will be required. But will default to
+    // currentPlayer for backwards compatibility for now.
+    private async Task<ResponseDTO> GetGameDTO(string id, string? playerId = null)
     {
         if (_container == null)
         {
@@ -105,7 +107,19 @@ public class GameService
             }
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
-            return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer, etag);
+
+            if (playerId != null)
+            {
+                var player = gs.Players.FirstOrDefault(p => p.Id == playerId);
+                if (player == null)
+                    return new ResponseDTO(false, 1012, $"GameId: {id}; PlayerId: {playerId}", null as GameStateDTO);
+                else
+                    return new ResponseDTO(true, 0, string.Empty, gs, player, etag);
+            }
+            else
+            {
+                return new ResponseDTO(true, 0, string.Empty, gs, gs.Phase.CurrentPlayer, etag);
+            }
         }
         catch (Exception ex)
         {
@@ -114,9 +128,17 @@ public class GameService
         }
     }
 
-    public async Task<ResponseDTO> GetGameAsync(Guid id)
+    public async Task<ResponseDTO> GetGameAsync(Guid id, BaseRequest? request = null)
     {
-        var response = await GetGameDTO(id.ToString());
+        // TODO: Eventually, playerId (or playerToken) should be required and we wouldn't
+        // even get to this spot. But going forward with currentPlayer if request doesn't
+        // specify player for now
+        string? playerId = null;
+
+        if (request != null)
+            playerId = request.PlayerId;
+
+        var response = await GetGameDTO(id.ToString(), playerId);
 
         return response;
     }
@@ -344,7 +366,8 @@ public class GameService
 
         try
         {
-            var response = await GetGameDTO(gameId.ToString());
+            ResponseDTO response = await GetGameDTO(gameId.ToString());
+
             if (!response.Success)
             {
                 _logger.LogError("Unable to retrieve game {GameId}.", gameId);
@@ -356,7 +379,7 @@ public class GameService
             if (gs.Phase.CurrentPlayer == null || gs.Phase.PhaseState != GameStates.RollOrUseDevCard)
             {
                 _logger.LogError("Game isn't in a state where RollDice is valid.");
-                return new ResponseDTO(false, 1003, $"Action: RollDice; GameId: {gameId}; Player: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
+                return new ResponseDTO(false, 1003, $"Action: RollDice; GameId: {gameId}; CurrentPlayer: {gs.Phase.CurrentPlayer}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
             }
 
             GamePlayHelpers.RollDice(gs);
@@ -389,7 +412,8 @@ public class GameService
 
         try
         {
-            var response = await GetGameDTO(gameId.ToString());
+            ResponseDTO response = await GetGameDTO(gameId.ToString());
+
             if (!response.Success)
             {
                 _logger.LogError("Unable to retrieve game {GameId}.", gameId);

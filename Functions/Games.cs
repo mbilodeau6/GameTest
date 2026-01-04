@@ -145,8 +145,12 @@ public class Games
         return await CreateSuccessResponse(req, response);
     }
 
-    [Function("GetGameById")]
-    public async Task<HttpResponseData> GetGameById(
+    // TODO: Remove this version (doesn't take playerId) when all frontends switch to use
+    // the new version.
+    // IMPORTANT: Check if Replay is still using this version. Might be because Replay doesn't
+    // depend on knowing a player.
+    [Function("OldGetGameById")]
+    public async Task<HttpResponseData> OldGetGameById(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "Games/{id}")] HttpRequestData req,
         string id)
     {
@@ -155,7 +159,29 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var dto = await _gameService.GetGameAsync(guid);
+        var dto = await _gameService.GetGameAsync(guid, null);
+        if (dto == null)
+            return await CreateErrorResponse(req, HttpStatusCode.NotFound, 1002, $"GameId: {id}");
+
+        return await CreateSuccessResponse(req, dto);
+    }
+
+    [Function("GetGameById")]
+    public async Task<HttpResponseData> GetGameById(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games/{id}")] HttpRequestData req,
+        string id)
+    {
+        _logger.LogInformation("GetGameById called for id {Id}", id);
+
+        if (!Guid.TryParse(id, out var guid))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
+
+        var request = await ReadRequestBodyAsync<BaseRequest>(req);
+        
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerId))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1034, $"GameId: {id}");
+
+        var dto = await _gameService.GetGameAsync(guid, request);
         if (dto == null)
             return await CreateErrorResponse(req, HttpStatusCode.NotFound, 1002, $"GameId: {id}");
 
