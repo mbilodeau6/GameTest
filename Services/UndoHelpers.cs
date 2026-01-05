@@ -1,3 +1,4 @@
+using System.Data;
 using System.Diagnostics.Eventing.Reader;
 using System.Numerics;
 using GameTest.DTOs;
@@ -109,6 +110,12 @@ public static class UndoHelpers
             case EventRecordAction.GainedLongestRoad:
                 UndoFromUser(gs, new UndoRequest(player.Id, er.Id -1), true);
                 break;
+            case EventRecordAction.PlaceSettlement:
+                UndoPlaceSettlement(gs, player, er.VertexId!);
+                break;
+            case EventRecordAction.UpgradeSettlement:
+                UndoUpgradeSettlement(gs, player, er.VertexId!);
+                break;
             default:
                 throw new NotImplementedException($"Unexpected Error. Haven't implemented ReverseAction yet for {er.Action}.");
         }
@@ -140,6 +147,8 @@ public static class UndoHelpers
                 gs.AssignLongestRoadToPlayer(longestRoadPlayer);
             }
         }
+
+        gs.UpdatePlayerVictoryPoints();
     }
 
     private static void UndoPlaceFirstSettlement(GameState gs, Player player, string vertexId)
@@ -168,13 +177,44 @@ public static class UndoHelpers
         var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
 
         if (vertex == null)
-            throw new InvalidOperationException("Unexpected Error. Event vertex not found.");
+            throw new InvalidOperationException($"Unexpected Error. Event vertex {vertexId} not found.");
         
         var resources = GamePlayHelpers.GetResourcesEarnedOnVertex(gs, vertex);
 
         UndoPlaceFirstSettlement(gs, player, vertexId);
 
         GamePlayHelpers.RemoveResourcesFromPlayer(gs, player, resources);
+    }
+
+    private static void UndoPlaceSettlement(GameState gs, Player player, string vertexId)
+    {
+        var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
+
+        if (vertex == null)
+            throw new InvalidOperationException($"Unexpected Error. Event vertex {vertexId} not found.");
+        
+        UndoPlaceFirstSettlement(gs, player, vertexId);
+
+        player.AssignResources(ResourceType.Wood, 1);
+        player.AssignResources(ResourceType.Wool, 1);
+        player.AssignResources(ResourceType.Brick, 1);
+        player.AssignResources(ResourceType.Grain, 1);
+    }
+
+    private static void UndoUpgradeSettlement(GameState gs, Player player, string vertexId)
+    {
+        var vertex = gs.Vertices.FirstOrDefault(v => v.Id == vertexId);
+
+        if (vertex == null)
+            throw new InvalidOperationException($"Unexpected Error. Event vertex not found. Vertex: {vertexId}");
+
+        if (vertex.Owner == null || vertex.Building != BuildingType.City || vertex.Owner.Id != player.Id)
+            throw new InvalidOperationException($"Unexpected Error. Vertex {vertexId} not in expected state.");
+
+        vertex.DowngradeToSettlement();
+
+        player.AssignResources(ResourceType.Grain, 2);
+        player.AssignResources(ResourceType.Ore, 3);
     }
 
     private static void UndoPlaceRoad(GameState gs, Player player, string edgeId)
