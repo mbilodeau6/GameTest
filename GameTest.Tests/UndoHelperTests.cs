@@ -708,33 +708,40 @@ public class UndoHelpersTests
         Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
     }
 
+    [Fact]
+    public void UndoFromUser_BankTrade4to1()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetRedPlayer());
+        var tradeRequest = new TradeRequestDTO(board.GetRedPlayer().Id, 
+            new Dictionary<ResourceType, int>() { {ResourceType.Wood, 4}}, new Dictionary<ResourceType, int>() { {ResourceType.Brick, 1}});
+        var buildResponse = GamePlayHelpers.BankTradeFromUser(gs, tradeRequest);
+        var eventIdToUndo = gs.EventRecord.Last().Id;
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+    
+        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(5, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
+    }
+
     // TODO: Continue working on tests
 
 
-    // [Fact]
-    // public void UndoFromUser_PlaceSecondRoad()
-    // {
-    //     Assert.True(false);
-    // }
-
-
-    // [Fact]
-    // public void UndoFromUser_BuildSettlement()
-    // {
-    //     Assert.True(false);
-    // }
-
-    // [Fact]
-    // public void UndoFromUser_BuildCity()
-    // {
-    //     Assert.True(false);
-    // }
-
-    // [Fact]
-    // public void UndoFromUser_BankTrade4to1()
-    // {
-    //     Assert.True(false);
-    // }
 
     // [Fact]
     // public void UndoFromUser_BankTrade2to1()

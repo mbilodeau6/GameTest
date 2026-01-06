@@ -1,6 +1,7 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.Services;
+using GameTest.DTOs;
 
 namespace GameTest.Tests;
 
@@ -309,7 +310,6 @@ public class PossiblePlayerActionTests
     // NOTE: Not testing what happens if the player doesn't have roads left or the player
     // doesn't have any place to put roads in FirstDevCardRoad and SecondDevCardRoad. 
     // The game shouldn't put that player in these states in those cases.
-
     private TestGameBoard CreatePlayerActionTestBoard2(bool bluePlayerIsBot = false)
     {
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(bluePlayerIsBot);
@@ -976,4 +976,70 @@ public class PossiblePlayerActionTests
         Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
     }
 
+    [Fact]
+    public void GetPossiblePlayerActions_Undo_BankTrade()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 5);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetRedPlayer());
+        var tradeRequest = new TradeRequestDTO(board.GetRedPlayer().Id, 
+            new Dictionary<ResourceType, int>() { {ResourceType.Wood, 4}}, new Dictionary<ResourceType, int>() { {ResourceType.Brick, 1}});
+        var buildResponse = GamePlayHelpers.BankTradeFromUser(gs, tradeRequest);
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.NotNull(actions);
+        Assert.NotEmpty(actions);
+        Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
+    }
+
+    private TestGameBoard CreatePlayerActionTestBoard3(bool bluePlayerIsBot = false)
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(bluePlayerIsBot);
+        var gs = board.GetGameState();
+        var orangePlayer = Player.CreateTestPlayer("Tim", PlayerColor.Orange);
+        gs.Players.Add(orangePlayer);
+        var human = board.GetRedPlayer();
+        board.GetVertex(TestVertex.V8).BuildSettlement(orangePlayer);
+        board.GetEdge(TestEdge.E13).BuildRoad(orangePlayer);
+        board.GetVertex(TestVertex.V10).BuildSettlement(orangePlayer);
+        board.GetEdge(TestEdge.E8).BuildRoad(orangePlayer);
+        board.GetVertex(TestVertex.V21).BuildSettlement(board.GetBluePlayer());
+        board.GetEdge(TestEdge.E26).BuildRoad(board.GetBluePlayer());
+        board.GetVertex(TestVertex.V12).BuildSettlement(board.GetRedPlayer());
+        board.GetEdge(TestEdge.E17).BuildRoad(board.GetRedPlayer());
+        board.SetRobberTile(board.GetTile(TestTile.T0));
+        GamePlayHelpers.MarkBlockedVertices(gs);
+
+        gs.Phase = new GamePhase(GameStates.PlaceRobber, orangePlayer, board.GetRedPlayer());
+        gs.Phase.SetStateToReturnTo(GameStates.RollOrUseDevCard, board.GetTile(TestTile.T0));
+
+        return board;
+    }
+
+    // Techically, I think it would be "fair" to allow Undo if the robber was placed on a tile
+    // that didn't have a chance of resulting in the transfer of resources (i.e. couldn't be used)
+    // to figure out why/who has what but waiting to see if any users actually care.
+    [Fact]
+    public void GetPossiblePlayerActions_Undo_NoOneAtRobberDestination()
+    {
+        var board = CreatePlayerActionTestBoard3();
+        var gs = board.GetGameState();
+        var orangePlayer = gs.Players.First(p => p.Color == PlayerColor.Orange);
+        var buildRequest = GamePlayHelpers.PlaceRobberForUser(gs, orangePlayer.Id, board.GetTile(TestTile.T6).Id);
+        Assert.True(buildRequest.Success);
+        Assert.Equal(board.GetTile(TestTile.T6).Id, gs.RobberTile.Id);
+
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
+
+        Assert.NotNull(actions);
+        Assert.Empty(actions);
+    }
 }

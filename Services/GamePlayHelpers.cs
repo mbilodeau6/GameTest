@@ -711,13 +711,13 @@ public static class GamePlayHelpers
         Bank bank = new Bank();
         var response = bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
 
-        if (response.Success)
-        {
-            var eventRecordId = gs.AddEventRecord(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer ));
-            gs.PushUndoState(preActionState, eventRecordId);
-        }
+        if (!response.Success)
+            return response;
 
-        return response;
+        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(request.Player, EventRecordAction.TradeWithBank, request.Request, request.Offer));
+        gs.PushUndoState(preActionState, eventRecordId);
+
+        return new ResponseDTO(true, 0, string.Empty, gs, request.Player);
     }
     
     public static ResponseDTO BankTradeFromUser(GameState gs, TradeRequestDTO request)

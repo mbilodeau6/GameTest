@@ -116,6 +116,9 @@ public static class UndoHelpers
             case EventRecordAction.UpgradeSettlement:
                 UndoUpgradeSettlement(gs, player, er.VertexId!);
                 break;
+            case EventRecordAction.TradeWithBank:
+                UndoBankTrade(gs, player, er.ResourcesUsed, er.ResourcesReceived);
+                break;
             default:
                 throw new NotImplementedException($"Unexpected Error. Haven't implemented ReverseAction yet for {er.Action}.");
         }
@@ -245,5 +248,24 @@ public static class UndoHelpers
                 }
                 break;
         }
+    }
+
+    private static void UndoBankTrade(GameState gs, Player player, 
+        Dictionary<ResourceType, int> resourcesUsed, Dictionary<ResourceType, int> resourcesReceived)
+    {
+        if (resourcesUsed.Count != 1)
+            throw new NotImplementedException("UndoBankTrade doesn't support multi-resource-type undo yet.");
+
+        if (resourcesReceived.Count != 1)
+            throw new NotImplementedException("UndoBankTrade doesn't support multi-resource-type undo yet.");
+
+        var resourceTypeUsed = resourcesUsed.First().Key;
+        var resourceCountUsed = resourcesUsed.First().Value;
+
+        if (Bank.GetTradeRate(player, resourceTypeUsed) != resourceCountUsed)
+            throw new InvalidOperationException("UndoBankTrade received a request to undo a bank trade that shouldn't have been allowed as user provided less resource than required.");
+
+        player.RemoveResources(resourcesReceived.First().Key, resourcesReceived.First().Value);
+        player.AssignResources(resourceTypeUsed, resourceCountUsed);
     }
 }

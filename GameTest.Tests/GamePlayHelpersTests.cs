@@ -1298,7 +1298,7 @@ public class GamePlayHelpersTests
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Brick]);
         Assert.NotNull(response.PossibleActions);
-        Assert.Equal(2, response.PossibleActions.Count);
+        Assert.Equal(3, response.PossibleActions.Count);
     }
 
     [Fact]
