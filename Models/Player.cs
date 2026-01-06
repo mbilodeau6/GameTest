@@ -127,6 +127,14 @@ public class Player
         DevCardsPurchasedThisRound.Clear();
     }
 
+    public void RetrievePlayedDevelopmentCard(DevelopmentCardType type)
+    {
+        // TODO: Need to return played dev cards to the bottom of the deck. When I do,
+        // need to remove from bottom of deck here.
+
+        DevCardsReadyToPlay.Add(type);
+    }
+
     public void PlayDevelopmentCard(DevelopmentCardType type)
     {
         if (!DevCardsReadyToPlay.Contains(type))

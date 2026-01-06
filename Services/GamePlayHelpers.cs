@@ -1048,16 +1048,14 @@ public static class GamePlayHelpers
     {
         StandardPlayDevCardValidation(gs, player, DevelopmentCardType.Knight);
 
-        var preActionState = gs.GetPreActionStat();
         var origRobberLocation = gs.RobberTile;
 
         if (targetTile.Id == gs.RobberTile.Id)
             throw new InvalidOperationException("Unexpected Error. The robber can not be moved to the tile it is already on.");
 
         SharedPlayDevCard(gs, player, DevelopmentCardType.Knight);
-        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlayKnight, targetTile));
         PlaceRobber(gs, player, targetTile);
-        gs.PushUndoState(preActionState, eventRecordId);
 
         if (gs.PlayerWithLargestArmy == null && player.CountPlayedKnights() > 2) 
         {

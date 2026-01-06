@@ -739,6 +739,39 @@ public class UndoHelpersTests
         Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
     }
 
+    [Fact]
+    public void UndoFromUser_YearOfPlenty()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        board.GetRedPlayer().MakeNewDevelopmentCardsPlayable();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetRedPlayer());
+        var playRequest = new PlayDevCardRequest(board.GetRedPlayer().Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>() { ResourceType.Wood, ResourceType.Brick }, null);
+        var buildResponse = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, playRequest);
+        var eventIdToUndo = gs.EventRecord.Last().Id;
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+    
+        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(1, board.GetRedPlayer().DevCardsReadyToPlay.Count(dc => dc == DevelopmentCardType.YearOfPlenty));
+        Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
+    }
+
     // TODO: Continue working on tests
 
 

@@ -119,6 +119,9 @@ public static class UndoHelpers
             case EventRecordAction.TradeWithBank:
                 UndoBankTrade(gs, player, er.ResourcesUsed, er.ResourcesReceived);
                 break;
+            case EventRecordAction.PlayYearOfPlenty:
+                UndoYearOfPlenty(gs, player, er.ResourcesReceived);
+                break;
             default:
                 throw new NotImplementedException($"Unexpected Error. Haven't implemented ReverseAction yet for {er.Action}.");
         }
@@ -267,5 +270,16 @@ public static class UndoHelpers
 
         player.RemoveResources(resourcesReceived.First().Key, resourcesReceived.First().Value);
         player.AssignResources(resourceTypeUsed, resourceCountUsed);
+    }
+
+    private static void UndoYearOfPlenty(GameState gs, Player player, Dictionary<ResourceType, int>? resourcesReceived)
+    {
+        if (resourcesReceived == null || resourcesReceived.Count == 0)
+            throw new InvalidOperationException("Unexpected Error. Year of Plenty undo with no resources received.");
+
+        foreach (var resource in resourcesReceived)
+            player.RemoveResources(resource.Key, resource.Value);
+
+        player.RetrievePlayedDevelopmentCard(DevelopmentCardType.YearOfPlenty);
     }
 }
