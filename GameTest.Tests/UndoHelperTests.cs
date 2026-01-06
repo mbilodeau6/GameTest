@@ -772,6 +772,53 @@ public class UndoHelpersTests
         Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
     }
 
+    [Fact]
+    public void UndoFromUser_MultiUndo()
+    {
+        var board = CreateBoardThatIsPastSetUpPhase(GameStates.BuildOrTrade);
+        var gs = board.GetGameState();
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        board.GetRedPlayer().MakeNewDevelopmentCardsPlayable();
+        board.GetRedPlayer().AssignResources(ResourceType.Wood, 0);
+        board.GetRedPlayer().RemoveResources(ResourceType.Ore, 2);
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetRedPlayer());
+        var playRequest = new PlayDevCardRequest(board.GetRedPlayer().Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>() { ResourceType.Ore, ResourceType.Ore }, null);
+        var buildResponse = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, playRequest);
+        var yopEventIdToUndo = gs.EventRecord.Last().Id;
+        Assert.True(buildResponse.Success);
+        Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
+    
+        var buildReponse = GamePlayHelpers.UpgradeToCityRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V5).Id);
+        var cityEventIdToUndo = gs.EventRecord.Last().Id;
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(1, gs.CountCitiesForPlayer(board.GetRedPlayer()));
+        Assert.Empty(board.GetRedPlayer().DevCardsReadyToPlay);
+        Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
+    
+        var request = new UndoRequest(board.GetRedPlayer().Id, cityEventIdToUndo);
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.Equal(0, gs.CountCitiesForPlayer(board.GetRedPlayer()));
+        Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
+
+        request = new UndoRequest(board.GetRedPlayer().Id, yopEventIdToUndo);
+        response =  UndoHelpers.UndoFromUser(gs, request);
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Ore]);
+        Assert.Equal(1, board.GetRedPlayer().DevCardsReadyToPlay.Count(dc => dc == DevelopmentCardType.YearOfPlenty));
+        Assert.Contains(gs.EventRecord, e => e.Id == cityEventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == cityEventIdToUndo);
+        Assert.Contains(gs.EventRecord, e => e.Id == yopEventIdToUndo + 3 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == yopEventIdToUndo);
+    }
+
     // TODO: Continue working on tests
 
 

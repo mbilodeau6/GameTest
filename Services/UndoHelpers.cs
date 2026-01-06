@@ -122,8 +122,15 @@ public static class UndoHelpers
             case EventRecordAction.PlayYearOfPlenty:
                 UndoYearOfPlenty(gs, player, er.ResourcesReceived);
                 break;
+            case EventRecordAction.Undo:
+                var previousEvent = gs.EventRecord.FirstOrDefault(e => e.Id == (er.EventReversed - 1));
+                if (previousEvent == null)
+                    throw new InvalidOperationException($"Unexpected Error. Couldn't find previous event to undo. EventId: {er.EventReversed - 1}");
+
+                UndoFromUser(gs, new UndoRequest(player.Id, previousEvent.Id), true);
+                break;          
             default:
-                throw new NotImplementedException($"Unexpected Error. Haven't implemented ReverseAction yet for {er.Action}.");
+                throw new NotImplementedException($"Unexpected Error. Haven't implemented ReverseAction yet for {er.Action}. EventId: {er.Id}.");
         }
 
         if (!stateAlreadyChanged)

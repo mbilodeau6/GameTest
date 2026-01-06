@@ -432,9 +432,8 @@ public class PossiblePlayerActionTests
         var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), human);
 
         Assert.NotNull(actions);
-        Assert.Equal(2, actions.Count);
+        Assert.Equal(1, actions.Count);
         Assert.Contains(actions, a => a.Action == PlayerAction.RollDice);
-        Assert.Contains(actions, a => a.Action == PlayerAction.Undo);
         var action = actions.First(a => a.Action == PlayerAction.RollDice);
         Assert.Equal(PlayerAction.RollDice, action.Action);
         Assert.Null(action.EdgeIds);
