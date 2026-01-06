@@ -786,11 +786,10 @@ public static class GamePlayHelpers
 
     public static void PlaceRobber(GameState gs, Player player, Tile tile)
     {
-        var preActionState = gs.GetPreActionStat();
+        gs.ClearUndoState();
         gs.Phase.SetTargetPlayers(GetOpponentsOnTile(gs, player, tile));
         gs.SetRobberTile(tile);
-        var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
-        gs.PushUndoState(preActionState, eventRecordId);
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRobber, tile));
 
         if (gs.Phase.TargetPlayers == null || gs.Phase.TargetPlayers.Count == 1)
             StealResource(gs, player, tile);

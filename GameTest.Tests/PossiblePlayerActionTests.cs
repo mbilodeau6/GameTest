@@ -1036,10 +1036,12 @@ public class PossiblePlayerActionTests
         var buildRequest = GamePlayHelpers.PlaceRobberForUser(gs, orangePlayer.Id, board.GetTile(TestTile.T6).Id);
         Assert.True(buildRequest.Success);
         Assert.Equal(board.GetTile(TestTile.T6).Id, gs.RobberTile.Id);
+        Assert.Equal(GameStates.RollOrUseDevCard, gs.Phase.PhaseState);
 
-        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), board.GetRedPlayer());
+        var actions = PossiblePlayerActions.GetPossiblePlayerActions(board.GetGameState(), orangePlayer);
 
         Assert.NotNull(actions);
-        Assert.Empty(actions);
+        Assert.NotEmpty(actions);
+        Assert.DoesNotContain(actions, a => a.Action == PlayerAction.Undo);
     }
 }
