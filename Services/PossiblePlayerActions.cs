@@ -169,7 +169,7 @@ public static class PossiblePlayerActions
         if (gs.Phase.CurrentPlayer != null && gs.EventRecord.Count > 0)
         {
             var eventRecordId = gs.EventRecord.Last().Id;          
-            if (UndoHelpers.ValidateUndoRequest(gs, new UndoRequest(player.Id, gs.EventRecord.Last().Id)).UndoPossible)
+            if (UndoHelpers.ValidateUndoRequest(gs, new BaseRequest(player.Id)).UndoPossible)
                 actions.Add(new PossiblePlayerAction { Action = PlayerAction.Undo, EventId = eventRecordId });
         }
 

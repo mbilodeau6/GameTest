@@ -1,14 +1,7 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Xunit;
 using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
-using GameTest.Functions;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
-using System.Drawing.Printing;
-using System.Runtime.CompilerServices;
-using Azure;
 
 namespace GameTest.Tests;
 
@@ -226,7 +219,7 @@ public class IntegrationTests
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.EndPlayer.Id);
         Assert.Equal(GameStates.PlaceSecondSettlement, gs.Phase.PhaseState);
 
-        response = UndoHelpers.UndoFromUser(gs, new UndoRequest(board.GetBluePlayer().Id, roadBuildEventId));
+        response = UndoHelpers.UndoFromUser(gs, new BaseRequest(board.GetBluePlayer().Id));
 
         Assert.NotNull(gs.Phase.CurrentPlayer);
         Assert.Equal(board.GetBluePlayer().Id, gs.Phase.CurrentPlayer.Id);

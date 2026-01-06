@@ -909,7 +909,7 @@ public class GameService
         }
     }
 
-    public async Task<ResponseDTO> UndoAsync(Guid gameId, UndoRequest request)
+    public async Task<ResponseDTO> UndoAsync(Guid gameId, BaseRequest request)
     {
         if (_container == null)
         {
@@ -934,13 +934,13 @@ public class GameService
             if (concurrencyError != null)
                 return concurrencyError;
 
-            _logger.LogInformation("Completed undo for player {PlayerId} undoing event {EventId} in game {GameId}.", request.PlayerId, request.EventId, gameId);
+            _logger.LogInformation("Completed undo for player {PlayerId} undoing last event in game {GameId}.", request.PlayerId, gameId);
             return undoResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Undo for player {playerId} undoing event {eventId} for game {GameId} failed.", request.PlayerId, request.EventId, gameId);
-            return new ResponseDTO(false, 9999, $"Action: Undo; GameId: {gameId}; PlayerId: {request.PlayerId}; EventId: {request.EventId}; Exception: {ex.Message}", null as GameStateDTO);
+            _logger.LogError(ex, "Undo for player {playerId} undoing last event for game {GameId} failed.", request.PlayerId, gameId);
+            return new ResponseDTO(false, 9999, $"Action: Undo; GameId: {gameId}; PlayerId: {request.PlayerId}; Exception: {ex.Message}", null as GameStateDTO);
         }
     }
 }

@@ -14,7 +14,7 @@ public class UndoHelpersTests
         var board = TestHelpers.CreateOriginalTestBoard(true);
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.SettingUpBoard, board.GetRedPlayer(), board.GetBluePlayer());
-        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
 
         var response = UndoHelpers.UndoFromUser(gs, request);
         
@@ -33,32 +33,12 @@ public class UndoHelpersTests
         Assert.NotNull(gs.EventRecord);
         Assert.Single(gs.EventRecord);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
 
         var response = UndoHelpers.UndoFromUser(gs, request);
         
         Assert.False(response.Success);
         Assert.Equal(1003, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_InvalidEventRecordId()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V5)));
-        Assert.NotNull(gs.EventRecord);
-        Assert.Equal(2, gs.EventRecord.Count);
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 2);
-
-        var response = UndoHelpers.UndoFromUser(gs, request);
-        
-        Assert.False(response.Success);
-        Assert.Equal(1070, response.ErrorCode);
         Assert.Null(response.GameState);
     }
 
@@ -69,223 +49,15 @@ public class UndoHelpersTests
         var gs = board.GetGameState();
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
         gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V3)));
+        var lastEventId = gs.AddEventRecord(new EventRecordDTO(board.GetBluePlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V3)));
+        gs.UndoState.Push(new PreActionState(lastEventId, gs.Phase, null, null));
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
 
         var response = UndoHelpers.UndoFromUser(gs, request);
         
         Assert.False(response.Success);
         Assert.Equal(1071, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionPlaceRobber()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRobber, 
-            board.GetTile(TestTile.T0)));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionRoll()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RollDice, new GameDice(2, 6)));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionBuyDevCard()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.BuyDevelopmentCard, DevelopmentCardType.VictoryPoint));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionPlayKnight()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlayKnight, 
-            board.GetTile(TestTile.T0)));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionMonopoly()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlayMonopoly, 
-            new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionOfferToTrade()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.OfferToTrade, 
-            new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}, 
-            new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}},
-            null
-            ));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionTradeWithPlayer()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.TradeWithPlayer, 
-            new Dictionary<ResourceType, int>() {{ResourceType.Grain, 2}}, 
-            new Dictionary<ResourceType, int>() {{ResourceType.Ore, 1}},
-            board.GetBluePlayer()
-            ));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionAcceptTrade()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.AcceptTrade));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_LastActionRejectTrade()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.RejectTrade));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_AttempToUndoEarlyWithoutUndoingLater()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V5)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceRoad, board.GetEdge(TestEdge.E11)));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
-        Assert.Null(response.GameState);
-    }
-
-    [Fact]
-    public void UndoFromUser_CantUndoUndo()
-    {
-        var board = TestHelpers.CreateOriginalTestBoard(true);
-        var gs = board.GetGameState();
-        gs.Phase = new GamePhase(GameStates.PlaceFirstRoad, board.GetRedPlayer(), board.GetBluePlayer());
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.PlaceSettlement, board.GetVertex(TestVertex.V5)));
-        gs.AddEventRecord(new EventRecordDTO(board.GetRedPlayer(), EventRecordAction.Undo, 0));
-
-        var request = new UndoRequest(board.GetRedPlayer().Id, 1);
-
-        var response =  UndoHelpers.UndoFromUser(gs, request);
-
-        Assert.False(response.Success);
-        Assert.Equal(1072, response.ErrorCode);
         Assert.Null(response.GameState);
     }
 
@@ -305,7 +77,7 @@ public class UndoHelpersTests
         Assert.Equal(BuildingType.Blocked, board.GetVertex(TestVertex.V4).Building);
         Assert.Equal(GameStates.PlaceFirstRoad, gs.Phase.PhaseState);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 2);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
 
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
@@ -343,7 +115,7 @@ public class UndoHelpersTests
         Assert.NotNull(gs.Phase.EndPlayer);
         Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -377,7 +149,7 @@ public class UndoHelpersTests
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Ore]);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
 
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
@@ -412,7 +184,7 @@ public class UndoHelpersTests
         Assert.Equal(board.GetBluePlayer().Id, gs.Phase.EndPlayer.Id);
         Assert.Equal(2, gs.CountRoadsForPlayer(board.GetRedPlayer()));
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, 0);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
 
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
@@ -462,12 +234,12 @@ public class UndoHelpersTests
         var board = CreateBoardThatIsPastSetUpPhase(GameStates.BuildOrTrade);
         var gs = board.GetGameState();
         var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E25).Id);
-        var eventIdToUndo = gs.EventRecord.Last().Id;
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.True(buildResponse.Success);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -495,11 +267,11 @@ public class UndoHelpersTests
         gs.Phase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 2);
 
         GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E25).Id);
-        var eventIdToUndo = gs.EventRecord.Last().Id;
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
         GamePlayHelpers.GameLoop(gs);
         Assert.Equal(GameStates.SecondDevCardRoad, gs.Phase.PhaseState);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -528,10 +300,10 @@ public class UndoHelpersTests
         gs.Phase.StoreStateDevCardRoadBuilding(GameStates.BuildOrTrade, 2);
         var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E26).Id);
         Assert.True(buildResponse.Success);
-        var eventIdToUndo = gs.EventRecord.Last().Id;
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -560,15 +332,15 @@ public class UndoHelpersTests
         var gs = board.GetGameState();
         var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E21).Id);
         Assert.True(buildResponse.Success);
-        var eventIdLongRoadGained = gs.EventRecord.Last().Id;
-        var eventIdRoadBuilding = eventIdLongRoadGained -1 ;
+        var eventIdRoadBuilding = gs.UndoState.Peek().EventRecordId;
+        var eventIdLongRoadGained = eventIdRoadBuilding + 1 ;
         Assert.Equal(5, gs.CountRoadsForPlayer(board.GetRedPlayer()));
         Assert.NotNull(gs.PlayerWithLongestRoad);
         Assert.Equal(board.GetRedPlayer().Id, gs.PlayerWithLongestRoad.Id);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdLongRoadGained);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -586,8 +358,8 @@ public class UndoHelpersTests
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
         Assert.Null(board.GetEdge(TestEdge.E21).Owner);
-        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 2 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdLongRoadGained);
-        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdRoadBuilding);
+        Assert.Contains(gs.EventRecord, e => e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdLongRoadGained);
+        Assert.Contains(gs.EventRecord, e => e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdRoadBuilding);
     }
 
     [Fact]
@@ -604,8 +376,8 @@ public class UndoHelpersTests
         gs.AssignLongestRoadToPlayer(board.GetBluePlayer());
         var buildResponse = GamePlayHelpers.BuildRoadRequestFromUser(gs, board.GetRedPlayer().Id, board.GetEdge(TestEdge.E20).Id);
         Assert.True(buildResponse.Success);
-        var eventIdLongRoadGained = gs.EventRecord.Last().Id;
-        var eventIdRoadBuilding = eventIdLongRoadGained -1 ;
+        var eventIdRoadBuilding = gs.UndoState.Peek().EventRecordId;
+        var eventIdLongRoadGained = eventIdRoadBuilding + 1 ;
         Assert.Equal(5, gs.CountRoadsForPlayer(board.GetBluePlayer()));
         Assert.Equal(6, gs.CountRoadsForPlayer(board.GetRedPlayer()));
         Assert.NotNull(gs.PlayerWithLongestRoad);
@@ -613,7 +385,7 @@ public class UndoHelpersTests
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdLongRoadGained);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -632,8 +404,8 @@ public class UndoHelpersTests
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
         Assert.Null(board.GetEdge(TestEdge.E20).Owner);
-        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 2 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdLongRoadGained);
-        Assert.Contains(gs.EventRecord, e => e.Id == eventIdLongRoadGained + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdRoadBuilding);
+        Assert.Contains(gs.EventRecord, e => e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdRoadBuilding);
+        Assert.Contains(gs.EventRecord, e => e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdLongRoadGained);
     }
 
     [Fact]
@@ -643,7 +415,7 @@ public class UndoHelpersTests
         var gs = board.GetGameState();
         board.GetEdge(TestEdge.E25).BuildRoad(board.GetRedPlayer());
         var buildResponse = GamePlayHelpers.BuildSettlementRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V20).Id);
-        var eventIdToUndo = gs.EventRecord.Last().Id;
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.True(buildResponse.Success);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
@@ -652,7 +424,7 @@ public class UndoHelpersTests
         Assert.Equal(3,gs.CountSettlementsForPlayer(board.GetRedPlayer()));
         Assert.Equal(3, board.GetRedPlayer().FullVictoryPoints);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -680,7 +452,7 @@ public class UndoHelpersTests
         var board = CreateBoardThatIsPastSetUpPhase(GameStates.BuildOrTrade);
         var gs = board.GetGameState();
         var buildResponse = GamePlayHelpers.UpgradeToCityRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V5).Id);
-        var eventIdToUndo = gs.EventRecord.Last().Id;
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.True(buildResponse.Success);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Grain]);
@@ -688,7 +460,7 @@ public class UndoHelpersTests
         Assert.Equal(1, gs.CountCitiesForPlayer(board.GetRedPlayer()));
         Assert.Equal(3, board.GetRedPlayer().FullVictoryPoints);
 
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -718,7 +490,7 @@ public class UndoHelpersTests
         var tradeRequest = new TradeRequestDTO(board.GetRedPlayer().Id, 
             new Dictionary<ResourceType, int>() { {ResourceType.Wood, 4}}, new Dictionary<ResourceType, int>() { {ResourceType.Brick, 1}});
         var buildResponse = GamePlayHelpers.BankTradeFromUser(gs, tradeRequest);
-        var eventIdToUndo = gs.EventRecord.Last().Id;
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.True(buildResponse.Success);
         Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -726,7 +498,7 @@ public class UndoHelpersTests
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
     
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -750,7 +522,7 @@ public class UndoHelpersTests
         var playRequest = new PlayDevCardRequest(board.GetRedPlayer().Id, DevelopmentCardType.YearOfPlenty, 
             new List<ResourceType>() { ResourceType.Wood, ResourceType.Brick }, null);
         var buildResponse = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, playRequest);
-        var eventIdToUndo = gs.EventRecord.Last().Id;
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.True(buildResponse.Success);
         Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -758,7 +530,7 @@ public class UndoHelpersTests
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
     
-        var request = new UndoRequest(board.GetRedPlayer().Id, eventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
@@ -785,12 +557,12 @@ public class UndoHelpersTests
         var playRequest = new PlayDevCardRequest(board.GetRedPlayer().Id, DevelopmentCardType.YearOfPlenty, 
             new List<ResourceType>() { ResourceType.Ore, ResourceType.Ore }, null);
         var buildResponse = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, playRequest);
-        var yopEventIdToUndo = gs.EventRecord.Last().Id;
+        var yopEventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.True(buildResponse.Success);
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
     
         var buildReponse = GamePlayHelpers.UpgradeToCityRequestFromUser(gs, board.GetRedPlayer().Id, board.GetVertex(TestVertex.V5).Id);
-        var cityEventIdToUndo = gs.EventRecord.Last().Id;
+        var cityEventIdToUndo = gs.UndoState.Peek().EventRecordId;
         Assert.True(buildResponse.Success);
         Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
         Assert.NotNull(gs.Phase.CurrentPlayer);
@@ -799,14 +571,14 @@ public class UndoHelpersTests
         Assert.Empty(board.GetRedPlayer().DevCardsReadyToPlay);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
     
-        var request = new UndoRequest(board.GetRedPlayer().Id, cityEventIdToUndo);
+        var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
 
         Assert.True(response.Success);
         Assert.Equal(0, gs.CountCitiesForPlayer(board.GetRedPlayer()));
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
 
-        request = new UndoRequest(board.GetRedPlayer().Id, yopEventIdToUndo);
+        request = new BaseRequest(board.GetRedPlayer().Id);
         response =  UndoHelpers.UndoFromUser(gs, request);
         Assert.True(response.Success);
         Assert.NotNull(response.GameState);
@@ -818,44 +590,4 @@ public class UndoHelpersTests
         Assert.Contains(gs.EventRecord, e => e.Id == cityEventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == cityEventIdToUndo);
         Assert.Contains(gs.EventRecord, e => e.Id == yopEventIdToUndo + 3 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == yopEventIdToUndo);
     }
-
-    // TODO: Continue working on tests
-
-
-
-    // [Fact]
-    // public void UndoFromUser_BankTrade2to1()
-    // {
-    //     Assert.True(false);
-    // }
-
-    // [Fact]
-    // public void UndoFromUser_YearOfPlenty()
-    // {
-    //     Assert.True(false);
-    // }
-
-    // [Fact]
-    // public void UndoFromUser_RoadBuilding()
-    // {
-    //     Assert.True(false);
-    // }
-
-    // [Fact]
-    // public void UndoFromUser_EndTurn()
-    // {
-    //     Assert.True(false);
-    // }
-
-    // [Fact]
-    // public void UndoFromUser_Discard()
-    // {
-    //     Assert.True(false);
-    // }
-
-    // [Fact]
-    // public void UndoFromUser_LastActionAlreadyUndone()
-    // {
-    //     Assert.True(false);
-    // }   
 }

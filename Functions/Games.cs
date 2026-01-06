@@ -511,7 +511,7 @@ public class Games
         if (!Guid.TryParse(id, out var guid))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1000, $"GameId: {id}");
 
-        var request = await ReadRequestBodyAsync<UndoRequest>(req);
+        var request = await ReadRequestBodyAsync<BaseRequest>(req);
         if (request == null || string.IsNullOrWhiteSpace(request.PlayerId))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1075, $"GameId: {id}");
 
