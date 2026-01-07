@@ -3,17 +3,15 @@ using GameTest.Models;
 
 namespace GameTest.DTOs;
 
-public class TradeRequestDTO
+public class TradeRequestDTO : BaseRequest
 {
-    public string PlayerId { get; private set; }
     public Dictionary<ResourceType, int> Offer { get; private set; }
     public Dictionary<ResourceType, int> Request { get; private set; }
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
-    public TradeRequestDTO(string playerId, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    public TradeRequestDTO(string? playerId, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request, string? playerToken = null) : base(playerId, playerToken)
     {
-        PlayerId = playerId ?? string.Empty;
         Offer = offer ?? new Dictionary<ResourceType, int>();
         Request = request ?? new Dictionary<ResourceType, int>();
     }
