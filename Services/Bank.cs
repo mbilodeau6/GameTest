@@ -1,11 +1,45 @@
 using GameTest.DTOs;
 using GameTest.Models;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace GameTest.Services;
 
 public class Bank
 {
+    private Dictionary<ResourceType, int> Resources = new Dictionary<ResourceType, int>()
+    {
+        { ResourceType.Brick, 19 },
+        { ResourceType.Wood, 19 },
+        { ResourceType.Wool, 19 },
+        { ResourceType.Ore, 19 },
+        { ResourceType.Grain, 19 }
+    };
+
+    public int GetResourceCount(ResourceType resource)
+    {
+        if (!Resources.ContainsKey(resource))
+            throw new InvalidOperationException($"Bank does not have resource type: {resource}");
+
+        return Resources[resource];
+    }
+
+    public void WithdrawResources(ResourceType resource, int quantity)
+    {
+        if (!Resources.ContainsKey(resource))
+            throw new InvalidOperationException($"Bank does not have resource type: {resource}");
+
+        if (Resources[resource] < quantity)
+            throw new InvalidOperationException($"Bank does not have enough of resource type: {resource}");
+
+        Resources[resource] -= quantity;
+    }
+    public void ReturnResources(ResourceType resource, int quantity)
+    {
+        if (!Resources.ContainsKey(resource))
+            throw new InvalidOperationException($"Bank does not have resource type: {resource}");
+
+        Resources[resource] += quantity;
+    }
+
     public static int GetTradeRate(Player player, ResourceType resource)
     {
         var tradeRate = GameSettings.DefaultBankTradeRate;
@@ -44,14 +78,21 @@ public class Bank
         if (request.First().Value != 1)
             return new ResponseDTO(false, 1009, $"PlayerId: {player.Id}; ResourceRequested: {request.First().Key}; RequestedQty: {request.First().Value}", null as GameStateDTO);
 
-        // TODO: Check if bank has the requested resources
+        if (GetResourceCount(request.First().Key) < request.First().Value)
+            return new ResponseDTO(false, 1076, $"PlayerId: {player.Id}; ResourceRequested: {request.First().Key}; RequestedQty: {request.First().Value}", null as GameStateDTO);
 
         // Execute trade
         foreach (var resource in offer)
+        {
             player.RemoveResources(resource.Key, resource.Value);
+            ReturnResources(resource.Key, resource.Value);
+        }
 
         foreach (var resource in request)
+        {
+            WithdrawResources(resource.Key, resource.Value);
             player.AssignResources(resource.Key, resource.Value);
+        }
 
         return new ResponseDTO(true, 0, string.Empty, gs, player);
     }

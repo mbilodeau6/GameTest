@@ -1,9 +1,6 @@
 using Xunit;
 using GameTest.Models;
-using GameTest.DTOs;
 using GameTest.Services;
-using GameTest.Functions;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 
 namespace GameTest.Tests;
 
@@ -280,6 +277,36 @@ public class BankTests
     }
 
     [Fact]
+    public void TradeWithBank_BankDoesntHaveResources()
+    {
+        var player = Player.CreateTestPlayer("Ally", PlayerColor.Red);
+        
+        
+        var bank = new Bank();
+        player.AssignResources(ResourceType.Ore, 4);
+        bank.WithdrawResources(ResourceType.Ore, 4);
+
+        bank.WithdrawResources(ResourceType.Grain, 19); // Withdraw all grain from bank
+
+        var offer = new Dictionary<ResourceType, int>()
+        {
+            { ResourceType.Ore, 4 },
+        };
+        var request = new Dictionary<ResourceType, int>()
+        {
+            { ResourceType.Grain, 1 },
+        };
+
+        // Act
+        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal(1076, result.ErrorCode);
+        Assert.Equal(4, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
+    }
+
+    [Fact]
     public void TradeWithBank_PlayerHasOfferedResources_TradeSuccessful()
     {
         // Arrange
@@ -289,6 +316,7 @@ public class BankTests
         player.AssignResources(ResourceType.Ore, 2);
 
         var bank = new Bank();
+        bank.WithdrawResources(ResourceType.Wood, 9);
 
         var offer = new Dictionary<ResourceType, int>
         {
@@ -309,6 +337,8 @@ public class BankTests
         Assert.Equal(0, player.Resources.GetValueOrDefault(ResourceType.Wood, 0));
         Assert.Equal(2, player.Resources.GetValueOrDefault(ResourceType.Grain, -1));
         Assert.Equal(3, player.Resources.GetValueOrDefault(ResourceType.Ore, -1));
+        Assert.Equal(18, bank.GetResourceCount(ResourceType.Ore));
+        Assert.Equal(14, bank.GetResourceCount(ResourceType.Wood));
     }
 
     [Fact]
