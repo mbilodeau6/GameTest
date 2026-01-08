@@ -555,6 +555,7 @@ public class UndoHelpersTests
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
         Assert.Equal(18, gs.GetBankResourceCount(ResourceType.Wood));
         Assert.Equal(18, gs.GetBankResourceCount(ResourceType.Brick));
+        var countOfDevCards = gs.DevelopmentCards.Count();
     
         var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
@@ -570,7 +571,40 @@ public class UndoHelpersTests
         Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));
         Assert.Equal(1, board.GetRedPlayer().DevCardsReadyToPlay.Count(dc => dc == DevelopmentCardType.YearOfPlenty));
         Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
+        Assert.Equal(countOfDevCards - 1, gs.DevelopmentCards.Count());
     }
+
+    [Fact]
+    public void UndoFromUser_RoadBuilding()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        board.GetRedPlayer().AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        board.GetRedPlayer().MakeNewDevelopmentCardsPlayable();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetRedPlayer());
+        var playRequest = new PlayDevCardRequest(board.GetRedPlayer().Id, DevelopmentCardType.RoadBuilding, 
+            null, null);
+        var buildResponse = GamePlayHelpers.PlayRoadBuildingDevCardFromUser(gs, playRequest);
+        var eventIdToUndo = gs.UndoState.Peek().EventRecordId;
+        Assert.True(buildResponse.Success);
+        Assert.Equal(GameStates.FirstDevCardRoad, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
+        Assert.Equal(DevelopmentCardType.RoadBuilding, gs.DevelopmentCards.Last());
+        var countOfDevCards = gs.DevelopmentCards.Count();
+
+            var request = new BaseRequest(board.GetRedPlayer().Id);
+        var response =  UndoHelpers.UndoFromUser(gs, request);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.GameState);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.CurrentPlayer);
+        Assert.Equal(1, board.GetRedPlayer().DevCardsReadyToPlay.Count(dc => dc == DevelopmentCardType.RoadBuilding));
+        Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
+        Assert.Equal(countOfDevCards - 1, gs.DevelopmentCards.Count());
+    }
+
 
     [Fact]
     public void UndoFromUser_MultiUndo()

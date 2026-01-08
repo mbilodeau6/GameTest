@@ -3,6 +3,7 @@ using System.Diagnostics.Eventing.Reader;
 using System.Numerics;
 using GameTest.DTOs;
 using GameTest.Models;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Identity.Client;
 
 namespace GameTest.Services;
@@ -127,6 +128,9 @@ public static class UndoHelpers
                 break;
             case EventRecordAction.PlayYearOfPlenty:
                 UndoYearOfPlenty(gs, player, er.ResourcesReceived);
+                break;
+            case EventRecordAction.PlayRoadBuilding:
+                UndoRoadBuilding(gs, player);
                 break;
             default:
                 throw new NotImplementedException($"Unexpected Error. Haven't implemented ReverseAction yet for {er.Action}. EventId: {er.Id}.");
@@ -285,6 +289,20 @@ public static class UndoHelpers
 
         gs.RemoveResourcesFromPlayer(player, resourcesReceived);
 
+        if (!gs.DevelopmentCards.Contains(DevelopmentCardType.YearOfPlenty) || gs.DevelopmentCards.Last() != DevelopmentCardType.YearOfPlenty)
+            throw new InvalidOperationException("Unexpected Error. Year of Plenty undo but no Year of Plenty at bottom of development card stack.");
+
+        gs.DevelopmentCards.RemoveAt(gs.DevelopmentCards.FindLastIndex(dc => dc == DevelopmentCardType.YearOfPlenty));
         player.RetrievePlayedDevelopmentCard(DevelopmentCardType.YearOfPlenty);
     }
+
+    private static void UndoRoadBuilding(GameState gs, Player player)
+    {
+        if (!gs.DevelopmentCards.Contains(DevelopmentCardType.RoadBuilding) || gs.DevelopmentCards.Last() != DevelopmentCardType.RoadBuilding)
+            throw new InvalidOperationException("Unexpected Error. Year of Plenty undo but no Road Building at bottom of development card stack.");
+
+        gs.DevelopmentCards.RemoveAt(gs.DevelopmentCards.FindLastIndex(dc => dc == DevelopmentCardType.RoadBuilding));
+        player.RetrievePlayedDevelopmentCard(DevelopmentCardType.RoadBuilding);
+    }
+
 }

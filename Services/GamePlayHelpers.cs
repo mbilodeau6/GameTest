@@ -818,6 +818,9 @@ public static class GamePlayHelpers
     {
         player.PlayDevelopmentCard(type);
         gs.Phase.SetDevCardPlayedThisRound();
+
+        if (type != DevelopmentCardType.VictoryPoint && type != DevelopmentCardType.Knight)
+            gs.DevelopmentCards.Add(type);
     }
 
     public static void PlayMonopolyDevCard(GameState gs, Player player, ResourceType requestedResource)

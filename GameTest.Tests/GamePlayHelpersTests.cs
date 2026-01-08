@@ -1713,6 +1713,7 @@ public class GamePlayHelpersTests
         Assert.True(woodCount > 0);
         var botWoodCount = bot.Resources[ResourceType.Wood];
         Assert.True(botWoodCount > 0);
+        var countDevCardsInDeck = gs.DevelopmentCards.Count;
 
         GamePlayHelpers.PlayMonopolyDevCard(gs, human, ResourceType.Wood);
 
@@ -1721,6 +1722,8 @@ public class GamePlayHelpersTests
         Assert.Empty(human.DevCardsPlayed);
         Assert.Equal(woodCount + botWoodCount, human.Resources[ResourceType.Wood]);
         Assert.Equal(0, bot.Resources[ResourceType.Wood]);
+        Assert.Equal(countDevCardsInDeck + 1, gs.DevelopmentCards.Count);
+        Assert.Equal(DevelopmentCardType.Monopoly, gs.DevelopmentCards.Last());
     }
 
     [Fact]
@@ -1935,6 +1938,7 @@ public class GamePlayHelpersTests
         var countWood = human.Resources[ResourceType.Wood];
         var countBrick = human.Resources[ResourceType.Brick];
         var countYearOfPlenty = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty);
+        var countDevCardsInDeck = gs.DevelopmentCards.Count;
 
         PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
             new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
@@ -1949,6 +1953,8 @@ public class GamePlayHelpersTests
         Assert.Equal(countYearOfPlenty - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty));
         Assert.NotNull(response.PossibleActions);
         Assert.NotEmpty(response.PossibleActions);
+        Assert.Equal(countDevCardsInDeck + 1, gs.DevelopmentCards.Count);
+        Assert.Equal(DevelopmentCardType.YearOfPlenty, gs.DevelopmentCards.Last());
     }
 
     [Fact]
@@ -2127,11 +2133,14 @@ public class GamePlayHelpersTests
         var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.RoadBuilding);
         var human = gs.Players.First(p => !p.IsBot);
         var roadBuildingCount = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding);
+        var countDevCardsInDeck = gs.DevelopmentCards.Count;
 
         GamePlayHelpers.PlayRoadBuildingDevCard(gs, human);
 
         Assert.Equal(roadBuildingCount - 1, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.RoadBuilding));
         Assert.Equal(GameStates.FirstDevCardRoad ,gs.Phase.PhaseState);
+        Assert.Equal(countDevCardsInDeck + 1, gs.DevelopmentCards.Count);
+        Assert.Equal(DevelopmentCardType.RoadBuilding, gs.DevelopmentCards.Last());
     }
 
     [Fact]
