@@ -3,6 +3,7 @@ using GameTest.Models;
 using GameTest.DTOs;
 using GameTest.Services;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 
 namespace GameTest.Tests;
 
@@ -1104,6 +1105,47 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
+    public void BankTradeFromUser_Rejected_BankDoesNotHaveRequestedResource()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var player = board.GetRedPlayer();
+        var gs = board.GetGameState();
+        player.AssignResources(ResourceType.Wood, 5);
+        gs.AssignResourcesToPlayer(board.GetBluePlayer(), ResourceType.Brick, 19);
+        Assert.Equal(0, gs.GetBankResourceCount(ResourceType.Brick));
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, player);
+
+        var tradeRequest = CreateTradeRequestDTO(player, ResourceType.Wood, 4, ResourceType.Brick, 1);
+        var response = GamePlayHelpers.BankTradeFromUser(gs, tradeRequest);
+
+        Assert.False(response.Success);
+        Assert.Equal(1076, response.ErrorCode);
+        Assert.Equal(5, gs.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
+        Assert.Equal(0, gs.GetBankResourceCount(ResourceType.Brick));
+    }
+
+    [Fact]
+    public void BankTrade_Rejected_BankDoesNotHaveRequestedResource()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var player = board.GetRedPlayer();
+        var gs = board.GetGameState();
+        player.AssignResources(ResourceType.Wood, 5);
+        gs.AssignResourcesToPlayer(board.GetBluePlayer(), ResourceType.Brick, 19);
+        Assert.Equal(0, gs.GetBankResourceCount(ResourceType.Brick));
+
+        var tradeRequest = CreateTradeRequest(player, ResourceType.Wood, 4, ResourceType.Brick, 1);
+        var response = GamePlayHelpers.BankTrade(gs, tradeRequest);
+
+        Assert.False(response.Success);
+        Assert.Equal(1076, response.ErrorCode);
+        Assert.Equal(5, gs.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(0, gs.Players[0].Resources[ResourceType.Brick]);
+        Assert.Equal(0, gs.GetBankResourceCount(ResourceType.Brick));
+    }
+
+    [Fact]
     public void PopulatePlayerPorts_Valid()
     {
         // Arrange
@@ -1842,6 +1884,48 @@ public class GamePlayHelpersTests
         Assert.Null(response.GameState);
     }
 
+    [Fact]
+    public void PlayYearOfPlentyDevCardFromUser_BankDoesntHaveResources()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        var countWood = human.Resources[ResourceType.Wood];
+        var countBrick = human.Resources[ResourceType.Brick];
+        var countYearOfPlenty = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 19); // Take all wood from bank
+
+        PlayDevCardRequest request = new PlayDevCardRequest(human.Id, DevelopmentCardType.YearOfPlenty, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }, null);
+
+        var response = GamePlayHelpers.PlayYearOfPlentyDevCardFromUser(gs, request);
+
+        Assert.False(response.Success);
+        Assert.Equal(1076, response.ErrorCode);
+        Assert.Null(response.GameState);
+        Assert.Equal(countWood, human.Resources[ResourceType.Wood]);
+        Assert.Equal(countBrick, human.Resources[ResourceType.Brick]);
+        Assert.Equal(countYearOfPlenty, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty));
+    }
+
+    [Fact]
+    public void PlayYearOfPlentyDevCard_BankDoesntHaveResources()
+    {
+        var gs = CreateGameForPlayDevCardTesting(GameStates.BuildOrTrade, DevelopmentCardType.YearOfPlenty);
+        var human = gs.Players.First(p => !p.IsBot);
+        var bot = gs.Players.First(p => p.IsBot);
+        var countWood = human.Resources[ResourceType.Wood];
+        var countBrick = human.Resources[ResourceType.Brick];
+        var countYearOfPlenty = human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 19); // Take all wood from bank
+
+        Assert.Throws<InvalidOperationException>(() => GamePlayHelpers.PlayYearOfPlentyDevCard(gs, human, 
+            new List<ResourceType>()  { ResourceType.Wood, ResourceType.Brick }));
+
+        Assert.Equal(countWood, human.Resources[ResourceType.Wood]);
+        Assert.Equal(countBrick, human.Resources[ResourceType.Brick]);
+        Assert.Equal(countYearOfPlenty, human.DevCardsReadyToPlay.Count(d => d == DevelopmentCardType.YearOfPlenty));
+    }
 
     [Fact]
     public void PlayYearOfPlentyDevCardFromUser_Valid()

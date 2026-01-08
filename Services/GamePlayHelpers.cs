@@ -907,6 +907,15 @@ public static class GamePlayHelpers
         if (player == null)
             return new ResponseDTO(false, 1012, $"Player: {request.PlayerId}", null as GameState);
 
+        foreach(var resource in request.SelectedResources)
+        {
+            if (resource == ResourceType.Desert)
+                return new ResponseDTO(false, 1038, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
+
+            if (gs.GetBankResourceCount(resource) < 1)
+                return new ResponseDTO(false, 1076, $"GameId: {gs.Id}; Player: {request.PlayerId}; Resource: {resource}", null as GameStateDTO);
+        }
+
         PlayYearOfPlentyDevCard(gs, player, request.SelectedResources);
         GameLoop(gs);
 
