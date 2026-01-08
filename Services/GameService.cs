@@ -15,6 +15,7 @@ public class GameService
 {
     private readonly BlobContainerClient? _container;
     private readonly ILogger<GameService> _logger;
+    private readonly string? _authToken;
 
     // parameterless ctor kept for tests / direct instantiation
     public GameService() : this(NullLogger<GameService>.Instance) { }
@@ -23,6 +24,10 @@ public class GameService
     public GameService(ILogger<GameService> logger)
     {
         _logger = logger ?? NullLogger<GameService>.Instance;
+
+        _authToken = Environment.GetEnvironmentVariable("TEMP_AUTH_TOKEN");
+        if (string.IsNullOrWhiteSpace(_authToken))
+            _logger.LogWarning("TEMP_AUTH_TOKEN not set; token validation will fail.");
 
         var conn = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
         if (string.IsNullOrWhiteSpace(conn))
@@ -47,8 +52,22 @@ public class GameService
         }
     }
 
-    public GameState CreateGame(string gameTypeString)
+    public bool IsCallerAuthorized(string? token)
     {
+        if (string.IsNullOrWhiteSpace(_authToken))
+            return false;
+
+        return token?.StartsWith(_authToken) ?? false;
+    }
+
+    public GameState CreateGame(string gameTypeString, string playerToken)
+    {
+        if (!IsCallerAuthorized(playerToken))
+        {
+            _logger.LogWarning("CreateGame called with unauthorized player token.");
+            throw new UnauthorizedAccessException("CreateGame called with unauthorized player token.");
+        }
+
         GameType gameType = Enum.Parse<GameType>(gameTypeString, ignoreCase: true);
         var gs = BoardCreationHelpers.CreateNewBoard(gameType, "ProdTest");
 

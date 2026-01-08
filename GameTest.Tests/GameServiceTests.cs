@@ -7,14 +7,10 @@ namespace GameTest.Tests;
 public class GameServiceTests
 {
     [Fact]
-    public void CreateGame_ReturnGameState()
+    public void CreateGame_RequiresValidToken()
     {
         // Act
         var gs = new GameService();
-        var game = gs.CreateGame("Default");
-
-        // Assert
-        Assert.NotEmpty(game.Vertices);
-        Assert.NotEmpty(game.Edges);
+        Assert.Throws<UnauthorizedAccessException>(() => gs.CreateGame("Default", "InvalidToken"));
     }
 }

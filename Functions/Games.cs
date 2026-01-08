@@ -70,16 +70,31 @@ public class Games
     public async Task<HttpResponseData> CreateGame(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Games")] HttpRequestData req)
     {
-        var body = await new StreamReader(req.Body).ReadToEndAsync();
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var request = JsonSerializer.Deserialize<CreateGameRequest>(body, options);
+        _logger.LogInformation("CreateGame called.");
+
+        var request = await ReadRequestBodyAsync<CreateGameRequest>(req);
+        if (request == null || string.IsNullOrWhiteSpace(request.PlayerToken))
+            return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1077, "Action: CreateGame.");
 
         if (request == null || string.IsNullOrWhiteSpace(request.GameType))
             return await CreateErrorResponse(req, HttpStatusCode.BadRequest, 1004, string.Empty);
 
-        var gameState = _gameService.CreateGame(request.GameType);
-
-        return await CreateSuccessResponse(req, gameState);
+        try
+        {
+            var gameState = _gameService.CreateGame(request.GameType, request.PlayerToken);
+            _logger.LogInformation("CreateGame succeeded. GameId: {GameId}", gameState.Id);
+            return await CreateSuccessResponse(req, gameState);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("CreateGame unauthorized: {Message}", ex.Message);
+            return await CreateErrorResponse(req, HttpStatusCode.Unauthorized, 1078, "Action: CreateGame.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CreateGame unexpected error: {Message}", ex.Message);
+            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError, 9999, "Action: CreateGame.");
+        }
     }
 
     [Function("BuildRoad")]

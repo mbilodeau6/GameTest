@@ -143,6 +143,8 @@ public class ResponseDTO
         { 1074, "Cannot undo earlier event if later events not undone first."},
         { 1075, "Undo request must specify player id and event id."},
         { 1076, "Bank does not have enough resources."},
+        { 1077, "Player Token required for action."},
+        { 1078, "User is not authorized for this action."},
         { 9999, "Unexpected error."},
     };
 }
