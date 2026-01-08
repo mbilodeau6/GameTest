@@ -69,7 +69,7 @@ public class GameService
         }
 
         GameType gameType = Enum.Parse<GameType>(gameTypeString, ignoreCase: true);
-        var gs = BoardCreationHelpers.CreateNewBoard(gameType, "ProdTest");
+        var gs = BoardCreationHelpers.CreateNewBoard(gameType, playerToken);
 
         // Try to persist a DTO representation to blob storage (best-effort).
         try
