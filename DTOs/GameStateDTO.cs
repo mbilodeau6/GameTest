@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using GameTest.Models;
 using GameTest.Tests;
 using Microsoft.Extensions.Logging;
+using GameTest.Services;
 
 namespace GameTest.DTOs;
 
@@ -24,6 +25,7 @@ public class GameStateDTO
     public Stack<PreActionState> UndoState {get; } = new Stack<PreActionState>();
     public List<EventRecordDTO> EventRecord { get; private set; } = new List<EventRecordDTO>();
     public int NextEventId { get; private set; } = 0;
+    public Bank Bank { get; set; } = new Bank();
 
     // JsonConstructor lets System.Text.Json bind constructor parameters to JSON properties.
     [JsonConstructor]
@@ -34,7 +36,8 @@ public class GameStateDTO
         List<EdgeDTO>? edges = null, List<VertexDTO>? vertices = null,
         List<PortDTO>? ports = null, List<EventRecordDTO>? eventRecord = null,
         List<DevelopmentCardType>? developmentCards = null,
-        int nextEventId = 0, Stack<PreActionState>? undoState = null)
+        int nextEventId = 0, Stack<PreActionState>? undoState = null,
+        Bank? bank = null)
     {
         Id = id ?? string.Empty;
         Settings = settings;
@@ -71,6 +74,9 @@ public class GameStateDTO
             UndoState = new Stack<PreActionState>(undoState);
         else
             UndoState = new Stack<PreActionState>();
+
+        if (bank != null)
+            Bank = new Bank(bank);
     }
 
     private GameStateDTO(GameStateDTO dto)
@@ -108,6 +114,8 @@ public class GameStateDTO
 
         Dice = dto.Dice;
         NextEventId = dto.NextEventId;
+
+        Bank = new Bank(dto.Bank);
     }
 
     public GameStateDTO(GameState gameState)
@@ -150,6 +158,8 @@ public class GameStateDTO
         Dice = gameState.Dice;
         NextEventId = gameState.NextEventId;
         UndoState = new Stack<PreActionState>(gameState.UndoState);
+
+        Bank = new Bank(gameState.GetBankResources());
     }
 
     public GameStateDTO GetStateForPlayer(Player player)

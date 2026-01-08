@@ -5,7 +5,7 @@ namespace GameTest.Services;
 
 public class Bank
 {
-    private Dictionary<ResourceType, int> Resources = new Dictionary<ResourceType, int>()
+    public Dictionary<ResourceType, int> Resources { get; set; }= new Dictionary<ResourceType, int>()
     {
         { ResourceType.Brick, 19 },
         { ResourceType.Wood, 19 },
@@ -13,6 +13,22 @@ public class Bank
         { ResourceType.Ore, 19 },
         { ResourceType.Grain, 19 }
     };
+
+    public Bank(Bank bank)
+    {
+        foreach (var resource in bank.Resources)
+            Resources[resource.Key] = resource.Value;
+    }
+
+    public Bank(Dictionary<ResourceType, int> resources)
+    {
+        foreach (var resource in resources)
+            Resources[resource.Key] = resource.Value;
+    }
+
+    public Bank()
+    {
+    }
 
     public int GetResourceCount(ResourceType resource)
     {
@@ -95,5 +111,10 @@ public class Bank
         }
 
         return new ResponseDTO(true, 0, string.Empty, gs, player);
+    }
+
+    public Dictionary<ResourceType, int> GetBankResources()
+    {
+        return new Dictionary<ResourceType, int>(Resources);
     }
 }

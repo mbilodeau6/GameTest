@@ -9,78 +9,6 @@ namespace GameTest.Tests;
 public class GamePlayHelpersTests
 {
     [Fact]
-    public void GetResourcesEarnedOnLastRoll_NoBuildingsOnMatchingTiles()
-    {
-        // Arrage
-        var gameState = TestHelpers.CreateOriginalTestBoard().GetGameState();
-        gameState.SetDiceForTesting(new GameDice(new GameDie(3), new GameDie(5)));
-
-        // Act
-        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(gameState);
-
-        // Assert
-        Assert.Empty(resources);
-    }
-
-    [Fact]
-    public void GetResourcesEarnedOnLastRoll_BuildingsOnMatchingTiles()
-    {
-        // Arrage
-        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
-        board.GetVertex(TestVertex.V3).UpgradeToCity();
-
-        board.GetGameState().SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(5)));
-
-        // Act
-        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(board.GetGameState());
-
-        // Assert
-        Assert.NotEmpty(resources);
-        Assert.True(resources.ContainsKey(board.GetBluePlayer()));
-        Assert.True(resources.ContainsKey(board.GetRedPlayer()));
-        Assert.True(resources[board.GetRedPlayer()].ContainsKey(ResourceType.Grain));
-        Assert.Equal(1, resources[board.GetRedPlayer()][ResourceType.Grain]);
-        Assert.True(resources[board.GetBluePlayer()].ContainsKey(ResourceType.Grain));
-        Assert.Equal(2, resources[board.GetBluePlayer()][ResourceType.Grain]);
-    }
-
-    [Fact]
-    public void GetResourcesEarnedOnLastRoll_DontIncludeDesert()
-    {
-        // Arrage
-        // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
-        TestHelpers.AddPlayers(gs);
-
-        var desertTile = gs.GetTileAt(0, 0);
-        Assert.NotNull(desertTile);
-        Assert.Equal(ResourceType.Desert, desertTile.Resource);
-
-        var brickTile = gs.GetTileAt(-1, -1);
-        Assert.NotNull(brickTile);
-        Assert.Equal(ResourceType.Brick, brickTile.Resource);
-
-        var woolTile = gs.GetTileAt(1, -1);
-        Assert.NotNull(woolTile);
-        Assert.Equal(ResourceType.Wool, woolTile.Resource);
-
-        var bluePlayer = gs.Players.First(p => p.Color == PlayerColor.Blue);
-        Assert.NotNull(bluePlayer);
-        var redPlayer = gs.Players.First(p => p.Color == PlayerColor.Red);
-        Assert.NotNull(redPlayer);
-
-        gs.Vertices[0].BuildSettlement(bluePlayer);
-
-        gs.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(3)));
-
-        // Act
-        var resources = GamePlayHelpers.GetResourcesEarnedOnLastRoll(gs);
-
-        // Assert
-        Assert.Empty(resources);
-    }
-
-    [Fact]
     public void GetVictoryPointsForBuild_ForSettlement()
     {
         // Arrange
@@ -99,68 +27,10 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void AssignResourcesToPlayers()
-    {
-        // Arrange
-        GameState gameState = new GameState(new Guid());
-
-        var player1 = Player.CreateTestPlayer("Fred", PlayerColor.Blue);
-        var player2 = Player.CreateTestPlayer("Marge", PlayerColor.Orange);
-        gameState.AddPlayer(player1);
-        gameState.AddPlayer(player2);
-
-        Dictionary<Player, Dictionary<ResourceType, int>> resources = new Dictionary<Player, Dictionary<ResourceType, int>>();
-        resources.Add(player1, new Dictionary<ResourceType, int>());
-        resources[player1].Add(ResourceType.Ore, 4);
-        resources.Add(player2, new Dictionary<ResourceType, int>());
-        resources[player2].Add(ResourceType.Wood, 1);
-        resources[player2].Add(ResourceType.Brick, 2);
-
-        // Act
-        GamePlayHelpers.AssignResourcesToPlayers(gameState, resources);
-
-        // Assert
-        Assert.Equal(4, gameState.Players[0].Resources[ResourceType.Ore]);
-        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Brick]);
-        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Wood]);
-        Assert.Equal(4, gameState.Players[0].ResourceCount);
-        Assert.Equal(0, gameState.Players[1].Resources[ResourceType.Ore]);
-        Assert.Equal(2, gameState.Players[1].Resources[ResourceType.Brick]);
-        Assert.Equal(1, gameState.Players[1].Resources[ResourceType.Wood]);
-        Assert.Equal(3, gameState.Players[1].ResourceCount);
-    }
-
-    private Player CreatePlayerWithSufficientResources()
-    {
-        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
-
-        player.Resources[ResourceType.Wood] = 1;
-        player.Resources[ResourceType.Brick] = 1;
-        player.Resources[ResourceType.Grain] = 2;
-        player.Resources[ResourceType.Wool] = 1;
-        player.Resources[ResourceType.Ore] = 3;
-
-        return player;
-    }
-
-    private Player CreatePlayerWithInsufficientResources()
-    {
-        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
-
-        player.Resources[ResourceType.Wood] = 1;
-        player.Resources[ResourceType.Brick] = 0;
-        player.Resources[ResourceType.Grain] = 2;
-        player.Resources[ResourceType.Wool] = 0;
-        player.Resources[ResourceType.Ore] = 2;
-
-        return player;
-    }
-
-    [Fact]
     public void HasResourcesToBuildRoad_SufficientResources()
     {
         // Arrange
-        var player = CreatePlayerWithSufficientResources();
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
 
         // Act
         var result = GamePlayHelpers.HasResourcesToBuildRoad(player);
@@ -173,7 +43,7 @@ public class GamePlayHelpersTests
     public void HasResourcesToBuildRoad_InsufficientResources()
     {
         // Arrange
-        var player = CreatePlayerWithInsufficientResources();
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
 
         // Act
         var result = GamePlayHelpers.HasResourcesToBuildRoad(player);
@@ -183,44 +53,10 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void WithdrawResourcesToBuildRoad_SufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithSufficientResources();
-        var woodCount = player.Resources[ResourceType.Wood];
-        var brickCount = player.Resources[ResourceType.Brick];
-
-        // Act
-        GamePlayHelpers.WithdrawResourcesToBuildRoad(player);
-
-        // Assert
-        Assert.Equal(woodCount - 1, player.Resources[ResourceType.Wood]);
-        Assert.Equal(brickCount - 1, player.Resources[ResourceType.Brick]);
-    }
-
-    [Fact]
-    public void WithdrawResourcesToBuildRoad_InsufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithInsufficientResources();
-        var woodCount = player.Resources[ResourceType.Wood];
-        var brickCount = player.Resources[ResourceType.Brick];
-
-        // Act
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-           GamePlayHelpers.WithdrawResourcesToBuildRoad(player));
-
-        // Assert
-        Assert.Equal("Player does not have required resources to build road.", exception.Message);
-        Assert.Equal(woodCount, player.Resources[ResourceType.Wood]);
-        Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
-    }
-
-    [Fact]
     void HasResourcesToBuildSettlment_SufficientResources()
     {
         // Arrange
-        var player = CreatePlayerWithSufficientResources();
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
 
         // Act
         var result = GamePlayHelpers.HasResourcesToBuildSettlement(player);
@@ -233,7 +69,7 @@ public class GamePlayHelpersTests
     public void HsResourcesToBuildSettlement_InufficientResources()
     {
         // Arrange
-        var player = CreatePlayerWithInsufficientResources();
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
 
         // Act
         var result = GamePlayHelpers.HasResourcesToBuildSettlement(player);
@@ -243,52 +79,10 @@ public class GamePlayHelpersTests
     }
 
     [Fact]
-    public void WithdrawResourcesToBuildSettlement_SufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithSufficientResources();
-        var woodCount = player.Resources[ResourceType.Wood];
-        var brickCount = player.Resources[ResourceType.Brick];
-        var woolCount = player.Resources[ResourceType.Wool];
-        var grainCount = player.Resources[ResourceType.Grain];
-
-        // Act
-        GamePlayHelpers.WithdrawResourcesToBuildSettlement(player);
-
-        // Assert
-        Assert.Equal(woodCount - 1, player.Resources[ResourceType.Wood]);
-        Assert.Equal(brickCount - 1, player.Resources[ResourceType.Brick]);
-        Assert.Equal(woolCount - 1, player.Resources[ResourceType.Wool]);
-        Assert.Equal(grainCount - 1, player.Resources[ResourceType.Grain]);
-    }
-
-    [Fact]
-    public void WithdrawResourcesToBuildSettlement_InufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithInsufficientResources();
-        var woodCount = player.Resources[ResourceType.Wood];
-        var brickCount = player.Resources[ResourceType.Brick];
-        var woolCount = player.Resources[ResourceType.Wool];
-        var grainCount = player.Resources[ResourceType.Grain];
-
-        // Act
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-           GamePlayHelpers.WithdrawResourcesToBuildSettlement(player));
-
-        // Assert
-        Assert.Equal("Player does not have required resources to build settlement.", exception.Message);
-        Assert.Equal(woodCount, player.Resources[ResourceType.Wood]);
-        Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
-        Assert.Equal(woolCount, player.Resources[ResourceType.Wool]);
-        Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
-    }
-
-    [Fact]
     public void HasResourcesToBuildCity_SufficientResources()
     {
         // Arrange
-        var player = CreatePlayerWithSufficientResources();
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
 
         // Act
         var result = GamePlayHelpers.HasResourcesToBuildCity(player);
@@ -301,7 +95,7 @@ public class GamePlayHelpersTests
     public void HasResourcesToBuildCity_InsufficientResources()
     {
         // Arrange
-        var player = CreatePlayerWithInsufficientResources();
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
 
         // Act
         var result = GamePlayHelpers.HasResourcesToBuildCity(player);
@@ -310,88 +104,19 @@ public class GamePlayHelpersTests
         Assert.False(result);
     }
 
-    [Fact]
-    public void WithdrawResourcesToBuildCity_SufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithSufficientResources();
-        var oreCount = player.Resources[ResourceType.Ore];
-        var grainCount = player.Resources[ResourceType.Grain];
-
-        // Act
-        GamePlayHelpers.WithdrawResourcesToBuildCity(player);
-
-        // Assert
-        Assert.Equal(oreCount - 3, player.Resources[ResourceType.Ore]);
-        Assert.Equal(grainCount - 2, player.Resources[ResourceType.Grain]);
-    }
-
-    [Fact]
-    public void WithdrawResourcesToBuildCity_InsufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithInsufficientResources();
-        var oreCount = player.Resources[ResourceType.Ore];
-        var grainCount = player.Resources[ResourceType.Grain];
-
-        // Act
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-           GamePlayHelpers.WithdrawResourcesToBuildCity(player));
-
-        // Assert
-        Assert.Equal("Player does not have required resources to build city.", exception.Message);
-        Assert.Equal(oreCount, player.Resources[ResourceType.Ore]);
-        Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
-    }
 
     [Fact]
     public void HasResourcesToBuyDevCard_SufficientResources()
     {
-        var player = CreatePlayerWithSufficientResources();
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
         Assert.True(GamePlayHelpers.HasResourcesToBuyDevCard(player));        
     }
 
     [Fact]
     public void HasResourcesToBuyDevCard_InsufficientResources()
     {
-        var player = CreatePlayerWithInsufficientResources();
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
         Assert.False(GamePlayHelpers.HasResourcesToBuyDevCard(player));        
-    }
-
-    [Fact]
-    public void WithdrawResourcesToBuyDevCard_SufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithSufficientResources();
-        var oreCount = player.Resources[ResourceType.Ore];
-        var woolCount = player.Resources[ResourceType.Wool];
-        var grainCount = player.Resources[ResourceType.Grain];
-
-        // Act
-        GamePlayHelpers.WithdrawResourcesToBuyDevCard(player);
-
-        // Assert
-        Assert.Equal(oreCount - 1, player.Resources[ResourceType.Ore]);
-        Assert.Equal(woolCount - 1, player.Resources[ResourceType.Wool]);
-        Assert.Equal(grainCount - 1, player.Resources[ResourceType.Grain]);
-    }
-
-    [Fact]
-    public void WithdrawResourcesToBuyDevCard_InsufficientResources()
-    {
-        // Arrange
-        var player = CreatePlayerWithInsufficientResources();
-        var oreCount = player.Resources[ResourceType.Ore];
-        var woolCount = player.Resources[ResourceType.Wool];
-        var grainCount = player.Resources[ResourceType.Grain];
-
-        // Act
-        GamePlayHelpers.WithdrawResourcesToBuyDevCard(player);
-
-        // Assert
-        Assert.Equal(oreCount, player.Resources[ResourceType.Ore]);
-        Assert.Equal(woolCount, player.Resources[ResourceType.Wool]);
-        Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
     }
 
     [Fact]
@@ -2905,6 +2630,7 @@ public class GamePlayHelpersTests
         Assert.NotNull(response.PossibleActions);
         Assert.Single(response.PossibleActions);
         Assert.Contains(response.PossibleActions, a => a.Action == PlayerAction.PlaceRobber);
+        Assert.Equal(23, gs.GetBankResourceCount(ResourceType.Brick));
     }
 
     [Fact]

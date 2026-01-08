@@ -34,79 +34,10 @@ public static class GamePlayHelpers
         return resources;
     }
 
-    public static Dictionary<Player, Dictionary<ResourceType, int>> GetResourcesEarnedOnLastRoll(GameState gs)
-    {
-        var resourcesEarned = new Dictionary<Player, Dictionary<ResourceType, int>>();
-
-        if (gs.Dice.GetCombinedValue() == 7)
-            return resourcesEarned;
-
-        var matchingTiles = gs.Tiles.FindAll(t => t.DiceNumber == gs.Dice.GetCombinedValue() && t.Id != gs.RobberTile.Id);
-
-        foreach (var tile in matchingTiles)
-        {
-            foreach (var vertex in gs.Vertices)
-            {
-                if (vertex.Tiles.Contains(tile) && vertex.Building != null && vertex.Owner != null)
-                {
-                    if (!resourcesEarned.ContainsKey(vertex.Owner))
-                        resourcesEarned.Add(vertex.Owner, new Dictionary<ResourceType, int>());
-
-                    var victoryPoints = GetVictoryPointsForBuild(vertex.Building);
-
-                    if (!resourcesEarned[vertex.Owner].ContainsKey(tile.Resource))
-                        resourcesEarned[vertex.Owner].Add(tile.Resource, victoryPoints);
-                    else
-                        resourcesEarned[vertex.Owner][tile.Resource] += victoryPoints;
-                }
-            }
-        }
-
-        return resourcesEarned;
-    }
-
-    public static void AssignResourcesToPlayers(GameState gameState, Dictionary<Player, Dictionary<ResourceType, int>> resources)
-    {
-        foreach (var kvpPlayer in resources)
-        {
-            var gained = new Dictionary<ResourceType, int>();
-            foreach (var kvpResource in kvpPlayer.Value)
-            {
-                kvpPlayer.Key.AssignResources(kvpResource.Key, kvpResource.Value);
-                gained.Add(kvpResource.Key, kvpResource.Value);
-            }
-
-            gameState.AddEventRecord(new EventRecordDTO(kvpPlayer.Key, EventRecordAction.ReceivedResources, gained));
-        }
-    }
-
-    public static void RemoveResourcesFromPlayer(GameState gs, Player player, Dictionary<ResourceType, int> resources)
-    {
-        foreach (var kvp in resources)
-            player.RemoveResources(kvp.Key, kvp.Value);
-    }
-
-    public static void AssignResourcesBasedOnLastDiceRoll(GameState gameState)
-    {
-        var resources = GetResourcesEarnedOnLastRoll(gameState);
-        AssignResourcesToPlayers(gameState, resources);
-    }
-
     public static bool HasResourcesToBuildRoad(Player player)
     {
         return player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
                player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1;
-    }
-
-    public static void WithdrawResourcesToBuildRoad(Player player)
-    {
-        if (HasResourcesToBuildRoad(player))
-        {
-            player.RemoveResources(ResourceType.Wood, 1);
-            player.RemoveResources(ResourceType.Brick, 1);
-        }
-        else
-            throw new InvalidOperationException("Player does not have required resources to build road.");
     }
 
     public static bool HasResourcesToBuildSettlement(Player player)
@@ -117,32 +48,10 @@ public static class GamePlayHelpers
                player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1;
     }
 
-    public static void WithdrawResourcesToBuildSettlement(Player player)
-    {
-        if (!HasResourcesToBuildSettlement(player))
-            throw new InvalidOperationException("Player does not have required resources to build settlement.");
-
-        player.RemoveResources(ResourceType.Wood, 1);
-        player.RemoveResources(ResourceType.Brick, 1);
-        player.RemoveResources(ResourceType.Wool, 1);
-        player.RemoveResources(ResourceType.Grain, 1);
-    }
-
     public static bool HasResourcesToBuildCity(Player player)
     {
         return player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 2 &&
                player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 3;
-    }
-
-    public static void WithdrawResourcesToBuildCity(Player player)
-    {
-        if (HasResourcesToBuildCity(player))
-        {
-            player.RemoveResources(ResourceType.Ore, 3);
-            player.RemoveResources(ResourceType.Grain, 2);
-        }
-        else
-            throw new InvalidOperationException("Player does not have required resources to build city.");
     }
 
     public static bool HasResourcesToBuyDevCard(Player player)
@@ -150,16 +59,6 @@ public static class GamePlayHelpers
         return (player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 1 &&
             player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1 &&
             player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1);
-    }
-
-    public static void WithdrawResourcesToBuyDevCard(Player player)
-    {
-        if (HasResourcesToBuyDevCard(player))
-        {
-            player.RemoveResources(ResourceType.Ore, 1);
-            player.RemoveResources(ResourceType.Wool, 1);
-            player.RemoveResources(ResourceType.Grain, 1);
-        }
     }
 
     public static int CountVictoryPointDevCardsForPlayer(Player player)
@@ -293,7 +192,7 @@ public static class GamePlayHelpers
     {
         var preActionState = gs.GetPreActionStat();
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
-            WithdrawResourcesToBuildRoad(player);
+            gs.WithdrawResourcesToBuildRoad(player);
 
         if (gs.Phase.PhaseState == GameStates.PlaceSecondRoad)
         {
@@ -372,12 +271,12 @@ public static class GamePlayHelpers
         var resourcesGained = new Dictionary<ResourceType, int>();
 
         if (gs.Phase.PhaseState == GameStates.BuildOrTrade)
-            WithdrawResourcesToBuildSettlement(player);
+            gs.WithdrawResourcesToBuildSettlement(player);
         else if (gs.Phase.PhaseState == GameStates.PlaceSecondSettlement) 
             foreach (var tile in vertex.Tiles)
                 if (tile.Resource != ResourceType.Desert)
                 {
-                    player.AssignResources(tile.Resource, 1);
+                    gs.AssignResourcesToPlayer(player, tile.Resource, 1);
                     if (!resourcesGained.ContainsKey(tile.Resource))
                         resourcesGained.Add(tile.Resource, 1);
                     else
@@ -448,7 +347,7 @@ public static class GamePlayHelpers
         if (BuildCityPhase(gs))
         {
             var preActionState = gs.GetPreActionStat();
-            WithdrawResourcesToBuildCity(player);
+            gs.WithdrawResourcesToBuildCity(player);
             vertex.UpgradeToCity();
             var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.UpgradeSettlement, vertex));
             gs.UpdatePlayerVictoryPoints(player);
@@ -625,7 +524,7 @@ public static class GamePlayHelpers
         gs.Dice.Roll();
         gs.Phase.ClearWaitingForRoll();
         gs.AddEventRecord(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.RollDice, gs.Dice));
-        GamePlayHelpers.AssignResourcesBasedOnLastDiceRoll(gs);
+        gs.AssignResourcesBasedOnLastDiceRoll();
 
         if (!skipGameLoop)
             GameLoop(gs);
@@ -708,8 +607,7 @@ public static class GamePlayHelpers
     public static ResponseDTO BankTrade(GameState gs, TradeRequest request)
     {
         var preActionState = gs.GetPreActionStat();
-        Bank bank = new Bank();
-        var response = bank.TradeWithBank(gs, request.Player, request.Offer, request.Request);
+        var response = gs.TradeWithBank(gs, request.Player, request.Offer, request.Request);
 
         if (!response.Success)
             return response;
@@ -841,7 +739,7 @@ public static class GamePlayHelpers
         player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.BuyDevelopmentCard, gs.DevelopmentCards[0]));
         gs.DevelopmentCards.RemoveAt(0);
-        WithdrawResourcesToBuyDevCard(player);
+        gs.WithdrawResourcesToBuyDevCard(player);
         gs.UpdatePlayerVictoryPoints(player);
     }
     public static ResponseDTO BuyDevCardFromUser(GameState gs, string playerId)
@@ -983,7 +881,7 @@ public static class GamePlayHelpers
         var preActionState = gs.GetPreActionStat();
 
         foreach(var resource in requestedResources)
-            player.AssignResources(resource, 1);
+            gs.AssignResourcesToPlayer(player, resource, 1);
 
         var eventRecordId = -1;
         SharedPlayDevCard(gs, player, DevelopmentCardType.YearOfPlenty);
@@ -1128,7 +1026,7 @@ public static class GamePlayHelpers
             if (player.Resources[resource] <= 0)
                 throw new InvalidOperationException($"Unexpected Error: Player doesn't have a resource they are trying to discard. MissingResource: {resource}; GameId: {gs.Id}; Player: {player.Id}");
 
-            player.RemoveResources(resource, 1);
+            gs.RemoveResourcesFromPlayer(player, resource, 1);
         }
 
         var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.DiscardCards, cardsToDiscard));

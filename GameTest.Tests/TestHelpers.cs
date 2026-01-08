@@ -167,4 +167,30 @@ public static class TestHelpers
         gameState.AddPlayer(p1);
         gameState.AddPlayer(p2);
     }
+
+    public static Player CreatePlayerWithSufficientResources()
+    {
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
+
+        player.Resources[ResourceType.Wood] = 1;
+        player.Resources[ResourceType.Brick] = 1;
+        player.Resources[ResourceType.Grain] = 2;
+        player.Resources[ResourceType.Wool] = 1;
+        player.Resources[ResourceType.Ore] = 3;
+
+        return player;
+    }
+
+    public static Player CreatePlayerWithInsufficientResources()
+    {
+        var player = Player.CreateTestPlayer("Mary", PlayerColor.Red);
+
+        player.Resources[ResourceType.Wood] = 1;
+        player.Resources[ResourceType.Brick] = 0;
+        player.Resources[ResourceType.Grain] = 2;
+        player.Resources[ResourceType.Wool] = 0;
+        player.Resources[ResourceType.Ore] = 2;
+
+        return player;
+    }
 }

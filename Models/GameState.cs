@@ -23,20 +23,9 @@ public class GameState
     public Stack<PreActionState> UndoState { get; private set; } = new Stack<PreActionState>();
     public int NextEventId { get; private set; } = 0;
     private int NextPlayerId { get; set; } = 1;
-
-    public Dictionary<ResourceType, int> Resources { get; } = new()
-    {
-        { ResourceType.Brick, 19 },
-        { ResourceType.Wood, 19 },
-        { ResourceType.Ore, 19 },
-        { ResourceType.Grain, 19 },
-        { ResourceType.Wool, 19 }
-    };
-
+    private Bank Bank { get; set; } = new Bank();
     public List<DevelopmentCardType> DevelopmentCards { get; private set; } = new List<DevelopmentCardType>();
-
     public GamePhase Phase { get; set; }
-
     public List<Port> Ports {get; } = new();
 
     private void InitializeDevelopmentCards()
@@ -169,6 +158,11 @@ public class GameState
             PlayerWithLongestRoad = Players.First(p => p.Id == dto.HasLongestRoadPlayerId);
 
         UndoState = new Stack<PreActionState>(dto.UndoState);
+
+        if (dto.Bank == null)
+            Bank = new Bank();
+        else
+            Bank = new Bank(dto.Bank);
     }
 
     public string GetNewPlayerId()
@@ -402,5 +396,171 @@ public class GameState
     public void ClearUndoState()
     {
         UndoState.Clear();
+    }
+
+    public int GetBankResourceCount(ResourceType resource)
+    {
+        return Bank.GetResourceCount(resource);
+    }
+
+    public Dictionary<ResourceType, int> GetBankResources()
+    {
+        return Bank.GetBankResources();
+    }
+
+    public void AssignResourcesToPlayer(Player player, ResourceType resourceType, int resourceCount)
+    {
+        Bank.WithdrawResources(resourceType, resourceCount);
+        player.AssignResources(resourceType, resourceCount);
+    }
+
+    public void WithdrawResourcesToBuildRoad(Player player)
+    {
+        if (GamePlayHelpers.HasResourcesToBuildRoad(player))
+        {
+            player.RemoveResources(ResourceType.Wood, 1);
+            player.RemoveResources(ResourceType.Brick, 1);
+            Bank.ReturnResources(ResourceType.Wood, 1);
+            Bank.ReturnResources(ResourceType.Brick, 1);
+        }
+        else
+            throw new InvalidOperationException("Player does not have required resources to build road.");
+    }
+
+    public void WithdrawResourcesToBuildSettlement(Player player)
+    {
+        if (!GamePlayHelpers.HasResourcesToBuildSettlement(player))
+            throw new InvalidOperationException("Player does not have required resources to build settlement.");
+
+        player.RemoveResources(ResourceType.Wood, 1);
+        player.RemoveResources(ResourceType.Brick, 1);
+        player.RemoveResources(ResourceType.Wool, 1);
+        player.RemoveResources(ResourceType.Grain, 1);
+        Bank.ReturnResources(ResourceType.Wood, 1);
+        Bank.ReturnResources(ResourceType.Brick, 1);
+        Bank.ReturnResources(ResourceType.Wool, 1);
+        Bank.ReturnResources(ResourceType.Grain, 1);
+    }
+
+    public void WithdrawResourcesToBuildCity(Player player)
+    {
+        if (GamePlayHelpers.HasResourcesToBuildCity(player))
+        {
+            player.RemoveResources(ResourceType.Ore, 3);
+            player.RemoveResources(ResourceType.Grain, 2);
+            Bank.ReturnResources(ResourceType.Ore, 3);
+            Bank.ReturnResources(ResourceType.Grain, 2);
+        }
+        else
+            throw new InvalidOperationException("Player does not have required resources to build city.");
+    }
+
+    public void WithdrawResourcesToBuyDevCard(Player player)
+    {
+        if (GamePlayHelpers.HasResourcesToBuyDevCard(player))
+        {
+            player.RemoveResources(ResourceType.Ore, 1);
+            player.RemoveResources(ResourceType.Wool, 1);
+            player.RemoveResources(ResourceType.Grain, 1);
+            Bank.ReturnResources(ResourceType.Ore, 1);
+            Bank.ReturnResources(ResourceType.Wool, 1);
+            Bank.ReturnResources(ResourceType.Grain, 1);
+        }
+    }
+
+    public void AssignResourcesToPlayers(Dictionary<Player, Dictionary<ResourceType, int>> resources)
+    {
+        // First, find out if the bank has enough resources to pay everyone. Skip assignment for resources that the bank is short
+        var resourcesNeeded = new Dictionary<ResourceType, int>();
+
+        foreach (var kvpPlayer in resources)
+        {
+            foreach (var kvpResource in kvpPlayer.Value)
+            {
+                if (!resourcesNeeded.ContainsKey(kvpResource.Key))
+                    resourcesNeeded.Add(kvpResource.Key, 0);
+
+                resourcesNeeded[kvpResource.Key] += kvpResource.Value;
+            }
+        }
+
+        var resourceShortages = new List<ResourceType>();
+        foreach (var kvpResource in resourcesNeeded)
+            if (GetBankResourceCount(kvpResource.Key) < kvpResource.Value)
+                resourceShortages.Add(kvpResource.Key);
+
+        // Now assign resources to players and log events
+        foreach (var kvpPlayer in resources)
+        {
+            var gained = new Dictionary<ResourceType, int>();
+            foreach (var kvpResource in kvpPlayer.Value)
+            { 
+                if (resourceShortages.Contains(kvpResource.Key))
+                    continue;
+
+                kvpPlayer.Key.AssignResources(kvpResource.Key, kvpResource.Value);
+                Bank.WithdrawResources(kvpResource.Key, kvpResource.Value);
+                gained.Add(kvpResource.Key, kvpResource.Value);
+            }
+
+            AddEventRecord(new EventRecordDTO(kvpPlayer.Key, EventRecordAction.ReceivedResources, gained));
+        }
+    }
+
+    public void RemoveResourcesFromPlayer(Player player, Dictionary<ResourceType, int> resources)
+    {
+        foreach (var kvp in resources)
+        {
+            player.RemoveResources(kvp.Key, kvp.Value);
+            Bank.ReturnResources(kvp.Key, kvp.Value);
+        }
+    }
+
+    public void RemoveResourcesFromPlayer(Player player, ResourceType resourceType, int resourceCount)
+    {
+        player.RemoveResources(resourceType, resourceCount);
+        Bank.ReturnResources(resourceType, resourceCount);
+    }
+
+    public Dictionary<Player, Dictionary<ResourceType, int>> GetResourcesEarnedOnLastRoll()
+    {
+        var resourcesEarned = new Dictionary<Player, Dictionary<ResourceType, int>>();
+
+        if (Dice.GetCombinedValue() == 7)
+            return resourcesEarned;
+
+        var matchingTiles = Tiles.FindAll(t => t.DiceNumber == Dice.GetCombinedValue() && t.Id != RobberTile.Id);
+
+        foreach (var tile in matchingTiles)
+        {
+            foreach (var vertex in Vertices)
+            {
+                if (vertex.Tiles.Contains(tile) && vertex.Building != null && vertex.Owner != null)
+                {
+                    if (!resourcesEarned.ContainsKey(vertex.Owner))
+                        resourcesEarned.Add(vertex.Owner, new Dictionary<ResourceType, int>());
+
+                    var victoryPoints = GamePlayHelpers.GetVictoryPointsForBuild(vertex.Building);
+
+                    if (!resourcesEarned[vertex.Owner].ContainsKey(tile.Resource))
+                        resourcesEarned[vertex.Owner].Add(tile.Resource, victoryPoints);
+                    else
+                        resourcesEarned[vertex.Owner][tile.Resource] += victoryPoints;
+                }
+            }
+        }
+
+        return resourcesEarned;
+    }
+
+    public void AssignResourcesBasedOnLastDiceRoll()
+    {
+        var resources = GetResourcesEarnedOnLastRoll();
+        AssignResourcesToPlayers(resources);
+    }
+
+    public ResponseDTO TradeWithBank(GameState gs, Player player, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    {
+        return Bank.TradeWithBank(gs, player, offer, request);  
     }
 }

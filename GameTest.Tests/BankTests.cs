@@ -1,6 +1,7 @@
 using Xunit;
 using GameTest.Models;
 using GameTest.Services;
+using System.Reflection;
 
 namespace GameTest.Tests;
 
@@ -383,5 +384,28 @@ public class BankTests
         Assert.Equal(2, Bank.GetTradeRate(player, ResourceType.Wool));
         Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Grain));
         Assert.Equal(3, Bank.GetTradeRate(player, ResourceType.Ore));
+    }
+
+    [Fact]
+    public void GetBankResources_ReturnsCopyOfResources()
+    {
+        // Arrange
+        var bank = new Bank();
+
+        // Act
+        var resources = bank.GetBankResources();
+        resources[ResourceType.Brick] = 0;
+
+        // Assert
+        Assert.Contains(ResourceType.Brick, bank.GetBankResources().Keys);
+        Assert.Contains(ResourceType.Wood, bank.GetBankResources().Keys);
+        Assert.Contains(ResourceType.Wool, bank.GetBankResources().Keys);
+        Assert.Contains(ResourceType.Grain, bank.GetBankResources().Keys);
+        Assert.Contains(ResourceType.Ore, bank.GetBankResources().Keys);
+        Assert.Equal(19, bank.GetResourceCount(ResourceType.Brick));
+        Assert.Equal(19, bank.GetResourceCount(ResourceType.Wood));
+        Assert.Equal(19, bank.GetResourceCount(ResourceType.Wool));
+        Assert.Equal(19, bank.GetResourceCount(ResourceType.Grain));
+        Assert.Equal(19, bank.GetResourceCount(ResourceType.Ore));
     }
 }

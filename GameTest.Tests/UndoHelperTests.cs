@@ -148,6 +148,8 @@ public class UndoHelpersTests
         Assert.Equal(2, gs.CountSettlementsForPlayer(board.GetRedPlayer()));
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Ore]);
+        Assert.Equal(18, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(18, gs.GetBankResourceCount(ResourceType.Wool));
 
         var request = new BaseRequest(board.GetRedPlayer().Id);
 
@@ -163,6 +165,8 @@ public class UndoHelpersTests
         Assert.Equal(1, gs.CountSettlementsForPlayer(board.GetRedPlayer()));
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wool));
         Assert.Null(board.GetVertex(TestVertex.V10).Owner);
         Assert.Null(board.GetVertex(TestVertex.V10).Building);
         Assert.Contains(gs.EventRecord, e => e.Id == 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == 0);
@@ -238,6 +242,8 @@ public class UndoHelpersTests
         Assert.True(buildResponse.Success);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(20, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(20, gs.GetBankResourceCount(ResourceType.Brick));
 
         var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
@@ -257,6 +263,8 @@ public class UndoHelpersTests
         Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
         Assert.Null(board.GetEdge(TestEdge.E25).Owner);
         Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));
     }
 
     [Fact]
@@ -421,6 +429,10 @@ public class UndoHelpersTests
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Equal(20, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(20, gs.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(20, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(20, gs.GetBankResourceCount(ResourceType.Grain));
         Assert.Equal(3,gs.CountSettlementsForPlayer(board.GetRedPlayer()));
         Assert.Equal(3, board.GetRedPlayer().FullVictoryPoints);
 
@@ -440,6 +452,10 @@ public class UndoHelpersTests
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wool]);
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Grain));
         Assert.Null(board.GetVertex(TestVertex.V20).Owner);
         Assert.Null(board.GetVertex(TestVertex.V20).Building);
         Assert.Equal(2, board.GetRedPlayer().FullVictoryPoints);
@@ -456,6 +472,8 @@ public class UndoHelpersTests
         Assert.True(buildResponse.Success);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Equal(22, gs.GetBankResourceCount(ResourceType.Ore));
+        Assert.Equal(21, gs.GetBankResourceCount(ResourceType.Grain));
         Assert.Equal(1, gs.CountSettlementsForPlayer(board.GetRedPlayer()));
         Assert.Equal(1, gs.CountCitiesForPlayer(board.GetRedPlayer()));
         Assert.Equal(3, board.GetRedPlayer().FullVictoryPoints);
@@ -474,6 +492,8 @@ public class UndoHelpersTests
         Assert.Equal(0, gs.CountCitiesForPlayer(board.GetRedPlayer()));
         Assert.Equal(3, board.GetRedPlayer().Resources[ResourceType.Ore]);
         Assert.Equal(2, board.GetRedPlayer().Resources[ResourceType.Grain]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Ore));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Grain));
         Assert.Null(board.GetVertex(TestVertex.V20).Owner);
         Assert.Null(board.GetVertex(TestVertex.V20).Building);
         Assert.Equal(2, board.GetRedPlayer().FullVictoryPoints);
@@ -497,6 +517,8 @@ public class UndoHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(23, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(18, gs.GetBankResourceCount(ResourceType.Brick));
     
         var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
@@ -508,6 +530,8 @@ public class UndoHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
         Assert.Equal(5, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));
         Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
     }
 
@@ -529,6 +553,8 @@ public class UndoHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(1, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(18, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(18, gs.GetBankResourceCount(ResourceType.Brick));
     
         var request = new BaseRequest(board.GetRedPlayer().Id);
         var response =  UndoHelpers.UndoFromUser(gs, request);
@@ -540,6 +566,8 @@ public class UndoHelpersTests
         Assert.Equal(board.GetRedPlayer().Id, gs.Phase.CurrentPlayer.Id);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Wood]);
         Assert.Equal(0, board.GetRedPlayer().Resources[ResourceType.Brick]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));
         Assert.Equal(1, board.GetRedPlayer().DevCardsReadyToPlay.Count(dc => dc == DevelopmentCardType.YearOfPlenty));
         Assert.Contains(gs.EventRecord, e => e.Id == eventIdToUndo + 1 && e.Action == EventRecordAction.Undo && e.EventReversed != null && e.EventReversed == eventIdToUndo);
     }

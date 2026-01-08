@@ -22,7 +22,6 @@ public class GameStateTests
         Assert.Null(game.RobberTile);
         Assert.Null(game.PlayerWithLongestRoad);
         Assert.Null(game.PlayerWithLargestArmy);
-        Assert.All(game.Resources.Values, v => Assert.Equal(19, v));
         Assert.Equal(25, game.DevelopmentCards.Count);
         Assert.Equal(2, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.Monopoly));
         Assert.Equal(2, game.DevelopmentCards.Count(dc => dc == DevelopmentCardType.RoadBuilding));
@@ -37,6 +36,11 @@ public class GameStateTests
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
         Assert.Equal(10, game.Settings.VictoryPointsToWin);
         Assert.True(game.Dice.Die1.Random);
+        Assert.Equal(19, game.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(19, game.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19, game.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(19, game.GetBankResourceCount(ResourceType.Ore));
+        Assert.Equal(19, game.GetBankResourceCount(ResourceType.Grain));
     }
 
     [Fact]
@@ -756,5 +760,337 @@ public class GameStateTests
         Assert.Equal(gs.Players[0].Id, newGS.PlayerWithLargestArmy.Id);
         Assert.NotNull(newGS.PlayerWithLongestRoad);
         Assert.Equal(gs.Players[1].Id, newGS.PlayerWithLongestRoad.Id);
+    }
+
+    [Fact]
+    public void WithdrawResourcesToBuildRoad_SufficientResources()
+    {
+        var gs = new GameState(new Guid());
+
+        // Arrange
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
+        var woodCount = player.Resources[ResourceType.Wood];
+        var brickCount = player.Resources[ResourceType.Brick];
+
+        // Act
+        gs.WithdrawResourcesToBuildRoad(player);
+
+        // Assert
+        Assert.Equal(woodCount - 1, player.Resources[ResourceType.Wood]);
+        Assert.Equal(brickCount - 1, player.Resources[ResourceType.Brick]);
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Brick));
+    }
+
+    [Fact]
+    public void WithdrawResourcesToBuildRoad_InsufficientResources()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
+        var woodCount = player.Resources[ResourceType.Wood];
+        var brickCount = player.Resources[ResourceType.Brick];
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           gs.WithdrawResourcesToBuildRoad(player));
+
+        // Assert
+        Assert.Equal("Player does not have required resources to build road.", exception.Message);
+        Assert.Equal(woodCount, player.Resources[ResourceType.Wood]);
+        Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));  
+    }
+
+    [Fact]
+    public void WithdrawResourcesToBuildSettlement_SufficientResources()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
+        var woodCount = player.Resources[ResourceType.Wood];
+        var brickCount = player.Resources[ResourceType.Brick];
+        var woolCount = player.Resources[ResourceType.Wool];
+        var grainCount = player.Resources[ResourceType.Grain];
+
+        // Act
+        gs.WithdrawResourcesToBuildSettlement(player);
+
+        // Assert
+        Assert.Equal(woodCount - 1, player.Resources[ResourceType.Wood]);
+        Assert.Equal(brickCount - 1, player.Resources[ResourceType.Brick]);
+        Assert.Equal(woolCount - 1, player.Resources[ResourceType.Wool]);
+        Assert.Equal(grainCount - 1, player.Resources[ResourceType.Grain]);
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Grain));
+    }
+
+    [Fact]
+    public void WithdrawResourcesToBuildSettlement_InufficientResources()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
+        var woodCount = player.Resources[ResourceType.Wood];
+        var brickCount = player.Resources[ResourceType.Brick];
+        var woolCount = player.Resources[ResourceType.Wool];
+        var grainCount = player.Resources[ResourceType.Grain];
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           gs.WithdrawResourcesToBuildSettlement(player));
+
+        // Assert
+        Assert.Equal("Player does not have required resources to build settlement.", exception.Message);
+        Assert.Equal(woodCount, player.Resources[ResourceType.Wood]);
+        Assert.Equal(brickCount, player.Resources[ResourceType.Brick]);
+        Assert.Equal(woolCount, player.Resources[ResourceType.Wool]);
+        Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Grain));
+    }
+
+    [Fact]
+    public void WithdrawResourcesToBuildCity_SufficientResources()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
+        var oreCount = player.Resources[ResourceType.Ore];
+        var grainCount = player.Resources[ResourceType.Grain];
+
+        // Act
+        gs.WithdrawResourcesToBuildCity(player);
+
+        // Assert
+        Assert.Equal(oreCount - 3, player.Resources[ResourceType.Ore]);
+        Assert.Equal(grainCount - 2, player.Resources[ResourceType.Grain]);
+        Assert.Equal(19 + 3, gs.GetBankResourceCount(ResourceType.Ore));
+        Assert.Equal(19 + 2, gs.GetBankResourceCount(ResourceType.Grain));
+    }
+
+    [Fact]
+    public void WithdrawResourcesToBuildCity_InsufficientResources()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
+        var oreCount = player.Resources[ResourceType.Ore];
+        var grainCount = player.Resources[ResourceType.Grain];
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+           gs.WithdrawResourcesToBuildCity(player));
+
+        // Assert
+        Assert.Equal("Player does not have required resources to build city.", exception.Message);
+        Assert.Equal(oreCount, player.Resources[ResourceType.Ore]);
+        Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Ore));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Grain));
+    }
+
+    [Fact]
+
+    public void WithdrawResourcesToBuyDevCard_SufficientResources()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        var player = TestHelpers.CreatePlayerWithSufficientResources();
+        var oreCount = player.Resources[ResourceType.Ore];
+        var woolCount = player.Resources[ResourceType.Wool];
+        var grainCount = player.Resources[ResourceType.Grain];
+
+        // Act
+        gs.WithdrawResourcesToBuyDevCard(player);
+
+        // Assert
+        Assert.Equal(oreCount - 1, player.Resources[ResourceType.Ore]);
+        Assert.Equal(woolCount - 1, player.Resources[ResourceType.Wool]);
+        Assert.Equal(grainCount - 1, player.Resources[ResourceType.Grain]);
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Ore));
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(19 + 1, gs.GetBankResourceCount(ResourceType.Grain));
+    }
+
+    [Fact]
+    public void WithdrawResourcesToBuyDevCard_InsufficientResources()
+    {
+        // Arrange
+        var gs = new GameState(new Guid());
+        var player = TestHelpers.CreatePlayerWithInsufficientResources();
+        var oreCount = player.Resources[ResourceType.Ore];
+        var woolCount = player.Resources[ResourceType.Wool];
+        var grainCount = player.Resources[ResourceType.Grain];
+
+        // Act
+        gs.WithdrawResourcesToBuyDevCard(player);
+
+        // Assert
+        Assert.Equal(oreCount, player.Resources[ResourceType.Ore]);
+        Assert.Equal(woolCount, player.Resources[ResourceType.Wool]);
+        Assert.Equal(grainCount, player.Resources[ResourceType.Grain]);
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Ore));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Wool));
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Grain));
+    }
+
+        [Fact]
+    public void GetResourcesEarnedOnLastRoll_NoBuildingsOnMatchingTiles()
+    {
+        // Arrage
+        var gameState = TestHelpers.CreateOriginalTestBoard().GetGameState();
+        gameState.SetDiceForTesting(new GameDice(new GameDie(3), new GameDie(5)));
+
+        // Act
+        var resources = gameState.GetResourcesEarnedOnLastRoll();
+
+        // Assert
+        Assert.Empty(resources);
+    }
+
+    [Fact]
+    public void GetResourcesEarnedOnLastRoll_BuildingsOnMatchingTiles()
+    {
+        // Arrage
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        var banksGrainHoldingBefore = board.GetGameState().GetBankResourceCount(ResourceType.Grain);
+
+        board.GetGameState().SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(5)));
+
+        // Act
+        var resources = board.GetGameState().GetResourcesEarnedOnLastRoll();
+
+        // Assert
+        Assert.NotEmpty(resources);
+        Assert.True(resources.ContainsKey(board.GetBluePlayer()));
+        Assert.True(resources.ContainsKey(board.GetRedPlayer()));
+        Assert.True(resources[board.GetRedPlayer()].ContainsKey(ResourceType.Grain));
+        Assert.Equal(1, resources[board.GetRedPlayer()][ResourceType.Grain]);
+        Assert.True(resources[board.GetBluePlayer()].ContainsKey(ResourceType.Grain));
+        Assert.Equal(2, resources[board.GetBluePlayer()][ResourceType.Grain]);
+    }
+
+    [Fact]
+    public void GetResourcesEarnedOnLastRoll_DontIncludeDesert()
+    {
+        // Arrage
+        // TODO: Should change to Test Board
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        TestHelpers.AddPlayers(gs);
+
+        var desertTile = gs.GetTileAt(0, 0);
+        Assert.NotNull(desertTile);
+        Assert.Equal(ResourceType.Desert, desertTile.Resource);
+
+        var brickTile = gs.GetTileAt(-1, -1);
+        Assert.NotNull(brickTile);
+        Assert.Equal(ResourceType.Brick, brickTile.Resource);
+
+        var woolTile = gs.GetTileAt(1, -1);
+        Assert.NotNull(woolTile);
+        Assert.Equal(ResourceType.Wool, woolTile.Resource);
+
+        var bluePlayer = gs.Players.First(p => p.Color == PlayerColor.Blue);
+        Assert.NotNull(bluePlayer);
+        var redPlayer = gs.Players.First(p => p.Color == PlayerColor.Red);
+        Assert.NotNull(redPlayer);
+
+        gs.Vertices[0].BuildSettlement(bluePlayer);
+
+        gs.SetDiceForTesting(new GameDice(new GameDie(4), new GameDie(3)));
+
+        // Act
+        var resources = gs.GetResourcesEarnedOnLastRoll();
+
+        // Assert
+        Assert.Empty(resources);
+    }
+
+    [Fact]
+    public void AssignResourcesToPlayers_InsufficientOre()
+    {
+        // Arrange
+        GameState gameState = new GameState(new Guid());
+
+        var player1 = Player.CreateTestPlayer("Fred", PlayerColor.Blue);
+        var player2 = Player.CreateTestPlayer("Marge", PlayerColor.Orange);
+        var player3 = Player.CreateTestPlayer("Homer", PlayerColor.Red);
+        gameState.AddPlayer(player1);
+        gameState.AddPlayer(player2);
+        gameState.AddPlayer(player3);
+        var brickCountBefore = gameState.GetBankResourceCount(ResourceType.Brick);
+        var woodCountBefore = gameState.GetBankResourceCount(ResourceType.Wood);
+
+
+        gameState.AssignResourcesToPlayer(player3, ResourceType.Ore, 15); // Remove ore from bank to create shortage
+
+        Dictionary<Player, Dictionary<ResourceType, int>> resources = new Dictionary<Player, Dictionary<ResourceType, int>>();
+        resources.Add(player1, new Dictionary<ResourceType, int>());
+        resources[player1].Add(ResourceType.Ore, 4);
+        resources[player1].Add(ResourceType.Brick, 1);
+        resources.Add(player2, new Dictionary<ResourceType, int>());
+        resources[player2].Add(ResourceType.Wood, 1);
+        resources[player2].Add(ResourceType.Brick, 2);
+        resources[player2].Add(ResourceType.Ore, 2);
+
+        // Act
+        gameState.AssignResourcesToPlayers(resources);
+
+        // Assert
+        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Ore]);
+        Assert.Equal(1, gameState.Players[0].Resources[ResourceType.Brick]);
+        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(1, gameState.Players[0].ResourceCount);
+        Assert.Equal(0, gameState.Players[1].Resources[ResourceType.Ore]);
+        Assert.Equal(2, gameState.Players[1].Resources[ResourceType.Brick]);
+        Assert.Equal(1, gameState.Players[1].Resources[ResourceType.Wood]);
+        Assert.Equal(3, gameState.Players[1].ResourceCount);
+        Assert.Equal(brickCountBefore - 3, gameState.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(woodCountBefore - 1, gameState.GetBankResourceCount(ResourceType.Wood));
+    }
+
+    [Fact]
+    public void AssignResourcesToPlayers_AllValid()
+    {
+        // Arrange
+        GameState gameState = new GameState(new Guid());
+
+        var player1 = Player.CreateTestPlayer("Fred", PlayerColor.Blue);
+        var player2 = Player.CreateTestPlayer("Marge", PlayerColor.Orange);
+        gameState.AddPlayer(player1);
+        gameState.AddPlayer(player2);
+        var brickCountBefore = gameState.GetBankResourceCount(ResourceType.Brick);
+        var woodCountBefore = gameState.GetBankResourceCount(ResourceType.Wood);
+        var oreCountBefore = gameState.GetBankResourceCount(ResourceType.Ore);
+
+        Dictionary<Player, Dictionary<ResourceType, int>> resources = new Dictionary<Player, Dictionary<ResourceType, int>>();
+        resources.Add(player1, new Dictionary<ResourceType, int>());
+        resources[player1].Add(ResourceType.Ore, 4);
+        resources.Add(player2, new Dictionary<ResourceType, int>());
+        resources[player2].Add(ResourceType.Wood, 1);
+        resources[player2].Add(ResourceType.Brick, 2);
+
+        // Act
+        gameState.AssignResourcesToPlayers(resources);
+
+        // Assert
+        Assert.Equal(4, gameState.Players[0].Resources[ResourceType.Ore]);
+        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Brick]);
+        Assert.Equal(0, gameState.Players[0].Resources[ResourceType.Wood]);
+        Assert.Equal(4, gameState.Players[0].ResourceCount);
+        Assert.Equal(0, gameState.Players[1].Resources[ResourceType.Ore]);
+        Assert.Equal(2, gameState.Players[1].Resources[ResourceType.Brick]);
+        Assert.Equal(1, gameState.Players[1].Resources[ResourceType.Wood]);
+        Assert.Equal(3, gameState.Players[1].ResourceCount);
+        Assert.Equal(brickCountBefore - 2, gameState.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(woodCountBefore - 1, gameState.GetBankResourceCount(ResourceType.Wood));
+        Assert.Equal(oreCountBefore - 4, gameState.GetBankResourceCount(ResourceType.Ore));
     }
 }

@@ -195,7 +195,7 @@ public static class UndoHelpers
 
         UndoPlaceFirstSettlement(gs, player, vertexId);
 
-        GamePlayHelpers.RemoveResourcesFromPlayer(gs, player, resources);
+        gs.RemoveResourcesFromPlayer(player, resources);
     }
 
     private static void UndoPlaceSettlement(GameState gs, Player player, string vertexId)
@@ -207,10 +207,10 @@ public static class UndoHelpers
         
         UndoPlaceFirstSettlement(gs, player, vertexId);
 
-        player.AssignResources(ResourceType.Wood, 1);
-        player.AssignResources(ResourceType.Wool, 1);
-        player.AssignResources(ResourceType.Brick, 1);
-        player.AssignResources(ResourceType.Grain, 1);
+        gs.AssignResourcesToPlayer(player, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(player, ResourceType.Grain, 1);
+        gs.AssignResourcesToPlayer(player, ResourceType.Wool, 1);
+        gs.AssignResourcesToPlayer(player, ResourceType.Brick, 1);
     }
 
     private static void UndoUpgradeSettlement(GameState gs, Player player, string vertexId)
@@ -225,8 +225,8 @@ public static class UndoHelpers
 
         vertex.DowngradeToSettlement();
 
-        player.AssignResources(ResourceType.Grain, 2);
-        player.AssignResources(ResourceType.Ore, 3);
+        gs.AssignResourcesToPlayer(player, ResourceType.Grain, 2);
+        gs.AssignResourcesToPlayer(player, ResourceType.Ore, 3);
     }
 
     private static void UndoPlaceRoad(GameState gs, Player player, string edgeId)
@@ -252,8 +252,8 @@ public static class UndoHelpers
 
                 if (gs.Phase.PhaseState != GameStates.SecondDevCardRoad && gs.UndoState.Peek().Phase.PhaseState != GameStates.SecondDevCardRoad)
                 {
-                    player.AssignResources(ResourceType.Wood, 1);
-                    player.AssignResources(ResourceType.Brick, 1);
+                    gs.AssignResourcesToPlayer(player, ResourceType.Wood, 1); 
+                    gs.AssignResourcesToPlayer(player, ResourceType.Brick, 1);
                 }
                 break;
         }
@@ -274,8 +274,8 @@ public static class UndoHelpers
         if (Bank.GetTradeRate(player, resourceTypeUsed) != resourceCountUsed)
             throw new InvalidOperationException("UndoBankTrade received a request to undo a bank trade that shouldn't have been allowed as user provided less resource than required.");
 
-        player.RemoveResources(resourcesReceived.First().Key, resourcesReceived.First().Value);
-        player.AssignResources(resourceTypeUsed, resourceCountUsed);
+        gs.RemoveResourcesFromPlayer(player, resourcesReceived.First().Key, resourcesReceived.First().Value);
+        gs.AssignResourcesToPlayer(player, resourceTypeUsed, resourceCountUsed);
     }
 
     private static void UndoYearOfPlenty(GameState gs, Player player, Dictionary<ResourceType, int>? resourcesReceived)
@@ -283,8 +283,7 @@ public static class UndoHelpers
         if (resourcesReceived == null || resourcesReceived.Count == 0)
             throw new InvalidOperationException("Unexpected Error. Year of Plenty undo with no resources received.");
 
-        foreach (var resource in resourcesReceived)
-            player.RemoveResources(resource.Key, resource.Value);
+        gs.RemoveResourcesFromPlayer(player, resourcesReceived);
 
         player.RetrievePlayedDevelopmentCard(DevelopmentCardType.YearOfPlenty);
     }
