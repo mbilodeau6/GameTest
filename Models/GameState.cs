@@ -50,10 +50,10 @@ public class GameState
         DevelopmentCards = developmentCards.OrderBy(x => rnd.Next()).ToList();
     }
 
-    public GameState(Guid guid, GameType type = GameType.Default)
+    public GameState(Guid guid, string creator, GameType type = GameType.Default)
     {
         Id = guid;
-        Settings = type == GameType.Test ? new GameSettings(type, 2, 5, 6, 3, 2) : new GameSettings(type);
+        Settings = type == GameType.Test ? new GameSettings(type, creator, 2, 5, 6, 3, 2) : new GameSettings(type, creator);
 
         Phase = new GamePhase(GameStates.SettingUpBoard, Settings.VictoryPointsToWin);
 

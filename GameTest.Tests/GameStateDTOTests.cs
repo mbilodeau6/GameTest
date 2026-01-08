@@ -10,7 +10,7 @@ public class GameStateDTOTests
     private GameState CreateTestGameState()
     {
         Guid guid = Guid.NewGuid();
-        var gameState = new GameState(guid);
+        var gameState = new GameState(guid, "UT");
         var player1 = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         var player2 = Player.CreateTestPlayer("Bob", PlayerColor.Red, true);
         gameState.Players.Add(player1);
@@ -86,7 +86,7 @@ public class GameStateDTOTests
     {
         // Arrange
         Guid guid = Guid.NewGuid();
-        var gameState = new GameState(guid);
+        var gameState = new GameState(guid, "UT");
         var tile1 = new Tile(ResourceType.Brick, 8, 0, 0);
         var tile2 = new Tile(ResourceType.Wood, 5, -1, 0);
         gameState.Tiles.Add(tile1);

@@ -72,7 +72,7 @@ public class BoardCreationHelpersTests
     public void CreateEdgesAndVerticesForStarterBoard_AllCreated()
     {
         // Act
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
 
         gs.Players.Add(Player.CreateTestPlayer("Alice", PlayerColor.Red));
         gs.Players.Add(Player.CreateTestPlayer("Bob", PlayerColor.Blue));
@@ -96,7 +96,7 @@ public class BoardCreationHelpersTests
     public void CreateEdgesAndVerticesForDefaultBoard_AllCreated()
     {
         // Act
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Default);
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Default, "UT");
 
         gs.Players.Add(Player.CreateTestPlayer("Alice", PlayerColor.Red));
         gs.Players.Add(Player.CreateTestPlayer("Bob", PlayerColor.Blue));
@@ -147,14 +147,14 @@ public class BoardCreationHelpersTests
     [Fact]
     public void AddPorts_UnsupportedGameType()
     {
-        GameState gs = new GameState(new Guid(), GameType.Test);
+        GameState gs = new GameState(new Guid(), "UT", GameType.Test);
         Assert.Throws<InvalidOperationException>(() => BoardCreationHelpers.AddPorts(gs));
     }
 
     [Fact]
     public void AddPorts_Valid()
     {
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Default);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Default, "UT");
         ValidatePortsForStandardBoard(gs);
     }
 
@@ -162,14 +162,14 @@ public class BoardCreationHelpersTests
     [Fact]
     public void AddPortsForStarter_UnsupportedGameType()
     {
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         Assert.Throws<InvalidOperationException>(() => BoardCreationHelpers.AddPortsForStarter(gs));
     }
 
     [Fact]
     public void AddPortsForStarter_Valid()
     {
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         ValidatePortsForStandardBoard(gs);
     }
 
@@ -191,7 +191,7 @@ public class BoardCreationHelpersTests
 
     private static GameState CreateBoardForPortTesting()
     {
-        var gs = new GameState(Guid.NewGuid(), GameType.Starter);
+        var gs = new GameState(Guid.NewGuid(), "UT", GameType.Starter);
 
         foreach (var tile in BoardCreationHelpers.CreateTilesForStarterBoard())
             gs.AddTile(tile);

@@ -12,7 +12,7 @@ public class BotAITests
     private static GameState CreateBoardForSetupTest(GameStates state)
     {
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         BoardCreationHelpers.LinkEdgesAndVertices(gs);
@@ -72,7 +72,7 @@ public class BotAITests
     public void Constructor_CurrentPlayerMissingOrNotBot()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() =>

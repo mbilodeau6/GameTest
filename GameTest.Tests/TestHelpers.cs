@@ -61,7 +61,7 @@ public static class TestHelpers
 
     public static GameState CreateEdgesAndVertexForRefTests()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         var t1 = new Tile(ResourceType.Wood, 10, 0, 0);
         gs.Tiles.Add(t1);
@@ -108,7 +108,7 @@ public static class TestHelpers
 
     public static GameState CreateGameStateForSetUpPhase()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         gs.Phase.PhaseState = GameStates.PlaceFirstSettlement;
         gs.Phase.CurrentPlayer = SetUpPhaseTestReferences.BotPlayer;
 

@@ -50,7 +50,7 @@ public class GameService
     public GameState CreateGame(string gameTypeString)
     {
         GameType gameType = Enum.Parse<GameType>(gameTypeString, ignoreCase: true);
-        var gs = BoardCreationHelpers.CreateNewBoard(gameType);
+        var gs = BoardCreationHelpers.CreateNewBoard(gameType, "ProdTest");
 
         // Try to persist a DTO representation to blob storage (best-effort).
         try

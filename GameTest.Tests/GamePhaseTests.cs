@@ -12,7 +12,7 @@ public class GamePhaseTests
     public void Constructor_DTO()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var p1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         gs.Players.Add(p1);
         var p2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue);

@@ -12,11 +12,12 @@ public class GameSettingsDTO
     public int RoadsPerPlayer { get; }
     public int SettlementsPerPlayer { get; }
     public int CitiesPerPlayer { get; }
+    public string Creator { get; }
 
     [JsonConstructor]
     public GameSettingsDTO(GameType type,
         int maxPlayers = 0, int victoryPointsToWin = 0, int roadsPerPlayer = 0,
-        int settlementsPerPlayer = 0, int citiesPerPlayer = 0) 
+        int settlementsPerPlayer = 0, int citiesPerPlayer = 0, string creator = "" ) 
     {
         Type = type;
         MaxPlayers = maxPlayers;
@@ -24,6 +25,7 @@ public class GameSettingsDTO
         RoadsPerPlayer = roadsPerPlayer;
         SettlementsPerPlayer = settlementsPerPlayer;
         CitiesPerPlayer = citiesPerPlayer;
+        Creator = creator;
     }
 
     public GameSettingsDTO(GameSettings settings)
@@ -34,6 +36,7 @@ public class GameSettingsDTO
         RoadsPerPlayer = settings.RoadsPerPlayer;
         SettlementsPerPlayer = settings.SettlementsPerPlayer;
         CitiesPerPlayer = settings.CitiesPerPlayer;
+        Creator = settings.Creator;
     }
 
     public GameSettingsDTO(GameSettingsDTO dto)
@@ -44,5 +47,6 @@ public class GameSettingsDTO
         RoadsPerPlayer = dto.RoadsPerPlayer;
         SettlementsPerPlayer = dto.SettlementsPerPlayer;
         CitiesPerPlayer = dto.CitiesPerPlayer;
+        Creator = dto.Creator;
     }
 }

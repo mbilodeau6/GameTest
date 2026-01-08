@@ -478,7 +478,7 @@ public class GamePlayHelpersTests
     public void LinkEdgesAndVertices_AroundCenter()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         gs.Tiles.Add(t1);
@@ -562,7 +562,7 @@ public class GamePlayHelpersTests
     public void GetEdgeFromTileInfo_2Tile()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var e1 = new Edge(t1, HexDirection.NW);
@@ -585,7 +585,7 @@ public class GamePlayHelpersTests
     public void GetEdgeFromTileInfo_1Tile()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var e1 = new Edge(t1, HexDirection.NW);
@@ -608,7 +608,7 @@ public class GamePlayHelpersTests
     public void GetEdgeFromTileInfo_IgnoreDirIfMoreThan1Tile()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
 
@@ -627,7 +627,7 @@ public class GamePlayHelpersTests
     public void GetEdgeFromTileInfo_EdgeNotFound()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var t3 = new Tile(ResourceType.Wood, 11, -2, 0);
@@ -648,7 +648,7 @@ public class GamePlayHelpersTests
     public void GetVertexFromTileInfo_IgnoreDirIfMoreThan1Tile()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
@@ -666,7 +666,7 @@ public class GamePlayHelpersTests
     public void GetVertexFromTileInfo_VertexNotFound()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
@@ -687,7 +687,7 @@ public class GamePlayHelpersTests
     public void GetVertexFromTileInfo_3Tiles()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
@@ -709,7 +709,7 @@ public class GamePlayHelpersTests
     public void GetVertexFromTileInfo_2Tiles3rdMissing()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
@@ -731,7 +731,7 @@ public class GamePlayHelpersTests
     public void GetVertexFromTileInfo_2Tiles2ndMissing()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
@@ -753,7 +753,7 @@ public class GamePlayHelpersTests
     public void GetVertexFromTileInfo_1Tiles()
     {
         // Arrange
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         var t1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var t2 = new Tile(ResourceType.Wool, 4, 1, -1);
         var t3 = new Tile(ResourceType.Brick, 6, -1, -1);
@@ -776,7 +776,7 @@ public class GamePlayHelpersTests
     {
         // Find tiles on vertices I will build or test
         // TODO: Change to use a test board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
         var t9 = gs.GetTileAt(4, 0);
         var t10 = gs.GetTileAt(3, -1);
@@ -844,7 +844,7 @@ public class GamePlayHelpersTests
     public void IsEdgeAdjacentToPlayerBuild_AdjacentToRoad()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -862,7 +862,7 @@ public class GamePlayHelpersTests
     public void IsEdgeAdjacentToPlayerBuild_AdjacentToSettlement()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -880,7 +880,7 @@ public class GamePlayHelpersTests
     public void IsEdgeAdjacentToPlayerBuild_AdjacentToCity()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -899,7 +899,7 @@ public class GamePlayHelpersTests
     public void IsEdgeAdjacentToPlayerBuild_NotAdjacentToAnything()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -917,7 +917,7 @@ public class GamePlayHelpersTests
     public void IsEdgeAdjacentToPlayerBuild_NotAdjacentToRightPlayer()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -935,7 +935,7 @@ public class GamePlayHelpersTests
     public void IsEdgeAdjacentToPlayerBuild_NotAdjacentIfRoadSplitByOtherPlayer()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -956,7 +956,7 @@ public class GamePlayHelpersTests
     public void IsVertexAdjacentToPlayerRoad_NotAdjacentToAnything()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -974,7 +974,7 @@ public class GamePlayHelpersTests
     public void IsVertexAdjacentToPlayerRoad_AdjacentToRoad()
     {
         // TODO: Change to use a Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var woodTile = gs.GetTileAt(2, 0);
@@ -1008,7 +1008,7 @@ public class GamePlayHelpersTests
     public void BankTradeFromUser_Accepted()
     {
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         gs.Phase.PhaseState = GameStates.BuildOrTrade;
@@ -1030,7 +1030,7 @@ public class GamePlayHelpersTests
     public void BankTradeFromUser_Rejected_WrongState()
     {
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         gs.Phase.PhaseState = GameStates.RollOrUseDevCard;
@@ -1050,7 +1050,7 @@ public class GamePlayHelpersTests
     public void BankTradeFromUser_Rejected_DoesNotHaveEnoughResources()
     {
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         gs.Phase.PhaseState = GameStates.BuildOrTrade;
@@ -1072,13 +1072,13 @@ public class GamePlayHelpersTests
     public void BankTrade_Accepted()
     {
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         gs.Players[0].AssignResources(ResourceType.Wood, 5);
         var tradeRequest = CreateTradeRequest(gs.Players[0], ResourceType.Wood, 4, ResourceType.Brick, 1);
 
-        var response = GamePlayHelpers.BankTrade(new GameState(new Guid()), tradeRequest);
+        var response = GamePlayHelpers.BankTrade(new GameState(new Guid(), "UT"), tradeRequest);
 
         Assert.True(response.Success);
         Assert.Equal(1, gs.Players[0].Resources[ResourceType.Wood]);
@@ -1089,13 +1089,13 @@ public class GamePlayHelpersTests
     public void BankTrade_Rejected()
     {
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         gs.Players[0].AssignResources(ResourceType.Wood, 3);
         var tradeRequest = CreateTradeRequest(gs.Players[0], ResourceType.Wood, 2, ResourceType.Brick, 1);
 
-        var response = GamePlayHelpers.BankTrade(new GameState(new Guid()), tradeRequest);
+        var response = GamePlayHelpers.BankTrade(new GameState(new Guid(), "UT"), tradeRequest);
 
         Assert.False(response.Success);
         Assert.Equal(1008, response.ErrorCode);
@@ -1108,7 +1108,7 @@ public class GamePlayHelpersTests
     {
         // Arrange
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var bot = gs.Players.First(p => p.IsBot);
@@ -1152,7 +1152,7 @@ public class GamePlayHelpersTests
 
     private static GameState CreateGameForRobberTesting(GameStates previousState)
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player1 = Player.CreateTestPlayer("Time", PlayerColor.Red);
         gs.Players.Add(player1);
         var player2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue);
@@ -1266,7 +1266,7 @@ public class GamePlayHelpersTests
 
     private static GameState CreateGameForBuyDevCardTesting(GameStates currentState)
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         gs.Players.Add(player1);
         player1.AssignResources(ResourceType.Ore, 1);
@@ -1436,7 +1436,7 @@ public class GamePlayHelpersTests
 
     private static GameState CreateGameForPlayDevCardTesting(GameStates currentState, DevelopmentCardType desiredType)
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player1 = Player.CreateTestPlayer("Tim", PlayerColor.Red);
         gs.Players.Add(player1);
         var player2 = Player.CreateTestPlayer("Mary", PlayerColor.Blue, true);
@@ -3556,7 +3556,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_InvalidState()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         gs.Phase = new GamePhase(GameStates.PlaceFirstSettlement);
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", PreferredColor = PlayerColor.Orange});
@@ -3569,7 +3569,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_AlreadyAtMaxPlayers()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         while (gs.Players.Count < gs.Settings.MaxPlayers)
             gs.Players.Add(Player.CreateTestPlayer("Test", PlayerColor.White));
 
@@ -3583,7 +3583,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_EmptyName()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "  ", IsBot = false, PreferredColor = PlayerColor.Orange});
 
@@ -3595,7 +3595,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_InvalidCharInName()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "H<nry", IsBot = false, PreferredColor = PlayerColor.Orange});
 
@@ -3607,7 +3607,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_NameTooLong()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Michael Bilodeau", IsBot = false, PreferredColor = PlayerColor.Orange});
 
@@ -3619,7 +3619,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_NameAlreadyUsed()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         gs.Players.Add(Player.CreateTestPlayer("Test", PlayerColor.White));
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Test", IsBot = false, PreferredColor = PlayerColor.Orange});
@@ -3632,7 +3632,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_ColorAlreadyUsed()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         gs.Players.Add(Player.CreateTestPlayer("Test", PlayerColor.Orange));
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", IsBot = false, PreferredColor = PlayerColor.Orange});
@@ -3645,7 +3645,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_Bot()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var countBefore = gs.Players.Count;
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PreferredColor = PlayerColor.Orange});
@@ -3662,7 +3662,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void AddPlayerToGame_Human()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var countBefore = gs.Players.Count;
 
         var response = GamePlayHelpers.AddPlayerToGame(gs, new AddPlayerRequest {PlayerName = "Henry", IsBot = false, PreferredColor = PlayerColor.Orange});
@@ -3679,7 +3679,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void StartGame_NotEnoughPlayers()
     {
-        GameState gs = new GameState(new Guid());
+        GameState gs = new GameState(new Guid(), "UT");
         Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
 
         gs.Players.Add(Player.CreateTestPlayer("Tim", PlayerColor.Red));
@@ -3690,7 +3690,7 @@ public class GamePlayHelpersTests
     [Fact]
     public void StartGame_CurrentPlayerSet()
     {
-        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        var gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         Assert.Equal(GameStates.SettingUpBoard, gs.Phase.PhaseState);
 
         gs.Players.Add(Player.CreateTestPlayer("Tim", PlayerColor.Red));

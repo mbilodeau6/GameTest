@@ -94,7 +94,7 @@ public class TradeRequestTests
     public void Constructor_FromDTO_NullDTO()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
@@ -129,7 +129,7 @@ public class TradeRequestTests
     public void Constructor_FromDTO_PlayerNotFound()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var dto = new TradeRequestDTO("player1", new Dictionary<ResourceType, int>
         {
             { ResourceType.Wood, 2 }
@@ -150,7 +150,7 @@ public class TradeRequestTests
     public void Constructor_FromDTO_Successful()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         gs.Players.Add(Player.CreateTestPlayer("Bob", PlayerColor.Red));
         var dto = new TradeRequestDTO(gs.Players[0].Id, new Dictionary<ResourceType, int>
         {

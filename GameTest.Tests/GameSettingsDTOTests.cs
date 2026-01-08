@@ -22,13 +22,14 @@ public class GameSettingsDTOTests
         Assert.Equal(settings.RoadsPerPlayer, settingsDTO.RoadsPerPlayer);
         Assert.Equal(settings.SettlementsPerPlayer, settingsDTO.SettlementsPerPlayer);
         Assert.Equal(settings.VictoryPointsToWin, settingsDTO.VictoryPointsToWin);
+        Assert.Equal(settings.Creator, settingsDTO.Creator);
     }
 
     [Fact]
     public void Constructor_CopyConstructor()
     {
         // Arrange
-        var settings = new GameSettings();
+        var settings = new GameSettings(GameType.Starter, "UT", 2, 11, 9, 5, 1);
         var settingsDTO = new GameSettingsDTO(settings);
 
         // Act
@@ -41,5 +42,6 @@ public class GameSettingsDTOTests
         Assert.Equal(settings.RoadsPerPlayer, copiedDTO.RoadsPerPlayer);
         Assert.Equal(settings.SettlementsPerPlayer, copiedDTO.SettlementsPerPlayer);
         Assert.Equal(settings.VictoryPointsToWin, copiedDTO.VictoryPointsToWin);
+        Assert.Equal(settings.Creator, copiedDTO.Creator);
     }
 }

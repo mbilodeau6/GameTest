@@ -9,7 +9,7 @@ public class ResponseDTOTests
     [Fact]
     public void Constructor_UnknownErrorCode()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var response = new ResponseDTO(false, 1, "A: 1", gs);
 
         Assert.NotNull(response);
@@ -32,7 +32,7 @@ public class ResponseDTOTests
     [Fact]
     public void Constructor_Success()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var response = new ResponseDTO(true, 1, "A: 1", gs);
 
         Assert.NotNull(response);
@@ -46,7 +46,7 @@ public class ResponseDTOTests
     [Fact]
     public void Constructor_FullError()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var response = new ResponseDTO(false, 1000, "GameId: 80ce2f25-c7ab-43d7-ace3-31735ca2a811", gs);
 
         Assert.NotNull(response);

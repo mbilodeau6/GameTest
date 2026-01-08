@@ -11,8 +11,10 @@ public class GameSettings
     public int RoadsPerPlayer { get; }
     public int SettlementsPerPlayer { get; }
     public int CitiesPerPlayer { get; }
+    public string Creator { get; init; } = string.Empty;
 
-    public GameSettings(GameType type = GameType.Default, int maxPlayers = 4,
+    public GameSettings(GameType type = GameType.Default,
+        string creator = "", int maxPlayers = 4,
         int victoryPointsToWin = 10, int roadsPerPlayer = 15,
         int settlementsPerPlayer = 5, int citiesPerPlayer = 4)
     {
@@ -22,6 +24,7 @@ public class GameSettings
         RoadsPerPlayer = roadsPerPlayer;
         SettlementsPerPlayer = settlementsPerPlayer;
         CitiesPerPlayer = citiesPerPlayer;
+        Creator = creator;
     }
     
     public GameSettings(GameSettingsDTO dto)
@@ -32,5 +35,6 @@ public class GameSettings
         RoadsPerPlayer = dto.RoadsPerPlayer;
         SettlementsPerPlayer = dto.SettlementsPerPlayer;
         CitiesPerPlayer = dto.CitiesPerPlayer;
+        Creator = dto.Creator;
     }
 }

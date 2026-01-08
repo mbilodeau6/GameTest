@@ -11,7 +11,7 @@ public class GameStateTests
     public void Constructor_DefaultNoGameType_EmptyState()
     {
         // Act
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
 
         // Assert
         Assert.Empty(game.Players);
@@ -47,7 +47,7 @@ public class GameStateTests
     public void Constructor_DefaultWithGameType_EmptyState()
     {
         // Act
-        var game = new GameState(Guid.NewGuid(), GameType.Starter);
+        var game = new GameState(Guid.NewGuid(), "UT", GameType.Starter);
 
         // Assert
         Assert.Empty(game.Players);
@@ -82,7 +82,7 @@ public class GameStateTests
     public void Constructor_FromDTO_NoPlayersForPhaseState()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         gs.Phase = new GamePhase(GameStates.BuildOrTrade);
         var dto = new GameStateDTO(gs);
 
@@ -102,7 +102,7 @@ public class GameStateTests
     public void Constructor_FromDTO_CreatesValidObject()
     {
         // Arrange
-        var gs = new GameState(Guid.NewGuid(), GameType.Test);
+        var gs = new GameState(Guid.NewGuid(), "UT", GameType.Test);
         var player1 = Player.CreateTestPlayer("Alice", PlayerColor.Blue);
         gs.AddPlayer(player1);
         var player2 = Player.CreateTestPlayer("Bob", PlayerColor.Red);
@@ -173,7 +173,7 @@ public class GameStateTests
     {
         // Arrange
         var desertTile = new Tile(ResourceType.Desert, 0, 0, 0);
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddTile(desertTile);
 
         // Act
@@ -189,7 +189,7 @@ public class GameStateTests
         // Arrange
         var desertTile1 = new Tile(ResourceType.Desert, 0, 0, 0);
         var desertTile2 = new Tile(ResourceType.Desert, 0, 1, -1);
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddTile(desertTile1);
         game.AddTile(desertTile2);
 
@@ -204,7 +204,7 @@ public class GameStateTests
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddTile(tile);
 
         // Act & Assert
@@ -218,7 +218,7 @@ public class GameStateTests
         string expectedName = "Alice";
 
         // Act
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddPlayer(Player.CreateTestPlayer(expectedName, PlayerColor.Blue));
 
         // Assert
@@ -233,7 +233,7 @@ public class GameStateTests
         ResourceType expectedResourceType = ResourceType.Wool;
 
         // Act
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddTile(new Tile(expectedResourceType, 5, 0, 0));
 
         // Assert
@@ -250,7 +250,7 @@ public class GameStateTests
         var expectedEdgeId = edge.Id;
 
         // Act
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddEdge(edge);
 
         // Assert
@@ -268,7 +268,7 @@ public class GameStateTests
         var expectedVertexId = vertex.Id;
 
         // Act
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddVertex(vertex);
 
         // Assert
@@ -281,7 +281,7 @@ public class GameStateTests
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddTile(tile);
 
         // Act
@@ -296,7 +296,7 @@ public class GameStateTests
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddTile(tile);
 
         var tileNotOnBoard = new Tile(ResourceType.Wood, 5, 1, -1);
@@ -311,7 +311,7 @@ public class GameStateTests
     {
         // Arrange
         var tile = new Tile(ResourceType.Brick, 8, 0, 0);
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         game.AddTile(tile);
         game.SetRobberTile(tile);
 
@@ -324,7 +324,7 @@ public class GameStateTests
     public void SetDiceForTesting_ChangeDice()
     {
         // Arrange
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         var newDice = new GameDice(new GameDie(1), new GameDie(1));
 
         // Act
@@ -339,7 +339,7 @@ public class GameStateTests
     public void AssignLongestRoadToPlayer()
     {
         // Arrage
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         var p1 = Player.CreateTestPlayer("Ann", PlayerColor.Red);
         game.AddPlayer(p1);
         var p2 = Player.CreateTestPlayer("Tim", PlayerColor.Blue);
@@ -357,7 +357,7 @@ public class GameStateTests
     public void AssignLargestArmyToPlayer()
     {
         // Arrage
-        var game = new GameState(Guid.NewGuid());
+        var game = new GameState(Guid.NewGuid(), "UT");
         var p1 = Player.CreateTestPlayer("Ann", PlayerColor.Red);
         game.AddPlayer(p1);
         var p2 = Player.CreateTestPlayer("Tim", PlayerColor.Blue);
@@ -375,7 +375,7 @@ public class GameStateTests
     private static GameState CreateTestGameWithManyRoads()
     {
         // TODO: Should use Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var player3 = Player.CreateTestPlayer("Alex", PlayerColor.Orange);
@@ -746,7 +746,7 @@ public class GameStateTests
    [Fact]
    public void Constructor_MaintainLongestRoadAndLargestArmy()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         gs.AddPlayer(Player.CreateTestPlayer("Tim", PlayerColor.White));
         gs.AddPlayer(Player.CreateTestPlayer("Mary", PlayerColor.Brown));
         gs.AssignLargestArmyToPlayer(gs.Players[0]);
@@ -765,7 +765,7 @@ public class GameStateTests
     [Fact]
     public void WithdrawResourcesToBuildRoad_SufficientResources()
     {
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
 
         // Arrange
         var player = TestHelpers.CreatePlayerWithSufficientResources();
@@ -786,7 +786,7 @@ public class GameStateTests
     public void WithdrawResourcesToBuildRoad_InsufficientResources()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = TestHelpers.CreatePlayerWithInsufficientResources();
         var woodCount = player.Resources[ResourceType.Wood];
         var brickCount = player.Resources[ResourceType.Brick];
@@ -807,7 +807,7 @@ public class GameStateTests
     public void WithdrawResourcesToBuildSettlement_SufficientResources()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = TestHelpers.CreatePlayerWithSufficientResources();
         var woodCount = player.Resources[ResourceType.Wood];
         var brickCount = player.Resources[ResourceType.Brick];
@@ -832,7 +832,7 @@ public class GameStateTests
     public void WithdrawResourcesToBuildSettlement_InufficientResources()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = TestHelpers.CreatePlayerWithInsufficientResources();
         var woodCount = player.Resources[ResourceType.Wood];
         var brickCount = player.Resources[ResourceType.Brick];
@@ -859,7 +859,7 @@ public class GameStateTests
     public void WithdrawResourcesToBuildCity_SufficientResources()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = TestHelpers.CreatePlayerWithSufficientResources();
         var oreCount = player.Resources[ResourceType.Ore];
         var grainCount = player.Resources[ResourceType.Grain];
@@ -878,7 +878,7 @@ public class GameStateTests
     public void WithdrawResourcesToBuildCity_InsufficientResources()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = TestHelpers.CreatePlayerWithInsufficientResources();
         var oreCount = player.Resources[ResourceType.Ore];
         var grainCount = player.Resources[ResourceType.Grain];
@@ -900,7 +900,7 @@ public class GameStateTests
     public void WithdrawResourcesToBuyDevCard_SufficientResources()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = TestHelpers.CreatePlayerWithSufficientResources();
         var oreCount = player.Resources[ResourceType.Ore];
         var woolCount = player.Resources[ResourceType.Wool];
@@ -922,7 +922,7 @@ public class GameStateTests
     public void WithdrawResourcesToBuyDevCard_InsufficientResources()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = TestHelpers.CreatePlayerWithInsufficientResources();
         var oreCount = player.Resources[ResourceType.Ore];
         var woolCount = player.Resources[ResourceType.Wool];
@@ -982,7 +982,7 @@ public class GameStateTests
     {
         // Arrage
         // TODO: Should change to Test Board
-        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter);
+        GameState gs = BoardCreationHelpers.CreateNewBoard(GameType.Starter, "UT");
         TestHelpers.AddPlayers(gs);
 
         var desertTile = gs.GetTileAt(0, 0);
@@ -1017,7 +1017,7 @@ public class GameStateTests
     public void AssignResourcesToPlayers_InsufficientOre()
     {
         // Arrange
-        GameState gameState = new GameState(new Guid());
+        GameState gameState = new GameState(new Guid(), "UT");
 
         var player1 = Player.CreateTestPlayer("Fred", PlayerColor.Blue);
         var player2 = Player.CreateTestPlayer("Marge", PlayerColor.Orange);
@@ -1060,7 +1060,7 @@ public class GameStateTests
     public void AssignResourcesToPlayers_AllValid()
     {
         // Arrange
-        GameState gameState = new GameState(new Guid());
+        GameState gameState = new GameState(new Guid(), "UT");
 
         var player1 = Player.CreateTestPlayer("Fred", PlayerColor.Blue);
         var player2 = Player.CreateTestPlayer("Marge", PlayerColor.Orange);

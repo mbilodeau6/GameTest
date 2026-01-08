@@ -21,7 +21,7 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -44,7 +44,7 @@ public class BankTests
         var request = new Dictionary<ResourceType, int>();
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -67,7 +67,7 @@ public class BankTests
         var request = new Dictionary<ResourceType, int>();
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -89,7 +89,7 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -111,7 +111,7 @@ public class BankTests
         var request = new Dictionary<ResourceType, int>();
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -137,7 +137,7 @@ public class BankTests
 
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -162,7 +162,7 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -188,7 +188,7 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -216,7 +216,7 @@ public class BankTests
 
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -244,7 +244,7 @@ public class BankTests
 
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -269,7 +269,7 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -299,7 +299,7 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.False(result.Success);
@@ -330,7 +330,7 @@ public class BankTests
         };
 
         // Act
-        var result = bank.TradeWithBank(new GameState(new Guid()), player, offer, request);
+        var result = bank.TradeWithBank(new GameState(new Guid(), "UT"), player, offer, request);
 
         // Assert
         Assert.True(result.Success);

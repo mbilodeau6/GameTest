@@ -26,7 +26,7 @@ public class GameSettingsTests
     {
         // Arrange
         // Act
-        var settings = new GameSettings(GameType.Starter, 3, 12, 10, 6, 2);
+        var settings = new GameSettings(GameType.Starter, "UT", 3, 12, 10, 6, 2);
 
         // Assert
         Assert.Equal(GameType.Starter, settings.Type);
@@ -41,7 +41,7 @@ public class GameSettingsTests
     public void Constructor_FromDto_ValuesUsed()
     {
         // Arrange
-        var settings = new GameSettings(GameType.Starter, 3, 12, 10, 6, 2);
+        var settings = new GameSettings(GameType.Starter, "UT", 3, 12, 10, 6, 2);
         var tile = new Tile(ResourceType.Brick, 10, 0, 0);
         var tiles = new List<Tile>() { tile };
         var dto = new GameSettingsDTO(settings);

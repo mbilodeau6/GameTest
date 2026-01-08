@@ -150,7 +150,7 @@ public class TradeResponseTests
     public void Constructor_DTO()
     {
         // Arrange
-        var gs = new GameState(new Guid());
+        var gs = new GameState(new Guid(), "UT");
         var player = Player.CreateTestPlayer("player1", PlayerColor.Red);
         gs.AddPlayer(player);
         var request = new Dictionary<ResourceType, int>() { { ResourceType.Wood, 2 } };
