@@ -356,6 +356,38 @@ public static class AIHelpers
         return resourceList;
     }
 
+    public static double ShouldBuyDevelopmentCard(GameState gs, Player player, bool spotReadyForSettlement = false)
+    {
+        if (!player.IsBot)
+            throw new InvalidOperationException("ShouldBuyDevelopmentCard should only be called for Bot players.");
+            
+        if (GamePlayHelpers.HasResourcesToBuyDevCard(player))
+        {
+            if (gs.PlayerWithLargestArmy == null && player.CountPlayedKnights() == 2 && gs.Players.Any(p => p.Id != player.Id && p.VisibleVictoryPoints >= gs.Settings.VictoryPointsToWin - 2))
+            {
+                // prioritize buying a development card to try to get largest army
+                return 0.8;
+            }
+
+            // prioritize cities over development cards
+            if (GamePlayHelpers.HasResourcesToBuildCity(player) && gs.UnusedCityAvailable(player) && gs.CountSettlementsForPlayer(player) > 0)
+            {
+                return 0.1;
+            }
+
+            // prioritize settlements over development cards
+            if (GamePlayHelpers.HasResourcesToBuildSettlement(player) && gs.UnusedSettlementAvailable(player) && spotReadyForSettlement)
+            {
+                return 0.1;
+            }
+
+            // Simple strategy for now: Buy a development card if we have enough resources
+            return 0.9;
+        }
+
+        return 0.0;
+    }
+
     public static double GetAIWeight(AIWeights name)
     {
         if (!AIWeightValues.ContainsKey(name))

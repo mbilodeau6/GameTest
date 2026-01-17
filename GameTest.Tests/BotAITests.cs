@@ -990,4 +990,11 @@ public class BotAITests
         Assert.False(move.RollDice);
         Assert.Null(move.PlayDevelopmentCard);
     }
+
+    [Fact]
+    public void BuyDevCard_TESTS_TBD()
+    {
+        Assert.True(false);
+    }
+
 }

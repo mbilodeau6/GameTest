@@ -827,6 +827,108 @@ public class AIHelpersTests
         Assert.Equal(3, result.Count(r => r == ResourceType.Grain));
         Assert.Equal(1, result.Count(r => r == ResourceType.Wool));
     }
+
+    [Fact]
+    public void ShouldBuyDevelopmentCard_No_CanBuildSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        board.GetEdge(TestEdge.E10).BuildRoad(bot);
+        bot.AssignResources(ResourceType.Wood, 1);
+        bot.AssignResources(ResourceType.Wool, 1);
+        bot.AssignResources(ResourceType.Brick, 1);
+        bot.AssignResources(ResourceType.Grain, 1);
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.ShouldBuyDevelopmentCard(board.GetGameState(), bot, true);
+
+        Assert.True(result <= 0.2);
+    }
+
+    [Fact]
+    public void ShouldBuyDevelopmentCard_No_CanUpgradeSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        bot.AssignResources(ResourceType.Ore, 3);
+        bot.AssignResources(ResourceType.Wool, 1);
+        bot.AssignResources(ResourceType.Grain, 2);
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.ShouldBuyDevelopmentCard(board.GetGameState(), bot);
+
+        Assert.True(result <= 0.2);
+    }
+
+    [Fact]
+    public void ShouldBuyDevelopmentCard_Yes_Over7CardsAndCantBuildAnythingElse()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        bot.AssignResources(ResourceType.Ore, 1);
+        bot.AssignResources(ResourceType.Wool, 3);
+        bot.AssignResources(ResourceType.Grain, 1);
+        bot.AssignResources(ResourceType.Brick, 3);
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.ShouldBuyDevelopmentCard(board.GetGameState(), bot);
+
+        Assert.True(result >= 0.8);
+    }
+
+    [Fact]
+    public void ShouldBuyDevelopmentCard_Yes_NoMoreCitiesAndNowhereToBuild()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetEdge(TestEdge.E10).BuildRoad(bot);
+        board.GetVertex(TestVertex.V16).BuildSettlement(bot);
+        board.GetVertex(TestVertex.V16).UpgradeToCity();
+        bot.AssignResources(ResourceType.Wool, 1);
+        bot.AssignResources(ResourceType.Ore, 1);
+        bot.AssignResources(ResourceType.Grain, 1);
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.ShouldBuyDevelopmentCard(board.GetGameState(), bot);
+
+        Assert.True(result >= 0.8);
+    }
+
+    [Fact]
+    public void ShouldBuyDevelopmentCard_Yes_GoingForLargestArmyAndGameAlmostOver()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        var human = board.GetRedPlayer();
+        board.GetVertex(TestVertex.V5).UpgradeToCity();
+        board.GetVertex(TestVertex.V7).BuildSettlement(human);
+
+        board.GetVertex(TestVertex.V3).UpgradeToCity();
+        board.GetEdge(TestEdge.E10).BuildRoad(bot);
+        bot.AssignResources(ResourceType.Wool, 1);
+        bot.AssignResources(ResourceType.Ore, 1);
+        bot.AssignResources(ResourceType.Grain, 1);
+        bot.AssignResources(ResourceType.Brick, 1);
+        bot.AssignResources(ResourceType.Wood, 1);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.MakeNewDevelopmentCardsPlayable();
+        bot.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        bot.PlayDevelopmentCard(DevelopmentCardType.Knight);
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+        board.GetGameState().UpdatePlayerVictoryPoints();
+
+        var result = AIHelpers.ShouldBuyDevelopmentCard(board.GetGameState(), bot, true);
+
+        Assert.True(result >= 0.8);
+    }
+
+    // TODO: Add tests for trading logic
 }
 
 
