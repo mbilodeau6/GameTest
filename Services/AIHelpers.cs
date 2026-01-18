@@ -356,6 +356,39 @@ public static class AIHelpers
         return resourceList;
     }
 
+    /// <summary>
+    /// Determines if the bot should play a development card and which one.
+    /// Considers game phase, available cards, and whether playing would be beneficial.
+    /// </summary>
+    /// <param name="gs">Current game state</param>
+    /// <param name="player">The bot player</param>
+    /// <returns>The development card to play, or null if no card should be played</returns>
+    public static DevelopmentCardType? GetDevCardToPlay(GameState gs, Player player)
+    {
+        // TODO: Implement - evaluate available dev cards and return best option
+        return null;
+    }
+
+    /// <summary>
+    /// Determines which resource to target with a Monopoly card.
+    /// </summary>
+    /// <returns>The resource type that would yield the best result</returns>
+    public static ResourceType GetMonopolyTarget(GameState gs, Player player)
+    {
+        // TODO: Implement - analyze opponent resources and return best target
+        return ResourceType.Desert; // Invalid placeholder
+    }
+
+    /// <summary>
+    /// Determines which two resources to take with a Year of Plenty card.
+    /// </summary>
+    /// <returns>List of exactly 2 resources to take from the bank</returns>
+    public static List<ResourceType> GetYearOfPlentyResources(GameState gs, Player player)
+    {
+        // TODO: Implement - determine which resources the bot needs most
+        return new List<ResourceType>(); // Invalid placeholder - should have exactly 2
+    }
+
     public static double ShouldBuyDevelopmentCard(GameState gs, Player player, bool spotReadyForSettlement = false)
     {
         if (!player.IsBot)
