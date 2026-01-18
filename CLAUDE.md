@@ -11,6 +11,13 @@ This is a **Settlers of Catan game engine** implemented as an Azure Functions v4
 - Game state persistence to Azure Blob Storage
 - Player authentication via token validation
 
+## Development Philosophy
+
+- **Learning project with production aspirations** - build quality code, but don't over-engineer
+- **Cost-conscious** - keep Azure hosting free/near-free (~$0.10/month currently); avoid services that increase costs
+- **Agile approach** - build only what's needed for the current iteration; keep flexibility to pivot
+- No premature abstractions or "just in case" features
+
 ## Related Projects
 
 The primary frontend is **GT_PlayBack** located at `C:\Users\mbilo\Documents\src\GT_PlayBack`:
@@ -139,3 +146,27 @@ The project uses Azure Storage emulator. Configure `local.settings.json`:
 ```
 
 Start Azurite before running locally.
+
+## Known Bot AI Limitations
+
+Current areas for improvement in `Services/BotAI.cs`:
+- Bots don't buy or use development cards
+- Bots don't respond to player trades
+- Bots don't value longest road as an objective
+
+## Testing Philosophy
+
+- TDD approach: reproduce bugs with tests before fixing
+- Goal is to cover all production gameplay scenarios
+- No specific code coverage target
+- Known gap: Functions and Blob storage integration are harder to test
+
+## Multiplayer Coordination
+
+Polling-based with progressive backoff:
+1. Fast phase: 2-second intervals
+2. Slow phase: 4-second intervals
+3. Dialog prompts user after extended inactivity - polling pauses
+4. User responds → returns to fast phase
+
+No WebSockets or real-time push - clients periodically fetch game state.
