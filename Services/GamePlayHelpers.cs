@@ -429,7 +429,7 @@ public static class GamePlayHelpers
 
         if (gs.Phase.CurrentPlayer.IsBot)
         {
-            var bot = new BotAI(gs);
+            var bot = new BotAI(gs, gs.Phase.CurrentPlayer);
 
             while (gs.Phase.CurrentPlayer != null && gs.Phase.CurrentPlayer.IsBot)
             {

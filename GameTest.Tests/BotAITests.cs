@@ -49,7 +49,7 @@ public class BotAITests
         GameState gs = CreateBoardForSetupTest(GameStates.SettingUpBoard);
 
         // Act
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // TODO: Need to find something I can test for after creation. Right now,
         // this just verifies no exception thrown.
@@ -61,24 +61,40 @@ public class BotAITests
     public void Constructor_MissingGameState()
     {
         // Arrange
+        var bot = Player.CreateTestPlayer("bot", PlayerColor.Blue, true);
+
         // Act
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new BotAI(null!));
+            new BotAI(null!, bot));
 
         Assert.Equal("Value cannot be null. (Parameter 'gs')", exception.Message);
     }
 
     [Fact]
-    public void Constructor_CurrentPlayerMissingOrNotBot()
+    public void Constructor_MissingBot()
     {
         // Arrange
         var gs = new GameState(new Guid(), "UT");
 
         // Act
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            new BotAI(gs));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new BotAI(gs, null!));
 
-        Assert.Equal("Current player must be identified and must be a Bot.", exception.Message);
+        Assert.Equal("Value cannot be null. (Parameter 'bot')", exception.Message);
+    }
+
+    [Fact]
+    public void Constructor_PlayerNotBot()
+    {
+        // Arrange
+        var gs = new GameState(new Guid(), "UT");
+        var human = Player.CreateTestPlayer("human", PlayerColor.Red, false);
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            new BotAI(gs, human));
+
+        Assert.Equal("Player must be a Bot.", exception.Message);
     }
 
     [Fact]
@@ -87,7 +103,7 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, GetBotPlayer(gs), GetHumanPlayer(gs));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             bai.GetSetUpMove());
@@ -98,7 +114,7 @@ public class BotAITests
     {
         // Arrange
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceFirstSettlement);
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         Assert.Equal(0, gs.CountSettlementsForPlayer(GetBotPlayer(gs)));
 
@@ -116,7 +132,7 @@ public class BotAITests
     {
         // Arrange
         GameState gs = CreateBoardForSetupTest(GameStates.PlaceFirstRoad);
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var brickTile = gs.GetTileAt(3, -1);
         var vertex = gs.GetVertexFromTileInfo(brickTile, null, null, VertexDirection.NE);
@@ -148,7 +164,7 @@ public class BotAITests
         gs.Vertices[0].BuildSettlement(GetBotPlayer(gs));
         gs.Vertices[1].BuildSettlement(GetHumanPlayer(gs));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         Assert.Equal(1, gs.CountSettlementsForPlayer(GetBotPlayer(gs)));
 
@@ -179,7 +195,7 @@ public class BotAITests
         var v2 = gs.GetVertexFromTileInfo(grainTile, null, null, VertexDirection.NW);
         v2.BuildSettlement(botPlayer);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         Assert.Equal(1, gs.CountRoadsForPlayer(botPlayer));
 
@@ -205,7 +221,7 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, GetBotPlayer(gs), GetHumanPlayer(gs));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             bai.GetPreRollMove());
@@ -220,7 +236,7 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.RollOrUseDevCard);
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, GetBotPlayer(gs), GetHumanPlayer(gs));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var move = bai.GetPreRollMove();
 
@@ -248,7 +264,7 @@ public class BotAITests
         gs.SetRobberTile(board.GetTile(TestTile.T0));
         Assert.Equal(board.GetTile(TestTile.T0).Id, gs.RobberTile.Id);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetPreRollMove();
@@ -278,7 +294,7 @@ public class BotAITests
         // Robber is on desert (T6) which doesn't border bot's settlement
         Assert.Equal(board.GetTile(TestTile.T6).Id, gs.RobberTile.Id);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetPreRollMove();
@@ -304,7 +320,7 @@ public class BotAITests
         // Even if robber is on bot's tile, YoP shouldn't be played pre-roll
         gs.SetRobberTile(board.GetTile(TestTile.T4));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetPreRollMove();
@@ -322,7 +338,7 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, GetBotPlayer(gs), GetHumanPlayer(gs));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             bai.GetDevCardRoadMove());
@@ -339,7 +355,7 @@ public class BotAITests
         var botPlayer = board.GetBluePlayer();
         gs.Phase = new GamePhase(GameStates.FirstDevCardRoad, botPlayer, board.GetRedPlayer());
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetDevCardRoadMove();
@@ -361,7 +377,7 @@ public class BotAITests
 
         gs.Phase = new GamePhase(GameStates.SecondDevCardRoad, botPlayer, board.GetRedPlayer());
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetDevCardRoadMove();
@@ -378,7 +394,7 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.RollOrUseDevCard);
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, GetBotPlayer(gs), GetHumanPlayer(gs));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             bai.GetBuildMove());
@@ -392,7 +408,7 @@ public class BotAITests
         var gs = CreateBoardForSetupTest(GameStates.BuildOrTrade);
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, GetBotPlayer(gs), GetHumanPlayer(gs));
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var move = bai.GetBuildMove();
 
@@ -412,7 +428,7 @@ public class BotAITests
         botPlayer.Resources[ResourceType.Brick] = 1;
         botPlayer.Resources[ResourceType.Wood] = 1;
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var move = bai.GetBuildMove();
 
@@ -438,7 +454,7 @@ public class BotAITests
         botPlayer.Resources[ResourceType.Grain] = 2;
         botPlayer.Resources[ResourceType.Wool] = 1;
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var move = bai.GetBuildMove();
 
@@ -468,7 +484,7 @@ public class BotAITests
         botPlayer.Resources[ResourceType.Wool] = 1;
         botPlayer.Resources[ResourceType.Wood] = 1;
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var move = bai.GetBuildMove();
 
@@ -493,7 +509,7 @@ public class BotAITests
         botPlayer.Resources[ResourceType.Brick] = 1;
         botPlayer.Resources[ResourceType.Wool] = 4;
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         var move = bai.GetBuildMove();
 
@@ -524,7 +540,7 @@ public class BotAITests
         var botPlayer = board.GetBluePlayer();
         botPlayer.AssignResources(ResourceType.Wood, 3);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -539,7 +555,7 @@ public class BotAITests
         var botPlayer = board.GetBluePlayer();
         botPlayer.AssignResources(ResourceType.Ore, 4);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -562,7 +578,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Wood, 1);
         botPlayer.AssignResources(ResourceType.Grain, 1);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -583,7 +599,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Wood, 1);
         botPlayer.AssignResources(ResourceType.Grain, 1);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -603,7 +619,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Grain, 1);
         botPlayer.AssignResources(ResourceType.Wood, 5);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -626,7 +642,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Wood, 2);
         botPlayer.AssignResources(ResourceType.Wool, 4);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -651,7 +667,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Brick, 2);
         botPlayer.AssignResources(ResourceType.Grain, 1);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -677,7 +693,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Brick, 2);
         botPlayer.AssignResources(ResourceType.Grain, 1);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         (var canTrade, var tradeRequest) = bot.AnalyzePossibleBankTrades();
 
@@ -696,7 +712,7 @@ public class BotAITests
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var move = bot.GetRobberMove();
@@ -733,7 +749,7 @@ public class BotAITests
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var move = bot.GetRobberMove();
@@ -760,7 +776,7 @@ public class BotAITests
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var move = bot.GetRobberMove();
@@ -790,7 +806,7 @@ public class BotAITests
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var move = bot.GetRobberMove();
@@ -813,7 +829,7 @@ public class BotAITests
         board.GetGameState().Phase.CurrentPlayer = board.GetBluePlayer();
         board.GetGameState().Phase.PhaseState = GameStates.PlaceRobber;
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         Assert.Throws<InvalidOperationException>(() => bot.GetDiscardMove());
@@ -832,7 +848,7 @@ public class BotAITests
         board.GetBluePlayer().AssignResources(ResourceType.Wool, 2);
         board.GetBluePlayer().AssignResources(ResourceType.Ore, 2);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var move = bot.GetDiscardMove();
@@ -861,7 +877,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Wood, 1);
         botPlayer.AssignResources(ResourceType.Brick, 1);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var discard = bot.DetermineCardsToDiscard();
@@ -890,7 +906,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Wood, 2);
         botPlayer.AssignResources(ResourceType.Brick, 1);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var discard = bot.DetermineCardsToDiscard();
@@ -917,7 +933,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Wood, 3);
         botPlayer.AssignResources(ResourceType.Brick, 2);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var discard = bot.DetermineCardsToDiscard();
@@ -947,7 +963,7 @@ public class BotAITests
         botPlayer.AssignResources(ResourceType.Wood, 2);
         botPlayer.AssignResources(ResourceType.Brick, 2);
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var discard = bot.DetermineCardsToDiscard();
@@ -1063,7 +1079,7 @@ public class BotAITests
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
         board.GetGameState().Phase = new GamePhase(GameStates.PlaceRobber, board.GetBluePlayer(), board.GetRedPlayer());
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         Assert.Throws<InvalidOperationException>( () => bot.SelectTargetMove());
@@ -1089,7 +1105,7 @@ public class BotAITests
         board.GetVertex(TestVertex.V16).BuildSettlement(board.GetRedPlayer());
         board.GetGameState().UpdatePlayerVictoryPoints();
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var move = bot.SelectTargetMove();
@@ -1113,7 +1129,7 @@ public class BotAITests
         var board = CreateTestBoardForSelectTarget();
         board.GetGameState().UpdatePlayerVictoryPoints();
 
-        var bot = new BotAI(board.GetGameState());
+        var bot = new BotAI(board.GetGameState(), board.GetGameState().Phase.CurrentPlayer!);
 
         // Act
         var move = bot.SelectTargetMove();
@@ -1149,7 +1165,7 @@ public class BotAITests
         botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.RoadBuilding);
 
         // Bot has settlement on V3, no roads built yet, so needs roads to reach open vertex
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1178,7 +1194,7 @@ public class BotAITests
         // Give bot Road Building card ready to play
         botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.RoadBuilding);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1208,7 +1224,7 @@ public class BotAITests
         // Give bot Road Building card (but should NOT use it since open vertex is available)
         botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.RoadBuilding);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1233,7 +1249,7 @@ public class BotAITests
         botPlayer.Resources[ResourceType.Grain] = 1;
         botPlayer.Resources[ResourceType.Wool] = 1;
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1259,7 +1275,7 @@ public class BotAITests
         botPlayer.Resources[ResourceType.Grain] = 2;
         botPlayer.Resources[ResourceType.Wool] = 1;
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1350,7 +1366,7 @@ public class BotAITests
         // Give bot Year of Plenty card ready to play
         botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.YearOfPlenty);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1380,7 +1396,7 @@ public class BotAITests
         // Give bot Monopoly card ready to play
         botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Monopoly);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1412,7 +1428,7 @@ public class BotAITests
         // Verify robber is on T6 (desert) - not adjacent to bot's settlement (V3 borders T0, T2, T3)
         Assert.Equal(board.GetTile(TestTile.T6).Id, gs.RobberTile.Id);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1439,7 +1455,7 @@ public class BotAITests
         // Verify robber is on T6 (desert) - not adjacent to bot's settlement
         Assert.Equal(board.GetTile(TestTile.T6).Id, gs.RobberTile.Id);
 
-        var bai = new BotAI(gs);
+        var bai = new BotAI(gs, gs.Phase.CurrentPlayer!);
 
         // Act
         var move = bai.GetBuildMove();
@@ -1713,6 +1729,97 @@ public class BotAITests
         Assert.Equal(humanInitialWood + 1, humanPlayer.Resources[ResourceType.Wood]);
         Assert.Equal(botInitialBrick + 1, botPlayer.Resources[ResourceType.Brick]);
         Assert.Equal(botInitialWood - 1, botPlayer.Resources[ResourceType.Wood]);
+    }
+
+    // ==================== GetTradeResponse Tests ====================
+
+    [Fact]
+    public void GetTradeResponse_GoodTrade_ReturnsAccept()
+    {
+        // Arrange - Bot has wood but needs brick to build a road
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+        var human = board.GetRedPlayer();
+
+        bot.Resources[ResourceType.Wood] = 2;
+        bot.Resources[ResourceType.Brick] = 0;
+
+        // Human is the trade initiator
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, human, human);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Human offers brick, requests wood
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+
+        // Act
+        var response = botAI.GetTradeResponse(offer, request);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(bot.Id, response.Player.Id);
+        Assert.Equal(TradeResponseType.Accept, response.ResponseType);
+        Assert.Null(response.Offer);
+        Assert.Null(response.Request);
+    }
+
+    [Fact]
+    public void GetTradeResponse_BadTrade_ReturnsReject()
+    {
+        // Arrange - Human offers terrible trade (1 wood for 3 ore)
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+        var human = board.GetRedPlayer();
+
+        bot.Resources[ResourceType.Ore] = 4;
+
+        // Human is the trade initiator
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, human, human);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Human offers wood, requests 3 ore
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Ore, 3 } };
+
+        // Act
+        var response = botAI.GetTradeResponse(offer, request);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(bot.Id, response.Player.Id);
+        Assert.Equal(TradeResponseType.Reject, response.ResponseType);
+    }
+
+    [Fact]
+    public void GetTradeResponse_CantFulfill_ReturnsReject()
+    {
+        // Arrange - Bot doesn't have the requested resource
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+        var human = board.GetRedPlayer();
+
+        bot.Resources[ResourceType.Wool] = 0;
+
+        // Human is the trade initiator
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, human, human);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Human offers brick, requests wool (bot has none)
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wool, 1 } };
+
+        // Act
+        var response = botAI.GetTradeResponse(offer, request);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(TradeResponseType.Reject, response.ResponseType);
     }
 
 }

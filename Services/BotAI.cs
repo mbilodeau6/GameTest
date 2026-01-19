@@ -10,16 +10,21 @@ public class BotAI
     // Temporarily storing the full GameState object. Assume that I'll eventually have a more optimized
     // internal representation.
     private GameState State;
+    private Player Bot;
 
-    public BotAI(GameState gs)
+    public BotAI(GameState gs, Player bot)
     {
         if (gs == null)
-            throw new ArgumentNullException("gs");
+            throw new ArgumentNullException(nameof(gs));
 
-        if (gs.Phase.CurrentPlayer == null || !gs.Phase.CurrentPlayer.IsBot)
-            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
+        if (bot == null)
+            throw new ArgumentNullException(nameof(bot));
+
+        if (!bot.IsBot)
+            throw new InvalidOperationException("Player must be a Bot.");
 
         State = gs;
+        Bot = bot;
     }
 
     public BotMove GetSetUpMove()
@@ -510,5 +515,16 @@ public class BotAI
         move.SelectedPlayer = selectedPlayer;
 
         return move;
+    }
+
+    /// <summary>
+    /// Determines the bot's response to a trade offer.
+    /// </summary>
+    /// <param name="offer">Resources being offered to the bot</param>
+    /// <param name="request">Resources being requested from the bot</param>
+    /// <returns>A TradeResponse indicating Accept or Reject</returns>
+    public TradeResponse GetTradeResponse(Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    {
+        throw new NotImplementedException("GetTradeResponse not yet implemented");
     }
 }
