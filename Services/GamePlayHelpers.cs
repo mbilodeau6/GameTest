@@ -427,6 +427,23 @@ public static class GamePlayHelpers
         if (gs.Phase.CurrentPlayer == null)
             throw new InvalidOperationException("Shouldn't call GameLoop before current player set.");
 
+        // Handle bot trade responses when in RespondToTrade phase
+        if (gs.Phase.PhaseState == GameStates.RespondToTrade)
+        {
+            // Get the original trade offer from PendingTradeResponses
+            var originalOffer = gs.Phase.PendingTradeResponses?.FirstOrDefault(r => r.ResponseType == TradeResponseType.Original);
+            if (originalOffer != null && originalOffer.Offer != null && originalOffer.Request != null)
+            {
+                // Have each bot respond to the trade
+                foreach (var player in gs.Players.Where(p => p.IsBot && p.Id != gs.Phase.CurrentPlayer.Id))
+                {
+                    var botAI = new BotAI(gs, player);
+                    var response = botAI.GetTradeResponse(originalOffer.Offer, originalOffer.Request);
+                    gs.Phase.PendingTradeResponses.Add(response);
+                }
+            }
+        }
+
         if (gs.Phase.CurrentPlayer.IsBot)
         {
             var bot = new BotAI(gs, gs.Phase.CurrentPlayer);

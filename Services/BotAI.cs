@@ -525,6 +525,11 @@ public class BotAI
     /// <returns>A TradeResponse indicating Accept or Reject</returns>
     public TradeResponse GetTradeResponse(Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
     {
-        throw new NotImplementedException("GetTradeResponse not yet implemented");
+        bool shouldAccept = AIHelpers.ShouldAcceptTrade(State, Bot, offer, request);
+
+        if (shouldAccept)
+            return new TradeResponse(Bot, TradeResponseType.Accept, null, null);
+        else
+            return new TradeResponse(Bot, TradeResponseType.Reject, null, null);
     }
 }
