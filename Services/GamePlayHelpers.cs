@@ -455,6 +455,10 @@ public static class GamePlayHelpers
                 {
                     move = bot.SelectTargetMove();
                 }
+                else if (gs.Phase.PhaseState == GameStates.FirstDevCardRoad || gs.Phase.PhaseState == GameStates.SecondDevCardRoad)
+                {
+                    move = bot.GetDevCardRoadMove();
+                }
                 else
                 {
                     // TODO: Other states not implemented yet.

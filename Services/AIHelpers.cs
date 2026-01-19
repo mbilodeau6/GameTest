@@ -428,6 +428,12 @@ public static class AIHelpers
         if (robberOnBotTile)
             return 1.0;
 
+        // If bot has 3+ total knights (played + ready), play to get/maintain Largest Army
+        int playedKnights = player.CountPlayedKnights();
+        int readyKnights = player.DevCardsReadyToPlay.Count(c => c == DevelopmentCardType.Knight);
+        if (playedKnights + readyKnights >= 3)
+            return 0.7;
+
         return 0.0;
     }
 
@@ -486,16 +492,26 @@ public static class AIHelpers
 
     private static double ScoreRoadBuilding(GameState gs, Player player)
     {
+        // Don't play if no roads available to build
+        if (!gs.UnusedRoadAvailable(player))
+            return 0.0;
+
         // Check if bot has settlement resources but no open vertex to build on
         bool hasSettlementResources = GamePlayHelpers.HasResourcesToBuildSettlement(player);
         var openVertex = GetVertexReadyForSettlement(gs);
 
         if (hasSettlementResources && openVertex == null && gs.UnusedSettlementAvailable(player))
         {
+            // High priority: can build settlement immediately after roads
             return 0.875;
         }
 
-        return 0.0;
+        // If there's an open vertex, don't prioritize Road Building - build the settlement instead
+        if (openVertex != null)
+            return 0.0;
+
+        // No open vertex and no settlement resources: play Road Building to extend road network
+        return 0.65;
     }
 
     /// <summary>

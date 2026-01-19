@@ -251,6 +251,13 @@ public class BotAI
             move.MonopolyTarget = AIHelpers.GetMonopolyTarget(State, State.Phase.CurrentPlayer);
             return move;
         }
+        else if (cardToPlay == DevelopmentCardType.Knight)
+        {
+            // Knight: move robber (for Largest Army or to move robber off bot's tile)
+            move.PlayDevelopmentCard = DevelopmentCardType.Knight;
+            move.TileMove = new TileDTO(AIHelpers.PickTargetForRobber(State, State.Phase.CurrentPlayer));
+            return move;
+        }
 
         move = DeterminePreferredMove();
         if (move.VertexMove != null || move.EdgeMove != null || move.BuyDevelopmentCard)
@@ -266,7 +273,46 @@ public class BotAI
         move.EndTurn = true;
         return move;
     }
-    
+
+    public BotMove GetDevCardRoadMove()
+    {
+        if (State.Phase.PhaseState != GameStates.FirstDevCardRoad && State.Phase.PhaseState != GameStates.SecondDevCardRoad)
+            throw new InvalidOperationException($"GetDevCardRoadMove should only be called if phase is FirstDevCardRoad or SecondDevCardRoad. Current phase is {State.Phase.PhaseState.ToString()}");
+
+        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
+            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
+
+        var move = new BotMove();
+
+        // Get ranked vertex targets and pick the edge toward the highest value vertex that still needs roads
+        var candidateVertices = AIHelpers.GetRankedListOfVertexTargets(State, AIHelpers.GetAllOwnedBuildings(State, State.Phase.CurrentPlayer))
+            .OrderByDescending(g => g.OverallScore)
+            .ToList();
+
+        foreach (var candidate in candidateVertices)
+        {
+            if (candidate.RoadsNeeded > 0 && candidate.NextEdgeToTarget != null)
+            {
+                move.EdgeMove = new EdgeDTO(candidate.NextEdgeToTarget.Id, State.Phase.CurrentPlayer.Id, null);
+                return move;
+            }
+        }
+
+        // Fallback: if all high-value vertices are reachable, just pick any valid edge
+        // This shouldn't normally happen, but provides a safety net
+        var validEdges = State.Edges.Where(e => e.Owner == null && e.Vertices.Any(v =>
+            v.Owner?.Id == State.Phase.CurrentPlayer.Id ||
+            v.Edges.Any(ve => ve.Owner?.Id == State.Phase.CurrentPlayer.Id)));
+
+        var fallbackEdge = validEdges.FirstOrDefault();
+        if (fallbackEdge != null)
+        {
+            move.EdgeMove = new EdgeDTO(fallbackEdge.Id, State.Phase.CurrentPlayer.Id, null);
+        }
+
+        return move;
+    }
+
     public BotMove GetPreRollMove()
     {
         if (State.Phase.PhaseState != GameStates.RollOrUseDevCard)
