@@ -433,6 +433,9 @@ public static class AIHelpers
 
     private static double ScoreMonopoly(GameState gs, Player player)
     {
+        // TODO: Bots should track their own estimate of opponent resources based on
+        // observed rolls, builds, and trades - not directly access player.Resources (that's cheating).
+
         // Find the resource that opponents have the most of
         var opponents = gs.Players.Where(p => p.Id != player.Id);
         int maxResources = 0;
@@ -497,22 +500,127 @@ public static class AIHelpers
 
     /// <summary>
     /// Determines which resource to target with a Monopoly card.
+    /// Picks the resource opponents have the most of, using resource weight as tie-breaker.
     /// </summary>
     /// <returns>The resource type that would yield the best result</returns>
     public static ResourceType GetMonopolyTarget(GameState gs, Player player)
     {
-        // TODO: Implement - analyze opponent resources and return best target
-        return ResourceType.Desert; // Invalid placeholder
+        // TODO: Bots should track their own estimate of opponent resources based on
+        // observed rolls, builds, and trades - not directly access player.Resources (that's cheating).
+
+        var opponents = gs.Players.Where(p => p.Id != player.Id);
+        ResourceType bestResource = ResourceType.Desert;
+        int bestCount = 0;
+        double bestWeight = 0.0;
+
+        foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
+        {
+            if (rt == ResourceType.Desert) continue;
+
+            int totalOfResource = opponents.Sum(p => p.Resources.GetValueOrDefault(rt, 0));
+            double weight = GetResourceWeight(rt);
+
+            // Pick this resource if count is higher, or if count is equal and weight is higher
+            if (totalOfResource > bestCount ||
+                (totalOfResource == bestCount && weight > bestWeight))
+            {
+                bestResource = rt;
+                bestCount = totalOfResource;
+                bestWeight = weight;
+            }
+        }
+
+        return bestResource;
     }
 
     /// <summary>
     /// Determines which two resources to take with a Year of Plenty card.
+    /// Prioritizes completing a city, then a settlement.
     /// </summary>
     /// <returns>List of exactly 2 resources to take from the bank</returns>
     public static List<ResourceType> GetYearOfPlentyResources(GameState gs, Player player)
     {
-        // TODO: Implement - determine which resources the bot needs most
-        return new List<ResourceType>(); // Invalid placeholder - should have exactly 2
+        var result = new List<ResourceType>();
+
+        // Try to complete a city first (highest priority)
+        var neededForCity = CalculateResourcesNeededForCity(player.Resources);
+        int cityNeed = neededForCity.Values.Sum();
+
+        if (cityNeed > 0 && cityNeed <= 2 &&
+            gs.UnusedCityAvailable(player) &&
+            gs.CountSettlementsForPlayer(player) > 0)
+        {
+            result = BuildResourceListFromNeed(neededForCity, 2);
+            if (result.Count == 2)
+                return result;
+        }
+
+        // Try to complete a settlement
+        var neededForSettlement = CalculateResourcesNeededForSettlement(player.Resources);
+        int settlementNeed = neededForSettlement.Values.Sum();
+
+        if (settlementNeed > 0 && settlementNeed <= 2 &&
+            gs.UnusedSettlementAvailable(player) &&
+            GetVertexReadyForSettlement(gs) != null)
+        {
+            result = BuildResourceListFromNeed(neededForSettlement, 2);
+            if (result.Count == 2)
+                return result;
+        }
+
+        // Fallback: pick highest-weighted resources bot doesn't have much of
+        result = GetHighValueResources(player, 2);
+        return result;
+    }
+
+    private static List<ResourceType> BuildResourceListFromNeed(Dictionary<ResourceType, int> needed, int count)
+    {
+        var result = new List<ResourceType>();
+
+        foreach (var kvp in needed.OrderByDescending(k => GetResourceWeight(k.Key)))
+        {
+            for (int i = 0; i < kvp.Value && result.Count < count; i++)
+            {
+                result.Add(kvp.Key);
+            }
+        }
+
+        return result;
+    }
+
+    private static List<ResourceType> GetHighValueResources(Player player, int count)
+    {
+        var result = new List<ResourceType>();
+
+        // Pick resources the player has least of, weighted by value
+        var resourcesByValue = new List<ResourceType>
+        {
+            ResourceType.Ore,
+            ResourceType.Grain,
+            ResourceType.Brick,
+            ResourceType.Wood,
+            ResourceType.Wool
+        };
+
+        foreach (var rt in resourcesByValue)
+        {
+            while (result.Count < count && player.Resources.GetValueOrDefault(rt, 0) + result.Count(r => r == rt) < 2)
+            {
+                result.Add(rt);
+            }
+            if (result.Count >= count) break;
+        }
+
+        // If still need more, just add highest value resources
+        foreach (var rt in resourcesByValue)
+        {
+            while (result.Count < count)
+            {
+                result.Add(rt);
+            }
+        }
+
+        return result;
     }
 
     public static double ShouldBuyDevelopmentCard(GameState gs, Player player, bool spotReadyForSettlement = false)

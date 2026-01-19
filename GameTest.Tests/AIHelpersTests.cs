@@ -1125,6 +1125,101 @@ public class AIHelpersTests
         Assert.Equal(DevelopmentCardType.RoadBuilding, result);
     }
 
+    // ==================== GetMonopolyTarget Tests ====================
+
+    [Fact]
+    public void GetMonopolyTarget_ReturnsResourceOpponentsHaveMostOf()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        var opponent = board.GetRedPlayer();
+
+        // Opponent has lots of Wool, some Brick
+        opponent.AssignResources(ResourceType.Wool, 6);
+        opponent.AssignResources(ResourceType.Brick, 2);
+
+        var result = AIHelpers.GetMonopolyTarget(board.GetGameState(), bot);
+
+        Assert.Equal(ResourceType.Wool, result);
+    }
+
+    [Fact]
+    public void GetMonopolyTarget_TieBreaker_UsesResourceWeight()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        var opponent = board.GetRedPlayer();
+
+        // Opponent has equal amounts of Ore and Wool - Ore should win (higher weight)
+        opponent.AssignResources(ResourceType.Ore, 4);
+        opponent.AssignResources(ResourceType.Wool, 4);
+
+        var result = AIHelpers.GetMonopolyTarget(board.GetGameState(), bot);
+
+        Assert.Equal(ResourceType.Ore, result);
+    }
+
+    // ==================== GetYearOfPlentyResources Tests ====================
+
+    [Fact]
+    public void GetYearOfPlentyResources_TwoOfSameResource_ForCity()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Bot has 1 Ore, 2 Grain - needs 2 more Ore for city
+        bot.AssignResources(ResourceType.Ore, 1);
+        bot.AssignResources(ResourceType.Grain, 2);
+
+        var result = AIHelpers.GetYearOfPlentyResources(board.GetGameState(), bot);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(2, result.Count(r => r == ResourceType.Ore));
+    }
+
+    [Fact]
+    public void GetYearOfPlentyResources_TwoDifferentResources_ForCity()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Bot has 2 Ore, 1 Grain - needs 1 Ore and 1 Grain for city
+        bot.AssignResources(ResourceType.Ore, 2);
+        bot.AssignResources(ResourceType.Grain, 1);
+
+        var result = AIHelpers.GetYearOfPlentyResources(board.GetGameState(), bot);
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(ResourceType.Ore, result);
+        Assert.Contains(ResourceType.Grain, result);
+    }
+
+    [Fact]
+    public void GetYearOfPlentyResources_ForSettlement()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Bot has Wood and Wool - needs Brick and Grain for settlement
+        bot.AssignResources(ResourceType.Wood, 1);
+        bot.AssignResources(ResourceType.Wool, 1);
+
+        // Build two roads so there's a valid settlement spot
+        // (need 2 roads because adjacent vertex is blocked due to distance rule)
+        board.GetEdge(TestEdge.E2).BuildRoad(bot);
+        board.GetEdge(TestEdge.E8).BuildRoad(bot);
+        GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
+
+        // Set current player so GetVertexReadyForSettlement works
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, bot);
+
+        var result = AIHelpers.GetYearOfPlentyResources(board.GetGameState(), bot);
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(ResourceType.Brick, result);
+        Assert.Contains(ResourceType.Grain, result);
+    }
+
     // TODO: Add tests for trading logic
 }
 
