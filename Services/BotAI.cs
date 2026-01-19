@@ -201,13 +201,19 @@ public class BotAI
                 }
             }
 
-            // Notice: If the highest priority vertex is available and requires no roads but the Bot doesn't have the resources to 
+            // Notice: If the highest priority vertex is available and requires no roads but the Bot doesn't have the resources to
             // build a settlement, the Bot will NOT build another road. It will keep the resources it could use for a road in case
             // it helps it get a settlement (needed to buy settlement or trade for resources needed).
             // TODO: Need to revisit and set up rules for when the Bot should go ahead and build a road even though it isn't
             // required for the highest value target.
+        }
 
-            // TODO: Add rules to determine if the Bot should buy a dev card
+        // Consider buying a dev card if we have resources and it makes sense
+        bool spotReadyForSettlement = candidateVertices.Any() && candidateVertices.First().RoadsNeeded == 0;
+        if (AIHelpers.ShouldBuyDevelopmentCard(State, State.Phase.CurrentPlayer, spotReadyForSettlement) >= 0.5)
+        {
+            move.BuyDevelopmentCard = true;
+            return move;
         }
 
         return move;        
@@ -221,7 +227,18 @@ public class BotAI
         if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
             throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
-        var move = DeterminePreferredMove();
+        var move = new BotMove();
+
+        // Check Road Building exception first: if bot has settlement resources but needs roads,
+        // play Road Building to get free roads and save resources for settlement
+        var cardToPlay = AIHelpers.GetDevCardToPlay(State, State.Phase.CurrentPlayer);
+        if (cardToPlay == DevelopmentCardType.RoadBuilding)
+        {
+            move.PlayDevelopmentCard = DevelopmentCardType.RoadBuilding;
+            return move;
+        }
+
+        move = DeterminePreferredMove();
         if (move.VertexMove != null || move.EdgeMove != null || move.BuyDevelopmentCard)
             return move;
 
@@ -241,9 +258,21 @@ public class BotAI
         if (State.Phase.PhaseState != GameStates.RollOrUseDevCard)
             throw new InvalidOperationException($"GetPreRollMove should only be called if phase is RollOrUseDevCard. Current phase is {State.Phase.PhaseState.ToString()}");
 
-        var move = new BotMove();
-        move.RollDice = true;
+        if (State.Phase.CurrentPlayer == null || !State.Phase.CurrentPlayer.IsBot)
+            throw new InvalidOperationException("Current player must be identified and must be a Bot.");
 
+        var move = new BotMove();
+
+        // Only consider playing Knight pre-roll (to move robber before collecting resources)
+        var cardToPlay = AIHelpers.GetDevCardToPlay(State, State.Phase.CurrentPlayer);
+        if (cardToPlay == DevelopmentCardType.Knight)
+        {
+            move.PlayDevelopmentCard = DevelopmentCardType.Knight;
+            move.TileMove = new TileDTO(AIHelpers.PickTargetForRobber(State, State.Phase.CurrentPlayer));
+            return move;
+        }
+
+        move.RollDice = true;
         return move;
     }
 

@@ -214,10 +214,8 @@ public class BotAITests
     }
 
 
-    // TODO: Need to figure out how to determine when AI should buy dev card
-    // vs roll and adjust test to refelct.
     [Fact]
-    public void GetPreRollMove_RollDice()
+    public void GetPreRollMove_RollDice_NoDevCards()
     {
         var gs = CreateBoardForSetupTest(GameStates.RollOrUseDevCard);
         gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, GetBotPlayer(gs), GetHumanPlayer(gs));
@@ -230,7 +228,90 @@ public class BotAITests
         Assert.Null(move.VertexMove);
         Assert.False(move.BuyDevelopmentCard);
         Assert.True(move.RollDice);
+        Assert.Null(move.PlayDevelopmentCard);
         Assert.Null(move.SelectedPlayer);
+    }
+
+    [Fact]
+    public void GetPreRollMove_PlayKnight_RobberOnBotTile()
+    {
+        // Arrange
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, botPlayer, board.GetRedPlayer());
+
+        // Give bot a Knight ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Knight);
+
+        // Robber starts on desert (T6). Move it to a tile with bot's settlement (V3 borders T0, T3, T2)
+        gs.SetRobberTile(board.GetTile(TestTile.T0));
+        Assert.Equal(board.GetTile(TestTile.T0).Id, gs.RobberTile.Id);
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetPreRollMove();
+
+        // Assert
+        Assert.Equal(DevelopmentCardType.Knight, move.PlayDevelopmentCard);
+        Assert.NotNull(move.TileMove);
+        // Robber was on T0. Opponent is on T4 (wool 2) and T5 (brick 5). T5 is better target.
+        Assert.Equal(board.GetTile(TestTile.T5).Id, move.TileMove.Id);
+        Assert.False(move.RollDice);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.VertexMove);
+    }
+
+    [Fact]
+    public void GetPreRollMove_RollDice_HasKnightButRobberNotOnBotTile()
+    {
+        // Arrange
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, botPlayer, board.GetRedPlayer());
+
+        // Give bot a Knight ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Knight);
+
+        // Robber is on desert (T6) which doesn't border bot's settlement
+        Assert.Equal(board.GetTile(TestTile.T6).Id, gs.RobberTile.Id);
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetPreRollMove();
+
+        // Assert - Should roll dice, not play Knight (no benefit pre-roll)
+        Assert.True(move.RollDice);
+        Assert.Null(move.PlayDevelopmentCard);
+        Assert.Null(move.TileMove);
+    }
+
+    [Fact]
+    public void GetPreRollMove_RollDice_HasYoPButNotKnight()
+    {
+        // Arrange - Bot has YoP but not Knight. Should roll, not play YoP pre-roll.
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, botPlayer, board.GetRedPlayer());
+
+        // Give bot YoP ready to play (but no Knight)
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.YearOfPlenty);
+
+        // Even if robber is on bot's tile, YoP shouldn't be played pre-roll
+        gs.SetRobberTile(board.GetTile(TestTile.T4));
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetPreRollMove();
+
+        // Assert - Should roll dice, YoP is not played pre-roll
+        Assert.True(move.RollDice);
+        Assert.Null(move.PlayDevelopmentCard);
     }
 
     [Fact]
@@ -992,9 +1073,239 @@ public class BotAITests
     }
 
     [Fact]
-    public void BuyDevCard_TESTS_TBD()
+    public void GetBuildMove_PlayRoadBuilding_HasSettlementResourcesButNeedsRoads()
     {
-        Assert.True(false);
+        // Arrange - Bot has settlement resources and Road Building card, but needs roads to reach open vertex
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
+
+        // Give bot settlement resources
+        botPlayer.Resources[ResourceType.Brick] = 1;
+        botPlayer.Resources[ResourceType.Wood] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 1;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+
+        // Give bot Road Building card ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.RoadBuilding);
+
+        // Bot has settlement on V3, no roads built yet, so needs roads to reach open vertex
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetBuildMove();
+
+        // Assert - Should play Road Building to get free roads, saving held resources for settlement
+        Assert.Equal(DevelopmentCardType.RoadBuilding, move.PlayDevelopmentCard);
+        Assert.Null(move.VertexMove);
+        Assert.Null(move.EdgeMove);
+        Assert.False(move.BuyDevelopmentCard);
+    }
+
+    [Fact]
+    public void GetBuildMove_BuildSettlement_HasResourcesAndOpenVertex()
+    {
+        // Arrange - Bot has settlement resources AND open vertex available (no roads needed)
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
+
+        // Build road to open up a vertex
+        board.GetEdge(TestEdge.E10).BuildRoad(botPlayer);
+
+        // Give bot settlement resources
+        botPlayer.Resources[ResourceType.Brick] = 1;
+        botPlayer.Resources[ResourceType.Wood] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 1;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+
+        // Give bot Road Building card (but should NOT use it since open vertex is available)
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.RoadBuilding);
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetBuildMove();
+
+        // Assert - Should build settlement with held resources, not play Road Building
+        Assert.NotNull(move.VertexMove);
+        Assert.Equal(BuildingType.Settlement, move.VertexMove.Building);
+        Assert.Null(move.PlayDevelopmentCard);
+    }
+
+    [Fact]
+    public void GetBuildMove_BuyDevCard_HasResourcesButCantBuild()
+    {
+        // Arrange - Bot has dev card resources (ore, grain, wool) but can't build anything useful
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
+
+        // Give bot exactly dev card resources - can't build city, settlement, or road
+        botPlayer.Resources[ResourceType.Ore] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 1;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetBuildMove();
+
+        // Assert - Should buy a dev card since can't build anything else
+        Assert.True(move.BuyDevelopmentCard);
+        Assert.Null(move.VertexMove);
+        Assert.Null(move.EdgeMove);
+        Assert.Null(move.PlayDevelopmentCard);
+    }
+
+    [Fact]
+    public void GetBuildMove_BuildCity_NotBuyDevCard()
+    {
+        // Arrange - Bot has resources for both city and dev card, should prioritize city
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
+
+        // Give bot city resources (also covers dev card cost)
+        botPlayer.Resources[ResourceType.Ore] = 3;
+        botPlayer.Resources[ResourceType.Grain] = 2;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetBuildMove();
+
+        // Assert - Should build city, not buy dev card
+        Assert.NotNull(move.VertexMove);
+        Assert.Equal(BuildingType.City, move.VertexMove.Building);
+        Assert.False(move.BuyDevelopmentCard);
+    }
+
+    [Fact]
+    public void GameLoop_BotBuysDevCard_ResourcesDeductedAndCardReceived()
+    {
+        // Arrange - Bot has dev card resources but can't build anything useful
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+
+        // Start in BuildOrTrade phase with bot as current player
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
+
+        // Give bot exactly dev card resources - can't build city, settlement, or road
+        botPlayer.Resources[ResourceType.Ore] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 1;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+
+        int initialDevCardCount = botPlayer.DevCardsPurchasedThisRound.Count + botPlayer.DevCardsReadyToPlay.Count;
+        int initialDeckSize = gs.DevelopmentCards.Count;
+
+        // Act - Run the game loop (bot should buy dev card then end turn)
+        GamePlayHelpers.GameLoop(gs);
+
+        // Assert - Bot should have bought a dev card
+        int finalDevCardCount = botPlayer.DevCardsPurchasedThisRound.Count + botPlayer.DevCardsReadyToPlay.Count;
+        Assert.Equal(initialDevCardCount + 1, finalDevCardCount);
+        Assert.Equal(initialDeckSize - 1, gs.DevelopmentCards.Count);
+
+        // Resources should be spent
+        Assert.Equal(0, botPlayer.Resources[ResourceType.Ore]);
+        Assert.Equal(0, botPlayer.Resources[ResourceType.Grain]);
+        Assert.Equal(0, botPlayer.Resources[ResourceType.Wool]);
+    }
+
+    [Fact]
+    public void GameLoop_BotPlaysKnight_RobberMovedAndKnightCounted()
+    {
+        // Arrange - Bot has Knight ready and robber is on bot's tile
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+
+        // Start in RollOrUseDevCard phase
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, botPlayer, board.GetRedPlayer());
+
+        // Give bot a Knight ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Knight);
+
+        // Move robber to bot's tile (V3 borders T0, T2, T3)
+        gs.SetRobberTile(board.GetTile(TestTile.T0));
+
+        int initialKnightsPlayed = botPlayer.CountPlayedKnights();
+        var initialRobberTile = gs.RobberTile;
+        gs.Phase.SetWaitingForRoll();
+
+        // Act - Run the game loop (bot should play Knight to move robber)
+        GamePlayHelpers.GameLoop(gs);
+
+        // Assert - Knight should have been played
+        Assert.Equal(initialKnightsPlayed + 1, botPlayer.CountPlayedKnights());
+        Assert.DoesNotContain(botPlayer.DevCardsReadyToPlay, c => c == DevelopmentCardType.Knight);
+        // Robber should have moved (no longer on T0)
+        Assert.NotEqual(initialRobberTile.Id, gs.RobberTile.Id);
+    }
+
+    [Fact]
+    public void GameLoop_BotPlaysKnight_DoesNotTryToPlaceRobberTwice()
+    {
+        // Regression test: After playing Knight (which moves robber), the GameLoop
+        // should not try to place the robber again with the same TileMove
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+
+        // Start in RollOrUseDevCard phase
+        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, botPlayer, board.GetRedPlayer());
+
+        // Give bot a Knight ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Knight);
+
+        // Move robber to bot's tile so Knight will be played
+        gs.SetRobberTile(board.GetTile(TestTile.T0));
+        gs.Phase.SetWaitingForRoll();
+
+        // Act - This should not throw "Robber is already on the specified tile"
+        var exception = Record.Exception(() => GamePlayHelpers.GameLoop(gs));
+
+        // Assert - No exception about robber already on tile
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void GameLoop_BotPlaysRoadBuilding_RoadsBuiltAndCardUsed()
+    {
+        // Arrange - Bot has settlement resources + Road Building, needs roads to reach open vertex
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+
+        // Start in BuildOrTrade phase
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
+
+        // Give bot settlement resources
+        botPlayer.Resources[ResourceType.Brick] = 1;
+        botPlayer.Resources[ResourceType.Wood] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 1;
+        botPlayer.Resources[ResourceType.Wool] = 1;
+
+        // Give bot Road Building card ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.RoadBuilding);
+
+        int initialRoadCount = gs.CountRoadsForPlayer(botPlayer);
+
+        // Act - Run the game loop (bot should play Road Building)
+        GamePlayHelpers.GameLoop(gs);
+
+        Assert.Equal(GameStates.FirstDevCardRoad, gs.Phase.PhaseState);
+        Assert.Empty(botPlayer.DevCardsReadyToPlay.Where(c => c == DevelopmentCardType.RoadBuilding));
+        // Settlement resources should still be available (Road Building gives free roads)
+        Assert.Equal(1, botPlayer.Resources[ResourceType.Brick]);
+        Assert.Equal(1, botPlayer.Resources[ResourceType.Wood]);
     }
 
 }

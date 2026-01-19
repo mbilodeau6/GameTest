@@ -482,6 +482,25 @@ public static class GamePlayHelpers
                     BankTradeFromUser(gs, move.BankTrade);
                 }
 
+                if (move.BuyDevelopmentCard)
+                {
+                    BuyDevCard(gs, gs.Phase.CurrentPlayer);
+                }
+
+                if (move.PlayDevelopmentCard != null)
+                {
+                    if (move.PlayDevelopmentCard == DevelopmentCardType.Knight && move.TileMove != null)
+                    {
+                        var targetTile = GetTileFromTileId(gs, move.TileMove.Id);
+                        PlayKnightDevCard(gs, gs.Phase.CurrentPlayer, targetTile);
+                        move.TileMove = null;
+                    }
+                    else if (move.PlayDevelopmentCard == DevelopmentCardType.RoadBuilding)
+                    {
+                        PlayRoadBuildingDevCard(gs, gs.Phase.CurrentPlayer);
+                    }
+                }
+
                 if (move.RollDice)
                     GamePlayHelpers.RollDice(gs, true);
 

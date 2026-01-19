@@ -18,6 +18,20 @@ This is a **Settlers of Catan game engine** implemented as an Azure Functions v4
 - **Agile approach** - build only what's needed for the current iteration; keep flexibility to pivot
 - No premature abstractions or "just in case" features
 
+### TDD and MVP Approach
+
+**Test-Driven Development is required:**
+1. Write failing tests first that describe the expected behavior
+2. Implement the minimum code to make tests pass
+3. Refactor if needed while keeping tests green
+
+**MVP (Minimum Viable Product) task ordering:**
+- Always order tasks so each change delivers immediate, verifiable value
+- Prefer small, incremental changes over large feature batches
+- Each change should be testable AND ideally observable in gameplay
+- Example: Implement "buy dev card" before "play dev card" - you can't play cards you don't have
+- Avoid building infrastructure for features that don't exist yet
+
 ## Related Projects
 
 The primary frontend is **GT_PlayBack** located at `C:\Users\mbilo\Documents\src\GT_PlayBack`:
@@ -150,14 +164,18 @@ Start Azurite before running locally.
 ## Known Bot AI Limitations
 
 Current areas for improvement in `Services/BotAI.cs`:
-- Bots don't buy or use development cards
+- Bots can buy dev cards and play Knight (pre-roll) and Road Building
+- Bots don't yet play Monopoly or Year of Plenty
 - Bots don't respond to player trades
 - Bots don't value longest road as an objective
 
 ## Testing Philosophy
 
-- TDD approach: reproduce bugs with tests before fixing
+- **TDD is the standard** - write tests first, then implement
+- For new features: write failing tests that describe expected behavior before writing implementation code
+- For bug fixes: reproduce the bug with a failing test before fixing
 - Goal is to cover all production gameplay scenarios
+- Verify test expectations are correct (e.g., assert specific tile IDs, not just "not null")
 - No specific code coverage target
 - Known gap: Functions and Blob storage integration are harder to test
 
