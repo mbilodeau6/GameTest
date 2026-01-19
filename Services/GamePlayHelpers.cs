@@ -34,32 +34,40 @@ public static class GamePlayHelpers
         return resources;
     }
 
-    public static bool HasResourcesToBuildRoad(Player player)
+    public static bool HasResourcesToBuildRoad(Dictionary<ResourceType, int> resources)
     {
-        return player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
-               player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1;
+        return resources.GetValueOrDefault(ResourceType.Wood, 0) >= 1 &&
+               resources.GetValueOrDefault(ResourceType.Brick, 0) >= 1;
     }
 
-    public static bool HasResourcesToBuildSettlement(Player player)
+    public static bool HasResourcesToBuildRoad(Player player) => HasResourcesToBuildRoad(player.Resources);
+
+    public static bool HasResourcesToBuildSettlement(Dictionary<ResourceType, int> resources)
     {
-        return player.Resources.ContainsKey(ResourceType.Wood) && player.Resources[ResourceType.Wood] >= 1 &&
-               player.Resources.ContainsKey(ResourceType.Brick) && player.Resources[ResourceType.Brick] >= 1 &&
-               player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1 &&
-               player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1;
+        return resources.GetValueOrDefault(ResourceType.Wood, 0) >= 1 &&
+               resources.GetValueOrDefault(ResourceType.Brick, 0) >= 1 &&
+               resources.GetValueOrDefault(ResourceType.Wool, 0) >= 1 &&
+               resources.GetValueOrDefault(ResourceType.Grain, 0) >= 1;
     }
 
-    public static bool HasResourcesToBuildCity(Player player)
+    public static bool HasResourcesToBuildSettlement(Player player) => HasResourcesToBuildSettlement(player.Resources);
+
+    public static bool HasResourcesToBuildCity(Dictionary<ResourceType, int> resources)
     {
-        return player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 2 &&
-               player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 3;
+        return resources.GetValueOrDefault(ResourceType.Grain, 0) >= 2 &&
+               resources.GetValueOrDefault(ResourceType.Ore, 0) >= 3;
     }
 
-    public static bool HasResourcesToBuyDevCard(Player player)
+    public static bool HasResourcesToBuildCity(Player player) => HasResourcesToBuildCity(player.Resources);
+
+    public static bool HasResourcesToBuyDevCard(Dictionary<ResourceType, int> resources)
     {
-        return (player.Resources.ContainsKey(ResourceType.Ore) && player.Resources[ResourceType.Ore] >= 1 &&
-            player.Resources.ContainsKey(ResourceType.Grain) && player.Resources[ResourceType.Grain] >= 1 &&
-            player.Resources.ContainsKey(ResourceType.Wool) && player.Resources[ResourceType.Wool] >= 1);
+        return resources.GetValueOrDefault(ResourceType.Ore, 0) >= 1 &&
+               resources.GetValueOrDefault(ResourceType.Grain, 0) >= 1 &&
+               resources.GetValueOrDefault(ResourceType.Wool, 0) >= 1;
     }
+
+    public static bool HasResourcesToBuyDevCard(Player player) => HasResourcesToBuyDevCard(player.Resources);
 
     public static int CountVictoryPointDevCardsForPlayer(Player player)
     {

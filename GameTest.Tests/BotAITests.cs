@@ -1568,4 +1568,151 @@ public class BotAITests
         Assert.Equal(initialSettlementCount + 1, gs.CountSettlementsForPlayer(botPlayer));
     }
 
+    // ==================== Bot Trade Response Tests ====================
+
+    [Fact]
+    public void OpenTrade_HumanInitiates_BotAcceptsGoodTrade()
+    {
+        // Arrange - Human offers brick, asks for wood
+        // Bot has 2 wood but needs brick to build a road (roads cost 1 brick + 1 wood)
+        // This is a good trade for the bot - it gets the brick it needs
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var humanPlayer = board.GetRedPlayer();
+        var botPlayer = board.GetBluePlayer();
+
+        // Human is the current player in BuildOrTrade phase
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, humanPlayer, humanPlayer);
+
+        // Human has brick to offer
+        humanPlayer.Resources[ResourceType.Brick] = 2;
+        // Bot has wood (2) but no brick - needs brick to build a road
+        botPlayer.Resources[ResourceType.Wood] = 2;
+        botPlayer.Resources[ResourceType.Brick] = 0;
+
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+
+        // Act - Human opens trade
+        GamePlayHelpers.OpenTrade(gs, humanPlayer, offer, request);
+        GamePlayHelpers.GameLoop(gs);
+
+        // Assert - Bot should have responded to the trade
+        Assert.NotNull(gs.Phase.PendingTradeResponses);
+        var botResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(r => r.Player.Id == botPlayer.Id);
+        Assert.NotNull(botResponse);
+        // Bot should accept - getting brick lets it build a road with its wood
+        Assert.Equal(TradeResponseType.Accept, botResponse.ResponseType);
+    }
+
+    [Fact]
+    public void OpenTrade_HumanInitiates_BotRejectsBadTrade()
+    {
+        // Arrange - Human offers a bad trade (1 wood for 3 ore)
+        // This is a terrible deal for the bot
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var humanPlayer = board.GetRedPlayer();
+        var botPlayer = board.GetBluePlayer();
+
+        // Human is the current player in BuildOrTrade phase
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, humanPlayer, humanPlayer);
+
+        // Human has wood to offer
+        humanPlayer.Resources[ResourceType.Wood] = 1;
+        // Bot has ore
+        botPlayer.Resources[ResourceType.Ore] = 4;
+
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Ore, 3 } };
+
+        // Act - Human opens trade
+        GamePlayHelpers.OpenTrade(gs, humanPlayer, offer, request);
+        GamePlayHelpers.GameLoop(gs);
+
+        // Assert - Bot should have responded to the trade
+        Assert.NotNull(gs.Phase.PendingTradeResponses);
+        var botResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(r => r.Player.Id == botPlayer.Id);
+        Assert.NotNull(botResponse);
+        // Bot should reject this unfavorable trade
+        Assert.Equal(TradeResponseType.Reject, botResponse.ResponseType);
+    }
+
+    [Fact]
+    public void OpenTrade_HumanInitiates_BotRejectsWhenNoResources()
+    {
+        // Arrange - Human offers a trade but bot doesn't have the requested resource
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var humanPlayer = board.GetRedPlayer();
+        var botPlayer = board.GetBluePlayer();
+
+        // Human is the current player in BuildOrTrade phase
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, humanPlayer, humanPlayer);
+
+        // Human has ore to offer
+        humanPlayer.Resources[ResourceType.Ore] = 2;
+        // Bot has NO wool (human is requesting wool)
+        botPlayer.Resources[ResourceType.Wool] = 0;
+
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Ore, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wool, 1 } };
+
+        // Act - Human opens trade
+        GamePlayHelpers.OpenTrade(gs, humanPlayer, offer, request);
+        GamePlayHelpers.GameLoop(gs);
+
+        // Assert - Bot should have responded with rejection (can't fulfill)
+        Assert.NotNull(gs.Phase.PendingTradeResponses);
+        var botResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(r => r.Player.Id == botPlayer.Id);
+        Assert.NotNull(botResponse);
+        Assert.Equal(TradeResponseType.Reject, botResponse.ResponseType);
+    }
+
+    [Fact]
+    public void AcceptTrade_HumanAcceptsBotAcceptance_TradeCompletes()
+    {
+        // Arrange - Human offers brick for wood, bot accepts, human accepts bot's acceptance
+        // Same scenario as OpenTrade_HumanInitiates_BotAcceptsGoodTrade
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var humanPlayer = board.GetRedPlayer();
+        var botPlayer = board.GetBluePlayer();
+
+        // Human is the current player in BuildOrTrade phase
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, humanPlayer, humanPlayer);
+
+        // Human has brick to offer
+        humanPlayer.Resources[ResourceType.Brick] = 2;
+        // Bot has wood but no brick - needs brick to build a road
+        botPlayer.Resources[ResourceType.Wood] = 2;
+        botPlayer.Resources[ResourceType.Brick] = 0;
+
+        int humanInitialBrick = humanPlayer.Resources[ResourceType.Brick];
+        int humanInitialWood = humanPlayer.Resources.GetValueOrDefault(ResourceType.Wood, 0);
+        int botInitialBrick = botPlayer.Resources[ResourceType.Brick];
+        int botInitialWood = botPlayer.Resources[ResourceType.Wood];
+
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+
+        // Act - Human opens trade, bot should accept (via GameLoop)
+        GamePlayHelpers.OpenTrade(gs, humanPlayer, offer, request);
+        GamePlayHelpers.GameLoop(gs);
+
+        // Verify bot accepted
+        var botResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(r => r.Player.Id == botPlayer.Id);
+        Assert.NotNull(botResponse);
+        Assert.Equal(TradeResponseType.Accept, botResponse.ResponseType);
+
+        // Human accepts the bot's acceptance
+        GamePlayHelpers.AcceptTrade(gs, humanPlayer, botPlayer);
+
+        // Assert - Resources should have been exchanged
+        Assert.Equal(humanInitialBrick - 1, humanPlayer.Resources[ResourceType.Brick]);
+        Assert.Equal(humanInitialWood + 1, humanPlayer.Resources[ResourceType.Wood]);
+        Assert.Equal(botInitialBrick + 1, botPlayer.Resources[ResourceType.Brick]);
+        Assert.Equal(botInitialWood - 1, botPlayer.Resources[ResourceType.Wood]);
+    }
+
 }

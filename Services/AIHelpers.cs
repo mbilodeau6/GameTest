@@ -639,6 +639,78 @@ public static class AIHelpers
         return result;
     }
 
+    /// <summary>
+    /// Determines if a bot should accept a trade offer.
+    /// </summary>
+    /// <param name="gs">Current game state</param>
+    /// <param name="player">The bot player evaluating the trade</param>
+    /// <param name="offer">Resources the bot would receive</param>
+    /// <param name="request">Resources the bot would give up</param>
+    /// <returns>True if the trade should be accepted</returns>
+    public static bool ShouldAcceptTrade(GameState gs, Player player, Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    {
+        // Can't fulfill - don't have the requested resources
+        foreach (var kvp in request)
+        {
+            if (player.Resources.GetValueOrDefault(kvp.Key, 0) < kvp.Value)
+                return false;
+        }
+
+        // Don't help opponent who is close to winning (within 2 VP based on visible VP)
+        var tradeInitiator = gs.Phase.CurrentPlayer;
+        if (tradeInitiator != null && tradeInitiator.Id != player.Id)
+        {
+            if (tradeInitiator.VisibleVictoryPoints >= gs.Settings.VictoryPointsToWin - 2)
+                return false;
+        }
+
+        // Calculate resources after trade
+        var resourcesAfterTrade = new Dictionary<ResourceType, int>(player.Resources);
+        foreach (var kvp in request)
+            resourcesAfterTrade[kvp.Key] = resourcesAfterTrade.GetValueOrDefault(kvp.Key, 0) - kvp.Value;
+        foreach (var kvp in offer)
+            resourcesAfterTrade[kvp.Key] = resourcesAfterTrade.GetValueOrDefault(kvp.Key, 0) + kvp.Value;
+
+        // Check if trade enables a build that wasn't possible before
+        bool canBuildCityBefore = GamePlayHelpers.HasResourcesToBuildCity(player);
+        bool canBuildCityAfter = GamePlayHelpers.HasResourcesToBuildCity(resourcesAfterTrade);
+
+        bool canBuildSettlementBefore = GamePlayHelpers.HasResourcesToBuildSettlement(player);
+        bool canBuildSettlementAfter = GamePlayHelpers.HasResourcesToBuildSettlement(resourcesAfterTrade);
+
+        bool canBuildRoadBefore = GamePlayHelpers.HasResourcesToBuildRoad(player);
+        bool canBuildRoadAfter = GamePlayHelpers.HasResourcesToBuildRoad(resourcesAfterTrade);
+
+        // If trade enables a new build, it's good
+        if (!canBuildCityBefore && canBuildCityAfter) return true;
+        if (!canBuildSettlementBefore && canBuildSettlementAfter) return true;
+        if (!canBuildRoadBefore && canBuildRoadAfter) return true;
+
+        // If trade loses ability to build something we could build, it's bad
+        if (canBuildCityBefore && !canBuildCityAfter) return false;
+        if (canBuildSettlementBefore && !canBuildSettlementAfter) return false;
+
+        // Check if trade is clearly unfavorable based on resource value
+        double offerValue = GetTradeValue(offer);
+        double requestValue = GetTradeValue(request);
+
+        // Reject if giving up much more value than receiving
+        if (requestValue > offerValue * 1.5)
+            return false;
+
+        return false; // Default to rejecting trades that don't clearly help
+    }
+
+    private static double GetTradeValue(Dictionary<ResourceType, int> resources)
+    {
+        double value = 0;
+        foreach (var kvp in resources)
+        {
+            value += kvp.Value * GetResourceWeight(kvp.Key);
+        }
+        return value;
+    }
+
     public static double ShouldBuyDevelopmentCard(GameState gs, Player player, bool spotReadyForSettlement = false)
     {
         if (!player.IsBot)

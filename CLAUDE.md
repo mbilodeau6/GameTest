@@ -161,13 +161,89 @@ The project uses Azure Storage emulator. Configure `local.settings.json`:
 
 Start Azurite before running locally.
 
-## Known Bot AI Limitations
+## Bot AI Limitations Being Worked On Next
 
 Current areas for improvement in `Services/BotAI.cs`:
-- Bots can buy dev cards and play Knight (pre-roll) and Road Building
-- Bots don't yet play Monopoly or Year of Plenty
 - Bots don't respond to player trades
 - Bots don't value longest road as an objective
+
+We are working on enhancing the game to support OpenTrade with bots or between bots. We will prioritize getting the bots to respond to human initiated OpenTrades and then work on bot initiated OpenTrades.
+
+Initiation
+
+  1. During BuildOrTrade phase, the current player calls OpenTrade with their proposed trade (e.g., "I'll give 2 Wheat
+  for 1 Ore")
+  2. The proposal is stored in PendingTradeResponse as the Original offer
+  3. Phase changes to RespondToTrade
+  4. The turn remains with the initiating player
+
+  Response Period
+
+  5. All other players (not just current player) can submit TradeResponse:
+    - Accept - willing to make this trade
+    - Reject - not interested
+  6. Each response is added to PendingTradeResponse and includes the responding player's ID.
+
+  Resolution
+
+  The initiating player has two options:
+
+  7a. RejectAllOffers - Cancel the trade entirely, return to BuildOrTrade phase
+
+  7b. AcceptTrade - If at least one player accepted (or counter-offered acceptably), the initiator selects one to
+  finalize the trade with:
+  - Resources are exchanged between the two players
+  - PendingTradeResponse is cleared
+  - Phase returns to BuildOrTrade
+
+  Key Points
+
+  - Only the initiator can accept/finalize or cancel the trade
+  - Multiple players can accept the same offer (initiator chooses one)
+  - The initiator's turn doesn't end - they can continue building after trading
+  - Although there is code to support making a counter offer, this capability is not currently used and there is no plan to support counter-offers at this time. 
+
+TODO List
+
+  Phase 1: Bots Respond to Human-Initiated Trades
+
+  Stage 0: Exploration & High-Level Failing Tests
+  1. Read existing trade code
+  2. Write failing integration tests for bot responses to human trades
+
+  Stage 1: Bot Trade Evaluation Logic
+  3. Write tests for AIHelpers.ShouldAcceptTrade()
+  4. Implement ShouldAcceptTrade
+
+  Stage 2: Bot Trade Response Method
+  5. Write tests for BotAI.GetTradeResponse()
+  6. Implement GetTradeResponse
+
+  Stage 3: Hook Bots into OpenTrade Flow
+  7. Modify OpenTrade to have bots respond synchronously
+  8. Verify Phase 1 integration tests pass
+
+  Phase 2: Bots Initiate Trades
+
+  Stage 4: Bot Decides When to Initiate Trade
+  9. Write tests for AIHelpers.ShouldInitiateTrade() / GetTradeToPropose()
+  10. Implement logic for bot to decide if/what to trade
+
+  Stage 5: Bot Calls OpenTrade During GameLoop
+  11. Write tests for bot initiating trade in GetBuildMove()
+  12. Implement - bot proposes trade, other bots respond synchronously, function returns
+
+  Stage 6: Add Trade Timestamp
+  13. Add timestamp to trade data structure
+  14. Update OpenTrade to record start time
+
+  Stage 7: Bot Trade Resolution on Wake-Up
+  15. Write tests for bot deciding to wait/accept/reject based on time + responses
+  16. Implement check at start of request processing for pending bot trades
+  17. Hook into GetGameState and TradeResponse entry points
+
+  Stage 8: Full Integration Testing
+  18. Test complete bot-initiated trade flows with humans responding
 
 ## Testing Philosophy
 

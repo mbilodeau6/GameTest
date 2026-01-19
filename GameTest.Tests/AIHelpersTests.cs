@@ -1220,7 +1220,182 @@ public class AIHelpersTests
         Assert.Contains(ResourceType.Grain, result);
     }
 
-    // TODO: Add tests for trading logic
+    // ==================== ShouldAcceptTrade Tests ====================
+
+    [Fact]
+    public void ShouldAcceptTrade_CantFulfill_ReturnsFalse()
+    {
+        // Bot doesn't have the requested resource - can't fulfill trade
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Bot has no wool
+        bot.Resources[ResourceType.Wool] = 0;
+
+        // Human offers brick, requests wool
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wool, 1 } };
+
+        var result = AIHelpers.ShouldAcceptTrade(board.GetGameState(), bot, offer, request);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ShouldAcceptTrade_CantFulfillMultiple_ReturnsFalse()
+    {
+        // Bot doesn't have enough of the requested resource
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Bot has only 1 ore
+        bot.Resources[ResourceType.Ore] = 1;
+
+        // Human offers brick, requests 2 ore
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Ore, 2 } };
+
+        var result = AIHelpers.ShouldAcceptTrade(board.GetGameState(), bot, offer, request);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ShouldAcceptTrade_TerribleDeal_ReturnsFalse()
+    {
+        // Human offers 1 wood for 3 ore - terrible deal for bot
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Bot has plenty of ore
+        bot.Resources[ResourceType.Ore] = 4;
+
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Ore, 3 } };
+
+        var result = AIHelpers.ShouldAcceptTrade(board.GetGameState(), bot, offer, request);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ShouldAcceptTrade_GoodDeal_CompletesRoad_ReturnsTrue()
+    {
+        // Bot has 2 wood but no brick - getting brick lets it build a road
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        bot.Resources[ResourceType.Wood] = 2;
+        bot.Resources[ResourceType.Brick] = 0;
+
+        // Human offers brick for wood - bot can build a road after this
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+
+        var result = AIHelpers.ShouldAcceptTrade(board.GetGameState(), bot, offer, request);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldAcceptTrade_GoodDeal_CompletesSettlement_ReturnsTrue()
+    {
+        // Bot is one grain away from settlement
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Build a road so there's an open vertex for settlement
+        board.GetEdge(TestEdge.E10).BuildRoad(bot);
+        GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
+
+        bot.Resources[ResourceType.Wood] = 2;
+        bot.Resources[ResourceType.Brick] = 1;
+        bot.Resources[ResourceType.Wool] = 1;
+        bot.Resources[ResourceType.Grain] = 0;
+
+        // Human offers grain for wood - bot can build a settlement after this
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Grain, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, bot);
+
+        var result = AIHelpers.ShouldAcceptTrade(board.GetGameState(), bot, offer, request);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldAcceptTrade_GoodDeal_CompletesCity_ReturnsTrue()
+    {
+        // Bot is one ore away from city
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        bot.Resources[ResourceType.Ore] = 2;
+        bot.Resources[ResourceType.Grain] = 2;
+        bot.Resources[ResourceType.Wood] = 2;
+
+        // Human offers ore for wood - bot can build a city after this
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Ore, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+
+        var result = AIHelpers.ShouldAcceptTrade(board.GetGameState(), bot, offer, request);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldAcceptTrade_WouldLoseResourceNeededForCity_ReturnsFalse()
+    {
+        // Bot has exactly what it needs for a city - shouldn't trade away needed resources
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+
+        // Bot has exactly 3 ore, 2 grain for city
+        bot.Resources[ResourceType.Ore] = 3;
+        bot.Resources[ResourceType.Grain] = 2;
+
+        // Human offers wood for ore - bot would lose ability to build city
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Ore, 1 } };
+
+        var result = AIHelpers.ShouldAcceptTrade(board.GetGameState(), bot, offer, request);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ShouldAcceptTrade_OpponentAboutToWin_ReturnsFalse()
+    {
+        // Don't help opponent who is within 2 VP of winning (based on visible VP)
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+        var human = board.GetRedPlayer();
+
+        // Test board uses 5 VP to win, so "about to win" = 3+ visible VP
+        // Human has settlement at V5 (1 VP). Upgrade to city for 2 VP, add another settlement for 3 VP.
+        board.GetVertex(TestVertex.V5).UpgradeToCity(); // 2 VP
+        board.GetEdge(TestEdge.E25).BuildRoad(human);
+        board.GetVertex(TestVertex.V20).BuildSettlement(human); // 3 VP
+        gs.UpdatePlayerVictoryPoints();
+
+        // Human is the trade initiator (CurrentPlayer in RespondToTrade phase)
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, human, human);
+
+        // Verify human is within 2 VP of winning (visible VP >= VictoryPointsToWin - 2)
+        Assert.True(human.VisibleVictoryPoints >= gs.Settings.VictoryPointsToWin - 2);
+
+        // Bot has wood, human wants wood - even a "fair" trade should be rejected
+        bot.Resources[ResourceType.Wood] = 2;
+
+        var offer = new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } };
+        var request = new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } };
+
+        var result = AIHelpers.ShouldAcceptTrade(gs, bot, offer, request);
+
+        Assert.False(result);
+    }
 }
 
 
