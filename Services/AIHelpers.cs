@@ -365,8 +365,134 @@ public static class AIHelpers
     /// <returns>The development card to play, or null if no card should be played</returns>
     public static DevelopmentCardType? GetDevCardToPlay(GameState gs, Player player)
     {
-        // TODO: Implement - evaluate available dev cards and return best option
-        return null;
+        // Early exit: already played a card this round
+        if (gs.Phase.DevCardPlayedThisRound)
+            return null;
+
+        // Get playable cards (exclude VictoryPoint - never actively played)
+        var playableCards = player.DevCardsReadyToPlay
+            .Where(c => c != DevelopmentCardType.VictoryPoint)
+            .ToList();
+
+        if (playableCards.Count == 0)
+            return null;
+
+        // Evaluate each card type and assign scores
+        var candidates = new Dictionary<DevelopmentCardType, double>();
+
+        // Knight: High priority if robber is on a tile touching bot's settlement/city
+        if (playableCards.Contains(DevelopmentCardType.Knight))
+        {
+            double knightScore = ScoreKnight(gs, player);
+            if (knightScore > 0)
+                candidates[DevelopmentCardType.Knight] = knightScore;
+        }
+
+        // Monopoly: High priority if opponents have many of one resource
+        if (playableCards.Contains(DevelopmentCardType.Monopoly))
+        {
+            double monopolyScore = ScoreMonopoly(gs, player);
+            if (monopolyScore > 0)
+                candidates[DevelopmentCardType.Monopoly] = monopolyScore;
+        }
+
+        // YearOfPlenty: High priority if it enables a build this turn
+        if (playableCards.Contains(DevelopmentCardType.YearOfPlenty))
+        {
+            double yopScore = ScoreYearOfPlenty(gs, player);
+            if (yopScore > 0)
+                candidates[DevelopmentCardType.YearOfPlenty] = yopScore;
+        }
+
+        // RoadBuilding: High priority if bot needs roads to expand
+        if (playableCards.Contains(DevelopmentCardType.RoadBuilding))
+        {
+            double roadScore = ScoreRoadBuilding(gs, player);
+            if (roadScore > 0)
+                candidates[DevelopmentCardType.RoadBuilding] = roadScore;
+        }
+
+        // Pick the best candidate
+        if (candidates.Count == 0)
+            return null;
+
+        return candidates.OrderByDescending(kv => kv.Value).First().Key;
+    }
+
+    private static double ScoreKnight(GameState gs, Player player)
+    {
+        // Check if robber is on a tile that touches bot's settlement/city
+        var botVertices = gs.Vertices.Where(v => v.Owner?.Id == player.Id && GamePlayHelpers.HasBuilding(v));
+        bool robberOnBotTile = botVertices.Any(v => v.Tiles.Any(t => t.Id == gs.RobberTile.Id));
+
+        if (robberOnBotTile)
+            return 1.0;
+
+        return 0.0;
+    }
+
+    private static double ScoreMonopoly(GameState gs, Player player)
+    {
+        // Find the resource that opponents have the most of
+        var opponents = gs.Players.Where(p => p.Id != player.Id);
+        int maxResources = 0;
+
+        foreach (ResourceType rt in Enum.GetValues(typeof(ResourceType)))
+        {
+            if (rt == ResourceType.Desert) continue;
+            int totalOfResource = opponents.Sum(p => p.Resources.GetValueOrDefault(rt, 0));
+            if (totalOfResource > maxResources)
+                maxResources = totalOfResource;
+        }
+
+        // Score based on how many resources we can steal
+        if (maxResources >= 6)
+            return 0.85;
+        if (maxResources >= 4)
+            return 0.8;
+
+        return 0.0;
+    }
+
+    private static double ScoreYearOfPlenty(GameState gs, Player player)
+    {
+        // Check if YoP can complete a city (highest priority build)
+        var neededForCity = CalculateResourcesNeededForCity(player.Resources);
+        int totalNeeded = neededForCity.Values.Sum();
+
+        if (totalNeeded > 0 && totalNeeded <= 2 &&
+            gs.UnusedCityAvailable(player) &&
+            gs.CountSettlementsForPlayer(player) > 0)
+        {
+            return 0.95;
+        }
+
+        // Check if YoP can complete a settlement
+        var neededForSettlement = CalculateResourcesNeededForSettlement(player.Resources);
+        totalNeeded = neededForSettlement.Values.Sum();
+
+        if (totalNeeded > 0 && totalNeeded <= 2 &&
+            gs.UnusedSettlementAvailable(player) &&
+            GetVertexReadyForSettlement(gs) != null)
+        {
+            return 0.9;
+        }
+
+        return 0.0;
+    }
+
+    private static double ScoreRoadBuilding(GameState gs, Player player)
+    {
+        // Check if bot has settlement resources but no open vertex to build on
+        bool hasSettlementResources = GamePlayHelpers.HasResourcesToBuildSettlement(player);
+        var openVertex = GetVertexReadyForSettlement(gs);
+
+        if (hasSettlementResources && openVertex == null && gs.UnusedSettlementAvailable(player))
+        {
+            return 0.875;
+        }
+
+        return 0.0;
     }
 
     /// <summary>

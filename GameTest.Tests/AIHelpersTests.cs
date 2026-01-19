@@ -928,6 +928,203 @@ public class AIHelpersTests
         Assert.True(result >= 0.8);
     }
 
+    [Fact]
+    public void ShouldBuyDevelopmentCard_No_InsufficientResources()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        // Dev card costs: 1 Ore, 1 Wool, 1 Grain - give bot only 2 of the 3
+        bot.AssignResources(ResourceType.Ore, 1);
+        bot.AssignResources(ResourceType.Wool, 1);
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.ShouldBuyDevelopmentCard(board.GetGameState(), bot);
+
+        Assert.Equal(0.0, result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_NoDevCards_ReturnsNull()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        // Bot has no development cards
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_DevCardsPurchasedThisRound_ReturnsNull()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        // Bot has Year of Plenty purchased this round (not yet playable)
+        bot.AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        // Don't call MakeNewDevelopmentCardsPlayable - card stays in DevCardsPurchasedThisRound
+
+        // Bot has resources close to a city (needs 3 Ore, 2 Grain) but is short 2 Ore
+        // YoP would let them get the 2 Ore they need - so it would be desirable to play
+        bot.AssignResources(ResourceType.Ore, 1);
+        bot.AssignResources(ResourceType.Grain, 2);
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_OnlyVictoryPoints_ReturnsNull()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        // Bot only has Victory Point cards (which are never actively played)
+        bot.AssignDevelopmentCard(DevelopmentCardType.VictoryPoint);
+        bot.MakeNewDevelopmentCardsPlayable();
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_AlreadyPlayedCardThisRound_ReturnsNull()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        // Bot has a playable Knight
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.MakeNewDevelopmentCardsPlayable();
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+        // But already played a dev card this round
+        board.GetGameState().Phase.SetDevCardPlayedThisRound();
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_Knight_RobberOnBotsTile()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        // Bot has settlement at V3 which touches tiles T0, T2, T3
+        // Place robber on T2 (blocking bot's resource production)
+        board.SetRobberTile(board.GetTile(TestTile.T2));
+
+        // Give bot multiple dev cards - Knight should be chosen because robber is hurting bot
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Monopoly);
+        bot.AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        bot.MakeNewDevelopmentCardsPlayable();
+
+        // Opponents have few resources (so Monopoly isn't attractive)
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Equal(DevelopmentCardType.Knight, result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_Monopoly_OpponentsHaveManyOfOneResource()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        var opponent = board.GetRedPlayer();
+
+        // Opponent has lots of Wool
+        opponent.AssignResources(ResourceType.Wool, 6);
+
+        // Robber is at T6 (from board setup) which doesn't touch bot's V3
+        Assert.Equal(board.GetTile(TestTile.T6).Id, board.GetGameState().RobberTile.Id);
+
+        // Give bot multiple dev cards - Monopoly should be chosen to steal 6 Wool
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Monopoly);
+        bot.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        bot.MakeNewDevelopmentCardsPlayable();
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Equal(DevelopmentCardType.Monopoly, result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_YearOfPlenty_TwoResourcesFromCity()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        var opponent = board.GetRedPlayer();
+
+        // Bot has resources close to city (needs 3 Ore, 2 Grain) but short 2 Ore
+        bot.AssignResources(ResourceType.Ore, 1);
+        bot.AssignResources(ResourceType.Grain, 2);
+
+        // Robber is at T6 (from board setup) which doesn't touch bot's V3
+        Assert.Equal(board.GetTile(TestTile.T6).Id, board.GetGameState().RobberTile.Id);
+
+        // Opponent has no resources worth monopolizing
+
+        // Give bot multiple dev cards - YoP should be chosen to get 2 Ore for city
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Monopoly);
+        bot.AssignDevelopmentCard(DevelopmentCardType.YearOfPlenty);
+        bot.MakeNewDevelopmentCardsPlayable();
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Equal(DevelopmentCardType.YearOfPlenty, result);
+    }
+
+    [Fact]
+    public void GetDevCardToPlay_RoadBuilding_NoOpenRoadsButHasSettlementResources()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var bot = board.GetBluePlayer();
+        var opponent = board.GetRedPlayer();
+
+        // Blue bot has settlement at V3 and road at E3 (V3-V4)
+        // Block V4 by placing opponent settlement at V16 (adjacent to V4, causes V4 to be blocked)
+        board.GetEdge(TestEdge.E10).BuildRoad(opponent);
+        board.GetVertex(TestVertex.V16).BuildSettlement(opponent);
+        GamePlayHelpers.MarkBlockedVertices(board.GetGameState());
+
+        // Bot has settlement resources - wants to expand but needs roads first
+        bot.AssignResources(ResourceType.Wood, 1);
+        bot.AssignResources(ResourceType.Brick, 1);
+        bot.AssignResources(ResourceType.Wool, 1);
+        bot.AssignResources(ResourceType.Grain, 1);
+
+        // Robber is at T6 (from board setup) which doesn't touch bot's V3
+        Assert.Equal(board.GetTile(TestTile.T6).Id, board.GetGameState().RobberTile.Id);
+
+        // Opponent has no resources worth monopolizing
+
+        // Give bot multiple dev cards - RoadBuilding should be chosen to extend toward new vertex
+        bot.AssignDevelopmentCard(DevelopmentCardType.Knight);
+        bot.AssignDevelopmentCard(DevelopmentCardType.Monopoly);
+        bot.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        bot.MakeNewDevelopmentCardsPlayable();
+
+        board.GetGameState().Phase = new GamePhase(GameStates.BuildOrTrade, board.GetBluePlayer());
+
+        var result = AIHelpers.GetDevCardToPlay(board.GetGameState(), bot);
+
+        Assert.Equal(DevelopmentCardType.RoadBuilding, result);
+    }
+
     // TODO: Add tests for trading logic
 }
 
