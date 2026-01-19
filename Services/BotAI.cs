@@ -229,12 +229,26 @@ public class BotAI
 
         var move = new BotMove();
 
-        // Check Road Building exception first: if bot has settlement resources but needs roads,
-        // play Road Building to get free roads and save resources for settlement
+        // Check dev cards that should be played before attempting to build
         var cardToPlay = AIHelpers.GetDevCardToPlay(State, State.Phase.CurrentPlayer);
         if (cardToPlay == DevelopmentCardType.RoadBuilding)
         {
+            // Road Building: play to get free roads and save resources for settlement
             move.PlayDevelopmentCard = DevelopmentCardType.RoadBuilding;
+            return move;
+        }
+        else if (cardToPlay == DevelopmentCardType.YearOfPlenty)
+        {
+            // Year of Plenty: get 2 resources to complete a build
+            move.PlayDevelopmentCard = DevelopmentCardType.YearOfPlenty;
+            move.YearOfPlentyResources = AIHelpers.GetYearOfPlentyResources(State, State.Phase.CurrentPlayer);
+            return move;
+        }
+        else if (cardToPlay == DevelopmentCardType.Monopoly)
+        {
+            // Monopoly: steal all of one resource type from opponents
+            move.PlayDevelopmentCard = DevelopmentCardType.Monopoly;
+            move.MonopolyTarget = AIHelpers.GetMonopolyTarget(State, State.Phase.CurrentPlayer);
             return move;
         }
 

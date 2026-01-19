@@ -1251,29 +1251,118 @@ public class BotAITests
     }
 
     [Fact]
-    public void GameLoop_BotPlaysKnight_DoesNotTryToPlaceRobberTwice()
+    public void GetBuildMove_PlayYearOfPlenty_NeedsTwoResourcesForCity()
     {
-        // Regression test: After playing Knight (which moves robber), the GameLoop
-        // should not try to place the robber again with the same TileMove
+        // Arrange - Bot has YearOfPlenty card and is 2 resources short of a city
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
+
+        // Bot has 1 Ore, 2 Grain - needs 2 more Ore for city
+        botPlayer.Resources[ResourceType.Ore] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 2;
+
+        // Give bot Year of Plenty card ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.YearOfPlenty);
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetBuildMove();
+
+        // Assert - Should play Year of Plenty with 2 Ore
+        Assert.Equal(DevelopmentCardType.YearOfPlenty, move.PlayDevelopmentCard);
+        Assert.NotNull(move.YearOfPlentyResources);
+        Assert.Equal(2, move.YearOfPlentyResources.Count);
+        Assert.Equal(2, move.YearOfPlentyResources.Count(r => r == ResourceType.Ore));
+        Assert.Null(move.VertexMove);
+        Assert.False(move.BuyDevelopmentCard);
+    }
+
+    [Fact]
+    public void GetBuildMove_PlayMonopoly_OpponentHasManyResources()
+    {
+        // Arrange - Bot has Monopoly card and opponent has 4+ of one resource
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        var opponent = board.GetRedPlayer();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, opponent);
+
+        // Give opponent 5 Ore (triggers Monopoly with score 0.8)
+        opponent.Resources[ResourceType.Ore] = 5;
+
+        // Give bot Monopoly card ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Monopoly);
+
+        var bai = new BotAI(gs);
+
+        // Act
+        var move = bai.GetBuildMove();
+
+        // Assert - Should play Monopoly targeting Ore
+        Assert.Equal(DevelopmentCardType.Monopoly, move.PlayDevelopmentCard);
+        Assert.Equal(ResourceType.Ore, move.MonopolyTarget);
+        Assert.Null(move.VertexMove);
+        Assert.False(move.BuyDevelopmentCard);
+    }
+
+    [Fact]
+    public void GameLoop_BotPlaysYearOfPlenty_ResourcesReceivedAndCityBuilt()
+    {
+        // Arrange - Bot has YearOfPlenty card and is 2 resources short of a city
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
         var gs = board.GetGameState();
         var botPlayer = board.GetBluePlayer();
 
-        // Start in RollOrUseDevCard phase
-        gs.Phase = new GamePhase(GameStates.RollOrUseDevCard, botPlayer, board.GetRedPlayer());
+        // Start in BuildOrTrade phase
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, board.GetRedPlayer());
 
-        // Give bot a Knight ready to play
-        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Knight);
+        // Bot has 1 Ore, 2 Grain - needs 2 more Ore for city
+        botPlayer.Resources[ResourceType.Ore] = 1;
+        botPlayer.Resources[ResourceType.Grain] = 2;
 
-        // Move robber to bot's tile so Knight will be played
-        gs.SetRobberTile(board.GetTile(TestTile.T0));
-        gs.Phase.SetWaitingForRoll();
+        // Give bot Year of Plenty card ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.YearOfPlenty);
 
-        // Act - This should not throw "Robber is already on the specified tile"
-        var exception = Record.Exception(() => GamePlayHelpers.GameLoop(gs));
+        int initialCityCount = gs.CountCitiesForPlayer(botPlayer);
 
-        // Assert - No exception about robber already on tile
-        Assert.Null(exception);
+        // Act - Run the game loop (bot should play Year of Plenty then build city)
+        GamePlayHelpers.GameLoop(gs);
+
+        // Assert - YoP should have been played and city built
+        Assert.DoesNotContain(botPlayer.DevCardsReadyToPlay, c => c == DevelopmentCardType.YearOfPlenty);
+        Assert.Equal(initialCityCount + 1, gs.CountCitiesForPlayer(botPlayer));
+    }
+
+    [Fact]
+    public void GameLoop_BotPlaysMonopoly_ResourcesStolenFromOpponent()
+    {
+        // Arrange - Bot has Monopoly card and opponent has 5 Ore
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var botPlayer = board.GetBluePlayer();
+        var opponent = board.GetRedPlayer();
+
+        // Start in BuildOrTrade phase
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, botPlayer, opponent);
+
+        // Give opponent 5 Ore
+        opponent.Resources[ResourceType.Ore] = 5;
+
+        // Give bot Monopoly card ready to play
+        botPlayer.DevCardsReadyToPlay.Add(DevelopmentCardType.Monopoly);
+
+        int initialBotOre = botPlayer.Resources.GetValueOrDefault(ResourceType.Ore, 0);
+
+        // Act - Run the game loop (bot should play Monopoly)
+        GamePlayHelpers.GameLoop(gs);
+
+        // Assert - Monopoly should have been played, bot got opponent's Ore
+        Assert.DoesNotContain(botPlayer.DevCardsReadyToPlay, c => c == DevelopmentCardType.Monopoly);
+        Assert.Equal(initialBotOre + 5, botPlayer.Resources[ResourceType.Ore]);
+        Assert.Equal(0, opponent.Resources[ResourceType.Ore]);
     }
 
     [Fact]

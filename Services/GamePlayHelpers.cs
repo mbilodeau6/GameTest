@@ -499,6 +499,14 @@ public static class GamePlayHelpers
                     {
                         PlayRoadBuildingDevCard(gs, gs.Phase.CurrentPlayer);
                     }
+                    else if (move.PlayDevelopmentCard == DevelopmentCardType.YearOfPlenty && move.YearOfPlentyResources != null)
+                    {
+                        PlayYearOfPlentyDevCard(gs, gs.Phase.CurrentPlayer, move.YearOfPlentyResources);
+                    }
+                    else if (move.PlayDevelopmentCard == DevelopmentCardType.Monopoly && move.MonopolyTarget != null)
+                    {
+                        PlayMonopolyDevCard(gs, gs.Phase.CurrentPlayer, move.MonopolyTarget.Value);
+                    }
                 }
 
                 if (move.RollDice)
