@@ -89,6 +89,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException("Can not end the turn for another player.");
 
         player.MakeNewDevelopmentCardsPlayable();
+        player.ResetTradeAttemptsForRound();
 
         // TODO: Shouldn't have GetNextPlayer exposed here.
         gameState.Phase.CurrentPlayer = gameState.Phase.GetNextPlayer(gameState.Phase.CurrentPlayer, gameState.Players);

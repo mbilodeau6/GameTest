@@ -40,6 +40,36 @@ public class Player
     public List<DevelopmentCardType> DevCardsPlayed { get; private set; } = new List<DevelopmentCardType>();
     public List<DevelopmentCardType> DevCardsReadyToPlay { get; private set; } = new List<DevelopmentCardType>();
 
+    public int TradeAttemptsThisRound { get; set; } = 0;
+    public List<string> AttemptedTradesThisRound { get; private set; } = new List<string>();
+
+    public void ResetTradeAttemptsForRound()
+    {
+        TradeAttemptsThisRound = 0;
+        AttemptedTradesThisRound.Clear();
+    }
+
+    public void RecordTradeAttempt(Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    {
+        TradeAttemptsThisRound++;
+        // Create a unique key for this trade to prevent duplicates
+        var tradeKey = GetTradeKey(offer, request);
+        AttemptedTradesThisRound.Add(tradeKey);
+    }
+
+    public bool HasAttemptedTrade(Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    {
+        var tradeKey = GetTradeKey(offer, request);
+        return AttemptedTradesThisRound.Contains(tradeKey);
+    }
+
+    private static string GetTradeKey(Dictionary<ResourceType, int> offer, Dictionary<ResourceType, int> request)
+    {
+        var offerParts = offer.OrderBy(k => k.Key).Select(k => $"{k.Key}:{k.Value}");
+        var requestParts = request.OrderBy(k => k.Key).Select(k => $"{k.Key}:{k.Value}");
+        return $"O[{string.Join(",", offerParts)}]R[{string.Join(",", requestParts)}]";
+    }
+
     public HashSet<PortType> Ports {get ; private set; } = new HashSet<PortType>();
     public int FullVictoryPoints { get; private set; } = 0; // Includes points from victory dev cards
     public int VisibleVictoryPoints { get; private set; } = 0;

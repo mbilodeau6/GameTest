@@ -532,4 +532,27 @@ public class BotAI
         else
             return new TradeResponse(Bot, TradeResponseType.Reject, null, null);
     }
+
+    /// <summary>
+    /// Determines if the bot should initiate a trade and what to offer/request.
+    /// Returns null if the bot shouldn't try to trade.
+    /// </summary>
+    /// <returns>A TradeRequest with the offer/request, or null if shouldn't trade</returns>
+    public TradeRequest? GetInitiatedTrade()
+    {
+        // Check if bot has exceeded max trade attempts (2 per round)
+        if (Bot.TradeAttemptsThisRound >= 2)
+            return null;
+
+        // Use AIHelpers to determine if we should trade and what to offer
+        var tradeOffer = AIHelpers.GetTradeOffer(State, Bot);
+        if (tradeOffer == null)
+            return null;
+
+        // Check if this exact trade was already attempted this round
+        if (Bot.HasAttemptedTrade(tradeOffer.Offer, tradeOffer.Request))
+            return null;
+
+        return tradeOffer;
+    }
 }

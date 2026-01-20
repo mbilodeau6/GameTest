@@ -1822,4 +1822,134 @@ public class BotAITests
         Assert.Equal(TradeResponseType.Reject, response.ResponseType);
     }
 
+    // ==================== Bot-Initiated Trade Tests (Phase 2) ====================
+
+    [Fact]
+    public void GetInitiatedTrade_OneResourceFromRoad_ReturnsTradeOffer()
+    {
+        // Arrange - Bot has wood but needs brick to build a road
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Bot has wood and excess wool, but no brick
+        bot.Resources[ResourceType.Wood] = 1;
+        bot.Resources[ResourceType.Wool] = 2;
+        bot.Resources[ResourceType.Brick] = 0;
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Act
+        var tradeOffer = botAI.GetInitiatedTrade();
+
+        // Assert - Bot should offer wool for brick
+        Assert.NotNull(tradeOffer);
+        Assert.True(tradeOffer.Request.ContainsKey(ResourceType.Brick));
+        Assert.Equal(1, tradeOffer.Request[ResourceType.Brick]);
+    }
+
+    [Fact]
+    public void GetInitiatedTrade_OneResourceFromCity_ReturnsTradeOffer()
+    {
+        // Arrange - Bot has 2 grain, 2 ore - needs 1 more ore for city
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        bot.Resources[ResourceType.Grain] = 2;
+        bot.Resources[ResourceType.Ore] = 2;
+        bot.Resources[ResourceType.Wood] = 2; // Excess to offer
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Act
+        var tradeOffer = botAI.GetInitiatedTrade();
+
+        // Assert - Bot should request ore
+        Assert.NotNull(tradeOffer);
+        Assert.True(tradeOffer.Request.ContainsKey(ResourceType.Ore));
+    }
+
+    [Fact]
+    public void GetInitiatedTrade_NotCloseToAnyBuild_ReturnsNull()
+    {
+        // Arrange - Bot has scattered resources, not close to any build
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // No resources - can't be one away from anything meaningful
+        bot.Resources[ResourceType.Wood] = 0;
+        bot.Resources[ResourceType.Brick] = 0;
+        bot.Resources[ResourceType.Wool] = 0;
+        bot.Resources[ResourceType.Grain] = 0;
+        bot.Resources[ResourceType.Ore] = 0;
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Act
+        var tradeOffer = botAI.GetInitiatedTrade();
+
+        // Assert - Bot shouldn't try to trade
+        Assert.Null(tradeOffer);
+    }
+
+    [Fact]
+    public void GetInitiatedTrade_CanOffer2For1_WhenHasExcess()
+    {
+        // Arrange - Bot has 3 wool (excess), needs brick for road
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        bot.Resources[ResourceType.Wood] = 1;
+        bot.Resources[ResourceType.Wool] = 3; // Excess
+        bot.Resources[ResourceType.Brick] = 0;
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Act
+        var tradeOffer = botAI.GetInitiatedTrade();
+
+        // Assert - Bot could offer 2 wool for 1 brick
+        Assert.NotNull(tradeOffer);
+        Assert.True(tradeOffer.Request.ContainsKey(ResourceType.Brick));
+        // Offer should include wool
+        Assert.True(tradeOffer.Offer.ContainsKey(ResourceType.Wool));
+    }
+
+    [Fact]
+    public void GetInitiatedTrade_MaxTwoAttemptsPerRound()
+    {
+        // Arrange - Bot has already tried 2 trades this round
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        bot.Resources[ResourceType.Wood] = 1;
+        bot.Resources[ResourceType.Wool] = 2;
+        bot.Resources[ResourceType.Brick] = 0;
+
+        // Mark that bot has already attempted 2 trades this round
+        bot.TradeAttemptsThisRound = 2;
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
+
+        var botAI = new BotAI(gs, bot);
+
+        // Act
+        var tradeOffer = botAI.GetInitiatedTrade();
+
+        // Assert - Bot shouldn't try another trade
+        Assert.Null(tradeOffer);
+    }
+
 }

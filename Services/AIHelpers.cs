@@ -751,8 +751,129 @@ public static class AIHelpers
         return AIWeightValues[name];
     }
 
+    /// <summary>
+    /// Determines if a bot should try to initiate a trade.
+    /// Returns true if the bot is exactly 1 resource away from a build and has excess resources to offer.
+    /// </summary>
+    public static bool ShouldInitiateTrade(GameState gs, Player player)
+    {
+        // Find what resource is needed (if any)
+        var neededResource = GetSingleResourceNeeded(player);
+        if (neededResource == null)
+            return false;
+
+        // Check if player has excess resources to offer
+        var excessResources = GetExcessResources(player, neededResource.Value);
+        if (excessResources.Count == 0)
+            return false;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Generates a trade offer for the bot.
+    /// Returns null if bot shouldn't trade.
+    /// </summary>
+    public static TradeRequest? GetTradeOffer(GameState gs, Player player)
+    {
+        // Find what resource is needed
+        var neededResource = GetSingleResourceNeeded(player);
+        if (neededResource == null)
+            return null;
+
+        // Get excess resources to offer
+        var excessResources = GetExcessResources(player, neededResource.Value);
+        if (excessResources.Count == 0)
+            return null;
+
+        // Build the offer - offer excess resources for the needed one
+        var offer = new Dictionary<ResourceType, int>();
+        var request = new Dictionary<ResourceType, int> { { neededResource.Value, 1 } };
+
+        // Offer 1 of the first excess resource, or 2 if we have plenty
+        var resourceToOffer = excessResources.First();
+        int amountAvailable = player.Resources.GetValueOrDefault(resourceToOffer, 0);
+        int amountToOffer = amountAvailable >= 3 ? 2 : 1;
+        offer[resourceToOffer] = amountToOffer;
+
+        return new TradeRequest(player, offer, request);
+    }
+
+    /// <summary>
+    /// Returns the single resource needed to complete a build, or null if not exactly 1 away.
+    /// Checks city first (highest priority), then settlement, then road, then dev card.
+    /// </summary>
+    private static ResourceType? GetSingleResourceNeeded(Player player)
+    {
+        // Check city: needs 3 ore + 2 grain
+        var cityNeeded = CalculateResourcesNeededForCity(player.Resources);
+        if (cityNeeded.Count == 1 && cityNeeded.Values.Sum() == 1)
+            return cityNeeded.Keys.First();
+
+        // Check settlement: needs 1 each of wood, brick, wool, grain
+        var settlementNeeded = CalculateResourcesNeededForSettlement(player.Resources);
+        if (settlementNeeded.Count == 1 && settlementNeeded.Values.Sum() == 1)
+            return settlementNeeded.Keys.First();
+
+        // Check road: needs 1 wood + 1 brick
+        var roadNeeded = CalculateResourcesNeededForRoad(player.Resources);
+        if (roadNeeded.Count == 1 && roadNeeded.Values.Sum() == 1)
+            return roadNeeded.Keys.First();
+
+        // Check dev card: needs 1 ore + 1 grain + 1 wool
+        var devCardNeeded = CalculateResourcesNeededForDevCard(player.Resources);
+        if (devCardNeeded.Count == 1 && devCardNeeded.Values.Sum() == 1)
+            return devCardNeeded.Keys.First();
+
+        return null;
+    }
+
+    /// <summary>
+    /// Returns resources the player has that are not needed for the current build goal.
+    /// </summary>
+    private static List<ResourceType> GetExcessResources(Player player, ResourceType neededResource)
+    {
+        var excess = new List<ResourceType>();
+
+        foreach (var kvp in player.Resources)
+        {
+            if (kvp.Key == ResourceType.Desert)
+                continue;
+
+            // Don't offer the resource we need
+            if (kvp.Key == neededResource)
+                continue;
+
+            // Consider it excess if we have more than 1
+            // (keep 1 of each for potential builds)
+            if (kvp.Value >= 2)
+                excess.Add(kvp.Key);
+        }
+
+        // Sort by how much we have (offer resources we have most of first)
+        excess.Sort((a, b) => player.Resources.GetValueOrDefault(b, 0).CompareTo(player.Resources.GetValueOrDefault(a, 0)));
+
+        return excess;
+    }
+
+    public static Dictionary<ResourceType, int> CalculateResourcesNeededForDevCard(Dictionary<ResourceType, int> ownedResources)
+    {
+        var needed = new Dictionary<ResourceType, int>();
+
+        if (!ownedResources.ContainsKey(ResourceType.Ore) || ownedResources[ResourceType.Ore] == 0)
+            needed.Add(ResourceType.Ore, 1);
+
+        if (!ownedResources.ContainsKey(ResourceType.Grain) || ownedResources[ResourceType.Grain] == 0)
+            needed.Add(ResourceType.Grain, 1);
+
+        if (!ownedResources.ContainsKey(ResourceType.Wool) || ownedResources[ResourceType.Wool] == 0)
+            needed.Add(ResourceType.Wool, 1);
+
+        return needed;
+    }
+
     // Weights/parameters an AI may track/adjust as we gather game data. Try to stick with numbers
-    // that are added to a weight (use "ValueAdd" in the name and number between 0 and 1) and 
+    // that are added to a weight (use "ValueAdd" in the name and number between 0 and 1) and
     // numbers multiplied to a weight (use "ValueMultiplier" in the name and number greater than 0).
     private static Dictionary<AIWeights, double> AIWeightValues = new Dictionary<AIWeights, double>()
     {
