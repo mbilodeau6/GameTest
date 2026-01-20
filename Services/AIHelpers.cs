@@ -757,8 +757,8 @@ public static class AIHelpers
     /// </summary>
     public static bool ShouldInitiateTrade(GameState gs, Player player)
     {
-        // Find what resource is needed (if any)
-        var neededResource = GetSingleResourceNeeded(player);
+        // Find what resource is needed (if any) and available from opponents
+        var neededResource = GetSingleResourceNeeded(gs, player);
         if (neededResource == null)
             return false;
 
@@ -771,13 +771,31 @@ public static class AIHelpers
     }
 
     /// <summary>
+    /// Checks if a resource is potentially available from opponents.
+    /// Returns true if bank + player don't have all 19 of the resource.
+    /// </summary>
+    /// <remarks>
+    /// TODO: Eventually track what opponents are receiving/spending so we have a better
+    /// idea of what each opponent actually has, rather than just knowing that someone
+    /// might have the resource.
+    /// </remarks>
+    private static bool IsResourceAvailableFromOpponents(GameState gs, Player player, ResourceType resource)
+    {
+        int bankCount = gs.GetBankResourceCount(resource);
+        int playerCount = player.Resources.GetValueOrDefault(resource, 0);
+
+        // If bank + player have all 19, no opponent can have this resource
+        return bankCount + playerCount < 19;
+    }
+
+    /// <summary>
     /// Generates a trade offer for the bot.
     /// Returns null if bot shouldn't trade.
     /// </summary>
     public static TradeRequest? GetTradeOffer(GameState gs, Player player)
     {
-        // Find what resource is needed
-        var neededResource = GetSingleResourceNeeded(player);
+        // Find what resource is needed (and available from opponents)
+        var neededResource = GetSingleResourceNeeded(gs, player);
         if (neededResource == null)
             return null;
 
@@ -802,28 +820,45 @@ public static class AIHelpers
     /// <summary>
     /// Returns the single resource needed to complete a build, or null if not exactly 1 away.
     /// Checks city first (highest priority), then settlement, then road, then dev card.
+    /// Skips build goals where the needed resource is not available from any opponent.
     /// </summary>
-    private static ResourceType? GetSingleResourceNeeded(Player player)
+    private static ResourceType? GetSingleResourceNeeded(GameState gs, Player player)
     {
         // Check city: needs 3 ore + 2 grain
         var cityNeeded = CalculateResourcesNeededForCity(player.Resources);
         if (cityNeeded.Count == 1 && cityNeeded.Values.Sum() == 1)
-            return cityNeeded.Keys.First();
+        {
+            var resource = cityNeeded.Keys.First();
+            if (IsResourceAvailableFromOpponents(gs, player, resource))
+                return resource;
+        }
 
         // Check settlement: needs 1 each of wood, brick, wool, grain
         var settlementNeeded = CalculateResourcesNeededForSettlement(player.Resources);
         if (settlementNeeded.Count == 1 && settlementNeeded.Values.Sum() == 1)
-            return settlementNeeded.Keys.First();
+        {
+            var resource = settlementNeeded.Keys.First();
+            if (IsResourceAvailableFromOpponents(gs, player, resource))
+                return resource;
+        }
 
         // Check road: needs 1 wood + 1 brick
         var roadNeeded = CalculateResourcesNeededForRoad(player.Resources);
         if (roadNeeded.Count == 1 && roadNeeded.Values.Sum() == 1)
-            return roadNeeded.Keys.First();
+        {
+            var resource = roadNeeded.Keys.First();
+            if (IsResourceAvailableFromOpponents(gs, player, resource))
+                return resource;
+        }
 
         // Check dev card: needs 1 ore + 1 grain + 1 wool
         var devCardNeeded = CalculateResourcesNeededForDevCard(player.Resources);
         if (devCardNeeded.Count == 1 && devCardNeeded.Values.Sum() == 1)
-            return devCardNeeded.Keys.First();
+        {
+            var resource = devCardNeeded.Keys.First();
+            if (IsResourceAvailableFromOpponents(gs, player, resource))
+                return resource;
+        }
 
         return null;
     }

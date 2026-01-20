@@ -1831,11 +1831,14 @@ public class BotAITests
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
         var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
+
+        // Give other player brick so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Brick, 1);
 
         // Bot has wood and excess wool, but no brick
-        bot.Resources[ResourceType.Wood] = 1;
-        bot.Resources[ResourceType.Wool] = 2;
-        bot.Resources[ResourceType.Brick] = 0;
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 2);
 
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
 
@@ -1857,10 +1860,14 @@ public class BotAITests
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
         var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
 
-        bot.Resources[ResourceType.Grain] = 2;
-        bot.Resources[ResourceType.Ore] = 2;
-        bot.Resources[ResourceType.Wood] = 2; // Excess to offer
+        // Give other player ore so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Ore, 1);
+
+        gs.AssignResourcesToPlayer(bot, ResourceType.Grain, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Ore, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 2); // Excess to offer
 
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
 
@@ -1907,10 +1914,13 @@ public class BotAITests
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
         var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
 
-        bot.Resources[ResourceType.Wood] = 1;
-        bot.Resources[ResourceType.Wool] = 3; // Excess
-        bot.Resources[ResourceType.Brick] = 0;
+        // Give other player brick so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Brick, 1);
+
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 3); // Excess
 
         gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
 

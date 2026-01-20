@@ -1404,13 +1404,17 @@ public class AIHelpersTests
     {
         // Bot has wood but needs brick for road
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
 
-        bot.Resources[ResourceType.Wood] = 1;
-        bot.Resources[ResourceType.Wool] = 2; // Excess to offer
-        bot.Resources[ResourceType.Brick] = 0;
+        // Give other player brick so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Brick, 1);
 
-        var result = AIHelpers.ShouldInitiateTrade(board.GetGameState(), bot);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 2); // Excess to offer
+
+        var result = AIHelpers.ShouldInitiateTrade(gs, bot);
 
         Assert.True(result);
     }
@@ -1420,13 +1424,18 @@ public class AIHelpersTests
     {
         // Bot has 2 grain, 2 ore - needs 1 more ore
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
 
-        bot.Resources[ResourceType.Grain] = 2;
-        bot.Resources[ResourceType.Ore] = 2;
-        bot.Resources[ResourceType.Wood] = 2; // Excess to offer
+        // Give other player ore so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Ore, 1);
 
-        var result = AIHelpers.ShouldInitiateTrade(board.GetGameState(), bot);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Grain, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Ore, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 2); // Excess to offer
+
+        var result = AIHelpers.ShouldInitiateTrade(gs, bot);
 
         Assert.True(result);
     }
@@ -1487,13 +1496,17 @@ public class AIHelpersTests
     {
         // Bot has wood, needs brick
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
 
-        bot.Resources[ResourceType.Wood] = 1;
-        bot.Resources[ResourceType.Wool] = 2; // Excess
-        bot.Resources[ResourceType.Brick] = 0;
+        // Give other player brick so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Brick, 1);
 
-        var offer = AIHelpers.GetTradeOffer(board.GetGameState(), bot);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 2); // Excess
+
+        var offer = AIHelpers.GetTradeOffer(gs, bot);
 
         Assert.NotNull(offer);
         Assert.True(offer.Request.ContainsKey(ResourceType.Brick));
@@ -1506,13 +1519,18 @@ public class AIHelpersTests
     {
         // Bot has 2 grain, 2 ore - needs 1 more ore
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
 
-        bot.Resources[ResourceType.Grain] = 2;
-        bot.Resources[ResourceType.Ore] = 2;
-        bot.Resources[ResourceType.Wood] = 2; // Excess
+        // Give other player ore so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Ore, 1);
 
-        var offer = AIHelpers.GetTradeOffer(board.GetGameState(), bot);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Grain, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Ore, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 2); // Excess
+
+        var offer = AIHelpers.GetTradeOffer(gs, bot);
 
         Assert.NotNull(offer);
         Assert.True(offer.Request.ContainsKey(ResourceType.Ore));
@@ -1524,13 +1542,17 @@ public class AIHelpersTests
     {
         // Bot has 3 wool (excess), needs brick
         var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
         var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
 
-        bot.Resources[ResourceType.Wood] = 1;
-        bot.Resources[ResourceType.Wool] = 3;
-        bot.Resources[ResourceType.Brick] = 0;
+        // Give other player brick so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Brick, 1);
 
-        var offer = AIHelpers.GetTradeOffer(board.GetGameState(), bot);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 3);
+
+        var offer = AIHelpers.GetTradeOffer(gs, bot);
 
         Assert.NotNull(offer);
         // Should offer 2 wool for 1 brick (better chance of acceptance)
@@ -1553,6 +1575,116 @@ public class AIHelpersTests
         var offer = AIHelpers.GetTradeOffer(board.GetGameState(), bot);
 
         Assert.Null(offer);
+    }
+
+    [Fact]
+    public void GetTradeOffer_BankHasAll19OfNeededResource_ReturnsNull()
+    {
+        // Bot needs brick to complete road, but bank has all 19 brick (no player has any)
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Give bot wood (for road) and excess wool to offer
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 2);
+
+        // Verify bank still has all 19 brick - no player can have any
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(0, bot.Resources[ResourceType.Brick]);
+
+        var offer = AIHelpers.GetTradeOffer(gs, bot);
+
+        // Should return null because no player could have brick to trade
+        Assert.Null(offer);
+    }
+
+    [Fact]
+    public void GetTradeOffer_BotHasSomeAndBankHasRest_ReturnsNull()
+    {
+        // Bot needs ore to complete city, but bot has 2 ore and bank has 17 (no other player has ore)
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Give bot 2 ore, 2 grain (1 ore away from city) and excess wood to offer
+        gs.AssignResourcesToPlayer(bot, ResourceType.Ore, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Grain, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 2);
+
+        // Verify: bot has 2 ore, bank has 17 ore (no other player has ore)
+        Assert.Equal(2, bot.Resources[ResourceType.Ore]);
+        Assert.Equal(17, gs.GetBankResourceCount(ResourceType.Ore));
+
+        var offer = AIHelpers.GetTradeOffer(gs, bot);
+
+        // Should return null because bot+bank have all 19 ore
+        Assert.Null(offer);
+    }
+
+    [Fact]
+    public void GetTradeOffer_OtherPlayersHaveNeededResource_ReturnsTrade()
+    {
+        // Bot needs brick, and other players have some brick
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
+
+        // Give other player some brick (so bank doesn't have all 19)
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Brick, 2);
+
+        // Set up bot to need brick for road
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 2); // Excess to offer
+
+        // Verify: bank has 17 brick, other player has 2, bot has 0
+        Assert.Equal(17, gs.GetBankResourceCount(ResourceType.Brick));
+        Assert.Equal(2, otherPlayer.Resources[ResourceType.Brick]);
+        Assert.Equal(0, bot.Resources[ResourceType.Brick]);
+
+        var offer = AIHelpers.GetTradeOffer(gs, bot);
+
+        // Should return a trade because other player has brick
+        Assert.NotNull(offer);
+        Assert.True(offer.Request.ContainsKey(ResourceType.Brick));
+    }
+
+    [Fact]
+    public void GetTradeOffer_SkipsUnavailableResource_TriesNextBuildGoal()
+    {
+        // Bot is 1 brick from road AND 1 ore from city
+        // Bank has all 19 brick, but other player has ore
+        // Bot should skip road (brick unavailable) and try city (ore available)
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+        var otherPlayer = board.GetRedPlayer();
+
+        // Set up bot to be 1 brick from road (wood but no brick)
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wood, 1);
+        // Bank still has all 19 brick - brick is unavailable
+
+        // Also set up bot to be 1 ore from city (2 grain, 2 ore)
+        gs.AssignResourcesToPlayer(bot, ResourceType.Grain, 2);
+        gs.AssignResourcesToPlayer(bot, ResourceType.Ore, 2);
+
+        // Give other player some ore so it's available for trade
+        gs.AssignResourcesToPlayer(otherPlayer, ResourceType.Ore, 1);
+
+        // Give bot excess wool to offer
+        gs.AssignResourcesToPlayer(bot, ResourceType.Wool, 2);
+
+        // Verify setup
+        Assert.Equal(19, gs.GetBankResourceCount(ResourceType.Brick)); // No one has brick
+        Assert.Equal(16, gs.GetBankResourceCount(ResourceType.Ore)); // Bot has 2, other has 1
+
+        var offer = AIHelpers.GetTradeOffer(gs, bot);
+
+        // Should request ore (for city) not brick (unavailable)
+        Assert.NotNull(offer);
+        Assert.True(offer.Request.ContainsKey(ResourceType.Ore));
+        Assert.False(offer.Request.ContainsKey(ResourceType.Brick));
     }
 }
 
