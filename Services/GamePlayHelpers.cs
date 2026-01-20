@@ -435,12 +435,17 @@ public static class GamePlayHelpers
             var originalOffer = gs.Phase.PendingTradeResponses?.FirstOrDefault(r => r.ResponseType == TradeResponseType.Original);
             if (originalOffer != null && originalOffer.Offer != null && originalOffer.Request != null)
             {
-                // Have each bot respond to the trade
-                foreach (var player in gs.Players.Where(p => p.IsBot && p.Id != gs.Phase.CurrentPlayer.Id))
+                // Have each bot respond to the trade (only if they haven't already responded)
+                var respondedPlayerIds = gs.Phase.PendingTradeResponses
+                    .Where(r => r.ResponseType != TradeResponseType.Original)
+                    .Select(r => r.Player.Id)
+                    .ToHashSet();
+
+                foreach (var player in gs.Players.Where(p => p.IsBot && p.Id != gs.Phase.CurrentPlayer.Id && !respondedPlayerIds.Contains(p.Id)))
                 {
                     var botAI = new BotAI(gs, player);
                     var response = botAI.GetTradeResponse(originalOffer.Offer, originalOffer.Request);
-                    gs.Phase.PendingTradeResponses.Add(response);
+                    gs.Phase.AddPendingTradeResponse(response);
                 }
             }
         }
@@ -485,6 +490,45 @@ public static class GamePlayHelpers
                 {
                     move = bot.GetDevCardRoadMove();
                 }
+                else if (gs.Phase.PhaseState == GameStates.RespondToTrade)
+                {
+                    // Bot initiated a trade and is waiting for responses
+                    // Check if there are humans who haven't responded yet
+                    var respondedIds = gs.Phase.PendingTradeResponses?
+                        .Where(r => r.ResponseType != TradeResponseType.Original)
+                        .Select(r => r.Player.Id)
+                        .ToHashSet() ?? new HashSet<string>();
+
+                    var humansWhoHaventResponded = gs.Players
+                        .Where(p => !p.IsBot && p.Id != gs.Phase.CurrentPlayer.Id && !respondedIds.Contains(p.Id))
+                        .ToList();
+
+                    if (humansWhoHaventResponded.Count > 0)
+                    {
+                        // Wait for human responses - break out of loop
+                        break;
+                    }
+
+                    // All players have responded - bot decides what to do
+                    var acceptableResponses = gs.Phase.PendingTradeResponses?
+                        .Where(r => r.ResponseType == TradeResponseType.Accept || r.ResponseType == TradeResponseType.Counter)
+                        .ToList() ?? new List<TradeResponse>();
+
+                    if (acceptableResponses.Count > 0)
+                    {
+                        // Accept the first acceptable offer
+                        var acceptedPlayer = acceptableResponses.First().Player;
+                        AcceptTrade(gs, gs.Phase.CurrentPlayer, acceptedPlayer);
+                    }
+                    else
+                    {
+                        // No one accepted - reject all
+                        RejectAllOffers(gs, gs.Phase.CurrentPlayer);
+                    }
+
+                    // Continue with next phase (don't set move, just let GetNextPhase handle it)
+                    move = new BotMove();
+                }
                 else
                 {
                     // TODO: Other states not implemented yet.
@@ -510,6 +554,28 @@ public static class GamePlayHelpers
                 if (move.BankTrade != null)
                 {
                     BankTradeFromUser(gs, move.BankTrade);
+                }
+
+                if (move.InitiateTrade != null)
+                {
+                    // Bot initiates a player trade
+                    var tradeRequest = move.InitiateTrade;
+
+                    // Record the trade attempt
+                    gs.Phase.CurrentPlayer.RecordTradeAttempt(tradeRequest.Offer, tradeRequest.Request);
+
+                    // Add the original trade offer
+                    var originalTrade = new TradeResponse(gs.Phase.CurrentPlayer, TradeResponseType.Original, tradeRequest.Offer, tradeRequest.Request);
+                    gs.Phase.AddPendingTradeResponse(originalTrade);
+
+                    // Set trade start time for timeout tracking
+                    gs.Phase.SetTradeStartTime(DateTime.UtcNow);
+
+                    // Log the event (pass null for targetPlayer to use correct constructor)
+                    gs.AddEventRecord(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.OfferToTrade, tradeRequest.Request, tradeRequest.Offer, null));
+
+                    // Other bots will respond when we loop back (handled at top of GameLoop)
+                    // Phase will transition to RespondToTrade via GetNextPhase
                 }
 
                 if (move.BuyDevelopmentCard)
@@ -1455,6 +1521,55 @@ public static class GamePlayHelpers
         GameLoop(gs);
 
         return new ResponseDTO(true, 0, null!, gs, player);
+    }
+
+    private const int TradeTimeoutSeconds = 30;
+
+    /// <summary>
+    /// Checks if there's an active trade that has timed out and cancels it if so.
+    /// Returns true if a trade was cancelled (indicating state was modified and needs to be persisted).
+    /// </summary>
+    public static bool HandleTradeTimeoutIfNeeded(GameState gs)
+    {
+        // Only check for timeout if we're in RespondToTrade state with an active trade
+        if (gs.Phase.PhaseState != GameStates.RespondToTrade)
+            return false;
+
+        if (gs.Phase.TradeStartTime == null)
+            return false;
+
+        if (gs.Phase.PendingTradeResponses == null)
+            return false;
+
+        // Check if any human players haven't responded yet
+        var originalTrade = gs.Phase.PendingTradeResponses.FirstOrDefault(tr => tr.ResponseType == TradeResponseType.Original);
+        if (originalTrade == null)
+            return false;
+
+        var respondedPlayerIds = gs.Phase.PendingTradeResponses
+            .Where(tr => tr.ResponseType != TradeResponseType.Original)
+            .Select(tr => tr.Player.Id)
+            .ToHashSet();
+
+        var humanPlayersWhoHaventResponded = gs.Players
+            .Where(p => !p.IsBot && p.Id != originalTrade.Player.Id && !respondedPlayerIds.Contains(p.Id))
+            .ToList();
+
+        // If no humans are waiting to respond, no timeout needed
+        if (humanPlayersWhoHaventResponded.Count == 0)
+            return false;
+
+        // Check if trade has timed out
+        var elapsed = DateTime.UtcNow - gs.Phase.TradeStartTime.Value;
+        if (elapsed.TotalSeconds < TradeTimeoutSeconds)
+            return false;
+
+        // Trade has timed out - cancel it
+        gs.Phase.ClearPendingTradeResponses();
+        gs.Phase.ClearTradeStartTime();
+        GameLoop(gs);
+
+        return true;
     }
 
     private static readonly System.Text.RegularExpressions.Regex ValidNamePattern = new(@"^[a-zA-Z0-9 ]+$");

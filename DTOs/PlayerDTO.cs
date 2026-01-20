@@ -30,13 +30,17 @@ public class PlayerDTO
     public int VictoryPoints { get; }
     public int? FullVictoryPoints { get; }
 
+    public int TradeAttemptsThisRound { get; } = 0;
+    public List<string> AttemptedTradesThisRound { get; } = new();
+
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
     public PlayerDTO(string id, string name, PlayerColor color, bool isBot = false,
         Dictionary<ResourceType, int>? resources = null, int resourceCount = 0,
         int developmentCardCount = 0, List<DevelopmentCardType>? devCardsPurchasedThisRound = null,
         List<DevelopmentCardType>? devCardsPlayed = null, List<DevelopmentCardType>? devCardsReadyToPlay = null,
-        int victoryPoints = 0, int? fullVictoryPoints = 0)
+        int victoryPoints = 0, int? fullVictoryPoints = 0,
+        int tradeAttemptsThisRound = 0, List<string>? attemptedTradesThisRound = null)
     {
         Id = id ?? string.Empty;
         Name = name ?? string.Empty;
@@ -58,11 +62,16 @@ public class PlayerDTO
 
         if (devCardsReadyToPlay != null)
             DevCardsReadyToPlay = devCardsReadyToPlay;
-            
+
         VictoryPoints = victoryPoints;
 
         if (fullVictoryPoints != null)
             FullVictoryPoints = fullVictoryPoints;
+
+        TradeAttemptsThisRound = tradeAttemptsThisRound;
+
+        if (attemptedTradesThisRound != null)
+            AttemptedTradesThisRound = attemptedTradesThisRound;
     }
 
     public PlayerDTO(Player player, bool countsOnly = true)
@@ -92,5 +101,9 @@ public class PlayerDTO
         ResourceCount = player.ResourceCount;
         VictoryPoints = player.VisibleVictoryPoints;
         FullVictoryPoints = player.FullVictoryPoints;
+
+        TradeAttemptsThisRound = player.TradeAttemptsThisRound;
+        if (player.AttemptedTradesThisRound != null)
+            AttemptedTradesThisRound = player.AttemptedTradesThisRound.ToList();
     }
 }

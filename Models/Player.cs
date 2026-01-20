@@ -122,6 +122,11 @@ public class Player
         VisibleVictoryPoints = dto.VictoryPoints;
 
         FullVictoryPoints = dto.FullVictoryPoints ?? 0;
+
+        TradeAttemptsThisRound = dto.TradeAttemptsThisRound;
+        if (dto.AttemptedTradesThisRound != null)
+            foreach (var trade in dto.AttemptedTradesThisRound)
+                AttemptedTradesThisRound.Add(trade);
     }
 
     public void AssignResources(ResourceType type, int count)

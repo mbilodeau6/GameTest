@@ -275,6 +275,14 @@ public class BotAI
             return move;
         }
 
+        // Try to initiate a player trade if we can't build or bank trade
+        var initiatedTrade = GetInitiatedTrade();
+        if (initiatedTrade != null)
+        {
+            move.InitiateTrade = initiatedTrade;
+            return move;
+        }
+
         move.EndTurn = true;
         return move;
     }

@@ -127,6 +127,21 @@ public class GameService
 
             var gs = GamePlayHelpers.LoadAndPrepareGameStateDTO(dto);
 
+            // Check for trade timeout and persist if state was modified
+            if (GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs))
+            {
+                var updatedDto = new GameStateDTO(gs);
+                var json2 = JsonSerializer.Serialize(updatedDto, JsonOptions.Default);
+                using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json2));
+                await blob.UploadAsync(ms, new Azure.Storage.Blobs.Models.BlobUploadOptions
+                {
+                    Conditions = new Azure.Storage.Blobs.Models.BlobRequestConditions { IfMatch = etag }
+                });
+                // Update etag after successful upload
+                var props = await blob.GetPropertiesAsync();
+                etag = props.Value.ETag;
+            }
+
             if (playerId != null)
             {
                 var player = gs.Players.FirstOrDefault(p => p.Id == playerId);

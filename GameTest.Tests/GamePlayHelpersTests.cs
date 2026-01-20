@@ -3838,4 +3838,124 @@ public class GamePlayHelpersTests
         Assert.NotEmpty(players);
         Assert.Equal(2, players.Count);
     }
+
+    // HandleTradeTimeoutIfNeeded tests
+
+    [Fact]
+    public void HandleTradeTimeoutIfNeeded_ReturnsFalse_WhenNotInRespondToTradeState()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, board.GetRedPlayer(), board.GetBluePlayer());
+
+        var result = GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void HandleTradeTimeoutIfNeeded_ReturnsFalse_WhenNoTradeStartTime()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        // No TradeStartTime set
+
+        var result = GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void HandleTradeTimeoutIfNeeded_ReturnsFalse_WhenNoPendingTradeResponses()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase.SetTradeStartTime(DateTime.UtcNow.AddSeconds(-60));
+        // PendingTradeResponses is null
+
+        var result = GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void HandleTradeTimeoutIfNeeded_ReturnsFalse_WhenNoHumansWaiting()
+    {
+        // All players are bots - no timeout needed for bot-only games
+        var bot1 = Player.CreateTestPlayer("Bot1", PlayerColor.Red, isBot: true);
+        var bot2 = Player.CreateTestPlayer("Bot2", PlayerColor.Blue, isBot: true);
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Players.Clear();
+        gs.Players.Add(bot1);
+        gs.Players.Add(bot2);
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, bot1, bot2);
+        gs.Phase.SetTradeStartTime(DateTime.UtcNow.AddSeconds(-60));
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(bot1, TradeResponseType.Original,
+            new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } },
+            new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } }));
+
+        var result = GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void HandleTradeTimeoutIfNeeded_ReturnsFalse_WhenNotTimedOut()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase.SetTradeStartTime(DateTime.UtcNow.AddSeconds(-5)); // Only 5 seconds ago
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(board.GetRedPlayer(), TradeResponseType.Original,
+            new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } },
+            new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } }));
+
+        var result = GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs);
+
+        Assert.False(result);
+        Assert.Equal(GameStates.RespondToTrade, gs.Phase.PhaseState);
+        Assert.NotNull(gs.Phase.PendingTradeResponses);
+    }
+
+    [Fact]
+    public void HandleTradeTimeoutIfNeeded_ReturnsTrue_WhenTimedOutWithHumanWaiting()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase.SetTradeStartTime(DateTime.UtcNow.AddSeconds(-31)); // 31 seconds ago - timed out
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(board.GetRedPlayer(), TradeResponseType.Original,
+            new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } },
+            new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } }));
+
+        var result = GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs);
+
+        Assert.True(result);
+        Assert.Equal(GameStates.BuildOrTrade, gs.Phase.PhaseState);
+        Assert.Null(gs.Phase.PendingTradeResponses);
+        Assert.Null(gs.Phase.TradeStartTime);
+    }
+
+    [Fact]
+    public void HandleTradeTimeoutIfNeeded_ReturnsFalse_WhenAllHumansHaveResponded()
+    {
+        var board = TestHelpers.CreateOriginalTestBoard();
+        var gs = board.GetGameState();
+        gs.Phase = new GamePhase(GameStates.RespondToTrade, board.GetRedPlayer(), board.GetBluePlayer());
+        gs.Phase.SetTradeStartTime(DateTime.UtcNow.AddSeconds(-60));
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(board.GetRedPlayer(), TradeResponseType.Original,
+            new Dictionary<ResourceType, int> { { ResourceType.Brick, 1 } },
+            new Dictionary<ResourceType, int> { { ResourceType.Wood, 1 } }));
+        // Blue player has already responded
+        gs.Phase.AddPendingTradeResponse(new TradeResponse(board.GetBluePlayer(), TradeResponseType.Reject,
+            new Dictionary<ResourceType, int>(),
+            new Dictionary<ResourceType, int>()));
+
+        var result = GamePlayHelpers.HandleTradeTimeoutIfNeeded(gs);
+
+        Assert.False(result);
+    }
 }

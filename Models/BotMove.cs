@@ -16,6 +16,7 @@ public class BotMove
     public bool EndTurn { get; set; }
 
     public TradeRequestDTO? BankTrade { get; set; }
+    public TradeRequest? InitiateTrade { get; set; }
     public TileDTO? TileMove { get; set; }
     public List<ResourceType>? DiscardResources { get; set; }
     public Player? SelectedPlayer { get; set; }

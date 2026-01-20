@@ -16,6 +16,7 @@ public class GamePhase
     private int VictoryPointsToWin { get; init; }
     public bool DevCardPlayedThisRound {get; private set; } = false;
     public List<TradeResponse>? PendingTradeResponses { get; private set; }
+    public DateTime? TradeStartTime { get; private set; } = null;
 
     // TODO: Can all callers to this version be changed to use the DTO version?
     public GamePhase(GameStates state, int victoryPointsToWin, Player? current = null, Player? end = null)
@@ -67,6 +68,8 @@ public class GamePhase
                 PendingTradeResponses.Add(tradeResponse);
             }
         }
+
+        TradeStartTime = dto.TradeStartTime;
     }
 
     // Copy Constructor
@@ -92,6 +95,8 @@ public class GamePhase
 
         if (gamePhase.TargetPlayers != null)
             TargetPlayers = gamePhase.TargetPlayers.ToList();
+
+        TradeStartTime = gamePhase.TradeStartTime;
     }
     
     public void SetStateToReturnTo(GameStates state, Tile originalTile)
@@ -346,5 +351,15 @@ public class GamePhase
     public void ClearPendingTradeResponses()
     {
         PendingTradeResponses = null;
+    }
+
+    public void SetTradeStartTime(DateTime startTime)
+    {
+        TradeStartTime = startTime;
+    }
+
+    public void ClearTradeStartTime()
+    {
+        TradeStartTime = null;
     }
 }
