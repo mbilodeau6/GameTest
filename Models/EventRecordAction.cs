@@ -22,6 +22,7 @@ public enum EventRecordAction
     OfferToTrade, 
     AcceptTrade,
     RejectTrade,
+    CancelOpenTrade,
     CounterOffer,
     TradeWithPlayer,
     EndTurn, // not used for eventRecord entries but could be

@@ -445,7 +445,7 @@ public static class GamePlayHelpers
                 {
                     var botAI = new BotAI(gs, player);
                     var response = botAI.GetTradeResponse(originalOffer.Offer, originalOffer.Request);
-                    gs.Phase.AddPendingTradeResponse(response);
+                    RespondToTrade(gs, player, new TradeResponseDTO(response));
                 }
             }
         }
@@ -1497,7 +1497,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException($"Unexpected Error. It isn't the player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}");
 
         gs.ClearUndoState();
-        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.RejectTrade));
+        gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.CancelOpenTrade));
         gs.Phase.ClearPendingTradeResponses();
     }
 
