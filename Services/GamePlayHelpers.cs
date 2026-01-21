@@ -452,10 +452,10 @@ public static class GamePlayHelpers
 
         if (gs.Phase.CurrentPlayer.IsBot)
         {
-            var bot = new BotAI(gs, gs.Phase.CurrentPlayer);
-
             while (gs.Phase.CurrentPlayer != null && gs.Phase.CurrentPlayer.IsBot)
             {
+                // Create fresh BotAI each iteration to ensure we're using current player state
+                var bot = new BotAI(gs, gs.Phase.CurrentPlayer);
                 if (loopCounter++ > 100)
                     throw new InvalidOperationException("GameLoop appears to be stuck in an infinite loop");
 
@@ -558,21 +558,17 @@ public static class GamePlayHelpers
 
                 if (move.InitiateTrade != null)
                 {
-                    // Bot initiates a player trade
+                    // Bot initiates a player trade - use OpenTrade for consistent validation
                     var tradeRequest = move.InitiateTrade;
 
-                    // Record the trade attempt
+                    // Record the trade attempt (bot-specific tracking to prevent duplicate trades)
                     gs.Phase.CurrentPlayer.RecordTradeAttempt(tradeRequest.Offer, tradeRequest.Request);
 
-                    // Add the original trade offer
-                    var originalTrade = new TradeResponse(gs.Phase.CurrentPlayer, TradeResponseType.Original, tradeRequest.Offer, tradeRequest.Request);
-                    gs.Phase.AddPendingTradeResponse(originalTrade);
+                    // Use OpenTrade to validate and initiate the trade (same path as humans)
+                    OpenTrade(gs, gs.Phase.CurrentPlayer, tradeRequest.Offer, tradeRequest.Request);
 
                     // Set trade start time for timeout tracking
                     gs.Phase.SetTradeStartTime(DateTime.UtcNow);
-
-                    // Log the event (pass null for targetPlayer to use correct constructor)
-                    gs.AddEventRecord(new EventRecordDTO(gs.Phase.CurrentPlayer, EventRecordAction.OfferToTrade, tradeRequest.Request, tradeRequest.Offer, null));
 
                     // Other bots will respond when we loop back (handled at top of GameLoop)
                     // Phase will transition to RespondToTrade via GetNextPhase
@@ -856,7 +852,7 @@ public static class GamePlayHelpers
             throw new InvalidOperationException("Unexpected Error. All development cards have been used.");
 
         if (!HasResourcesToBuyDevCard(player))
-            throw new InvalidOperationException("Unexpected Error. Player doesn't have resources to buy dev card.");
+            throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to buy dev card. Player: {player.Id} ");
 
         gs.ClearUndoState();
         player.AssignDevelopmentCard(gs.DevelopmentCards[0]);
@@ -1225,7 +1221,7 @@ public static class GamePlayHelpers
 
         var missingResources = AIHelpers.MultiSetSubtraction(offerAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
         if (missingResources.Count > 0)
-            throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their offer. ResourceMissing: {missingResources[0].ToString()}");
+            throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their offer. Player: {player.Id}; ResourceMissing: {missingResources[0].ToString()}");
 
         gs.Phase.AddPendingTradeResponse(new TradeResponse(player, TradeResponseType.Original, offer, request));
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.OfferToTrade, request, offer, null!));
@@ -1282,11 +1278,11 @@ public static class GamePlayHelpers
 
             var pendingResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(p => p.ResponseType == TradeResponseType.Original);
 
-            if (pendingResponse == null || pendingResponse.Offer == null)
+            if (pendingResponse == null || pendingResponse.Request == null)
                 throw new InvalidOperationException("Unexpected Error. Trade response received when no original offers present.");
 
-            var requestAsList = AIHelpers.ConvertResourceDictToList(pendingResponse.Offer);
-            var playerResources = AIHelpers.ConvertResourceDictToList(gs.Phase.CurrentPlayer.Resources);
+            var requestAsList = AIHelpers.ConvertResourceDictToList(pendingResponse.Request);
+            var playerResources = AIHelpers.ConvertResourceDictToList(player.Resources);
             if (AIHelpers.MultiSetSubtraction(requestAsList, playerResources).Count > 0)
                 throw new InvalidOperationException("Unexpected Error. Player accepting a trade they don't have the resources to fulfill.");
         }
@@ -1307,7 +1303,7 @@ public static class GamePlayHelpers
 
             var missingResources = AIHelpers.MultiSetSubtraction(offerAsList, AIHelpers.ConvertResourceDictToList(player.Resources));
             if (missingResources.Count > 0)
-                throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their counter offer. ResourceMissing: {missingResources[0].ToString()}");
+                throw new InvalidOperationException($"Unexpected Error. Player doesn't have resources to cover their counter offer. Player: {player.Id}; ResourceMissing: {missingResources[0].ToString()}");
 
             gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.CounterOffer, response.Request, response.Offer, null!));
         }
@@ -1340,11 +1336,11 @@ public static class GamePlayHelpers
         {
             var pendingResponse = gs.Phase.PendingTradeResponses.FirstOrDefault(p => p.ResponseType == TradeResponseType.Original);
 
-            if (pendingResponse == null || pendingResponse.Offer == null)
+            if (pendingResponse == null || pendingResponse.Request == null)
                 return new ResponseDTO(false, 9999, $"Original trade not found.", null as GameStateDTO);
 
-            var requestAsList = AIHelpers.ConvertResourceDictToList(pendingResponse.Offer);
-            var playerResources = AIHelpers.ConvertResourceDictToList(gs.Phase.CurrentPlayer.Resources);
+            var requestAsList = AIHelpers.ConvertResourceDictToList(pendingResponse.Request);
+            var playerResources = AIHelpers.ConvertResourceDictToList(player.Resources);
             if (AIHelpers.MultiSetSubtraction(requestAsList, playerResources).Count > 0)
                 return new ResponseDTO(false, 1017, $"GameId: {gs.Id}; TradeResponsePlayer: {player}", null as GameStateDTO);
         }

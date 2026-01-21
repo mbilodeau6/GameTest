@@ -1686,6 +1686,201 @@ public class AIHelpersTests
         Assert.True(offer.Request.ContainsKey(ResourceType.Ore));
         Assert.False(offer.Request.ContainsKey(ResourceType.Brick));
     }
+
+    // ==================== Longest Road Strategy Tests ====================
+    // Note: Test board uses GameType.Test which has VictoryPointsToWin = 5
+    // So bot needs 3+ points to win via longest road (3 + 2 = 5)
+
+    [Fact]
+    public void RoadsNeededForLongestRoad_NoOneHasLongestRoad_Returns5MinusCurrentLength()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Bot has 1 road from setup, longest road requires 5
+        int currentRoads = gs.GetLongestRoadLength(bot);
+        int roadsNeeded = AIHelpers.RoadsNeededForLongestRoad(gs, bot);
+
+        Assert.Equal(5 - currentRoads, roadsNeeded);
+    }
+
+    [Fact]
+    public void RoadsNeededForLongestRoad_BotAlreadyHasLongestRoad_ReturnsZero()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Give bot longest road
+        gs.AssignLongestRoadToPlayer(bot);
+
+        int roadsNeeded = AIHelpers.RoadsNeededForLongestRoad(gs, bot);
+
+        Assert.Equal(0, roadsNeeded);
+    }
+
+    [Fact]
+    public void CanWinWithLongestRoad_BotHas3Points_ReturnsTrue()
+    {
+        // Test board: VictoryPointsToWin = 5, so need 3+ points to win with longest road
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 3 victory points (3 + 2 = 5 = win)
+        bot.SetVictoryPoints(3, 3);
+
+        bool canWin = AIHelpers.CanWinWithLongestRoad(gs, bot);
+
+        Assert.True(canWin);
+    }
+
+    [Fact]
+    public void CanWinWithLongestRoad_BotHas2Points_ReturnsFalse()
+    {
+        // Test board: VictoryPointsToWin = 5, so need 3+ points
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 2 victory points (2 + 2 = 4, not enough)
+        bot.SetVictoryPoints(2, 2);
+
+        bool canWin = AIHelpers.CanWinWithLongestRoad(gs, bot);
+
+        Assert.False(canWin);
+    }
+
+    [Fact]
+    public void CanWinWithLongestRoad_BotAlreadyHasLongestRoad_ReturnsFalse()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 3 points but already has longest road
+        bot.SetVictoryPoints(3, 3);
+        gs.AssignLongestRoadToPlayer(bot);
+
+        bool canWin = AIHelpers.CanWinWithLongestRoad(gs, bot);
+
+        // Already has longest road - can't gain additional points from it
+        Assert.False(canWin);
+    }
+
+    [Fact]
+    public void ShouldPrioritizeRoadsForWin_BotHasEnoughPoints_ReturnsTrue()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 3 points (enough to win with longest road in test game)
+        bot.SetVictoryPoints(3, 3);
+
+        // Bot has 1 road from setup (E3), needs 4 more for longest road
+        // Build E2 and E10 to extend in both directions (avoiding red's settlement at V5)
+        // Chain: V2-V3 (E2) -> V3-V4 (E3) -> V4-V16 (E10) = 3 roads
+        board.GetEdge(TestEdge.E2).BuildRoad(bot);
+        board.GetEdge(TestEdge.E10).BuildRoad(bot);
+
+        // Now bot has 3 connected roads, needs 2 more for longest road (within 1-3 range)
+        int roadsNeeded = AIHelpers.RoadsNeededForLongestRoad(gs, bot);
+        Assert.True(roadsNeeded <= 3, $"Roads needed should be <= 3, was {roadsNeeded}");
+
+        bool shouldPrioritize = AIHelpers.ShouldPrioritizeRoadsForWin(gs, bot);
+
+        Assert.True(shouldPrioritize);
+    }
+
+    [Fact]
+    public void ShouldPrioritizeRoadsForWin_BotNotEnoughPoints_ReturnsFalse()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 2 points (not enough to win with longest road)
+        bot.SetVictoryPoints(2, 2);
+
+        bool shouldPrioritize = AIHelpers.ShouldPrioritizeRoadsForWin(gs, bot);
+
+        Assert.False(shouldPrioritize);
+    }
+
+    [Fact]
+    public void CanWinWithRoadBuildingCard_TwoRoadsWouldWin_ReturnsTrue()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 3 points
+        bot.SetVictoryPoints(3, 3);
+
+        // Build a linear chain of roads so bot is only 2 away from longest road (5)
+        // Bot has E3 from setup (V3-V4). Red has settlement at V5, so we can't go E3-E4.
+        // Instead: E2 (V2-V3) and E10 (V4-V16) extend in opposite directions from E3
+        // Chain: V2-V3 (E2) -> V3-V4 (E3) -> V4-V16 (E10) = 3 roads
+        board.GetEdge(TestEdge.E2).BuildRoad(bot);
+        board.GetEdge(TestEdge.E10).BuildRoad(bot);
+
+        // Now bot should have 3 continuous roads, needs 2 more for 5
+        int currentRoadLength = gs.GetLongestRoadLength(bot);
+        int roadsNeeded = AIHelpers.RoadsNeededForLongestRoad(gs, bot);
+
+        // Verify setup is correct
+        Assert.True(currentRoadLength >= 3, $"Current road length should be >= 3, was {currentRoadLength}");
+        Assert.Equal(2, roadsNeeded);
+
+        bool canWin = AIHelpers.CanWinWithRoadBuildingCard(gs, bot);
+        Assert.True(canWin);
+    }
+
+    [Fact]
+    public void CanWinWithRoadBuildingCard_NeedsMoreThanTwoRoads_ReturnsFalse()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements();
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 3 points
+        bot.SetVictoryPoints(3, 3);
+
+        // Bot has 1 road from setup, needs 4 more for longest road
+        int roadsNeeded = AIHelpers.RoadsNeededForLongestRoad(gs, bot);
+        Assert.True(roadsNeeded > 2);
+
+        bool canWin = AIHelpers.CanWinWithRoadBuildingCard(gs, bot);
+        Assert.False(canWin);
+    }
+
+    [Fact]
+    public void ScoreRoadBuilding_CanWinWithCard_ReturnsMaxPriority()
+    {
+        var board = TestHelpers.CreateOriginalTestBoardWithSettlements(true);
+        var gs = board.GetGameState();
+        var bot = board.GetBluePlayer();
+
+        // Set bot to 3 points
+        bot.SetVictoryPoints(3, 3);
+
+        // Build E2 and E10 to form a chain of 3 (avoiding red's settlement at V5)
+        board.GetEdge(TestEdge.E2).BuildRoad(bot);
+        board.GetEdge(TestEdge.E10).BuildRoad(bot);
+
+        // Give bot the Road Building card
+        bot.AssignDevelopmentCard(DevelopmentCardType.RoadBuilding);
+        bot.MakeNewDevelopmentCardsPlayable();
+
+        gs.Phase = new GamePhase(GameStates.BuildOrTrade, bot, bot);
+
+        // GetDevCardToPlay should return Road Building because it can win
+        var cardToPlay = AIHelpers.GetDevCardToPlay(gs, bot);
+
+        Assert.Equal(DevelopmentCardType.RoadBuilding, cardToPlay);
+    }
 }
 
 

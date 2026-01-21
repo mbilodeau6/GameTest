@@ -356,6 +356,94 @@ public static class AIHelpers
         return resourceList;
     }
 
+    // ==================== Longest Road Strategy ====================
+
+    /// <summary>
+    /// Calculates how many roads the player needs to build to take or tie for longest road.
+    /// Returns -1 if longest road is not achievable (e.g., no roads left to build).
+    /// </summary>
+    public static int RoadsNeededForLongestRoad(GameState gs, Player player)
+    {
+        int playerRoadLength = gs.GetLongestRoadLength(player);
+        int targetLength;
+
+        if (gs.PlayerWithLongestRoad == null)
+        {
+            // No one has longest road yet - need at least 5
+            targetLength = 5;
+        }
+        else if (gs.PlayerWithLongestRoad.Id == player.Id)
+        {
+            // Player already has longest road
+            return 0;
+        }
+        else
+        {
+            // Need to exceed current holder's length
+            targetLength = gs.GetLongestRoadLength(gs.PlayerWithLongestRoad) + 1;
+        }
+
+        int roadsNeeded = targetLength - playerRoadLength;
+
+        // Check if player has enough roads left to build
+        int roadsBuilt = gs.CountRoadsForPlayer(player);
+        int roadsRemaining = gs.Settings.RoadsPerPlayer - roadsBuilt;
+
+        if (roadsNeeded > roadsRemaining)
+            return -1; // Not achievable
+
+        return roadsNeeded > 0 ? roadsNeeded : 0;
+    }
+
+    /// <summary>
+    /// Determines if the bot can win the game by obtaining longest road.
+    /// Returns true if bot has enough points that longest road would win.
+    /// </summary>
+    public static bool CanWinWithLongestRoad(GameState gs, Player player)
+    {
+        // Need (VictoryPointsToWin - 2) or more points so that longest road (2 points) wins
+        int pointsNeededWithoutLongestRoad = gs.Settings.VictoryPointsToWin - 2;
+        if (player.VisibleVictoryPoints < pointsNeededWithoutLongestRoad)
+            return false;
+
+        // Already has longest road - no additional points to gain
+        if (gs.PlayerWithLongestRoad?.Id == player.Id)
+            return false;
+
+        int roadsNeeded = RoadsNeededForLongestRoad(gs, player);
+        return roadsNeeded >= 0; // Achievable if not -1
+    }
+
+    /// <summary>
+    /// Determines if playing the Road Building card would win the game via longest road.
+    /// Returns true if bot has enough points and 2 free roads would give longest road.
+    /// </summary>
+    public static bool CanWinWithRoadBuildingCard(GameState gs, Player player)
+    {
+        if (!CanWinWithLongestRoad(gs, player))
+            return false;
+
+        int roadsNeeded = RoadsNeededForLongestRoad(gs, player);
+
+        // Road Building gives 2 free roads
+        return roadsNeeded > 0 && roadsNeeded <= 2;
+    }
+
+    /// <summary>
+    /// Determines if the bot should prioritize building roads to win via longest road.
+    /// Returns true if bot has enough points and is close to longest road (1-3 roads away).
+    /// </summary>
+    public static bool ShouldPrioritizeRoadsForWin(GameState gs, Player player)
+    {
+        if (!CanWinWithLongestRoad(gs, player))
+            return false;
+
+        int roadsNeeded = RoadsNeededForLongestRoad(gs, player);
+
+        // Prioritize if we're within striking distance (1-3 roads away)
+        return roadsNeeded > 0 && roadsNeeded <= 3;
+    }
+
     /// <summary>
     /// Determines if the bot should play a development card and which one.
     /// Considers game phase, available cards, and whether playing would be beneficial.
@@ -495,6 +583,10 @@ public static class AIHelpers
         // Don't play if no roads available to build
         if (!gs.UnusedRoadAvailable(player))
             return 0.0;
+
+        // WIN CONDITION: If Road Building can win the game via longest road, highest priority
+        if (CanWinWithRoadBuildingCard(gs, player))
+            return 1.0;
 
         // Check if bot has settlement resources but no open vertex to build on
         bool hasSettlementResources = GamePlayHelpers.HasResourcesToBuildSettlement(player);
@@ -812,6 +904,11 @@ public static class AIHelpers
         var resourceToOffer = excessResources.First();
         int amountAvailable = player.Resources.GetValueOrDefault(resourceToOffer, 0);
         int amountToOffer = amountAvailable >= 3 ? 2 : 1;
+
+        // Defensive check: ensure player actually has the resources to offer
+        if (amountAvailable < amountToOffer)
+            return null;
+
         offer[resourceToOffer] = amountToOffer;
 
         return new TradeRequest(player, offer, request);

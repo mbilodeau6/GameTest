@@ -166,10 +166,30 @@ public class BotAI
     {
         var move = new BotMove();
 
+        if (State.Phase.CurrentPlayer == null)
+            throw new InvalidOperationException("CurrentPlayer required.");
+
+        // WIN CONDITION: If bot can win via longest road, prioritize building roads
+        if (AIHelpers.ShouldPrioritizeRoadsForWin(State, State.Phase.CurrentPlayer)
+            && State.UnusedRoadAvailable(State.Phase.CurrentPlayer)
+            && (GamePlayHelpers.HasResourcesToBuildRoad(State.Phase.CurrentPlayer) || !restrictToHeldResources))
+        {
+            var longestRoadTargets = AIHelpers.GetRankedListOfVertexTargets(State, AIHelpers.GetAllOwnedBuildings(State, State.Phase.CurrentPlayer))
+                .OrderByDescending(g => g.OverallScore);
+
+            // Find any vertex that needs roads and build toward it
+            var targetWithRoads = longestRoadTargets.FirstOrDefault(v => v.RoadsNeeded > 0 && v.NextEdgeToTarget != null);
+            if (targetWithRoads != null)
+            {
+                move.EdgeMove = new EdgeDTO(targetWithRoads.NextEdgeToTarget!.Id, State.Phase.CurrentPlayer.Id, null);
+                return move;
+            }
+        }
+
         // First look to see if we can upgrade settlements to a city
         var settlementToUpgrade = AIHelpers.GetSettlementToUpgrade(State);
         if (settlementToUpgrade != null && State.Phase.CurrentPlayer != null
-            && State.UnusedCityAvailable(State.Phase.CurrentPlayer) 
+            && State.UnusedCityAvailable(State.Phase.CurrentPlayer)
             && (GamePlayHelpers.HasResourcesToBuildCity(State.Phase.CurrentPlayer) || !restrictToHeldResources))
         {
                 move.VertexMove = new VertexDTO(settlementToUpgrade.Id, BuildingType.City, State.Phase.CurrentPlayer.Id, null);
@@ -177,8 +197,6 @@ public class BotAI
         }
 
         // Determine if there are settlements or roads the bot should work towards
-        if (State.Phase.CurrentPlayer == null)
-            throw new InvalidOperationException("CurrentPlayer required.");
             
         var candidateVertices = AIHelpers.GetRankedListOfVertexTargets(State, AIHelpers.GetAllOwnedBuildings(State, State.Phase.CurrentPlayer)).OrderByDescending(g => g.OverallScore);
         if (candidateVertices.Count() > 0)
@@ -336,7 +354,15 @@ public class BotAI
 
         var move = new BotMove();
 
-        // Only consider playing Knight pre-roll (to move robber before collecting resources)
+        // WIN CONDITION: Play Road Building pre-roll if it would win the game via longest road
+        if (State.Phase.CurrentPlayer.DevCardsReadyToPlay.Contains(DevelopmentCardType.RoadBuilding)
+            && AIHelpers.CanWinWithRoadBuildingCard(State, State.Phase.CurrentPlayer))
+        {
+            move.PlayDevelopmentCard = DevelopmentCardType.RoadBuilding;
+            return move;
+        }
+
+        // Consider playing Knight pre-roll (to move robber before collecting resources)
         var cardToPlay = AIHelpers.GetDevCardToPlay(State, State.Phase.CurrentPlayer);
         if (cardToPlay == DevelopmentCardType.Knight)
         {
