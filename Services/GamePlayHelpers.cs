@@ -1443,6 +1443,7 @@ public static class GamePlayHelpers
 
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.TradeWithPlayer, request, offer, acceptedPlayer));
         gs.Phase.ClearPendingTradeResponses();
+        gs.Phase.ClearTradeStartTime();
     }
 
     public static ResponseDTO AcceptTradeFromUser(GameState gs, AcceptTradeDTO request)
@@ -1499,6 +1500,7 @@ public static class GamePlayHelpers
         gs.ClearUndoState();
         gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.CancelOpenTrade));
         gs.Phase.ClearPendingTradeResponses();
+        gs.Phase.ClearTradeStartTime();
     }
 
     public static ResponseDTO RejectAllOffersFromUser(GameState gs, BaseRequest request)
