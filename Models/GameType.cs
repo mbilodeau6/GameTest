@@ -4,5 +4,6 @@ public enum GameType
     Expansion6,
     Expansion8,
     Starter,
-    Test
+    Test,
+    Presidio1
 }

@@ -89,6 +89,43 @@ public static class BoardCreationHelpers
         return tiles;
     }
 
+    public static List<Tile> CreateTilesForPresidio1Board()
+    {
+        List<Tile> tiles = new List<Tile>
+        {
+            new Tile(ResourceType.Wood, 3, 0, -2),
+
+            new Tile(ResourceType.Brick, 4, -1, -1),
+            new Tile(ResourceType.Brick, 10, 1, -1),
+
+            new Tile(ResourceType.Ore, 9, -4, 0),
+            new Tile(ResourceType.Grain, 8, -2, 0),
+            new Tile(ResourceType.Brick, 12, 0, 0),
+            new Tile(ResourceType.Grain, 6, 2, 0),
+            new Tile(ResourceType.Ore, 5, 4, 0),
+
+            new Tile(ResourceType.Wood, 11, -5, 1),
+            new Tile(ResourceType.Desert, 4, -3, 1),
+            new Tile(ResourceType.Wool, 3, -1, 1),
+            new Tile(ResourceType.Wood, 11, 1, 1),
+            new Tile(ResourceType.Desert, 4, 3, 1),
+            new Tile(ResourceType.Wool, 11, 5, 1),
+
+            new Tile(ResourceType.Ore, 5, -4, 2),
+            new Tile(ResourceType.Grain, 6, -2, 2),
+            new Tile(ResourceType.Brick, 2, 0, 2),
+            new Tile(ResourceType.Grain, 8, 2, 2),
+            new Tile(ResourceType.Ore, 9, 4, 2),
+
+            new Tile(ResourceType.Brick, 10, -1, 3),
+            new Tile(ResourceType.Brick, 4, 1, 3),
+
+            new Tile(ResourceType.Wool, 3, 0, 4)
+        };
+
+        return tiles;
+    }
+
     public static List<Tile> CreateTilesForTestBoard()
     {
         List<Tile> tiles = new List<Tile>
@@ -196,6 +233,10 @@ public static class BoardCreationHelpers
                 foreach (var tile in CreateTilesForStarterBoard())
                     gameState.AddTile(tile);
                 break;
+            case GameType.Presidio1:
+                foreach (var tile in CreateTilesForPresidio1Board())
+                    gameState.AddTile(tile);
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(gameType), $"Unhandled game type: {gameType}");
         }
@@ -211,6 +252,9 @@ public static class BoardCreationHelpers
                 break;
             case GameType.Starter:
                 BoardCreationHelpers.AddPortsForStarter(gameState); 
+                break;
+            case GameType.Presidio1:
+                BoardCreationHelpers.AddPortsForPresidio1(gameState);
                 break;           
         }
 
@@ -456,6 +500,56 @@ public static class BoardCreationHelpers
         v1 = gs.GetVertexFromTileInfo(grain12Tile, null, null, VertexDirection.NW);
         v2 = gs.GetVertexFromTileInfo(grain12Tile, grain9Tile, null, null);
         port = new Port(v1, v2, PortType.Wood);
+        gs.Ports.Add(port);
+    }
+
+    public static void AddPortsForPresidio1(GameState gs)
+    {
+        if (gs.Settings.Type != GameType.Presidio1)
+            throw new InvalidOperationException("AddPortsForPresidio1 only works with GameType.Presidio1.");
+
+        var woodN = gs.GetTileAt(0, -2);
+        var v1 = gs.GetVertexFromTileInfo(woodN, null, null, VertexDirection.NW);
+        var v2 = gs.GetVertexFromTileInfo(woodN, null, null, VertexDirection.N);
+        var v3 = gs.GetVertexFromTileInfo(woodN, null, null, VertexDirection.NE);
+        var port = new Port(v1, v2, PortType.Wool);
+        gs.Ports.Add(port);
+        port = new Port(v2, v3, PortType.Grain);
+        gs.Ports.Add(port);
+
+        var woolS = gs.GetTileAt(0, 4);
+        v1 = gs.GetVertexFromTileInfo(woolS, null, null, VertexDirection.SW);
+        v2 = gs.GetVertexFromTileInfo(woolS, null, null, VertexDirection.S);
+        v3 = gs.GetVertexFromTileInfo(woolS, null, null, VertexDirection.SE);
+        port = new Port(v1, v2, PortType.Wood);
+        gs.Ports.Add(port);
+        port = new Port(v2, v3, PortType.Ore);
+        gs.Ports.Add(port);
+
+        var woodW = gs.GetTileAt(-5, 1);
+        var oreN = gs.GetTileAt(-4, 0);
+        var oreS = gs.GetTileAt(-4, 2);
+        v1 = gs.GetVertexFromTileInfo(woodW, oreN, null, null);
+        v2 = gs.GetVertexFromTileInfo(woodW, null, null, VertexDirection.NW);
+        port = new Port(v1, v2, PortType.ThreeToOne);
+        gs.Ports.Add(port);
+
+        v1 = gs.GetVertexFromTileInfo(woodW, oreS, null, null);
+        v2 = gs.GetVertexFromTileInfo(woodW, null, null, VertexDirection.SW);
+        port = new Port(v1, v2, PortType.ThreeToOne);
+        gs.Ports.Add(port);
+
+        var woolE = gs.GetTileAt(5, 1);
+        oreN = gs.GetTileAt(4, 0);
+        oreS = gs.GetTileAt(4, 2);
+        v1 = gs.GetVertexFromTileInfo(woolE, oreN, null, null);
+        v2 = gs.GetVertexFromTileInfo(woolE, null, null, VertexDirection.NE);
+        port = new Port(v1, v2, PortType.ThreeToOne);
+        gs.Ports.Add(port);
+
+        v1 = gs.GetVertexFromTileInfo(woolE, oreS, null, null);
+        v2 = gs.GetVertexFromTileInfo(woolE, null, null, VertexDirection.SE);
+        port = new Port(v1, v2, PortType.ThreeToOne);
         gs.Ports.Add(port);
     }
 }
