@@ -91,37 +91,52 @@ public static class BoardCreationHelpers
 
     public static List<Tile> CreateTilesForPresidio1Board()
     {
-        List<Tile> tiles = new List<Tile>
+        List<int> diceValues = new List<int>
         {
-            new Tile(ResourceType.Wood, 4, 0, -2),
+            2, 12, 3, 3, 11, 11, 4, 4, 4, 10, 10, 10, 5, 5, 9, 9, 6, 6, 8, 8
+        };  
 
-            new Tile(ResourceType.Brick, 2, -1, -1),
-            new Tile(ResourceType.Brick, 10, 1, -1),
+        var randomDiceValues = diceValues.OrderBy(x => SharedHelpers.NextRandom()).ToList();
 
-            new Tile(ResourceType.Ore, 3, -4, 0),
-            new Tile(ResourceType.Grain, 8, -2, 0),
-            new Tile(ResourceType.Brick, 6, 0, 0),
-            new Tile(ResourceType.Grain, 11, 2, 0),
-            new Tile(ResourceType.Ore, 9, 4, 0),
+        List<ResourceType> resourceTypes = new List<ResourceType>() { ResourceType.Desert, ResourceType.Desert };
+        for (int i = 0; i < 4; i++)
+        {
+            resourceTypes.Add(ResourceType.Wood);
+            resourceTypes.Add(ResourceType.Wool);
+            resourceTypes.Add(ResourceType.Brick);
+            resourceTypes.Add(ResourceType.Ore);
+            resourceTypes.Add(ResourceType.Grain);
+        }
 
-            new Tile(ResourceType.Wood, 4, -5, 1),
-            new Tile(ResourceType.Desert, 4, -3, 1),
-            new Tile(ResourceType.Wool, 11, -1, 1),
-            new Tile(ResourceType.Wood, 3, 1, 1),
-            new Tile(ResourceType.Desert, 4, 3, 1),
-            new Tile(ResourceType.Wool, 10, 5, 1),
+        var randomResourceTypes = resourceTypes.OrderBy(x => SharedHelpers.NextRandom()).ToList();
 
-            new Tile(ResourceType.Ore, 5, -4, 2),
-            new Tile(ResourceType.Grain, 3, -2, 2),
-            new Tile(ResourceType.Brick, 8, 0, 2),
-            new Tile(ResourceType.Grain, 6, 2, 2),
-            new Tile(ResourceType.Ore, 11, 4, 2),
-
-            new Tile(ResourceType.Brick, 4, -1, 3),
-            new Tile(ResourceType.Brick, 12, 1, 3),
-
-            new Tile(ResourceType.Wool, 10, 0, 4)
+        var tileLocations = new List<(int x, int y)>
+        {
+            (0, -2), 
+            (-1, -1), (1, -1),
+            (-4, 0), (-2, 0), (0, 0), (2, 0), (4, 0),
+            (-5, 1), (-3, 1), (-1, 1), (1, 1), (3, 1), (5, 1),
+            (-4, 2), (-2, 2), (0, 2), (2, 2), (4, 2),
+            (-1, 3), (1, 3), (0, 4)
         };
+
+        List<Tile> tiles = new List<Tile>();
+        
+        foreach(var loc in tileLocations)
+        {
+            // If desert, assign dice value of 7
+            if (randomResourceTypes[0] == ResourceType.Desert)
+            {
+                randomResourceTypes.RemoveAt(0);
+                tiles.Add(new Tile(ResourceType.Desert, 7, loc.x, loc.y));
+            }
+            else
+            {
+                tiles.Add(new Tile(randomResourceTypes[0], randomDiceValues[0], loc.x, loc.y));
+                randomResourceTypes.RemoveAt(0);
+                randomDiceValues.RemoveAt(0);
+            }
+        }
 
         return tiles;
     }
@@ -432,11 +447,10 @@ public static class BoardCreationHelpers
         };
 
         // Shuffle the ports
-        var rnd = new Random();
-        var randPorts = ports.OrderBy(x => rnd.Next()).ToList();
+        var randPorts = ports.OrderBy(x => SharedHelpers.NextRandom()).ToList();
 
         // Assign ports
-        var startIndex = rnd.Next(18);
+        var startIndex = SharedHelpers.NextRandom(18);
         AddPortsWithStartIndex(gs, randPorts, startIndex, -1);
     }
 
