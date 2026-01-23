@@ -93,34 +93,34 @@ public static class BoardCreationHelpers
     {
         List<Tile> tiles = new List<Tile>
         {
-            new Tile(ResourceType.Wood, 3, 0, -2),
+            new Tile(ResourceType.Wood, 4, 0, -2),
 
-            new Tile(ResourceType.Brick, 4, -1, -1),
+            new Tile(ResourceType.Brick, 2, -1, -1),
             new Tile(ResourceType.Brick, 10, 1, -1),
 
-            new Tile(ResourceType.Ore, 9, -4, 0),
+            new Tile(ResourceType.Ore, 3, -4, 0),
             new Tile(ResourceType.Grain, 8, -2, 0),
-            new Tile(ResourceType.Brick, 12, 0, 0),
-            new Tile(ResourceType.Grain, 6, 2, 0),
-            new Tile(ResourceType.Ore, 5, 4, 0),
+            new Tile(ResourceType.Brick, 6, 0, 0),
+            new Tile(ResourceType.Grain, 11, 2, 0),
+            new Tile(ResourceType.Ore, 9, 4, 0),
 
-            new Tile(ResourceType.Wood, 11, -5, 1),
+            new Tile(ResourceType.Wood, 4, -5, 1),
             new Tile(ResourceType.Desert, 4, -3, 1),
-            new Tile(ResourceType.Wool, 3, -1, 1),
-            new Tile(ResourceType.Wood, 11, 1, 1),
+            new Tile(ResourceType.Wool, 11, -1, 1),
+            new Tile(ResourceType.Wood, 3, 1, 1),
             new Tile(ResourceType.Desert, 4, 3, 1),
-            new Tile(ResourceType.Wool, 11, 5, 1),
+            new Tile(ResourceType.Wool, 10, 5, 1),
 
             new Tile(ResourceType.Ore, 5, -4, 2),
-            new Tile(ResourceType.Grain, 6, -2, 2),
-            new Tile(ResourceType.Brick, 2, 0, 2),
-            new Tile(ResourceType.Grain, 8, 2, 2),
-            new Tile(ResourceType.Ore, 9, 4, 2),
+            new Tile(ResourceType.Grain, 3, -2, 2),
+            new Tile(ResourceType.Brick, 8, 0, 2),
+            new Tile(ResourceType.Grain, 6, 2, 2),
+            new Tile(ResourceType.Ore, 11, 4, 2),
 
-            new Tile(ResourceType.Brick, 10, -1, 3),
-            new Tile(ResourceType.Brick, 4, 1, 3),
+            new Tile(ResourceType.Brick, 4, -1, 3),
+            new Tile(ResourceType.Brick, 12, 1, 3),
 
-            new Tile(ResourceType.Wool, 3, 0, 4)
+            new Tile(ResourceType.Wool, 10, 0, 4)
         };
 
         return tiles;
@@ -512,7 +512,7 @@ public static class BoardCreationHelpers
         var v1 = gs.GetVertexFromTileInfo(woodN, null, null, VertexDirection.NW);
         var v2 = gs.GetVertexFromTileInfo(woodN, null, null, VertexDirection.N);
         var v3 = gs.GetVertexFromTileInfo(woodN, null, null, VertexDirection.NE);
-        var port = new Port(v1, v2, PortType.Wool);
+        var port = new Port(v1, v2, PortType.Wood);
         gs.Ports.Add(port);
         port = new Port(v2, v3, PortType.Grain);
         gs.Ports.Add(port);
@@ -521,7 +521,7 @@ public static class BoardCreationHelpers
         v1 = gs.GetVertexFromTileInfo(woolS, null, null, VertexDirection.SW);
         v2 = gs.GetVertexFromTileInfo(woolS, null, null, VertexDirection.S);
         v3 = gs.GetVertexFromTileInfo(woolS, null, null, VertexDirection.SE);
-        port = new Port(v1, v2, PortType.Wood);
+        port = new Port(v1, v2, PortType.Wool);
         gs.Ports.Add(port);
         port = new Port(v2, v3, PortType.Ore);
         gs.Ports.Add(port);
@@ -531,7 +531,7 @@ public static class BoardCreationHelpers
         var oreS = gs.GetTileAt(-4, 2);
         v1 = gs.GetVertexFromTileInfo(woodW, oreN, null, null);
         v2 = gs.GetVertexFromTileInfo(woodW, null, null, VertexDirection.NW);
-        port = new Port(v1, v2, PortType.ThreeToOne);
+        port = new Port(v1, v2, PortType.Brick);
         gs.Ports.Add(port);
 
         v1 = gs.GetVertexFromTileInfo(woodW, oreS, null, null);
@@ -549,7 +549,7 @@ public static class BoardCreationHelpers
 
         v1 = gs.GetVertexFromTileInfo(woolE, oreS, null, null);
         v2 = gs.GetVertexFromTileInfo(woolE, null, null, VertexDirection.SE);
-        port = new Port(v1, v2, PortType.ThreeToOne);
+        port = new Port(v1, v2, PortType.Brick);
         gs.Ports.Add(port);
     }
 }
