@@ -13,11 +13,6 @@ public class ResponseDTO
     public string ErrorMessage { get; init; }
     public GameStateDTO? GameState { get; init; }
     public List<PossiblePlayerAction> PossibleActions { get; init; }
-
-    /// <summary>
-    /// ETag for optimistic concurrency control. Used internally for blob storage updates.
-    /// </summary>
-    [JsonIgnore]
     public ETag? ETag { get; init; }
 
     public ResponseDTO(bool success, int errorCode, string errorParmValues, GameState? gameState, Player? player = null, ETag? etag = null)
