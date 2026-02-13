@@ -191,7 +191,7 @@ public class BoardCreationHelpersTests
 
     private static GameState CreateBoardForPortTesting()
     {
-        var gs = new GameState(Guid.NewGuid(), "UT", GameType.Starter);
+        var gs = new GameState(Guid.NewGuid(), "UT", GameType.Default);
 
         foreach (var tile in BoardCreationHelpers.CreateTilesForStarterBoard())
             gs.AddTile(tile);

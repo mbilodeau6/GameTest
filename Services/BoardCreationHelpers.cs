@@ -320,10 +320,8 @@ public static class BoardCreationHelpers
         switch(gameType)
         {
             case GameType.Default:
-                BoardCreationHelpers.AddPorts(gameState);
-                break;
             case GameType.Expansion6:
-                // TODO: Add ports for expansion 6 board
+                BoardCreationHelpers.AddPorts(gameState);
                 break;
             case GameType.Starter:
                 BoardCreationHelpers.AddPortsForStarter(gameState); 
@@ -376,14 +374,9 @@ public static class BoardCreationHelpers
             }
         }
     }
-    
-    public static void AddPortsWithStartIndex(GameState gs, List<PortType> randPorts, int startingIndex, int subIndexOverride)
-    {
-        var rnd = new Random();
 
-        // Ports are not an equal number of vertexes apart. Instead they are placed at one of 18 starting points. Some
-        // of the starting points only have one possible orientation while most have two. The following list provides
-        // the starting vertex option(s) for each position
+    private static List<List<Vertex>> GetStartLocationsDefaultBoard(GameState gs)
+    {
         List<List<Vertex>> portStartLocations = new List<List<Vertex>>();
         portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(2, -2), null, null, VertexDirection.N)});
         portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(2, -2), null, null, VertexDirection.NE), 
@@ -416,14 +409,83 @@ public static class BoardCreationHelpers
         portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-0, -2), null, null, VertexDirection.N), 
                 gs.GetVertexFromTileInfo(gs.GetTileAt(0, -2), gs.GetTileAt(2, -2), null, null)});
 
+        return portStartLocations;        
+    }
+
+    private static List<List<Vertex>> GetStartLocationsExpansion6Board(GameState gs)
+    {
+        List<List<Vertex>> portStartLocations = new List<List<Vertex>>();
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(1, -3), null, null, VertexDirection.N)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(1, -3), null, null, VertexDirection.NE), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(1, -3), gs.GetTileAt(2, -2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(2, -2), null, null, VertexDirection.NE), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(2, -2), gs.GetTileAt(3, -1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(3, -1), null, null, VertexDirection.NE), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(3, -1), gs.GetTileAt(4, 0), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(4, 0), null, null, VertexDirection.NE)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(4, 0), null, null, VertexDirection.SE), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(4, 0), gs.GetTileAt(3, 1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(3, 1), null, null, VertexDirection.SE), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(3, 1), gs.GetTileAt(2, 2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(2, 2), null, null, VertexDirection.SE),
+                gs.GetVertexFromTileInfo(gs.GetTileAt(2, 2), gs.GetTileAt(1, 3), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(1, 3), null, null, VertexDirection.SE)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(1, 3), null, null, VertexDirection.S), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(1, 3), gs.GetTileAt(-1, 3), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-1, 3), null, null, VertexDirection.S),
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-1, 3), gs.GetTileAt(-3, 3), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-3, 3), null, null, VertexDirection.S)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-3, 3), null, null, VertexDirection.SW), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-3, 3), gs.GetTileAt(-4, 2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-4, 2), null, null, VertexDirection.SW), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-4, 2), gs.GetTileAt(-5, 1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-5, 1), null, null, VertexDirection.SW), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-5, 1), gs.GetTileAt(-6, 0), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-6, 0), null, null, VertexDirection.SW)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-6, 0), null, null, VertexDirection.NW), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-6, 0), gs.GetTileAt(-5, -1), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-5, -1), null, null, VertexDirection.NW), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-5, -1), gs.GetTileAt(-4, -2), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-4, -2), null, null, VertexDirection.NW), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-4, -2), gs.GetTileAt(-3, -3), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-3, -3), null, null, VertexDirection.NW)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-3, -3), null, null, VertexDirection.N), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-3, -3), gs.GetTileAt(-1, -3), null, null)});
+        portStartLocations.Add(new List<Vertex>() { gs.GetVertexFromTileInfo(gs.GetTileAt(-1, -3), null, null, VertexDirection.N), 
+                gs.GetVertexFromTileInfo(gs.GetTileAt(-1, -3), gs.GetTileAt(1, -3), null, null)});
+
+        return portStartLocations;        
+    }
+
+    public static void AddPortsWithStartIndex(GameState gs, List<PortType> randPorts, int startingIndex, int subIndexOverride)
+    {
+        var rnd = new Random();
+
+        // Ports are not an equal number of vertexes apart. Instead they are placed at starting point along the end of the 
+        // board. Some of the starting points only have one possible orientation while most have two. The following list 
+        // provides the starting vertex option(s) for each position
         // TODO: There should be a more elegant/flexible way to do this that will work on random boards.
         // Need something that will move along the edges of the map.
+        List<List<Vertex>> portStartLocations = null!;
+        int portsNeeded = 9;
+
+        switch(gs.Settings.Type)
+        {
+            case GameType.Default:
+                portStartLocations = GetStartLocationsDefaultBoard(gs);
+                break;
+            case GameType.Expansion6:
+                portStartLocations = GetStartLocationsExpansion6Board(gs);
+                portsNeeded = 11;
+                break;
+        }
+
 
         // We will pick a random index to start the port placement and move 2 positions until all ports are selected.
         // If a position has two options for starting position, we randomly pick one of the options.
         var index = startingIndex;
         var portIndex = 0;
-        while (gs.Ports.Count < 9)
+        while (gs.Ports.Count < portsNeeded)
         {
             var subIndex = 0;
             if (portStartLocations[index].Count > 1)
@@ -475,7 +537,7 @@ public static class BoardCreationHelpers
 
             gs.Ports.Add(new Port(startVertex, secondVertex, randPorts[portIndex]));
             portIndex++;
-            index = (index + 2) % 18;
+            index = (index + 2) % portStartLocations.Count;
         }
     }
 
@@ -490,8 +552,8 @@ public static class BoardCreationHelpers
 
     public static void AddPorts(GameState gs)
     {
-        if (gs.Settings.Type != GameType.Default)
-            throw new InvalidOperationException("AddPorts only works with GameType.Default.");
+        if (gs.Settings.Type != GameType.Default && gs.Settings.Type != GameType.Expansion6)
+            throw new InvalidOperationException("AddPorts only works with GameType.Default and GameType.Expansion6.");
 
         List<PortType> ports = new List<PortType>()
         {
@@ -505,6 +567,12 @@ public static class BoardCreationHelpers
             PortType.Grain,
             PortType.Wool
         };
+
+        if (gs.Settings.Type == GameType.Expansion6)
+        {
+            ports.Add(PortType.ThreeToOne);
+            ports.Add(PortType.Wool);
+        }
 
         // Shuffle the ports
         var randPorts = ports.OrderBy(x => SharedHelpers.NextRandom()).ToList();
