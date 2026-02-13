@@ -32,6 +32,7 @@ public class PlayerDTO
 
     public int TradeAttemptsThisRound { get; } = 0;
     public List<string> AttemptedTradesThisRound { get; } = new();
+    public int LongRoadLength { get; }
 
     // JsonConstructor parameters must match the JSON property names (case-insensitive).
     [JsonConstructor]
@@ -40,12 +41,14 @@ public class PlayerDTO
         int developmentCardCount = 0, List<DevelopmentCardType>? devCardsPurchasedThisRound = null,
         List<DevelopmentCardType>? devCardsPlayed = null, List<DevelopmentCardType>? devCardsReadyToPlay = null,
         int victoryPoints = 0, int? fullVictoryPoints = 0,
-        int tradeAttemptsThisRound = 0, List<string>? attemptedTradesThisRound = null)
+        int tradeAttemptsThisRound = 0, List<string>? attemptedTradesThisRound = null,
+        int longRoadLength = 0)
     {
         Id = id ?? string.Empty;
         Name = name ?? string.Empty;
         Color = color;
         IsBot = isBot;
+        LongRoadLength = longRoadLength;
 
         if (resources != null && resources.Count > 0)
             foreach (var kvp in resources)
@@ -105,5 +108,7 @@ public class PlayerDTO
         TradeAttemptsThisRound = player.TradeAttemptsThisRound;
         if (player.AttemptedTradesThisRound != null)
             AttemptedTradesThisRound = player.AttemptedTradesThisRound.ToList();
+
+        LongRoadLength = player.LongRoadLength;
     }
 }

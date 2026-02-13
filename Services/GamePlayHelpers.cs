@@ -214,13 +214,15 @@ public static class GamePlayHelpers
         var eventRecordId = gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.PlaceRoad, edge));
         gs.PushUndoState(preActionState, eventRecordId);
 
-        if (gs.PlayerWithLongestRoad == null && gs.GetLongestRoadLength(player) > 4)
+        player.SetLongRoadLength(gs.GetLongestRoadLength(player));
+
+        if (gs.PlayerWithLongestRoad == null && player.LongRoadLength > 4)
         {
             gs.AssignLongestRoadToPlayer(player);
             gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.GainedLongestRoad));
         }
 
-        if (gs.PlayerWithLongestRoad != null && player.Id != gs.PlayerWithLongestRoad.Id && gs.GetLongestRoadLength(player) > gs.GetLongestRoadLength(gs.PlayerWithLongestRoad))
+        if (gs.PlayerWithLongestRoad != null && player.Id != gs.PlayerWithLongestRoad.Id && player.LongRoadLength > gs.PlayerWithLongestRoad.LongRoadLength)
         {
             var previousPlayer = gs.PlayerWithLongestRoad;
             gs.AssignLongestRoadToPlayer(player);

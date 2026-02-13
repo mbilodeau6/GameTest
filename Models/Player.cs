@@ -42,6 +42,7 @@ public class Player
 
     public int TradeAttemptsThisRound { get; set; } = 0;
     public List<string> AttemptedTradesThisRound { get; private set; } = new List<string>();
+    public int LongRoadLength { get; set; } = 0;
 
     public void ResetTradeAttemptsForRound()
     {
@@ -127,6 +128,8 @@ public class Player
         if (dto.AttemptedTradesThisRound != null)
             foreach (var trade in dto.AttemptedTradesThisRound)
                 AttemptedTradesThisRound.Add(trade);
+
+        LongRoadLength = dto.LongRoadLength;
     }
 
     public void AssignResources(ResourceType type, int count)
@@ -197,6 +200,11 @@ public class Player
     public int CountPlayedKnights()
     {
         return DevCardsPlayed.Count(d => d == DevelopmentCardType.Knight);
+    }
+
+    public void SetLongRoadLength(int length)
+    {
+        LongRoadLength = length;
     }
 
     public override string ToString() => $"{Name} ({Id}) - {Color}";
