@@ -42,7 +42,7 @@ public class Player
 
     public int TradeAttemptsThisRound { get; set; } = 0;
     public List<string> AttemptedTradesThisRound { get; private set; } = new List<string>();
-    public int LongRoadLength { get; set; } = 0;
+    public int LongestRoadLength { get; set; } = 0;
 
     public void ResetTradeAttemptsForRound()
     {
@@ -129,7 +129,7 @@ public class Player
             foreach (var trade in dto.AttemptedTradesThisRound)
                 AttemptedTradesThisRound.Add(trade);
 
-        LongRoadLength = dto.LongRoadLength;
+        LongestRoadLength = dto.LongestRoadLength;
     }
 
     public void AssignResources(ResourceType type, int count)
@@ -204,7 +204,7 @@ public class Player
 
     public void SetLongRoadLength(int length)
     {
-        LongRoadLength = length;
+        LongestRoadLength = length;
     }
 
     public override string ToString() => $"{Name} ({Id}) - {Color}";

@@ -26,7 +26,7 @@ public class PlayerTests
         Assert.Empty(player.DevCardsReadyToPlay);
         Assert.Equal(0, player.FullVictoryPoints);
         Assert.Equal(0, player.VisibleVictoryPoints);
-        Assert.Equal(0, player.LongRoadLength);
+        Assert.Equal(0, player.LongestRoadLength);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class PlayerTests
         Assert.True(new_player.IsBot);
         Assert.Equal(5, new_player.FullVictoryPoints);
         Assert.Equal(3, new_player.VisibleVictoryPoints);
-        Assert.Equal(orig_player.LongRoadLength, new_player.LongRoadLength);
+        Assert.Equal(orig_player.LongestRoadLength, new_player.LongestRoadLength);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class PlayerTests
         Assert.True(TestHelpers.ValidateId(player.Id, 'P'));
         Assert.Equal(expectedName, player.Name);
         Assert.Equal(expectedColor, player.Color);
-        Assert.Equal(3, player.LongRoadLength);
+        Assert.Equal(3, player.LongestRoadLength);
     }
 
     [Fact]

@@ -216,13 +216,13 @@ public static class GamePlayHelpers
 
         player.SetLongRoadLength(gs.GetLongestRoadLength(player));
 
-        if (gs.PlayerWithLongestRoad == null && player.LongRoadLength > 4)
+        if (gs.PlayerWithLongestRoad == null && player.LongestRoadLength > 4)
         {
             gs.AssignLongestRoadToPlayer(player);
             gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.GainedLongestRoad));
         }
 
-        if (gs.PlayerWithLongestRoad != null && player.Id != gs.PlayerWithLongestRoad.Id && player.LongRoadLength > gs.PlayerWithLongestRoad.LongRoadLength)
+        if (gs.PlayerWithLongestRoad != null && player.Id != gs.PlayerWithLongestRoad.Id && player.LongestRoadLength > gs.PlayerWithLongestRoad.LongestRoadLength)
         {
             var previousPlayer = gs.PlayerWithLongestRoad;
             gs.AssignLongestRoadToPlayer(player);

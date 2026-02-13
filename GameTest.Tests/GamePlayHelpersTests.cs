@@ -2549,7 +2549,7 @@ public class GamePlayHelpersTests
         Assert.NotNull(board.GetGameState().PlayerWithLongestRoad);
         Assert.Equal(board.GetBluePlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
         Assert.Equal(5, board.GetGameState().GetLongestRoadLength(board.GetBluePlayer()));
-        Assert.Equal(5, board.GetBluePlayer().LongRoadLength);
+        Assert.Equal(5, board.GetBluePlayer().LongestRoadLength);
         Assert.Equal(3, board.GetBluePlayer().FullVictoryPoints);
 
         var longestRoadEvent = board.GetGameState().EventRecord.FirstOrDefault(e => e.Action == EventRecordAction.GainedLongestRoad);
@@ -2579,7 +2579,7 @@ public class GamePlayHelpersTests
         GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetRedPlayer(), board.GetEdge(TestEdge.E30));
 
         Assert.Equal(5, board.GetGameState().GetLongestRoadLength(board.GetRedPlayer()));
-        Assert.Equal(5, board.GetBluePlayer().LongRoadLength);
+        Assert.Equal(5, board.GetBluePlayer().LongestRoadLength);
         Assert.NotNull(board.GetGameState().PlayerWithLongestRoad);
         Assert.Equal(board.GetBluePlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
     }
@@ -2598,7 +2598,7 @@ public class GamePlayHelpersTests
         GamePlayHelpers.BuildRoad(board.GetGameState(), board.GetRedPlayer(), board.GetEdge(TestEdge.E30));
 
         Assert.Equal(6, board.GetGameState().GetLongestRoadLength(board.GetRedPlayer()));
-        Assert.Equal(6, board.GetRedPlayer().LongRoadLength);
+        Assert.Equal(6, board.GetRedPlayer().LongestRoadLength);
         Assert.NotNull(board.GetGameState().PlayerWithLongestRoad);
         Assert.Equal(board.GetRedPlayer().Id, board.GetGameState().PlayerWithLongestRoad.Id);
         Assert.Equal(1, board.GetBluePlayer().FullVictoryPoints);
