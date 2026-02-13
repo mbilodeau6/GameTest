@@ -15,10 +15,9 @@ public static class BoardCreationHelpers
         resourceValues.AddRange(Enumerable.Repeat(ResourceType.Ore, 3));
         resourceValues.Add(ResourceType.Desert);
 
-        var rnd = new Random();
         for (int i = resourceValues.Count - 1; i > 0; i--)
         {
-            int j = rnd.Next(i + 1);
+            int j = SharedHelpers.NextRandom(i + 1);
             var tmp = resourceValues[i];
             resourceValues[i] = resourceValues[j];
             resourceValues[j] = tmp;
@@ -37,6 +36,62 @@ public static class BoardCreationHelpers
         var yCoordinates = new List<int>
         {
             -2, -1, 0, 1, 2, 2, 2, 1, 0, -1, -2, -2, -1, 0, 1, 1, 0, -1, 0
+        };
+
+        int diceIndex = 0;
+        int coordIndex = 0;
+
+        List<Tile> tiles = new List<Tile>();
+
+        foreach (var resourceType in resourceValues)
+        {
+            if (resourceType != ResourceType.Desert)
+            {
+                tiles.Add(new Tile(resourceType, diceValues[diceIndex], xCoordinates[coordIndex], yCoordinates[coordIndex]));
+                diceIndex++;
+            }
+            else
+            {
+                tiles.Add(new Tile(resourceType, 7, xCoordinates[coordIndex], yCoordinates[coordIndex]));
+            }
+            coordIndex++;
+        }
+
+        return tiles;
+    }
+
+    public static List<Tile> CreateTilesForExpansion6Board()
+    {
+        var resourceValues = new List<ResourceType>();
+        resourceValues.AddRange(Enumerable.Repeat(ResourceType.Brick, 5));
+        resourceValues.AddRange(Enumerable.Repeat(ResourceType.Wood, 6));
+        resourceValues.AddRange(Enumerable.Repeat(ResourceType.Wool, 6));
+        resourceValues.AddRange(Enumerable.Repeat(ResourceType.Grain, 6));
+        resourceValues.AddRange(Enumerable.Repeat(ResourceType.Ore, 5));
+        resourceValues.Add(ResourceType.Desert);
+        resourceValues.Add(ResourceType.Desert);
+
+        for (int i = resourceValues.Count - 1; i > 0; i--)
+        {
+            int j = SharedHelpers.NextRandom(i + 1);
+            var tmp = resourceValues[i];
+            resourceValues[i] = resourceValues[j];
+            resourceValues[j] = tmp;
+        }
+
+        var diceValues = new List<int>
+        {
+            2, 5, 4, 6, 3, 9, 8, 11, 11, 10, 6, 3, 8, 4, 8, 10, 11, 12, 10, 5, 4, 9, 5, 9, 12, 3, 2, 6
+        };
+
+        var xCoordinates = new List<int>
+        {
+            -3, -4, -5, -6, -5, -4, -3, -1, 1, 2, 3, 4, 3, 2, 1, -1, -2, -3, -4, -3, -2, 0, 1, 2, 1, 0, -1, -2, -1, 0
+         };
+
+        var yCoordinates = new List<int>
+        {
+            -3, -2, -1, 0, 1, 2, 3, 3, 3, 2, 1, 0, -1, -2, -3, -3, -2, -1, 0, 1, 2, 2, 1, 0, -1, -2, -1, 0, 1, 0
         };
 
         int diceIndex = 0;
@@ -241,7 +296,9 @@ public static class BoardCreationHelpers
                     gameState.AddTile(tile);
                 break;
             case GameType.Expansion6:
-                throw new NotImplementedException("Default and Expansion6 board types are not implemented yet.");
+                foreach (var tile in CreateTilesForExpansion6Board())
+                    gameState.AddTile(tile);
+                break;
             case GameType.Expansion8:
                 throw new NotImplementedException("Expansion8 board type is not implemented yet.");
             case GameType.Starter:
@@ -265,12 +322,15 @@ public static class BoardCreationHelpers
             case GameType.Default:
                 BoardCreationHelpers.AddPorts(gameState);
                 break;
+            case GameType.Expansion6:
+                // TODO: Add ports for expansion 6 board
+                break;
             case GameType.Starter:
                 BoardCreationHelpers.AddPortsForStarter(gameState); 
                 break;
             case GameType.Presidio1:
                 BoardCreationHelpers.AddPortsForPresidio1(gameState);
-                break;           
+                break;                           
         }
 
         return gameState;
