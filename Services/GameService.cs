@@ -16,6 +16,7 @@ public class GameService
     private readonly BlobContainerClient? _container;
     private readonly ILogger<GameService> _logger;
     private readonly string? _authToken;
+    private readonly string? _authToken2;
 
     // parameterless ctor kept for tests / direct instantiation
     public GameService() : this(NullLogger<GameService>.Instance) { }
@@ -26,8 +27,10 @@ public class GameService
         _logger = logger ?? NullLogger<GameService>.Instance;
 
         _authToken = Environment.GetEnvironmentVariable("TEMP_AUTH_TOKEN");
-        if (string.IsNullOrWhiteSpace(_authToken))
-            _logger.LogWarning("TEMP_AUTH_TOKEN not set; token validation will fail.");
+        _authToken2 = Environment.GetEnvironmentVariable("TEMP_AUTH_TOKEN");
+
+        if (string.IsNullOrWhiteSpace(_authToken) && string.IsNullOrWhiteSpace(_authToken2))
+            _logger.LogWarning("Neither TEMP_AUTH_TOKEN is set; token validation will fail.");
 
         var conn = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
         if (string.IsNullOrWhiteSpace(conn))
@@ -54,11 +57,11 @@ public class GameService
 
     public bool IsCallerAuthorized(string? token)
     {
-        if (string.IsNullOrWhiteSpace(_authToken))
+        if (string.IsNullOrWhiteSpace(_authToken) && string.IsNullOrWhiteSpace(_authToken2))
             return false;
 
-        return token?.StartsWith(_authToken) ?? false;
-    }
+        return (token?.StartsWith(_authToken) ?? false) || (token?.StartsWith(_authToken2) ?? false);
+    }   
 
     public GameState CreateGame(string gameTypeString, string playerToken)
     {
