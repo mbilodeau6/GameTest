@@ -27,7 +27,7 @@ public class GameService
         _logger = logger ?? NullLogger<GameService>.Instance;
 
         _authToken = Environment.GetEnvironmentVariable("TEMP_AUTH_TOKEN");
-        _authToken2 = Environment.GetEnvironmentVariable("TEMP_AUTH_TOKEN");
+        _authToken2 = Environment.GetEnvironmentVariable("TEMP_AUTH_TOKEN2");
 
         if (string.IsNullOrWhiteSpace(_authToken) && string.IsNullOrWhiteSpace(_authToken2))
             _logger.LogWarning("Neither TEMP_AUTH_TOKEN is set; token validation will fail.");
