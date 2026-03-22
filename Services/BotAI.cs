@@ -149,7 +149,7 @@ public class BotAI
             else if (State.Phase.CurrentPlayer.Resources[ResourceType.Ore] >= tradeRates[ResourceType.Ore])
                 resourceToTrade = ResourceType.Ore;
 
-            resourceToGet = neededForSettlement.First().Key;
+            resourceToGet = neededForRoad.First().Key;
         }
 
         if (resourceToTrade != ResourceType.Desert && resourceToGet != ResourceType.Desert)
@@ -539,11 +539,11 @@ public class BotAI
             if (player.VisibleVictoryPoints > maxVictoryPoints)
                 maxVictoryPoints = player.VisibleVictoryPoints;
 
-        var playersWithMax = State.Phase.TargetPlayers.Where(p => p.VisibleVictoryPoints == maxVictoryPoints);
+        var playersWithMax = State.Phase.TargetPlayers.Where(p => p.VisibleVictoryPoints == maxVictoryPoints).ToList();
         var selectedPlayer = playersWithMax.First();
 
         if (playersWithMax.Count() > 1)
-            selectedPlayer = State.Phase.TargetPlayers[SharedHelpers.NextRandom(State.Phase.TargetPlayers.Count)];
+            selectedPlayer = playersWithMax[SharedHelpers.NextRandom(playersWithMax.Count)];
 
         var move = new BotMove();
         move.SelectedPlayer = selectedPlayer;

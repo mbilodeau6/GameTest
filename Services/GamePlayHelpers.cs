@@ -1093,8 +1093,7 @@ public static class GamePlayHelpers
             gs.AssignLargestArmyToPlayer(player);
             gs.AddEventRecord(new EventRecordDTO(player, EventRecordAction.GainedLargestArmy));
         }
-
-        if (gs.PlayerWithLargestArmy != null && player.CountPlayedKnights() > gs.PlayerWithLargestArmy.CountPlayedKnights())
+        else if (gs.PlayerWithLargestArmy != null && player.CountPlayedKnights() > gs.PlayerWithLargestArmy.CountPlayedKnights())
         {
             var otherPlayer = gs.PlayerWithLargestArmy;
             gs.AssignLargestArmyToPlayer(player);
@@ -1204,7 +1203,7 @@ public static class GamePlayHelpers
     public static void OpenTrade(GameState gs, Player player, Dictionary<ResourceType, int> offer,Dictionary<ResourceType, int> request)
     {
         if ((gs.Phase.PhaseState != GameStates.BuildOrTrade) || gs.Phase.CurrentPlayer == null)
-            throw new InvalidOperationException("Unexpected Error. Invalid GameState for Open Trade. State: {gs.Phase.PhaseState}");
+            throw new InvalidOperationException($"Unexpected Error. Invalid GameState for Open Trade. State: {gs.Phase.PhaseState}");
 
         if (gs.Phase.CurrentPlayer.Id != player.Id)
             throw new InvalidOperationException($"Unexpected Error. It is not the identified player's turn. PlayerTurn: {gs.Phase.CurrentPlayer}; ActingPlayer: {player}");
@@ -1265,7 +1264,7 @@ public static class GamePlayHelpers
     public static void RespondToTrade(GameState gs, Player player, TradeResponseDTO response)
     {
         if ((gs.Phase.PhaseState != GameStates.RespondToTrade) || gs.Phase.CurrentPlayer == null)
-            throw new InvalidOperationException("Unexpected Error. Invalid GameState for Respond To Trade. State: {gs.Phase.PhaseState}");
+            throw new InvalidOperationException($"Unexpected Error. Invalid GameState for Respond To Trade. State: {gs.Phase.PhaseState}");
 
         if (gs.Phase.CurrentPlayer.Id == response.PlayerId)
             throw new InvalidOperationException($"Unexpected Error. Player should not be responding to their own trade request. PlayerTurn: {gs.Phase.CurrentPlayer}; ActingPlayer: {player}");
@@ -1468,7 +1467,7 @@ public static class GamePlayHelpers
             return new ResponseDTO(false, 1056, $"GameId: {gs.Id}; Player: {request.PlayerId}; AcceptedPlayer: {request.AcceptedPlayerId}", null as GameStateDTO);
 
         if (gs.Phase == null || gs.Phase.PendingTradeResponses == null)
-            return new ResponseDTO(false, 9999, "Action: AcceptTrade; GameId: {gs.Id}; PendingTradeResponses missing.", null as GameStateDTO);
+            return new ResponseDTO(false, 9999, $"Action: AcceptTrade; GameId: {gs.Id}; PendingTradeResponses missing.", null as GameStateDTO);
 
         var response = gs.Phase.PendingTradeResponses.FirstOrDefault(t => t.Player.Id == request.AcceptedPlayerId);
         if (response == null)

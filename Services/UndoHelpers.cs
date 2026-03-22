@@ -63,7 +63,7 @@ public static class UndoHelpers
             {
                 case 1003:
                     return new ResponseDTO(false, 1003, $"Action: Undo; GameId: {gs.Id}; State: {gs.Phase.PhaseState}", null as GameStateDTO);
-                case 1013:
+                case 1012:
                     return new ResponseDTO(false, 1012, $"GameId: {gs.Id}; Player: {request.PlayerId}", null as GameStateDTO);
                 case 1070:
                     return new ResponseDTO(false, 1070, $"GameId: {gs.Id}", null as GameStateDTO);
@@ -73,10 +73,7 @@ public static class UndoHelpers
                     else
                         return new ResponseDTO(false, 1071, $"GameId: {gs.Id}; EventPlayer: {validationResponse.Event.PlayerId}; RequestingPlayer: {request.PlayerId}", null as GameStateDTO);
                 case 1072:
-                    if (validationResponse.Event == null)
-                        throw new InvalidOperationException("UnexpectedError. Undo error 1072 missing event information.");
-                    else
-                        return new ResponseDTO(false, 1072, $"GameId: {gs.Id}; Action: {validationResponse.Event.Action}", null as GameStateDTO);
+                    return new ResponseDTO(false, 1072, $"GameId: {gs.Id}; Action: {validationResponse.Event.Action}", null as GameStateDTO);
                 case 1074:
                     return new ResponseDTO(false, 1074, $"GameId: {gs.Id}; EventBlockingUndo: {validationResponse.EventBlockingUndo}", null as GameStateDTO);
             }
@@ -299,7 +296,7 @@ public static class UndoHelpers
     private static void UndoRoadBuilding(GameState gs, Player player)
     {
         if (!gs.DevelopmentCards.Contains(DevelopmentCardType.RoadBuilding) || gs.DevelopmentCards.Last() != DevelopmentCardType.RoadBuilding)
-            throw new InvalidOperationException("Unexpected Error. Year of Plenty undo but no Road Building at bottom of development card stack.");
+            throw new InvalidOperationException("Unexpected Error. Road Building undo but no Road Building at bottom of development card stack.");
 
         gs.DevelopmentCards.RemoveAt(gs.DevelopmentCards.FindLastIndex(dc => dc == DevelopmentCardType.RoadBuilding));
         player.RetrievePlayedDevelopmentCard(DevelopmentCardType.RoadBuilding);
